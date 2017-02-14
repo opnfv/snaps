@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dabed58f_583709b1",
+        "filename": "INFO",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 459
+      },
+      "writtenOn": "2017-02-14T21:50:21Z",
+      "side": 1,
+      "message": "remove trailing white spaces",
+      "revId": "f70b4d0e4bbd91258afdb79513ad159ecf09c848",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_783c4d94",
+        "filename": "INFO",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 459
+      },
+      "writtenOn": "2017-02-14T21:50:21Z",
+      "side": 1,
+      "message": "you could also add some contributors already here (morgan, helen, me, ..)",
+      "revId": "f70b4d0e4bbd91258afdb79513ad159ecf09c848",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
