@@ -1,0 +1,8 @@
+{{ greeting_msg }}
+OS_USER - {{ os_user }}
+OS_PASSWORD - {{ os_pass }}
+AUTH_URL - {{ os_auth_url }}
+PROJECT_NAME - {{ os_project }}
+Floating IP - {{ fip1 }}
+Port MAC = {{ mac1 }}
+Port IP = {{ ip1 }}

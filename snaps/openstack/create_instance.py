@@ -1,0 +1,739 @@
+# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import logging
+import time
+
+from neutronclient.common.exceptions import PortNotFoundClient
+from novaclient.exceptions import NotFound
+
+from snaps.openstack.utils import glance_utils
+from snaps.openstack.utils import neutron_utils
+from snaps.openstack.create_network import PortSettings
+from snaps.provisioning import ansible_utils
+from snaps.openstack.utils import nova_utils
+
+__author__ = 'spisarski'
+
+logger = logging.getLogger('create_instance')
+
+POLL_INTERVAL = 3
+STATUS_ACTIVE = 'ACTIVE'
+STATUS_DELETED = 'DELETED'
+
+
+class OpenStackVmInstance:
+    """
+    Class responsible for creating a VM instance in OpenStack
+    """
+
+    def __init__(self, os_creds, instance_settings, image_settings, keypair_settings=None):
+        """
+        Constructor
+        :param os_creds: The connection credentials to the OpenStack API
+        :param instance_settings: Contains the settings for this VM
+        :param image_settings: The OpenStack image object settings
+        :param keypair_settings: The keypair metadata (Optional)
+        :raises Exception
+        """
+        self.__os_creds = os_creds
+
+        self.__nova = nova_utils.nova_client(self.__os_creds)
+        self.__neutron = neutron_utils.neutron_client(self.__os_creds)
+
+        self.instance_settings = instance_settings
+        self.image_settings = image_settings
+        self.keypair_settings = keypair_settings
+
+        # TODO - get rid of FIP list and only use the dict(). Need to fix populating this object when already exists
+        self.__floating_ips = list()
+        self.__floating_ip_dict = dict()
+
+        # Instantiated in self.create()
+        self.__ports = list()
+
+        # Note: this object does not change after the VM becomes active
+        self.__vm = None
+
+    def create(self, cleanup=False, block=False):
+        """
+        Creates a VM instance
+        :param cleanup: When true, only perform lookups for OpenStack objects.
+        :param block: Thread will block until instance has either become active, error, or timeout waiting.
+                      Additionally, when True, floating IPs will not be applied until VM is active.
+        :return: The VM reference object
+        """
+        try:
+            self.__ports = self.__setup_ports(self.instance_settings.port_settings, cleanup)
+            self.__lookup_existing_vm_by_name()
+            if not self.__vm and not cleanup:
+                self.__create_vm(block)
+            return self.__vm
+        except Exception as e:
+            logger.exception('Error occurred while setting up instance')
+            self.clean()
+            raise e
+
+    def __lookup_existing_vm_by_name(self):
+        """
+        Populates the member variables 'self.vm' and 'self.floating_ips' if a VM with the same name already exists
+        within the project
+        """
+        servers = nova_utils.get_servers_by_name(self.__nova, self.instance_settings.name)
+        for server in servers:
+            if server.name == self.instance_settings.name:
+                self.__vm = server
+                logger.info('Found existing machine with name - ' + self.instance_settings.name)
+                fips = self.__nova.floating_ips.list()
+                for fip in fips:
+                    if fip.instance_id == server.id:
+                        self.__floating_ips.append(fip)
+                        # TODO - Determine a means to associate to the FIP configuration and add to FIP map
+
+    def __create_vm(self, block=False):
+        """
+        Responsible for creating the VM instance
+        :param block: Thread will block until instance has either become active, error, or timeout waiting.
+                      Floating IPs will be assigned after active when block=True
+        """
+        nics = []
+        for key, port in self.__ports:
+            kv = dict()
+            kv['port-id'] = port['port']['id']
+            nics.append(kv)
+
+        logger.info('Creating VM with name - ' + self.instance_settings.name)
+        keypair_name = None
+        if self.keypair_settings:
+            keypair_name = self.keypair_settings.name
+
+        flavor = nova_utils.get_flavor_by_name(self.__nova, self.instance_settings.flavor)
+        if not flavor:
+            raise Exception('Flavor not found with name - ' + self.instance_settings.flavor)
+
+        image = glance_utils.get_image(self.__nova, glance_utils.glance_client(self.__os_creds),
+                                       self.image_settings.name)
+        if image:
+            self.__vm = self.__nova.servers.create(
+                name=self.instance_settings.name,
+                flavor=flavor,
+                image=image,
+                nics=nics,
+                key_name=keypair_name,
+                security_groups=list(self.instance_settings.security_group_names),
+                userdata=self.instance_settings.userdata,
+                availability_zone=self.instance_settings.availability_zone)
+        else:
+            raise Exception('Cannot create instance, image cannot be located with name ' + self.image_settings.name)
+
+        logger.info('Created instance with name - ' + self.instance_settings.name)
+
+        if block:
+            self.vm_active(block=True)
+
+        self.__apply_floating_ips()
+
+    def __apply_floating_ips(self):
+        """
+        Applies the configured floating IPs to the necessary ports
+        """
+        port_dict = dict()
+        for key, port in self.__ports:
+            port_dict[key] = port
+
+        # Apply floating IPs
+        for floating_ip_setting in self.instance_settings.floating_ip_settings:
+            port = port_dict.get(floating_ip_setting.port_name)
+
+            if not port:
+                raise Exception('Cannot find port object with name - ' + floating_ip_setting.port_name)
+
+            # Setup Floating IP only if there is a router with an external gateway
+            ext_gateway = self.__ext_gateway_by_router(floating_ip_setting.router_name)
+            if ext_gateway:
+                subnet = neutron_utils.get_subnet_by_name(self.__neutron, floating_ip_setting.subnet_name)
+                floating_ip = nova_utils.create_floating_ip(self.__nova, ext_gateway)
+                self.__floating_ips.append(floating_ip)
+                self.__floating_ip_dict[floating_ip_setting.name] = floating_ip
+
+                logger.info('Created floating IP ' + floating_ip.ip + ' via router - ' +
+                            floating_ip_setting.router_name)
+                self.__add_floating_ip(floating_ip, port, subnet)
+            else:
+                raise Exception('Unable to add floating IP to port,' +
+                                ' cannot locate router with an external gateway ')
+
+    def __ext_gateway_by_router(self, router_name):
+        """
+        Returns network name for the external network attached to a router or None if not found
+        :param router_name: The name of the router to lookup
+        :return: the external network name or None
+        """
+        router = neutron_utils.get_router_by_name(self.__neutron, router_name)
+        if router and router['router'].get('external_gateway_info'):
+            network = neutron_utils.get_network_by_id(self.__neutron,
+                                                      router['router']['external_gateway_info']['network_id'])
+            if network:
+                return network['network']['name']
+        return None
+
+    def clean(self):
+        """
+        Destroys the VM instance
+        """
+
+        # Cleanup floating IPs
+        for floating_ip in self.__floating_ips:
+            try:
+                logger.info('Deleting Floating IP - ' + floating_ip.ip)
+                nova_utils.delete_floating_ip(self.__nova, floating_ip)
+            except Exception as e:
+                logger.error('Error deleting Floating IP - ' + e.message)
+        self.__floating_ips = list()
+        self.__floating_ip_dict = dict()
+
+        # Cleanup ports
+        for name, port in self.__ports:
+            logger.info('Deleting Port - ' + name)
+            try:
+                neutron_utils.delete_port(self.__neutron, port)
+            except PortNotFoundClient as e:
+                logger.warn('Unexpected error deleting port - ' + e.message)
+                pass
+        self.__ports = list()
+
+        # Cleanup VM
+        if self.__vm:
+            try:
+                logger.info('Deleting VM instance - ' + self.instance_settings.name)
+                nova_utils.delete_vm_instance(self.__nova, self.__vm)
+            except Exception as e:
+                logger.error('Error deleting VM - ' + str(e))
+
+            # Block until instance cannot be found or returns the status of DELETED
+            logger.info('Checking deletion status')
+
+            try:
+                if self.vm_deleted(block=True):
+                    logger.info('VM has been properly deleted VM with name - ' + self.instance_settings.name)
+                    self.__vm = None
+                else:
+                    logger.error('VM not deleted within the timeout period of ' +
+                                 str(self.instance_settings.vm_delete_timeout) + ' seconds')
+            except Exception as e:
+                logger.error('Unexpected error while checking VM instance status - ' + e.message)
+
+    def __setup_ports(self, port_settings, cleanup):
+        """
+        Returns the previously configured ports or creates them if they do not exist
+        :param port_settings: A list of PortSetting objects
+        :param cleanup: When true, only perform lookups for OpenStack objects.
+        :return: a list of OpenStack port tuples where the first member is the port name and the second is the port
+                 object
+        """
+        ports = list()
+
+        for port_setting in port_settings:
+            # First check to see if network already has this port
+            # TODO/FIXME - this could potentially cause problems if another port with the same name exists
+            # VM has the same network/port name pair
+            found = False
+
+            # TODO/FIXME - should we not be iterating on ports for the specific network in question as unique port names
+            # seem to only be important by network
+            existing_ports = self.__neutron.list_ports()['ports']
+            for existing_port in existing_ports:
+                if existing_port['name'] == port_setting.name:
+                    ports.append((port_setting.name, {'port': existing_port}))
+                    found = True
+                    break
+
+            if not found and not cleanup:
+                ports.append((port_setting.name, neutron_utils.create_port(self.__neutron, self.__os_creds,
+                                                                           port_setting)))
+
+        return ports
+
+    def __add_floating_ip(self, floating_ip, port, subnet, timeout=30, poll_interval=POLL_INTERVAL):
+        """
+        Returns True when active else False
+        TODO - Make timeout and poll_interval configurable...
+        """
+        ip = None
+
+        if subnet:
+            # Take IP of subnet if there is one configured on which to place the floating IP
+            for fixed_ip in port['port']['fixed_ips']:
+                if fixed_ip['subnet_id'] == subnet['subnet']['id']:
+                    ip = fixed_ip['ip_address']
+                    break
+        else:
+            # Simply take the first
+            ip = port['port']['fixed_ips'][0]['ip_address']
+
+        if ip:
+            count = timeout / poll_interval
+            while count > 0:
+                logger.debug('Attempting to add floating IP to instance')
+                try:
+                    self.__vm.add_floating_ip(floating_ip, ip)
+                    logger.info('Added floating IP ' + floating_ip.ip + ' to port IP - ' + ip +
+                                ' on instance - ' + self.instance_settings.name)
+                    return
+                except Exception as e:
+                    logger.debug('Retry adding floating IP to instance. Last attempt failed with - ' + e.message)
+                    time.sleep(poll_interval)
+                    count -= 1
+                    pass
+        else:
+            raise Exception('Unable find IP address on which to place the floating IP')
+
+        logger.error('Timeout attempting to add the floating IP to instance.')
+        raise Exception('Timeout while attempting add floating IP to instance')
+
+    def get_os_creds(self):
+        """
+        Returns the OpenStack credentials used to create these objects
+        :return: the credentials
+        """
+        return self.__os_creds
+
+    def get_vm_inst(self):
+        """
+        Returns the latest version of this server object from OpenStack
+        :return: Server object
+        """
+        return nova_utils.get_latest_server_object(self.__nova, self.__vm)
+
+    def get_port_ip(self, port_name, subnet_name=None):
+        """
+        Returns the first IP for the port corresponding with the port_name parameter when subnet_name is None
+        else returns the IP address that corresponds to the subnet_name parameter
+        :param port_name: the name of the port from which to return the IP
+        :param subnet_name: the name of the subnet attached to this IP
+        :return: the IP or None if not found
+        """
+        port = self.get_port_by_name(port_name)
+        if port:
+            port_dict = port['port']
+            if subnet_name:
+                subnet = neutron_utils.get_subnet_by_name(self.__neutron, subnet_name)
+                if not subnet:
+                    logger.warn('Cannot retrieve port IP as subnet could not be located with name - ' + subnet_name)
+                    return None
+                for fixed_ip in port_dict['fixed_ips']:
+                    if fixed_ip['subnet_id'] == subnet['subnet']['id']:
+                        return fixed_ip['ip_address']
+            else:
+                fixed_ips = port_dict['fixed_ips']
+                if fixed_ips and len(fixed_ips) > 0:
+                    return fixed_ips[0]['ip_address']
+        return None
+
+    def get_port_mac(self, port_name):
+        """
+        Returns the first IP for the port corresponding with the port_name parameter
+        TODO - Add in the subnet as an additional parameter as a port may have multiple fixed_ips
+        :param port_name: the name of the port from which to return the IP
+        :return: the IP or None if not found
+        """
+        port = self.get_port_by_name(port_name)
+        if port:
+            port_dict = port['port']
+            return port_dict['mac_address']
+        return None
+
+    def get_port_by_name(self, port_name):
+        """
+        Retrieves the OpenStack port object by its given name
+        :param port_name: the name of the port
+        :return: the OpenStack port object or None if not exists
+        """
+        for key, port in self.__ports:
+            if key == port_name:
+                return port
+        logger.warn('Cannot find port with name - ' + port_name)
+        return None
+
+    def config_nics(self):
+        """
+        Responsible for configuring NICs on RPM systems where the instance has more than one configured port
+        :return: None
+        """
+        if len(self.__ports) > 1 and len(self.__floating_ips) > 0:
+            if self.vm_active(block=True) and self.vm_ssh_active(block=True):
+                for key, port in self.__ports:
+                    port_index = self.__ports.index((key, port))
+                    if port_index > 0:
+                        nic_name = 'eth' + repr(port_index)
+                        self.__config_nic(nic_name, port, self.__get_first_provisioning_floating_ip().ip)
+                        logger.info('Configured NIC - ' + nic_name + ' on VM - ' + self.instance_settings.name)
+
+    def __get_first_provisioning_floating_ip(self):
+        """
+        Returns the first floating IP tagged with the Floating IP name if exists else the first one found
+        :return:
+        """
+        for floating_ip_setting in self.instance_settings.floating_ip_settings:
+            if floating_ip_setting.provisioning:
+                fip = self.__floating_ip_dict.get(floating_ip_setting.name)
+                if fip:
+                    return fip
+                elif len(self.__floating_ips) > 0:
+                    return self.__floating_ips[0]
+
+    def __config_nic(self, nic_name, port, floating_ip):
+        """
+        Although ports/NICs can contain multiple IPs, this code currently only supports the first.
+
+        Your CWD at this point must be the <repo dir>/python directory.
+        TODO - fix this restriction.
+
+        :param nic_name: Name of the interface
+        :param port: The port information containing the expected IP values.
+        :param floating_ip: The floating IP on which to apply the playbook.
+        """
+        ip = port['port']['fixed_ips'][0]['ip_address']
+        variables = {
+            'floating_ip': floating_ip,
+            'nic_name': nic_name,
+            'nic_ip': ip
+        }
+
+        if self.image_settings.nic_config_pb_loc and self.keypair_settings:
+            ansible_utils.apply_playbook(self.image_settings.nic_config_pb_loc,
+                                         [floating_ip], self.get_image_user(), self.keypair_settings.private_filepath,
+                                         variables, self.__os_creds.proxy_settings)
+        else:
+            logger.warn('VM ' + self.instance_settings.name + ' cannot self configure NICs eth1++. ' +
+                        'No playbook  or keypairs found.')
+
+    def get_image_user(self):
+        """
+        Returns the instance sudo_user if it has been configured in the instance_settings else it returns the
+        image_settings.image_user value
+        """
+        if self.instance_settings.sudo_user:
+            return self.instance_settings.sudo_user
+        else:
+            return self.image_settings.image_user
+
+    def vm_deleted(self, block=False, poll_interval=POLL_INTERVAL):
+        """
+        Returns true when the VM status returns the value of expected_status_code or instance retrieval throws
+        a NotFound exception.
+        :param block: When true, thread will block until active or timeout value in seconds has been exceeded (False)
+        :param poll_interval: The polling interval in seconds
+        :return: T/F
+        """
+        try:
+            return self.__vm_status_check(STATUS_DELETED, block, self.instance_settings.vm_delete_timeout,
+                                          poll_interval)
+        except NotFound as e:
+            logger.debug("Instance not found when querying status for " + STATUS_DELETED + ' with message ' + e.message)
+            return True
+
+    def vm_active(self, block=False, poll_interval=POLL_INTERVAL):
+        """
+        Returns true when the VM status returns the value of expected_status_code
+        :param block: When true, thread will block until active or timeout value in seconds has been exceeded (False)
+        :param poll_interval: The polling interval in seconds
+        :return: T/F
+        """
+        return self.__vm_status_check(STATUS_ACTIVE, block, self.instance_settings.vm_boot_timeout, poll_interval)
+
+    def __vm_status_check(self, expected_status_code, block, timeout, poll_interval):
+        """
+        Returns true when the VM status returns the value of expected_status_code
+        :param expected_status_code: instance status evaluated with this string value
+        :param block: When true, thread will block until active or timeout value in seconds has been exceeded (False)
+        :param timeout: The timeout value
+        :param poll_interval: The polling interval in seconds
+        :return: T/F
+        """
+        # sleep and wait for VM status change
+        if block:
+            start = time.time()
+        else:
+            start = time.time() - timeout
+
+        while timeout > time.time() - start:
+            status = self.__status(expected_status_code)
+            if status:
+                logger.info('VM is - ' + expected_status_code)
+                return True
+
+            logger.debug('Retry querying VM status in ' + str(poll_interval) + ' seconds')
+            time.sleep(poll_interval)
+            logger.debug('VM status query timeout in ' + str(timeout - (time.time() - start)))
+
+        logger.error('Timeout checking for VM status for ' + expected_status_code)
+        return False
+
+    def __status(self, expected_status_code):
+        """
+        Returns True when active else False
+        :param expected_status_code: instance status evaluated with this string value
+        :return: T/F
+        """
+        instance = self.__nova.servers.get(self.__vm.id)
+        if not instance:
+            logger.warn('Cannot find instance with id - ' + self.__vm.id)
+            return False
+
+        if instance.status == 'ERROR':
+            raise Exception('Instance had an error during deployment')
+        logger.debug('Instance status [' + self.instance_settings.name + '] is - ' + instance.status)
+        return instance.status == expected_status_code
+
+    def vm_ssh_active(self, block=False, poll_interval=POLL_INTERVAL):
+        """
+        Returns true when the VM can be accessed via SSH
+        :param block: When true, thread will block until active or timeout value in seconds has been exceeded (False)
+        :param poll_interval: The polling interval
+        :return: T/F
+        """
+        # sleep and wait for VM status change
+        logger.info('Checking if VM is active')
+
+        timeout = self.instance_settings.ssh_connect_timeout
+
+        if self.vm_active(block=True):
+            if block:
+                start = time.time()
+            else:
+                start = time.time() - timeout
+
+            while timeout > time.time() - start:
+                status = self.__ssh_active()
+                if status:
+                    logger.info('SSH is active for VM instance')
+                    return True
+
+                logger.debug('Retry SSH connection in ' + str(poll_interval) + ' seconds')
+                time.sleep(poll_interval)
+                logger.debug('SSH connection timeout in ' + str(timeout - (time.time() - start)))
+
+        logger.error('Timeout attempting to connect with VM via SSH')
+        return False
+
+    def __ssh_active(self):
+        """
+        Returns True when can create a SSH session else False
+        :return: T/F
+        """
+        if len(self.__floating_ips) > 0:
+            ssh = self.ssh_client()
+            if ssh:
+                return True
+        return False
+
+    def get_floating_ip(self, fip_name=None):
+        """
+        Returns the floating IP object byt name if found, else the first known, else None
+        :param fip_name: the name of the floating IP to return
+        :return: the SSH client or None
+        """
+        fip = None
+        if fip_name and self.__floating_ip_dict.get(fip_name):
+            return self.__floating_ip_dict.get(fip_name)
+        if not fip and len(self.__floating_ips) > 0:
+            return self.__floating_ips[0]
+        return None
+
+    def ssh_client(self, fip_name=None):
+        """
+        Returns an SSH client using the name or the first known floating IP if exists, else None
+        :param fip_name: the name of the floating IP to return
+        :return: the SSH client or None
+        """
+        fip = self.get_floating_ip(fip_name)
+        if fip:
+            return ansible_utils.ssh_client(self.__floating_ips[0].ip, self.get_image_user(),
+                                            self.keypair_settings.private_filepath,
+                                            proxy_settings=self.__os_creds.proxy_settings)
+        else:
+            logger.warn('Cannot return an SSH client. No Floating IP configured')
+
+    def add_security_group(self, security_group):
+        """
+        Adds a security group to this VM. Call will block until VM is active.
+        :param security_group: the OpenStack security group object
+        :return True if successful else False
+        """
+        self.vm_active(block=True)
+
+        if not security_group:
+            logger.warn('Security group object is None, cannot add')
+            return False
+
+        try:
+            nova_utils.add_security_group(self.__nova, self.get_vm_inst(), security_group['security_group']['name'])
+            return True
+        except NotFound as e:
+            logger.warn('Security group not added - ' + e.message)
+            return False
+
+    def remove_security_group(self, security_group):
+        """
+        Removes a security group to this VM. Call will block until VM is active.
+        :param security_group: the OpenStack security group object
+        :return True if successful else False
+        """
+        self.vm_active(block=True)
+
+        if not security_group:
+            logger.warn('Security group object is None, cannot add')
+            return False
+
+        try:
+            nova_utils.remove_security_group(self.__nova, self.get_vm_inst(), security_group['security_group']['name'])
+            return True
+        except NotFound as e:
+            logger.warn('Security group not added - ' + e.message)
+            return False
+
+
+class VmInstanceSettings:
+    """
+    Class responsible for holding configuration setting for a VM Instance
+    """
+    def __init__(self, config=None, name=None, flavor=None, port_settings=list(), security_group_names=set(),
+                 floating_ip_settings=list(), sudo_user=None, vm_boot_timeout=900,
+                 vm_delete_timeout=300, ssh_connect_timeout=180, availability_zone=None, userdata=None):
+        """
+        Constructor
+        :param config: dict() object containing the configuration settings using the attribute names below as each
+                       member's the key and overrides any of the other parameters.
+        :param name: the name of the VM
+        :param flavor: the VM's flavor
+        :param port_settings: the port configuration settings
+        :param security_group_names: a set of names of the security groups to add to the VM
+        :param floating_ip_settings: the floating IP configuration settings
+        :param sudo_user: the sudo user of the VM that will override the instance_settings.image_user when trying to
+                          connect to the VM
+        :param vm_boot_timeout: the amount of time a thread will sleep waiting for an instance to boot
+        :param vm_delete_timeout: the amount of time a thread will sleep waiting for an instance to be deleted
+        :param ssh_connect_timeout: the amount of time a thread will sleep waiting obtaining an SSH connection to a VM
+        :param availability_zone: the name of the compute server on which to deploy the VM (optional)
+        :param userdata: the cloud-init script to run after the VM has been started
+        """
+        if config:
+            self.name = config.get('name')
+            self.flavor = config.get('flavor')
+            self.sudo_user = config.get('sudo_user')
+            self.userdata = config.get('userdata')
+
+            self.port_settings = list()
+            if config.get('ports'):
+                for port_config in config['ports']:
+                    if isinstance(port_config, PortSettings):
+                        self.port_settings.append(port_config)
+                    else:
+                        self.port_settings.append(PortSettings(config=port_config['port']))
+
+            if config.get('security_group_names'):
+                if isinstance(config['security_group_names'], list):
+                    self.security_group_names = set(config['security_group_names'])
+                elif isinstance(config['security_group_names'], set):
+                    self.security_group_names = config['security_group_names']
+                elif isinstance(config['security_group_names'], basestring):
+                    self.security_group_names = [config['security_group_names']]
+                else:
+                    raise Exception('Invalid data type for security_group_names attribute')
+            else:
+                self.security_group_names = set()
+
+            self.floating_ip_settings = list()
+            if config.get('floating_ips'):
+                for floating_ip_config in config['floating_ips']:
+                    if isinstance(floating_ip_config, FloatingIpSettings):
+                        self.floating_ip_settings.append(floating_ip_config)
+                    else:
+                        self.floating_ip_settings.append(FloatingIpSettings(config=floating_ip_config['floating_ip']))
+
+            if config.get('vm_boot_timeout'):
+                self.vm_boot_timeout = config['vm_boot_timeout']
+            else:
+                self.vm_boot_timeout = vm_boot_timeout
+
+            if config.get('vm_delete_timeout'):
+                self.vm_delete_timeout = config['vm_delete_timeout']
+            else:
+                self.vm_delete_timeout = vm_delete_timeout
+
+            if config.get('ssh_connect_timeout'):
+                self.ssh_connect_timeout = config['ssh_connect_timeout']
+            else:
+                self.ssh_connect_timeout = ssh_connect_timeout
+
+            if config.get('availability_zone'):
+                self.availability_zone = config['availability_zone']
+            else:
+                self.availability_zone = None
+        else:
+            self.name = name
+            self.flavor = flavor
+            self.port_settings = port_settings
+            self.security_group_names = security_group_names
+            self.floating_ip_settings = floating_ip_settings
+            self.sudo_user = sudo_user
+            self.vm_boot_timeout = vm_boot_timeout
+            self.vm_delete_timeout = vm_delete_timeout
+            self.ssh_connect_timeout = ssh_connect_timeout
+            self.availability_zone = availability_zone
+            self.userdata = userdata
+
+        if not self.name or not self.flavor:
+            raise Exception('Instance configuration requires the attributes: name, flavor')
+
+
+class FloatingIpSettings:
+    """
+    Class responsible for holding configuration settings for a floating IP
+    """
+    def __init__(self, config=None, name=None, port_name=None, router_name=None, subnet_name=None, provisioning=True):
+        """
+        Constructor
+        :param config: dict() object containing the configuration settings using the attribute names below as each
+                       member's the key and overrides any of the other parameters.
+        :param name: the name of the floating IP
+        :param port_name: the name of the router to the external network
+        :param router_name: the name of the router to the external network
+        :param subnet_name: the name of the subnet on which to attach the floating IP
+        :param provisioning: when true, this floating IP can be used for provisioning
+
+        TODO - provisioning flag is a hack as I have only observed a single Floating IPs that actually works on
+        an instance. Multiple floating IPs placed on different subnets from the same port are especially troublesome
+        as you cannot predict which one will actually connect. For now, it is recommended not to setup multiple
+        floating IPs on an instance unless absolutely necessary.
+        """
+        if config:
+            self.name = config.get('name')
+            self.port_name = config.get('port_name')
+            self.router_name = config.get('router_name')
+            self.subnet_name = config.get('subnet_name')
+            if config.get('provisioning') is not None:
+                self.provisioning = config['provisioning']
+            else:
+                self.provisioning = provisioning
+        else:
+            self.name = name
+            self.port_name = port_name
+            self.router_name = router_name
+            self.subnet_name = subnet_name
+            self.provisioning = provisioning
+
+        if not self.name or not self.port_name or not self.router_name:
+            raise Exception('The attributes name, port_name and router_name are required for FloatingIPSettings')

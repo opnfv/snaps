@@ -1,0 +1,77 @@
+# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+openstack:
+  connection:
+    # Note - when http_proxy is set, you must also configure ssh for proxy tunneling on your host.
+    username: admin
+    password: cable123
+    auth_url: http://10.197.103.50:5000/v2.0/
+    project_name: admin
+    http_proxy: localhost:3128
+  images:
+    - image:
+        name: Ubuntu
+        format: qcow2
+        image_user: ubuntu
+        download_url: http://uec-images.ubuntu.com/releases/trusty/14.04/ubuntu-14.04-server-cloudimg-amd64-disk1.img
+  networks:
+    - network:
+        name: ext-net
+        external: True
+        network_type: vlan
+        project_name: service
+        subnets:
+          - subnet:
+              name: ext-subnet
+              cidr: 10.197.101.0/24
+              gateway_ip: 10.197.101.1
+              start: 10.197.101.101
+              end: 10.197.101.200
+    - network:
+        name: internal-net
+        subnets:
+          - subnet:
+              name: internal-subnet
+              cidr: 10.0.1.0/24
+              dns_nameservers: [8.8.8.8]
+  routers:
+    - router:
+        name: ext-net-router
+        external_gateway: ext-net
+        internal_subnets:
+          - internal-subnet
+  keypairs:
+    - keypair:
+        name: ext-net-kp
+        public_filepath: /tmp/ext-net.pub
+        private_filepath: /tmp/ext-net
+  instances:
+    - instance:
+        name: ext-net-app
+        flavor: m1.small
+        imageName: Ubuntu
+        keypair_name: ext-net-kp
+        ports:
+          - port:
+              name: internal-net-port
+              network_name: internal-net
+        floating_ips:
+          - floating_ip:
+              name: fip1
+              port_name: internal-net-port
+              router_name: ext-net-router
+              subnet_name: internal-subnet
+

@@ -1,0 +1,234 @@
+# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+openstack:
+  connection:
+    # Note - when http_proxy is set, you must also configure ssh for proxy tunneling on your host.
+    username: admin
+    password: cable123
+    auth_url: http://10.197.103.50:5000/v2.0/
+    project_name: admin
+    http_proxy: localhost:3128
+  images:
+    - image:
+        name: centos-inst-test
+        format: qcow2
+        image_user: centos
+        download_url: http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
+        nic_config_pb_loc: provisioning/ansible/centos-network-setup/playbooks/configure_host.yml
+    - image:
+        name: Ubuntu-14.04
+        format: qcow2
+        image_user: ubuntu
+        download_url: http://uec-images.ubuntu.com/releases/trusty/14.04/ubuntu-14.04-server-cloudimg-amd64-disk1.img
+        nic_config_pb_loc: provisioning/ansible/ubuntu-network-setup/playbooks/configure_host.yml
+  networks:
+    - network:
+        name: mgr-net
+        subnets:
+          - subnet:
+              name: mgr-subnet
+              cidr: 10.0.1.0/24
+              dns_nameservers: [8.8.8.8]
+          - subnet:
+              name: mgr-subnet-2
+              cidr: 10.0.2.0/24
+              dns_nameservers: [8.8.8.8]
+    - network:
+        name: site1-net
+        subnets:
+          - subnet:
+              name: site1-subnet
+              cidr: 192.168.0.0/24
+              gateway_ip: 192.168.0.1
+          - subnet:
+              name: site1-subnet-2
+              cidr: 192.168.1.0/24
+              gateway_ip: 192.168.1.1
+    - network:
+        name: site2-net
+        subnets:
+          - subnet:
+              name: site2-subnet
+              cidr: 192.169.0.0/24
+              gateway_ip: 192.169.0.1
+  routers:
+  # Note: Routers between internal networks not being used but put in here as an example on how to do that.
+    - router:
+        name: mgr-router
+        external_gateway: external
+        internal_subnets:
+          - mgr-subnet
+          - mgr-subnet-2
+        interfaces:
+          - port:
+              name: mgr-router-to-site1
+              network_name: site1-net
+              ip_addrs:
+                - subnet_name: site1-subnet
+                  ip: 192.168.0.10
+    - router:
+        name: site1-router
+        external_gateway: external
+        internal_subnets:
+          - site1-subnet
+    - router:
+        name: site2-router
+        external_gateway: external
+        internal_subnets:
+          - site2-subnet
+    - router:
+        name: site-to-site-router
+        interfaces:
+          - port:
+              name: site1-router-port
+              network_name: site1-net
+              ip_addrs:
+                - subnet_name: site1-subnet
+                  ip: 192.168.0.100
+          - port:
+              name: site2-router-port
+              network_name: site2-net
+              ip_addrs:
+                - subnet_name: site2-subnet
+                  ip: 192.169.0.100
+  keypairs:
+    - keypair:
+        name: cmplx-net-kp
+        public_filepath: /tmp/cmplx-net-kp.pub
+        private_filepath: /tmp/cmplx-net-kp
+  instances:
+    - instance:
+        name: mgr-app
+        flavor: m1.small
+        imageName: centos-inst-test
+        keypair_name: cmplx-net-kp
+        vm_boot_timeout: 600
+        vm_delete_timeout: 120
+        ssh_connect_timeout: 120
+        ports:
+          - port:
+              name: mgr-app-port
+              network_name: mgr-net
+              ip_addrs:
+                - subnet_name: mgr-subnet
+                  ip: 10.0.1.30
+                - subnet_name: mgr-subnet-2
+                  ip: 10.0.2.30
+        floating_ips:
+# TODO - Why is only one of these floating IPs not working and why does it vary which one?
+#          - floating_ip:
+#              name: fip1
+#              port_name: mgr-app-port
+#              subnet_name: mgr-subnet
+#              router_name: mgr-router
+#              provisioning: False
+          - floating_ip:
+              name: fip2
+              port_name: mgr-app-port
+              subnet_name: mgr-subnet-2
+              router_name: mgr-router
+    - instance:
+        name: site1-ovs
+        flavor: m1.small
+        imageName: centos-inst-test
+        keypair_name: cmplx-net-kp
+        vm_boot_timeout: 600
+        vm_delete_timeout: 120
+        ssh_connect_timeout: 120
+        ports:
+          - port:
+              name: site1-ovs-mgr-port
+              network_name: mgr-net
+          - port:
+              name: site1-ovs-site1-port
+              network_name: site1-net
+        floating_ips:
+          - floating_ip:
+              name: fip1
+              port_name: site1-ovs-mgr-port
+              router_name: mgr-router
+    - instance:
+        name: site2-ovs
+        flavor: m1.small
+        imageName: Ubuntu-14.04
+        keypair_name: cmplx-net-kp
+        vm_boot_timeout: 600
+        vm_delete_timeout: 120
+        ssh_connect_timeout: 120
+        ports:
+          - port:
+              name: site2-ovs-mgr-port
+              network_name: mgr-net
+          - port:
+              name: site2-ovs-site2-port
+              network_name: site2-net
+        floating_ips:
+          - floating_ip:
+              name: fip1
+              port_name: site2-ovs-mgr-port
+              subnet_name: mgr-subnet-2
+              router_name: mgr-router
+    - instance:
+        name: site2-host
+        flavor: m1.small
+        imageName: Ubuntu-14.04
+        keypair_name: cmplx-net-kp
+        vm_boot_timeout: 600
+        vm_delete_timeout: 120
+        ssh_connect_timeout: 120
+        ports:
+          - port:
+              name: site2-host-port
+              network_name: site2-net
+        floating_ips:
+          - floating_ip:
+              name: fip1
+              port_name: site2-host-port
+              subnet_name: site2-subnet
+              router_name: site2-router
+# TODO - Add a playbook here...
+#ansible:
+#    - playbook_location: main.yml
+#      hosts:
+#        - mgr-app
+#        - site1-ovs
+#        - site2-ovs
+#        - site2-host
+#      variables:
+#        mac1:
+#          type: port
+#          vm_name: site1-ovs
+#          port_name: site1-ovs-site1-port
+#          port_value: mac_address
+#        ip1:
+#          type: port
+#          vm_name: site1-ovs
+#          port_name: site1-ovs-mgr-port
+#          port_value: ip_address
+#        mac2:
+#          type: port
+#          vm_name: site2-ovs
+#          port_name: site2-ovs-site2-port
+#          port_value: mac_address
+#        ip2:
+#          type: port
+#          vm_name: site2-ovs
+#          port_name: site2-ovs-mgr-port
+#          port_value: ip_address
+#    - playbook_location: ./main.yml
+#      hosts:
+#        - site1-ovs
+#        - site2-ovs

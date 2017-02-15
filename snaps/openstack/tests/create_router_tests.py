@@ -1,0 +1,264 @@
+# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import uuid
+
+from snaps.openstack import create_network
+from snaps.openstack import create_router
+from snaps.openstack.create_network import NetworkSettings
+from snaps.openstack.create_network import OpenStackNetwork
+from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
+from snaps.openstack.create_router import RouterSettings
+from snaps.openstack.utils import neutron_utils
+
+__author__ = 'mmakati'
+
+cidr1 = '10.200.201.0/24'
+cidr2 = '10.200.202.0/24'
+static_gateway_ip1 = '10.200.201.1'
+static_gateway_ip2 = '10.200.202.1'
+
+
+class CreateRouterSuccessTests(OSIntegrationTestCase):
+    """
+    Class for testing routers with various positive scenarios expected to succeed
+    """
+
+    def setUp(self):
+        """
+        Initializes objects used for router testing
+        """
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.router_creator = None
+        self.network_creator1 = None
+        self.network_creator2 = None
+        self.neutron = neutron_utils.neutron_client(self.os_creds)
+
+    def tearDown(self):
+        """
+        Cleans the remote OpenStack objects used for router testing
+        """
+        if self.router_creator:
+            self.router_creator.clean()
+
+        if self.network_creator1:
+            self.network_creator1.clean()
+
+        if self.network_creator2:
+            self.network_creator2.clean()
+
+        super(self.__class__, self).__clean__()
+
+    def test_create_router_vanilla(self):
+        """
+        Test creation of a most basic router with minimal options.
+        """
+        router_settings = RouterSettings(name=self.guid + '-pub-router', external_gateway=self.ext_net_name)
+
+        self.router_creator = create_router.OpenStackRouter(self.os_creds, router_settings)
+        self.router_creator.create()
+
+        router = neutron_utils.get_router_by_name(self.neutron, router_settings.name)
+        self.assertIsNotNone(router)
+
+        self.assertTrue(verify_router_attributes(router, self.router_creator, ext_gateway=self.ext_net_name))
+
+    def test_create_delete_router(self):
+        """
+        Test that clean() will not raise an exception if the router is deleted by another process.
+        """
+        self.router_settings = RouterSettings(name=self.guid + '-pub-router', external_gateway=self.ext_net_name)
+
+        self.router_creator = create_router.OpenStackRouter(self.os_creds, self.router_settings)
+        created_router = self.router_creator.create()
+        self.assertIsNotNone(created_router)
+        retrieved_router = neutron_utils.get_router_by_name(self.neutron, self.router_settings.name)
+        self.assertIsNotNone(retrieved_router)
+
+        neutron_utils.delete_router(self.neutron, created_router)
+
+        retrieved_router = neutron_utils.get_router_by_name(self.neutron, self.router_settings.name)
+        self.assertIsNone(retrieved_router)
+
+        # Should not raise an exception
+        self.router_creator.clean()
+
+    def test_create_router_admin_state_false(self):
+        """
+        Test creation of a basic router with admin state down.
+        """
+        router_settings = RouterSettings(name=self.guid + '-pub-router', admin_state_up=False)
+
+        self.router_creator = create_router.OpenStackRouter(self.os_creds, router_settings)
+        self.router_creator.create()
+
+        router = neutron_utils.get_router_by_name(self.neutron, router_settings.name)
+        self.assertIsNotNone(router)
+
+        self.assertTrue(verify_router_attributes(router, self.router_creator, admin_state=False))
+
+    def test_create_router_admin_state_True(self):
+        """
+        Test creation of a basic router with admin state Up.
+        """
+        router_settings = RouterSettings(name=self.guid + '-pub-router', admin_state_up=True)
+
+        self.router_creator = create_router.OpenStackRouter(self.os_creds, router_settings)
+        self.router_creator.create()
+
+        router = neutron_utils.get_router_by_name(self.neutron, router_settings.name)
+        self.assertIsNotNone(router)
+
+        self.assertTrue(verify_router_attributes(router, self.router_creator, admin_state=True))
+
+    def test_create_router_private_network(self):
+        """
+        Test creation of a router connected with two private networks and no external gateway
+        """
+        network_settings1 = NetworkSettings(name=self.guid + '-pub-net1',
+                                            subnet_settings=[
+                                                create_network.SubnetSettings(cidr=cidr1,
+                                                                              name=self.guid + '-pub-subnet1',
+                                                                              gateway_ip=static_gateway_ip1)])
+        network_settings2 = NetworkSettings(name=self.guid + '-pub-net2',
+                                            subnet_settings=[
+                                                create_network.SubnetSettings(cidr=cidr2,
+                                                                              name=self.guid + '-pub-subnet2',
+                                                                              gateway_ip=static_gateway_ip2)])
+
+        self.network_creator1 = OpenStackNetwork(self.os_creds, network_settings1)
+        self.network_creator2 = OpenStackNetwork(self.os_creds, network_settings2)
+
+        self.network_creator1.create()
+        self.network_creator2.create()
+
+        port_settings = [create_network.PortSettings(name=self.guid + '-port1', ip_addrs=[
+            {'subnet_name': network_settings1.subnet_settings[0].name, 'ip': static_gateway_ip1}],
+                                                     network_name=network_settings1.name)
+            , create_network.PortSettings(name=self.guid + '-port2', ip_addrs=[
+                {'subnet_name': network_settings2.subnet_settings[0].name, 'ip': static_gateway_ip2}],
+                                          network_name=network_settings2.name)]
+
+        router_settings = RouterSettings(name=self.guid + '-pub-router', port_settings=port_settings)
+        self.router_creator = create_router.OpenStackRouter(self.os_creds, router_settings)
+        self.router_creator.create()
+
+        router = neutron_utils.get_router_by_name(self.neutron, router_settings.name)
+
+        self.assertTrue(verify_router_attributes(router, self.router_creator))
+
+    def test_create_router_external_network(self):
+        """
+        Test creation of a router connected to an external network and a private network.
+        """
+        network_settings = NetworkSettings(name=self.guid + '-pub-net1',
+                                           subnet_settings=[
+                                               create_network.SubnetSettings(cidr=cidr1,
+                                                                             name=self.guid + '-pub-subnet1',
+                                                                             gateway_ip=static_gateway_ip1)])
+        self.network_creator1 = OpenStackNetwork(self.os_creds, network_settings)
+        self.network_creator1.create()
+
+        port_settings = [create_network.PortSettings(name=self.guid + '-port1', ip_addrs=[
+            {'subnet_name': network_settings.subnet_settings[0].name, 'ip': static_gateway_ip1}],
+                                                     network_name=network_settings.name)]
+
+        router_settings = RouterSettings(name=self.guid + '-pub-router',
+                                         external_gateway=self.ext_net_name, port_settings=port_settings)
+        self.router_creator = create_router.OpenStackRouter(self.os_creds, router_settings)
+        self.router_creator.create()
+
+        router = neutron_utils.get_router_by_name(self.neutron, router_settings.name)
+
+        self.assertTrue(verify_router_attributes(router, self.router_creator, ext_gateway=self.ext_net_name))
+
+
+class CreateRouterNegativeTests(OSIntegrationTestCase):
+    """
+    Class for testing routers with various negative scenarios expected to fail.
+    """
+
+    def setUp(self):
+        """
+        Initializes objects used for router testing
+        """
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.router_creator = None
+
+    def tearDown(self):
+        """
+        Cleans the remote OpenStack objects used for router testing
+        """
+        if self.router_creator:
+            self.router_creator.clean()
+
+        super(self.__class__, self).__clean__()
+
+    def test_create_router_noname(self):
+        """
+        Test creating a router without a name.
+        """
+        with self.assertRaises(Exception):
+            router_settings = RouterSettings(name=None, external_gateway=self.ext_net_name)
+            self.router_creator = create_router.OpenStackRouter(self.os_creds, router_settings)
+            self.router_creator.create()
+
+    def test_create_router_invalid_gateway_name(self):
+        """
+        Test creating a router without a valid network gateway name.
+        """
+        with self.assertRaises(Exception):
+            router_settings = RouterSettings(name=self.guid + '-pub-router', external_gateway="Invalid_name")
+            self.router_creator = create_router.OpenStackRouter(self.os_creds, router_settings)
+            self.router_creator.create()
+
+
+def verify_router_attributes(router_operational, router_creator, admin_state=True, ext_gateway=None):
+    """
+    Helper function to validate the attributes of router created with the one operational
+    :param router_operational: Operational Router object returned from neutron utils
+    :param router_creator: router_creator object returned from creating a router in the router test functions
+    :param admin_state: True if router is expected to be Up, else False
+    :param snat: True is enable_snat is True, else False
+    :param ext_gateway: None if router is not connected to external gateway
+    :return:
+    """
+
+    router = router_creator.get_router()
+
+    if not router_operational:
+        return False
+    elif not router_creator:
+        return False
+    elif not (router_operational['router']['name'] == router_creator.router_settings.name):
+        return False
+    elif not (router_operational['router']['id'] == router['router']['id']):
+        return False
+    elif not (router_operational['router']['status'] == router['router']['status']):
+        return False
+    elif not (router_operational['router']['tenant_id'] == router['router']['tenant_id']):
+        return False
+    elif not (admin_state == router_operational['router']['admin_state_up']):
+        return False
+    elif (ext_gateway is None) and (router_operational['router']['external_gateway_info'] is not None):
+        return False
+    elif ext_gateway is not None:
+        if router_operational['router']['external_gateway_info'] is None:
+            return False
+    return True
