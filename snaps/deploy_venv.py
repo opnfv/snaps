@@ -21,15 +21,16 @@ import logging
 import os
 import re
 
-import file_utils
-from snaps.openstack.create_keypairs import KeypairSettings
-from snaps.openstack.create_router import RouterSettings
-from snaps.openstack.os_credentials import OSCreds, ProxySettings
+from snaps import file_utils
+from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
 from snaps.openstack.create_image import ImageSettings
 from snaps.openstack.create_instance import VmInstanceSettings
 from snaps.openstack.create_network import PortSettings, NetworkSettings
-from snaps.provisioning import ansible_utils
+from snaps.openstack.create_router import RouterSettings
+from snaps.openstack.create_keypairs import KeypairSettings
+from snaps.openstack.os_credentials import OSCreds, ProxySettings
 from snaps.openstack.utils import deploy_utils
+from snaps.provisioning import ansible_utils
 
 __author__ = 'spisarski'
 
@@ -69,6 +70,34 @@ def __parse_ports_config(config):
     for port_config in config:
         out.append(PortSettings(config=port_config.get('port')))
     return out
+
+
+def __create_flavors(os_conn_config, flavors_config, cleanup=False):
+    """
+    Returns a dictionary of flavors where the key is the image name and the value is the image object
+    :param os_conn_config: The OpenStack connection credentials
+    :param flavors_config: The list of image configurations
+    :param cleanup: Denotes whether or not this is being called for cleanup or not
+    :return: dictionary
+    """
+    flavors = {}
+
+    if flavors_config:
+        try:
+            for flavor_config_dict in flavors_config:
+                flavor_config = flavor_config_dict.get('flavor')
+                if flavor_config and flavor_config.get('name'):
+                    flavor_creator = OpenStackFlavor(__get_os_credentials(os_conn_config),
+                                                     FlavorSettings(flavor_config))
+                    flavor_creator.create(cleanup=cleanup)
+                    flavors[flavor_config['name']] = flavor_creator
+        except Exception as e:
+            for key, flavor_creator in flavors.iteritems():
+                flavor_creator.clean()
+            raise e
+        logger.info('Created configured flavors')
+
+    return flavors
 
 
 def __create_images(os_conn_config, images_config, cleanup=False):
@@ -447,6 +476,10 @@ def main(arguments):
             try:
                 os_conn_config = os_config.get('connection')
 
+                # Create flavors
+                flavor_dict = __create_flavors(os_conn_config, os_config.get('flavors'),
+                                              arguments.clean is not ARG_NOT_SET)
+
                 # Create images
                 image_dict = __create_images(os_conn_config, os_config.get('images'),
                                              arguments.clean is not ARG_NOT_SET)
@@ -496,7 +529,7 @@ def main(arguments):
     exit(0)
 
 
-def __cleanup(vm_dict, keypairs_dict, router_dict, network_dict, image_dict, clean_image=False):
+def __cleanup(vm_dict, keypairs_dict, router_dict, network_dict, image_dict, flavor_dict, clean_image=False):
     for key, vm_inst in vm_dict.iteritems():
         vm_inst.clean()
     for key, kp_inst in keypairs_dict.iteritems():
@@ -508,6 +541,8 @@ def __cleanup(vm_dict, keypairs_dict, router_dict, network_dict, image_dict, cle
     if clean_image:
         for key, image_inst in image_dict.iteritems():
             image_inst.clean()
+    for key, flavor_inst in flavor_dict.iteritems():
+        flavor_inst.clean()
 
 
 if __name__ == '__main__':
