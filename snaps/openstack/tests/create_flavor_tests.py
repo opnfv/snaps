@@ -10,6 +10,7 @@
 import uuid
 import unittest
 
+from snaps.openstack import create_flavor
 from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import nova_utils
@@ -169,6 +170,7 @@ class FlavorSettingsUnitTests(unittest.TestCase):
         self.assertEquals(0, settings.swap)
         self.assertEquals(1.0, settings.rxtx_factor)
         self.assertEquals(True, settings.is_public)
+        self.assertEquals(create_flavor.DEFAULT_METADATA, settings.metadata)
 
     def test_config_with_name_ram_disk_vcpus_only(self):
         settings = FlavorSettings(config={'name': 'foo', 'ram': 1, 'disk': 2, 'vcpus': 3})
@@ -181,10 +183,12 @@ class FlavorSettingsUnitTests(unittest.TestCase):
         self.assertEquals(0, settings.swap)
         self.assertEquals(1.0, settings.rxtx_factor)
         self.assertEquals(True, settings.is_public)
+        self.assertEquals(create_flavor.DEFAULT_METADATA, settings.metadata)
 
     def test_all(self):
-        settings = FlavorSettings(name='foo', flavor_id='bar', ram=1, disk=2, vcpus=3, ephemeral=4, swap=5, rxtx_factor=6.0,
-                                  is_public=False)
+        metadata = {'foo': 'bar'}
+        settings = FlavorSettings(name='foo', flavor_id='bar', ram=1, disk=2, vcpus=3, ephemeral=4, swap=5,
+                                  rxtx_factor=6.0, is_public=False, metadata=metadata)
         self.assertEquals('foo', settings.name)
         self.assertEquals('bar', settings.flavor_id)
         self.assertEquals(1, settings.ram)
@@ -194,10 +198,13 @@ class FlavorSettingsUnitTests(unittest.TestCase):
         self.assertEquals(5, settings.swap)
         self.assertEquals(6.0, settings.rxtx_factor)
         self.assertEquals(False, settings.is_public)
+        self.assertEquals(metadata, settings.metadata)
 
     def test_config_all(self):
-        settings = FlavorSettings(config={'name': 'foo', 'flavor_id': 'bar', 'ram': 1, 'disk': 2, 'vcpus': 3, 'ephemeral': 4,
-                                          'swap': 5, 'rxtx_factor': 6.0, 'is_public': False})
+        metadata = {'foo': 'bar'}
+        settings = FlavorSettings(config={'name': 'foo', 'flavor_id': 'bar', 'ram': 1, 'disk': 2, 'vcpus': 3,
+                                          'ephemeral': 4, 'swap': 5, 'rxtx_factor': 6.0, 'is_public': False,
+                                          'metadata': metadata})
         self.assertEquals('foo', settings.name)
         self.assertEquals('bar', settings.flavor_id)
         self.assertEquals(1, settings.ram)
@@ -207,6 +214,7 @@ class FlavorSettingsUnitTests(unittest.TestCase):
         self.assertEquals(5, settings.swap)
         self.assertEquals(6.0, settings.rxtx_factor)
         self.assertEquals(False, settings.is_public)
+        self.assertEquals(metadata, settings.metadata)
 
 
 class CreateFlavorTests(OSComponentTestCase):
