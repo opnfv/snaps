@@ -15,25 +15,3 @@
 #project_name: admin
 #identity_api_version: 3
 #ext_net: <external network name>
-
-
-
-#username: admin
-#password: cable123
-#os_auth_url: http://192.168.67.10:5000/v2.0/
-#project_name: admin
-#ext_net: external
-#http_proxy: 10.197.123.27:3128
-#ssh_proxy_cmd: '/usr/local/bin/corkscrew 10.197.123.27 3128 %h %p'
-
-
-
-
-username: admin
-password: admin
-os_auth_url: http://192.168.0.2:5000/v3
-project_name: admin
-identity_api_version: 3
-ext_net: admin_floating_net
-http_proxy: 10.197.123.27:3128
-ssh_proxy_cmd: '/usr/local/bin/corkscrew localhost 3128 %h %p'
