@@ -22,6 +22,8 @@ __author__ = 'spisarski'
 
 logger = logging.getLogger('create_image')
 
+DEFAULT_METADATA = {'hw:mem_page_size': 'any'}
+
 
 class OpenStackFlavor:
     """
@@ -51,6 +53,9 @@ class OpenStackFlavor:
             logger.info('Found flavor with name - ' + self.flavor_settings.name)
         elif not cleanup:
             self.__flavor = nova_utils.create_flavor(self.__nova, self.flavor_settings)
+            if self.flavor_settings.metadata:
+                self.__flavor.set_keys(self.flavor_settings.metadata)
+            self.__flavor = nova_utils.get_flavor_by_name(self.__nova, self.flavor_settings.name)
         else:
             logger.info('Did not create flavor due to cleanup mode')
 
@@ -83,7 +88,7 @@ class FlavorSettings:
     """
 
     def __init__(self, config=None, name=None, flavor_id='auto', ram=None, disk=None, vcpus=None, ephemeral=0, swap=0,
-                 rxtx_factor=1.0, is_public=True):
+                 rxtx_factor=1.0, is_public=True, metadata=DEFAULT_METADATA):
         """
         Constructor
         :param config: dict() object containing the configuration settings using the attribute names below as each
@@ -98,6 +103,7 @@ class FlavorSettings:
         :param rxtx_factor: the receive/transmit factor to be set on ports if backend supports
                             QoS extension (default 1.0)
         :param is_public: denotes whether or not the flavor is public (default True)
+        :param metadata: freeform dict() for special metadata (default hw:mem_page_size=any)
         """
 
         if config:
@@ -131,6 +137,11 @@ class FlavorSettings:
                 self.is_public = config['is_public']
             else:
                 self.is_public = is_public
+
+            if config.get('metadata'):
+                self.metadata = config['metadata']
+            else:
+                self.metadata = metadata
         else:
             self.name = name
             self.flavor_id = flavor_id
@@ -141,6 +152,7 @@ class FlavorSettings:
             self.swap = swap
             self.rxtx_factor = rxtx_factor
             self.is_public = is_public
+            self.metadata = metadata
 
         if not self.name or not self.ram or not self.disk or not self.vcpus:
             raise Exception('The attributes name, ram, disk, and vcpus are required for FlavorSettings')
