@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dabed58f_c563f7af",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-24T14:58:19Z",
+      "side": 1,
+      "message": "I like the wildcard.",
+      "revId": "6d7e4954b6422a9065173985e2fc22b0ddd09c43",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_e56b9b83",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-24T14:58:19Z",
+      "side": 1,
+      "message": "If match_value here, we should probably check to ensure the expected IP address is contained. If yes, True, if no log the actual console line and continue. Your thoughts?",
+      "revId": "6d7e4954b6422a9065173985e2fc22b0ddd09c43",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
