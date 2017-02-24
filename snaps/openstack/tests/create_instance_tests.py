@@ -14,6 +14,7 @@
 # limitations under the License.
 import logging
 import os
+import re
 import time
 import unittest
 import uuid
@@ -313,13 +314,15 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         found = False
         timeout = 100
         start_time = time.time()
-        match_value = 'Lease of ' + ip + ' obtained,'
+        match_value = 'Lease of.*obtained'
 
         while timeout > time.time() - start_time:
             output = vm.get_console_output()
-            if match_value in output:
+            if re.search(match_value, output):
                 found = True
                 break
+            time.sleep(1)
+
         self.assertTrue(found)
 
 
