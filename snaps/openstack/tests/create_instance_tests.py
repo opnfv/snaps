@@ -14,6 +14,7 @@
 # limitations under the License.
 import logging
 import os
+import re
 import time
 import unittest
 import uuid
@@ -311,15 +312,23 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
         found = False
-        timeout = 100
+        timeout = 160
         start_time = time.time()
-        match_value = 'Lease of ' + ip + ' obtained,'
+        match_value = 'Lease of.*obtained'
 
+        logger.info("Looking for expression %s in the console log" % match_value)
         while timeout > time.time() - start_time:
             output = vm.get_console_output()
-            if match_value in output:
-                found = True
+            if re.search(match_value, output):
+                logger.info('DHCP lease obtained logged in console')
+                if ip in output:
+                    logger.info('With correct IP address')
+                    found = True
+                else:
+                    logger.error('With incorrect IP address')
                 break
+            time.sleep(1)
+
         self.assertTrue(found)
 
 
