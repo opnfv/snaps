@@ -61,13 +61,41 @@ def create_image(glance, image_settings):
     :raise Exception if using a file and it cannot be found
     """
     if image_settings.url:
+        if image_settings.kernel is None or image_settings.ramdisk is None:
+            return glance.images.create(name=image_settings.name, disk_format=image_settings.format,
+                                        container_format="bare", location=image_settings.url)
+
+        kernel = glance.images.create(name=image_settings.name + '_kernel',
+                                         disk_format="aki",
+                                         container_format="aki",
+                                         location=image_settings.kernel)
+        ramdisk = glance.images.create(name=image_settings.name + '_ramdisk',
+                                          disk_format="ari",
+                                          container_format="ari",
+                                          location=image_settings.ramdisk)
+        image_settings.extra_properties['kernel_id'] = kernel.__getattr__('id')
+        image_settings.extra_properties['ramdisk_id'] = ramdisk.__getattr__('id')
         return glance.images.create(name=image_settings.name, disk_format=image_settings.format,
-                                    container_format="bare", location=image_settings.url)
+                                    container_format="bare", location=image_settings.url, properties=image_settings.extra_properties)
+
     elif image_settings.image_file:
         image_file = file_utils.get_file(image_settings.image_file)
-        return glance.images.create(name=image_settings.name, disk_format=image_settings.format,
-                                    container_format="bare", data=image_file)
+        if image_settings.kernel is None or image_settings.ramdisk is None:
+            return glance.images.create(name=image_settings.name, disk_format=image_settings.format,
+                                        container_format="bare", data=image_file)
 
+        kernel = glance.images.create(name=image_settings.name + '_kernel',
+                                         disk_format="aki",
+                                         container_format="aki",
+                                         location=image_settings.kernel)
+        ramdisk = glance.images.create(name=image_settings.name + '_ramdisk',
+                                          disk_format="ari",
+                                          container_format="ari",
+                                          location=image_settings.ramdisk)
+        image_settings.extra_properties['kernel_id'] = kernel.__getattr__('id')
+        image_settings.extra_properties['ramdisk_id'] = ramdisk.__getattr__('id')
+        return glance.images.create(name=image_settings.name, disk_format=image_settings.format,
+                                    container_format="bare", data=image_file, properties=image_settings.extra_properties)
 
 def delete_image(glance, image):
     """
