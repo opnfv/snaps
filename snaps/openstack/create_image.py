@@ -150,7 +150,7 @@ class OpenStackImage:
 
 class ImageSettings:
     def __init__(self, config=None, name=None, image_user=None, img_format=None, url=None, image_file=None,
-                 nic_config_pb_loc=None):
+                 extra_properties=None, nic_config_pb_loc=None):
         """
 
         :param config: dict() object containing the configuration settings using the attribute names below as each
@@ -160,6 +160,8 @@ class ImageSettings:
         :param img_format: the image type (required)
         :param url: the image download location (requires url or img_file)
         :param image_file: the image file location (requires url or img_file)
+        :param extra_properties: dict() object containing extra parameters to pass when loading the image;
+                                 can be ids of kernel and initramfs images for a 3-part image
         :param nic_config_pb_loc: the file location to the Ansible Playbook that can configure multiple NICs
         """
 
@@ -169,6 +171,7 @@ class ImageSettings:
             self.format = config.get('format')
             self.url = config.get('download_url')
             self.image_file = config.get('image_file')
+            self.extra_properties = config.get('extra_properties')
             self.nic_config_pb_loc = config.get('nic_config_pb_loc')
         else:
             self.name = name
@@ -176,6 +179,7 @@ class ImageSettings:
             self.format = img_format
             self.url = url
             self.image_file = image_file
+            self.extra_properties = extra_properties
             self.nic_config_pb_loc = nic_config_pb_loc
 
         if not self.name or not self.image_user or not self.format:

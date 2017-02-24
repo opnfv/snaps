@@ -61,10 +61,22 @@ def create_image(glance, image_settings):
     :raise Exception if using a file and it cannot be found
     """
     if image_settings.url:
+        if image_settings.extra_properties:
+            return glance.images.create(name=image_settings.name,
+                                        disk_format=image_settings.format,
+                                        container_format="bare",
+                                        location=image_settings.url,
+                                        properties=image_settings.extra_properties)
         return glance.images.create(name=image_settings.name, disk_format=image_settings.format,
                                     container_format="bare", location=image_settings.url)
     elif image_settings.image_file:
         image_file = file_utils.get_file(image_settings.image_file)
+        if image_settings.extra_properties:
+            return glance.images.create(name=image_settings.name,
+                                        disk_format=image_settings.format,
+                                        container_format="bare",
+                                        data=image_file,
+                                        properties=image_settings.extra_properties)
         return glance.images.create(name=image_settings.name, disk_format=image_settings.format,
                                     container_format="bare", data=image_file)
 

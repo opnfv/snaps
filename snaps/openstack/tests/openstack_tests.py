@@ -92,7 +92,10 @@ def get_credentials(os_env_file=None, proxy_settings_str=None, ssh_proxy_cmd=Non
     return os_creds
 
 
-def cirros_url_image(name):
+def cirros_url_image(name, url=None):
+    if url:
+        return ImageSettings(name=name, image_user='cirros', img_format='qcow2',
+                             url=url)
     return ImageSettings(name=name, image_user='cirros', img_format='qcow2',
                          url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img')
 
@@ -102,13 +105,20 @@ def file_image_test_settings(name, file_path):
                          image_file=file_path)
 
 
-def centos_url_image(name):
+def centos_url_image(name, url=None):
+    if url:
+        return ImageSettings(name=name, image_user='centos', img_format='qcow2', url=url,
+                             nic_config_pb_loc='./provisioning/ansible/centos-network-setup/playbooks/configure_host.yml')
     return ImageSettings(name=name, image_user='centos', img_format='qcow2',
                          url='http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2',
                          nic_config_pb_loc='./provisioning/ansible/centos-network-setup/playbooks/configure_host.yml')
 
 
-def ubuntu_url_image(name):
+def ubuntu_url_image(name, url=None):
+    if url:
+        return ImageSettings(
+            name=name, image_user='ubuntu', img_format='qcow2', url=url,
+            nic_config_pb_loc='./provisioning/ansible/ubuntu-network-setup/playbooks/configure_host.yml')
     return ImageSettings(
         name=name, image_user='ubuntu', img_format='qcow2',
         url='http://uec-images.ubuntu.com/releases/trusty/14.04/ubuntu-14.04-server-cloudimg-amd64-disk1.img',
