@@ -1472,3 +1472,128 @@ def validate_ssh_client(instance_creator):
         return True
 
     return False
+
+
+class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
+    """
+    Test for the CreateInstance class for creating an image from a 3-part image
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateImage object that is responsible for downloading and creating an OS image file
+        within OpenStack
+        """
+        super(self.__class__, self).__start__()
+
+        guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.image_name = guid
+        self.vm_inst_name = guid + '-inst'
+        self.nova = nova_utils.nova_client(self.os_creds)
+
+        net_config = openstack_tests.get_priv_net_config(
+            net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
+            router_name=guid + '-pub-router', external_net=self.ext_net_name)
+
+        # Initialize for tearDown()
+        self.image_creators = list()
+        self.network_creator = None
+        self.flavor_creator = None
+        self.inst_creator = None
+
+        try:
+            # Create Images
+            # Create the kernel image
+            kernel_image_settings = openstack_tests.cirros_url_image(name=self.image_name+'_kernel',
+                url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel')
+            self.image_creators.append(OpenStackImage(self.os_creds, kernel_image_settings))
+            kernel_image = self.image_creators[-1].create()
+
+            # Create the ramdisk image
+            ramdisk_image_settings = openstack_tests.cirros_url_image(name=self.image_name+'_ramdisk',
+                url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs')
+            self.image_creators.append(OpenStackImage(self.os_creds, ramdisk_image_settings))
+            ramdisk_image = self.image_creators[-1].create()
+            self.assertIsNotNone(ramdisk_image)
+
+            # Create the main image
+            os_image_settings = openstack_tests.cirros_url_image(name=self.image_name,
+                url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img')
+            properties = {}
+            properties['kernel_id'] = kernel_image.id
+            properties['ramdisk_id'] = ramdisk_image.id
+            os_image_settings.extra_properties = properties
+            self.image_creators.append(OpenStackImage(self.os_creds, os_image_settings))
+            created_image = self.image_creators[-1].create()
+
+            # Create Flavor
+            self.flavor_creator = OpenStackFlavor(
+                self.admin_os_creds,
+                FlavorSettings(name=guid + '-flavor-name', ram=2048, disk=10, vcpus=2))
+            self.flavor_creator.create()
+
+            # Create Network
+            self.network_creator = OpenStackNetwork(self.os_creds, net_config.network_settings)
+            self.network_creator.create()
+
+            self.port_settings = PortSettings(name=guid + '-port',
+                                              network_name=net_config.network_settings.name)
+        except Exception as e:
+            self.tearDown()
+            raise e
+
+    def tearDown(self):
+        """
+        Cleans the created object
+        """
+        if self.inst_creator:
+            try:
+                self.inst_creator.clean()
+            except Exception as e:
+                logger.error('Unexpected exception cleaning VM instance with message - ' + e.message)
+
+        if self.flavor_creator:
+            try:
+                self.flavor_creator.clean()
+            except Exception as e:
+                logger.error('Unexpected exception cleaning flavor with message - ' + e.message)
+
+        if self.network_creator:
+            try:
+                self.network_creator.clean()
+            except Exception as e:
+                logger.error('Unexpected exception cleaning network with message - ' + e.message)
+
+        if self.image_creators:
+            try:
+                while self.image_creators:
+                    self.image_creators[0].clean()
+                    self.image_creators.pop(0)
+            except Exception as e:
+                logger.error('Unexpected exception cleaning image with message - ' + e.message)
+
+        super(self.__class__, self).__clean__()
+
+    def test_create_delete_instance_from_three_part_image(self):
+        """
+        Tests the creation of an OpenStack instance from a 3-part image.
+        """
+        instance_settings = VmInstanceSettings(name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name,
+                                               port_settings=[self.port_settings])
+
+        # The last created image is the main image from which we create the instance
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+
+        vm_inst = self.inst_creator.create()
+        self.assertEquals(1, len(nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
+
+        # Delete instance
+        nova_utils.delete_vm_instance(self.nova, vm_inst)
+
+        self.assertTrue(self.inst_creator.vm_deleted(block=True))
+        self.assertEquals(0, len(nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
+
+        # Exception should not be thrown
+        self.inst_creator.clean()
+
