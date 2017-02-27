@@ -250,11 +250,14 @@ def __create_instances(os_conn_config, instances_config, image_dict, keypairs_di
     return vm_dict
 
 
-def __apply_ansible_playbooks(ansible_configs, vm_dict, env_file):
+def __apply_ansible_playbooks(ansible_configs, os_conn_config, vm_dict, image_dict, flavor_dict, env_file):
     """
     Applies ansible playbooks to running VMs with floating IPs
     :param ansible_configs: a list of Ansible configurations
-    :param vm_dict: the dictionary of newly instantiated VMs where the VM name is the key
+    :param os_conn_config: the OpenStack connection configuration used to create an OSCreds instance
+    :param vm_dict: the dictionary of newly instantiated VMs where the name is the key
+    :param image_dict: the dictionary of newly instantiated images where the name is the key
+    :param flavor_dict: the dictionary of newly instantiated flavors where the name is the key
     :param env_file: the path of the environment for setting the CWD so playbook location is relative to the deployment
                      file
     :return: t/f - true if successful
@@ -274,7 +277,8 @@ def __apply_ansible_playbooks(ansible_configs, vm_dict, env_file):
 
         # Apply playbooks
         for ansible_config in ansible_configs:
-            __apply_ansible_playbook(ansible_config, vm_dict)
+            os_creds = __get_os_credentials(os_conn_config)
+            __apply_ansible_playbook(ansible_config, os_creds, vm_dict, image_dict, flavor_dict)
 
         # Return to original directory
         os.chdir(orig_cwd)
@@ -282,19 +286,22 @@ def __apply_ansible_playbooks(ansible_configs, vm_dict, env_file):
     return True
 
 
-def __apply_ansible_playbook(ansible_config, vm_dict):
+def __apply_ansible_playbook(ansible_config, os_creds, vm_dict, image_dict, flavor_dict):
     """
     Applies an Ansible configuration setting
     :param ansible_config: the configuration settings
-    :param vm_dict: the dictionary of newly instantiated VMs where the VM name is the key
-    :return:
+    :param os_creds: the OpenStack credentials object
+    :param vm_dict: the dictionary of newly instantiated VMs where the name is the key
+    :param image_dict: the dictionary of newly instantiated images where the name is the key
+    :param flavor_dict: the dictionary of newly instantiated flavors where the name is the key
     """
     if ansible_config:
         remote_user, floating_ips, private_key_filepath, proxy_settings = __get_connection_info(ansible_config, vm_dict)
         if floating_ips:
             ansible_utils.apply_playbook(ansible_config['playbook_location'], floating_ips, remote_user,
                                          private_key_filepath,
-                                         variables=__get_variables(ansible_config.get('variables'), vm_dict),
+                                         variables=__get_variables(ansible_config.get('variables'), os_creds, vm_dict,
+                                                                   image_dict, flavor_dict),
                                          proxy_setting=proxy_settings)
 
 
@@ -336,17 +343,20 @@ def __get_connection_info(ansible_config, vm_dict):
     return None
 
 
-def __get_variables(var_config, vm_dict):
+def __get_variables(var_config, os_creds, vm_dict, image_dict, flavor_dict):
     """
     Returns a dictionary of substitution variables to be used for Ansible templates
     :param var_config: the variable configuration settings
-    :param vm_dict: the dictionary of VMs where the VM name is the key
+    :param os_creds: the OpenStack credentials object
+    :param vm_dict: the dictionary of newly instantiated VMs where the name is the key
+    :param image_dict: the dictionary of newly instantiated images where the name is the key
+    :param flavor_dict: the dictionary of newly instantiated flavors where the name is the key
     :return: dictionary or None
     """
     if var_config and vm_dict and len(vm_dict) > 0:
         variables = dict()
         for key, value in var_config.iteritems():
-            value = __get_variable_value(value, vm_dict)
+            value = __get_variable_value(value, os_creds, vm_dict, image_dict, flavor_dict)
             if key and value:
                 variables[key] = value
                 logger.info("Set Jinga2 variable with key [" + key + "] the value [" + value + ']')
@@ -356,11 +366,14 @@ def __get_variables(var_config, vm_dict):
     return None
 
 
-def __get_variable_value(var_config_values, vm_dict):
+def __get_variable_value(var_config_values, os_creds, vm_dict, image_dict, flavor_dict):
     """
     Returns the associated variable value for use by Ansible for substitution purposes
     :param var_config_values: the configuration dictionary
-    :param vm_dict: the dictionary containing all VMs where the key is the VM's name
+    :param os_creds: the OpenStack credentials object
+    :param vm_dict: the dictionary of newly instantiated VMs where the name is the key
+    :param image_dict: the dictionary of newly instantiated images where the name is the key
+    :param flavor_dict: the dictionary of newly instantiated flavors where the name is the key
     :return:
     """
     if var_config_values['type'] == 'string':
@@ -368,9 +381,13 @@ def __get_variable_value(var_config_values, vm_dict):
     if var_config_values['type'] == 'vm-attr':
         return __get_vm_attr_variable_value(var_config_values, vm_dict)
     if var_config_values['type'] == 'os_creds':
-        return __get_os_creds_variable_value(var_config_values, vm_dict)
+        return __get_os_creds_variable_value(var_config_values, os_creds)
     if var_config_values['type'] == 'port':
         return __get_vm_port_variable_value(var_config_values, vm_dict)
+    if var_config_values['type'] == 'image':
+        return __get_image_variable_value(var_config_values, image_dict)
+    if var_config_values['type'] == 'flavor':
+        return __get_flavor_variable_value(var_config_values, flavor_dict)
     return None
 
 
@@ -394,31 +411,31 @@ def __get_vm_attr_variable_value(var_config_values, vm_dict):
     if vm:
         if var_config_values['value'] == 'floating_ip':
             return vm.get_floating_ip().ip
+        if var_config_values['value'] == 'image_user':
+            return vm.get_image_user()
 
 
-def __get_os_creds_variable_value(var_config_values, vm_dict):
+def __get_os_creds_variable_value(var_config_values, os_creds):
     """
     Returns the associated OS credentials value
     :param var_config_values: the configuration dictionary
-    :param vm_dict: the dictionary containing all VMs where the key is the VM's name
+    :param os_creds: the credentials
     :return: the value
     """
     logger.info("Retrieving OS Credentials")
-    vm = vm_dict.values()[0]
-
-    if vm:
+    if os_creds:
         if var_config_values['value'] == 'username':
             logger.info("Returning OS username")
-            return vm.get_os_creds().username
+            return os_creds.username
         elif var_config_values['value'] == 'password':
             logger.info("Returning OS password")
-            return vm.get_os_creds().password
+            return os_creds.password
         elif var_config_values['value'] == 'auth_url':
             logger.info("Returning OS auth_url")
-            return vm.get_os_creds().auth_url
+            return os_creds.auth_url
         elif var_config_values['value'] == 'project_name':
             logger.info("Returning OS project_name")
-            return vm.get_os_creds().project_name
+            return os_creds.project_name
 
     logger.info("Returning none")
     return None
@@ -443,6 +460,48 @@ def __get_vm_port_variable_value(var_config_values, vm_dict):
                     return vm.get_port_mac(port_name)
                 if port_value_id == 'ip_address':
                     return vm.get_port_ip(port_name)
+
+
+def __get_image_variable_value(var_config_values, image_dict):
+    """
+    Returns the associated image value
+    :param var_config_values: the configuration dictionary
+    :param image_dict: the dictionary containing all images where the key is the name
+    :return: the value
+    """
+    logger.info("Retrieving image values")
+
+    if image_dict:
+        if var_config_values.get('image_name'):
+            image_creator = image_dict.get(var_config_values['image_name'])
+            if image_creator:
+                if var_config_values.get('value') and var_config_values['value'] == 'id':
+                    return image_creator.get_image().id
+                if var_config_values.get('value') and var_config_values['value'] == 'user':
+                    return image_creator.image_settings.image_user
+
+    logger.info("Returning none")
+    return None
+
+
+def __get_flavor_variable_value(var_config_values, flavor_dict):
+    """
+    Returns the associated flavor value
+    :param var_config_values: the configuration dictionary
+    :param flavor_dict: the dictionary containing all flavor creators where the key is the name
+    :return: the value or None
+    """
+    logger.info("Retrieving flavor values")
+
+    if flavor_dict:
+        if var_config_values.get('flavor_name'):
+            flavor_creator = flavor_dict.get(var_config_values['flavor_name'])
+            if flavor_creator:
+                if var_config_values.get('value') and var_config_values['value'] == 'id':
+                    return flavor_creator.get_flavor().id
+
+    logger.info("Returning none")
+    return None
 
 
 def main(arguments):
@@ -523,7 +582,8 @@ def main(arguments):
             # Provision VMs
             ansible_config = config.get('ansible')
             if ansible_config and vm_dict:
-                if not __apply_ansible_playbooks(ansible_config, vm_dict, arguments.environment):
+                if not __apply_ansible_playbooks(ansible_config, os_conn_config, vm_dict, image_dict, flavor_dict,
+                                                 arguments.environment):
                     logger.error("Problem applying ansible playbooks")
     else:
         logger.error('Unable to read configuration file - ' + arguments.environment)
