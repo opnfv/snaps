@@ -52,6 +52,24 @@
       "revId": "38ef07b6d62252b1b503329b37268ec7123a2442",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_abab3188",
+        "filename": "snaps/deploy_venv.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-27T17:27:26Z",
+      "side": 1,
+      "message": "You know, I\u0027m rethinking the pattern here and may no longer raise the exception. Will need to check the impacts first.",
+      "parentUuid": "dabed58f_2bc8a173",
+      "revId": "38ef07b6d62252b1b503329b37268ec7123a2442",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
