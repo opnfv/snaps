@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dabed58f_4b69558a",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-27T15:28:03Z",
+      "side": 1,
+      "message": "Glad you added in extra_properties",
+      "revId": "07bbdc91bfdd9c4181cd08ec98bb7a65780c253d",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_0b0b5dd7",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-27T15:28:03Z",
+      "side": 1,
+      "message": "Each of these can be independent at this point. extra_properties are probably used for things other than 3-part images I would think.",
+      "revId": "07bbdc91bfdd9c4181cd08ec98bb7a65780c253d",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_ab0fb1e0",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-27T15:28:03Z",
+      "side": 1,
+      "message": "Same as above",
+      "revId": "07bbdc91bfdd9c4181cd08ec98bb7a65780c253d",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_cb1465f7",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-27T15:28:03Z",
+      "side": 1,
+      "message": "Here is where you would add in the validation of the kernel and ramdisk. We may also want to consider creating a class for each image content/endpoint type (i.e. URL, File 1-part, File 3-part, etc)",
+      "revId": "07bbdc91bfdd9c4181cd08ec98bb7a65780c253d",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_6bf9b9c7",
+        "filename": "snaps/openstack/utils/glance_utils.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-27T15:28:03Z",
+      "side": 1,
+      "message": "Store the originally configured image_settings.extra_properties to a dictionary object, add in the 3-part props to the new dict() and use that reference for the create(data\u003dnew_dict). You will not want to override the originally configured values in extra_properties.",
+      "revId": "07bbdc91bfdd9c4181cd08ec98bb7a65780c253d",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
