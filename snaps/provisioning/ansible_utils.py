@@ -79,13 +79,7 @@ def apply_playbook(playbook_path, hosts_inv, host_user, ssh_priv_key_file_path, 
         passwords=None)
 
     logger.debug('Executing Ansible Playbook - ' + playbook_path)
-    retval = executor.run()
-
-    if retval != 0:
-        logger.error('Playbook application failed [' + playbook_path + '] with return value of - ' + str(retval))
-        raise Exception('Playbook not applied - ' + playbook_path)
-
-    return retval
+    return executor.run()
 
 
 def ssh_client(ip, user, private_key_filepath, proxy_settings=None):
