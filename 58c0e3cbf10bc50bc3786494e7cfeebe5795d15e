@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "dabed58f_8b93cda2",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 2997
+      },
+      "writtenOn": "2017-02-27T14:30:49Z",
+      "side": 1,
+      "message": "How about `if ramdisk and kernel` to detect a 3-part image?\nIf ramdisk is None or kernel is None, it\u0027s a single part image ?",
+      "range": {
+        "startLine": 153,
+        "startChar": 17,
+        "endLine": 153,
+        "endChar": 22
+      },
+      "revId": "58c0e3cbf10bc50bc3786494e7cfeebe5795d15e",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dabed58f_0b883d70",
         "filename": "snaps/openstack/create_image.py",
         "patchSetId": 1
