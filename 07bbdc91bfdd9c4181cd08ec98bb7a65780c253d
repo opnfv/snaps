@@ -59,6 +59,30 @@
     },
     {
       "key": {
+        "uuid": "dabed58f_ebd36936",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-27T15:43:08Z",
+      "side": 1,
+      "message": "Understand, just saying to simply store the value of self.ramdisk and self.kernel regardless. At this point of rethinking, I\u0027m also thinking that None could be valid values for both self.ramdisk and self.kernel...",
+      "parentUuid": "dabed58f_cb2b052f",
+      "range": {
+        "startLine": 176,
+        "startChar": 15,
+        "endLine": 176,
+        "endChar": 34
+      },
+      "revId": "07bbdc91bfdd9c4181cd08ec98bb7a65780c253d",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dabed58f_ab0fb1e0",
         "filename": "snaps/openstack/create_image.py",
         "patchSetId": 2
@@ -87,6 +111,23 @@
       "writtenOn": "2017-02-27T15:28:03Z",
       "side": 1,
       "message": "Here is where you would add in the validation of the kernel and ramdisk. We may also want to consider creating a class for each image content/endpoint type (i.e. URL, File 1-part, File 3-part, etc)",
+      "revId": "07bbdc91bfdd9c4181cd08ec98bb7a65780c253d",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_0bd91d57",
+        "filename": "snaps/openstack/utils/glance_utils.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-27T15:43:08Z",
+      "side": 1,
+      "message": "Do you always need a ramdisk when a kernel is configured? Just checking...",
       "revId": "07bbdc91bfdd9c4181cd08ec98bb7a65780c253d",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
