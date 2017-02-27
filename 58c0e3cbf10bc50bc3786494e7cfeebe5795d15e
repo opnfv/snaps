@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "dabed58f_cbcf85af",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 459
+      },
+      "writtenOn": "2017-02-27T14:51:12Z",
+      "side": 1,
+      "message": "either way fine for me. if you remove the \u0027parts\u0027 you save one argument, but you need to do more checks later.",
+      "parentUuid": "dabed58f_ebd04955",
+      "range": {
+        "startLine": 153,
+        "startChar": 17,
+        "endLine": 153,
+        "endChar": 22
+      },
+      "revId": "58c0e3cbf10bc50bc3786494e7cfeebe5795d15e",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dabed58f_0b883d70",
         "filename": "snaps/openstack/create_image.py",
         "patchSetId": 1
@@ -78,6 +102,24 @@
       "side": 1,
       "message": "The extra_properties are optional so no need to enforce having them set",
       "parentUuid": "dabed58f_0b883d70",
+      "revId": "58c0e3cbf10bc50bc3786494e7cfeebe5795d15e",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_abca519f",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 459
+      },
+      "writtenOn": "2017-02-27T14:51:12Z",
+      "side": 1,
+      "message": "ok. Then, Alexandru\u0027s comments make sense. What if the user of this puts parts\u003d2 thinking that it only contains 2 images since extra_properties is not provided?",
+      "parentUuid": "dabed58f_4be4f53a",
       "revId": "58c0e3cbf10bc50bc3786494e7cfeebe5795d15e",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
