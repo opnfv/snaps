@@ -123,6 +123,24 @@
       "revId": "58c0e3cbf10bc50bc3786494e7cfeebe5795d15e",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_cb46a523",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 5267
+      },
+      "writtenOn": "2017-02-27T15:01:41Z",
+      "side": 1,
+      "message": "The 3 part image is made of the main image (the same one provided in 1 part), the kernel image and the initramfs image. The extra_properties are for other kind of custom config (we set the os_command_line and the hw_video_model). I will change to Alex\u0027s approach to reduce the confusions.",
+      "parentUuid": "dabed58f_abca519f",
+      "revId": "58c0e3cbf10bc50bc3786494e7cfeebe5795d15e",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
