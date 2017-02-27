@@ -134,6 +134,24 @@
     },
     {
       "key": {
+        "uuid": "dabed58f_6be77913",
+        "filename": "snaps/openstack/utils/glance_utils.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 2997
+      },
+      "writtenOn": "2017-02-27T15:47:52Z",
+      "side": 1,
+      "message": "No, if the kernel has in-built modules for everything, it should work without an initramfs too.",
+      "parentUuid": "dabed58f_0bd91d57",
+      "revId": "07bbdc91bfdd9c4181cd08ec98bb7a65780c253d",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dabed58f_6bf9b9c7",
         "filename": "snaps/openstack/utils/glance_utils.py",
         "patchSetId": 2
