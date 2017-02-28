@@ -269,7 +269,7 @@ def add_security_group(nova, vm, security_group_name):
     :param vm: the OpenStack server object (VM) to alter
     :param security_group_name: the name of the security group to add
     """
-    nova.servers.add_security_group(vm.id, security_group_name)
+    nova.servers.add_security_group(str(vm.id), security_group_name)
 
 
 def remove_security_group(nova, vm, security_group):
@@ -279,4 +279,4 @@ def remove_security_group(nova, vm, security_group):
     :param vm: the OpenStack server object (VM) to alter
     :param security_group: the OpenStack security group object to add
     """
-    nova.servers.remove_security_group(vm.id, security_group)
+    nova.servers.remove_security_group(str(vm.id), security_group['security_group']['name'])
