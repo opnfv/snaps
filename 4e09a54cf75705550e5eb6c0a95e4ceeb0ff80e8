@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dabed58f_b9e70be4",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 2997
+      },
+      "writtenOn": "2017-02-28T15:21:45Z",
+      "side": 1,
+      "message": "This should be bumped throughout the whole project to 0.3.5, later.",
+      "range": {
+        "startLine": 266,
+        "startChar": 50,
+        "endLine": 266,
+        "endChar": 55
+      },
+      "revId": "4e09a54cf75705550e5eb6c0a95e4ceeb0ff80e8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_79d193fa",
+        "filename": "snaps/openstack/tests/openstack_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 2997
+      },
+      "writtenOn": "2017-02-28T15:21:45Z",
+      "side": 1,
+      "message": "The same return expr should work if url\u003dNone too:\nreturn ImageSettings(name\u003dname, image_user\u003d\u0027cirros\u0027, img_format\u003d\u0027qcow2\u0027,\n                         url\u003d\u0027http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img\u0027, url\u003durl)",
+      "range": {
+        "startLine": 96,
+        "startChar": 4,
+        "endLine": 100,
+        "endChar": 99
+      },
+      "revId": "4e09a54cf75705550e5eb6c0a95e4ceeb0ff80e8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
