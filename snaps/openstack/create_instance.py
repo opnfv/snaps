@@ -131,9 +131,10 @@ class OpenStackVmInstance:
                 image=image,
                 nics=nics,
                 key_name=keypair_name,
-                security_groups=list(self.instance_settings.security_group_names),
+                security_groups=self.instance_settings.security_group_names,
                 userdata=self.instance_settings.userdata,
                 availability_zone=self.instance_settings.availability_zone)
+
         else:
             raise Exception('Cannot create instance, image cannot be located with name ' + self.image_settings.name)
 
@@ -141,6 +142,11 @@ class OpenStackVmInstance:
 
         if block:
             self.vm_active(block=True)
+
+        # TODO - the call above should add security groups. The return object shows they exist but the association
+        # had never been made by OpenStack. This call is here to ensure they have been added
+        for sec_grp_name in self.instance_settings.security_group_names:
+            nova_utils.add_security_group(self.__nova, self.__vm, sec_grp_name)
 
         self.__apply_floating_ips()
 
@@ -594,14 +600,14 @@ class OpenStackVmInstance:
         self.vm_active(block=True)
 
         if not security_group:
-            logger.warn('Security group object is None, cannot add')
+            logger.warn('Security group object is None, cannot remove')
             return False
 
         try:
-            nova_utils.remove_security_group(self.__nova, self.get_vm_inst(), security_group['security_group']['name'])
+            nova_utils.remove_security_group(self.__nova, self.get_vm_inst(), security_group)
             return True
         except NotFound as e:
-            logger.warn('Security group not added - ' + e.message)
+            logger.warn('Security group not removed - ' + e.message)
             return False
 
 
@@ -618,7 +624,7 @@ class VmInstanceSettings:
                        member's the key and overrides any of the other parameters.
         :param name: the name of the VM
         :param flavor: the VM's flavor
-        :param port_settings: the port configuration settings
+        :param port_settings: the port configuration settings (required)
         :param security_group_names: a set of names of the security groups to add to the VM
         :param floating_ip_settings: the floating IP configuration settings
         :param sudo_user: the sudo user of the VM that will override the instance_settings.image_user when trying to
@@ -697,6 +703,9 @@ class VmInstanceSettings:
 
         if not self.name or not self.flavor:
             raise Exception('Instance configuration requires the attributes: name, flavor')
+
+        if len(self.port_settings) == 0:
+            raise Exception('Instance configuration requires port settings (aka. NICS)')
 
 
 class FloatingIpSettings:
