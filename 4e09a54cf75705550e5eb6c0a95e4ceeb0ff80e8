@@ -2,6 +2,74 @@
   "comments": [
     {
       "key": {
+        "uuid": "dabed58f_341d6267",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-28T22:02:11Z",
+      "side": 1,
+      "message": "With the suggested changes, you may simply just create a new class called something like CreateMultiPartImageTests(OSIntegrationTestCase) where that one initializes a list of image_creators.",
+      "revId": "4e09a54cf75705550e5eb6c0a95e4ceeb0ff80e8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_d9175f50",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-28T22:02:11Z",
+      "side": 1,
+      "message": "3 part images require 3 image creators as implemented so we should be storing them into a list i.e.:\n\nself.image_creators \u003d list()",
+      "revId": "4e09a54cf75705550e5eb6c0a95e4ceeb0ff80e8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_9909e733",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-28T22:02:11Z",
+      "side": 1,
+      "message": "Although this should have been initialized in setup() but wasn\u0027t, the new reference should be now a list to iterate over for calling clean()",
+      "revId": "4e09a54cf75705550e5eb6c0a95e4ceeb0ff80e8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_f4ffcaff",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-28T22:02:11Z",
+      "side": 1,
+      "message": "append to list self.image_creators.append(create_image.OpenStackImage(...))",
+      "revId": "4e09a54cf75705550e5eb6c0a95e4ceeb0ff80e8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dabed58f_b9e70be4",
         "filename": "snaps/openstack/tests/create_image_tests.py",
         "patchSetId": 3
@@ -19,6 +87,40 @@
         "endLine": 266,
         "endChar": 55
       },
+      "revId": "4e09a54cf75705550e5eb6c0a95e4ceeb0ff80e8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_f9182386",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-28T22:02:11Z",
+      "side": 1,
+      "message": "This is my bad.",
+      "revId": "4e09a54cf75705550e5eb6c0a95e4ceeb0ff80e8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_f426eab9",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-02-28T22:02:11Z",
+      "side": 1,
+      "message": "You shouldn\u0027t call create() multiple times although it is a valid use case; however, what is going on here really shouldn\u0027t do anything. I\u0027m guessing you\u0027re simply copying my bug from the test above.",
       "revId": "4e09a54cf75705550e5eb6c0a95e4ceeb0ff80e8",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
