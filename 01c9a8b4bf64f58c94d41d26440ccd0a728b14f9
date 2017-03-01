@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dabed58f_fa633118",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-03-01T15:05:04Z",
+      "side": 1,
+      "message": "Just an extremely minor nit, python standards says 2 lines before class",
+      "revId": "01c9a8b4bf64f58c94d41d26440ccd0a728b14f9",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_1a6965f9",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-03-01T15:05:04Z",
+      "side": 1,
+      "message": "Minor nit, python standard one line between methods",
+      "revId": "01c9a8b4bf64f58c94d41d26440ccd0a728b14f9",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_ba6db906",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-03-01T15:05:04Z",
+      "side": 1,
+      "message": "Minor nit, python standard one line between methods",
+      "revId": "01c9a8b4bf64f58c94d41d26440ccd0a728b14f9",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_7ab0a18b",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-03-01T15:05:04Z",
+      "side": 1,
+      "message": "self.image does not exist. Test passes w/o this line.",
+      "revId": "01c9a8b4bf64f58c94d41d26440ccd0a728b14f9",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_7a7741d5",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1578,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-03-01T15:05:04Z",
+      "side": 1,
+      "message": "Minor nit, python standard one line between methods",
+      "revId": "01c9a8b4bf64f58c94d41d26440ccd0a728b14f9",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
