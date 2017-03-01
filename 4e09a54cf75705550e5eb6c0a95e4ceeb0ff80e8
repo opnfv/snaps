@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "dabed58f_df3adf35",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 5267
+      },
+      "writtenOn": "2017-03-01T14:29:53Z",
+      "side": 1,
+      "message": "This is a 1-part image with property \u0027hw_video_model\u0027 set. I guess you meant this comment for the next function, no need to have a list of creators here.",
+      "parentUuid": "dabed58f_f4ffcaff",
+      "revId": "4e09a54cf75705550e5eb6c0a95e4ceeb0ff80e8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dabed58f_b9e70be4",
         "filename": "snaps/openstack/tests/create_image_tests.py",
         "patchSetId": 3
