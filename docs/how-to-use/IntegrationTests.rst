@@ -86,6 +86,19 @@ create_image_tests.py - CreateImageNegativeTests
 |                                       |               | being raised when the credentials user is None            |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_image_tests.py - CreateMultiPartImageTests
+-------------------------------------------------
+
++----------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                              | Glance API    | Description                                               |
++========================================+===============+===========================================================+
+| test_create_three_part_image_from_url  | 1             | Ensures that a 3-part image can be created when each part |
+|                                        |               | is being sourced from URLs                                |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_three_part_image_from_file | 1             | Ensures that a 3-part image can be created when each part |
+|                                        |               | is being sourced from local files                         |
++----------------------------------------+---------------+-----------------------------------------------------------+
+
 create_keypairs_tests.py - CreateKeypairsTests
 ----------------------------------------------
 
@@ -242,6 +255,16 @@ create_instance_tests.py - CreateInstanceOnComputeHost
 | test_deploy_vm_to_each_compute_node   | Nova 2        | Tests to ensure that one can fire up an instance on each  |
 |                                       | Neutron 2     | active compute node                                       |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+
+create_instance_tests.py - CreateInstanceFromThreePartImage
+-----------------------------------------------------------
+
++-----------------------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                                           | API Versions  | Description                                               |
++=====================================================+===============+===========================================================+
+| test_create_delete_instance_from_three_part_image   | Nova 2        | Tests to ensure that one can fire up an instance then     |
+|                                                     | Neutron 2     | delete it when using a 3-part image                       |
++-----------------------------------------------------+---------------+-----------------------------------------------------------+
 
 create_instance_tests.py - CreateInstancePubPrivNetTests
 --------------------------------------------------------

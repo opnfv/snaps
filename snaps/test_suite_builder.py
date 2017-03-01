@@ -28,7 +28,7 @@ from snaps.openstack.utils.tests.keystone_utils_tests import KeystoneSmokeTests,
 from snaps.openstack.utils.tests.neutron_utils_tests import NeutronSmokeTests, NeutronUtilsNetworkTests, \
     NeutronUtilsSubnetTests, NeutronUtilsRouterTests, NeutronUtilsSecurityGroupTests
 from snaps.openstack.tests.create_image_tests import CreateImageSuccessTests, CreateImageNegativeTests, \
-    ImageSettingsUnitTests
+    ImageSettingsUnitTests, CreateMultiPartImageTests
 from snaps.openstack.tests.create_keypairs_tests import CreateKeypairsTests, KeypairSettingsUnitTests
 from snaps.openstack.tests.create_network_tests import CreateNetworkSuccessTests, NetworkSettingsUnitTests, \
     PortSettingsUnitTests, SubnetSettingsUnitTests, CreateNetworkTypeTests
@@ -36,7 +36,7 @@ from snaps.openstack.tests.create_router_tests import CreateRouterSuccessTests, 
 from snaps.openstack.tests.create_instance_tests import CreateInstanceSingleNetworkTests, \
     CreateInstancePubPrivNetTests, CreateInstanceOnComputeHost, CreateInstanceSimpleTests, \
     FloatingIpSettingsUnitTests, InstanceSecurityGroupTests, VmInstanceSettingsUnitTests, \
-    CreateInstancePortManipulationTests, SimpleHealthCheck
+    CreateInstancePortManipulationTests, SimpleHealthCheck, CreateInstanceFromThreePartImage
 from snaps.provisioning.tests.ansible_utils_tests import AnsibleProvisioningTests
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase, OSIntegrationTestCase
 from snaps.openstack.utils.tests.nova_utils_tests import NovaSmokeTests, NovaUtilsKeypairTests, NovaUtilsFlavorTests
@@ -162,6 +162,9 @@ def add_openstack_integration_tests(suite, source_filename, ext_net_name, proxy_
     suite.addTest(OSIntegrationTestCase.parameterize(CreateImageNegativeTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
                                                      log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(CreateMultiPartImageTests, source_filename, ext_net_name,
+                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
+                                                     log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(CreateKeypairsTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
                                                      log_level=log_level))
@@ -191,6 +194,8 @@ def add_openstack_integration_tests(suite, source_filename, ext_net_name, proxy_
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
                                                      log_level=log_level))
     suite.addTest(OSComponentTestCase.parameterize(CreateInstanceOnComputeHost, source_filename, ext_net_name,
+                                                   http_proxy_str=proxy_settings, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(CreateInstanceFromThreePartImage, source_filename, ext_net_name,
                                                    http_proxy_str=proxy_settings, log_level=log_level))
 
     if use_floating_ips:
