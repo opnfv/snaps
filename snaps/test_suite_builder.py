@@ -134,8 +134,8 @@ def add_openstack_api_tests(suite, source_filename, ext_net_name, http_proxy_str
 
 
 def add_openstack_integration_tests(suite, source_filename, ext_net_name, proxy_settings=None, ssh_proxy_cmd=None,
-                                    use_keystone=True, flavor_metadata=None, use_floating_ips=True,
-                                    log_level=logging.INFO):
+                                    use_keystone=True, flavor_metadata=None, image_metadata=None,
+                                    use_floating_ips=True, log_level=logging.INFO):
     """
     Adds tests written to exercise all long-running OpenStack integration tests meaning they will be creating VM
     instances and potentially performing some SSH functions through floating IPs
@@ -146,6 +146,9 @@ def add_openstack_integration_tests(suite, source_filename, ext_net_name, proxy_
     :param ssh_proxy_cmd: the command your environment requires for creating ssh connections through a proxy
     :param use_keystone: when True, tests requiring direct access to Keystone are added as these need to be running on
                          a host that has access to the cloud's private network
+    :param image_metadata: dict() object containing metadata for creating an image with custom config:
+                           (i.e. {'hw_video_model' : 'vga'}). It can be used to override the default url and
+                           create 3-part images by passing kerner_url and ramdisk_url info
     :param flavor_metadata: dict() object containing the metadata required by your flavor based on your configuration:
                             (i.e. {'hw:mem_page_size': 'large'})
     :param use_floating_ips: when true, all tests requiring Floating IPs will be added to the suite
@@ -184,7 +187,8 @@ def add_openstack_integration_tests(suite, source_filename, ext_net_name, proxy_
     # VM Instances
     suite.addTest(OSIntegrationTestCase.parameterize(SimpleHealthCheck, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, log_level=log_level))
+                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+                                                     log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(CreateInstanceSimpleTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
                                                      flavor_metadata=flavor_metadata, log_level=log_level))
