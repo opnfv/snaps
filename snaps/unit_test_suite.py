@@ -60,7 +60,8 @@ def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy
     # Long running integration type tests
     test_suite_builder.add_openstack_integration_tests(suite, source_filename, ext_net_name, use_keystone=use_keystone,
                                                        proxy_settings=proxy_settings, ssh_proxy_cmd=ssh_proxy_cmd,
-                                                       use_floating_ips=use_floating_ips, log_level=log_level)
+                                                       use_floating_ips=use_floating_ips,
+                                                       log_level=log_level)
     return suite
 
 
