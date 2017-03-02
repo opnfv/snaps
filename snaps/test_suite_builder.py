@@ -171,8 +171,6 @@ def add_openstack_integration_tests(suite, source_filename, ext_net_name, proxy_
     suite.addTest(OSIntegrationTestCase.parameterize(CreateNetworkSuccessTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
                                                      log_level=log_level))
-    suite.addTest(OSComponentTestCase.parameterize(CreateNetworkTypeTests, source_filename, ext_net_name,
-                                                   http_proxy_str=proxy_settings, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(CreateRouterSuccessTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
                                                      log_level=log_level))
@@ -211,3 +209,17 @@ def add_openstack_integration_tests(suite, source_filename, ext_net_name, proxy_
                                                          ext_net_name, http_proxy_str=proxy_settings,
                                                          ssh_proxy_cmd=ssh_proxy_cmd, use_keystone=use_keystone,
                                                          log_level=log_level))
+
+
+def add_openstack_staging_tests(suite, source_filename, ext_net_name, proxy_settings=None, log_level=logging.INFO):
+    """
+    Adds tests that are still in development have not been designed to run successfully against all OpenStack pods
+    :param suite: the unittest.TestSuite object to which to add the tests
+    :param source_filename: the OpenStack credentials filename
+    :param ext_net_name: the name of an external network on the cloud under test
+    :param proxy_settings: <host>:<port> of the proxy server (optional)
+    :param log_level: the logging level
+    :return: None as the tests will be adding to the 'suite' parameter object
+    """
+    suite.addTest(OSComponentTestCase.parameterize(CreateNetworkTypeTests, source_filename, ext_net_name,
+                                                   http_proxy_str=proxy_settings, log_level=log_level))
