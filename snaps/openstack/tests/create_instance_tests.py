@@ -243,7 +243,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         self.floating_ip_name = guid + 'fip1'
 
         # Initialize for tearDown()
-        self.image_creator = None
+        self.image_creators = list()
         self.network_creator = None
         self.flavor_creator = None
         self.inst_creator = None
@@ -253,12 +253,34 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         self.port_settings = PortSettings(
             name=self.port_1_name, network_name=self.priv_net_config.network_settings.name)
 
+        # set the default image settings, then set any custom parameters sent from the app
         self.os_image_settings = openstack_tests.cirros_url_image(name=guid + '-image')
 
+        if self.image_metadata:
+            if self.image_metadata['disk_url']:
+                self.os_image_settings.url = self.image_metadata['disk_url']
+            if self.image_metadata['extra_properties']:
+                self.os_image_settings.extra_properties = self.image_metadata['extra_properties']
+
         try:
-            # Create Image
-            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
-            self.image_creator.create()
+            # Create Image; if this is a 3-part image create the kernel and ramdisk images first
+            if self.image_metadata:
+                if self.image_metadata['kernel_url']:
+                    kernel_image_settings = openstack_tests.cirros_url_image(
+                        name=self.os_image_settings.name+'_kernel', url=self.image_metadata['kernel_url'])
+                    self.image_creators.append(OpenStackImage(self.os_creds, kernel_image_settings))
+                    kernel_image = self.image_creators[-1].create()
+                    self.os_image_settings.extra_properties['kernel_id'] = kernel_image.id
+
+                if self.image_metadata['ramdisk_url']:
+                    ramdisk_image_settings = openstack_tests.cirros_url_image(
+                        name=self.os_image_settings.name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
+                    self.image_creators.append(OpenStackImage(self.os_creds, ramdisk_image_settings))
+                    ramdisk_image = self.image_creators[-1].create()
+                    self.os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
+
+            self.image_creators.append(OpenStackImage(self.os_creds, self.os_image_settings))
+            self.image_creators[-1].create()
 
             # Create Network
             self.network_creator = OpenStackNetwork(self.os_creds, self.priv_net_config.network_settings)
@@ -293,17 +315,13 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + e.message)
-
-        if self.network_creator:
-            try:
-                self.network_creator.clean()
-            except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + e.message)
 
-        if self.image_creator:
+        if self.image_creators:
             try:
-                self.image_creator.clean()
+                while self.image_creators:
+                    self.image_creators[0].clean()
+                    self.image_creators.pop(0)
             except Exception as e:
                 logger.error('Unexpected exception cleaning image with message - ' + e.message)
 
@@ -317,7 +335,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creator.image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
         vm = self.inst_creator.create()
 
         ip = self.inst_creator.get_port_ip(self.port_settings.name)

@@ -29,7 +29,7 @@ LOG_LEVELS = {'FATAL': logging.FATAL, 'CRITICAL': logging.CRITICAL, 'ERROR': log
 
 
 def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy_cmd, run_unit_tests, use_keystone,
-                        use_floating_ips, log_level):
+                        image_metadata, use_floating_ips, log_level):
     """
     Compiles the tests that should run
     :param source_filename: the OpenStack credentials file (required)
@@ -39,6 +39,7 @@ def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy
     :param ssh_proxy_cmd: the command used to connect via SSH over some proxy server (optional)
     :param use_keystone: when true, tests creating users and projects will be exercised and must be run on a host that
                          has access to the cloud's administrative network
+    :param image_metadata: dict() object containing metadata for creating an image with custom config
     :param use_floating_ips: when true, tests requiring floating IPs will be executed
     :param log_level: the logging level
     :return:
@@ -60,7 +61,8 @@ def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy
     # Long running integration type tests
     test_suite_builder.add_openstack_integration_tests(suite, source_filename, ext_net_name, use_keystone=use_keystone,
                                                        proxy_settings=proxy_settings, ssh_proxy_cmd=ssh_proxy_cmd,
-                                                       use_floating_ips=use_floating_ips, log_level=log_level)
+                                                       image_metadata = image_metadata, use_floating_ips=use_floating_ips,
+                                                       log_level=log_level)
     return suite
 
 
