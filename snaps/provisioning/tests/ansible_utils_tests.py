@@ -85,7 +85,8 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = create_flavor.OpenStackFlavor(
                 self.admin_os_creds,
-                create_flavor.FlavorSettings(name=guid + '-flavor-name', ram=2048, disk=10, vcpus=2))
+                create_flavor.FlavorSettings(name=guid + '-flavor-name', ram=2048, disk=10, vcpus=2,
+                                             metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
             # Create Key/Pair

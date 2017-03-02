@@ -16,6 +16,7 @@
 import logging
 import unittest
 
+from snaps.openstack import create_flavor
 from snaps.openstack.utils.tests.glance_utils_tests import GlanceSmokeTests, GlanceUtilsTests
 from snaps.openstack.tests.create_flavor_tests import CreateFlavorTests
 from snaps.tests.file_utils_tests import FileUtilsTests
@@ -134,7 +135,8 @@ def add_openstack_api_tests(suite, source_filename, ext_net_name, http_proxy_str
 
 
 def add_openstack_integration_tests(suite, source_filename, ext_net_name, proxy_settings=None, ssh_proxy_cmd=None,
-                                    use_keystone=True, use_floating_ips=True, log_level=logging.INFO):
+                                    use_keystone=True, flavor_metadata=create_flavor.DEFAULT_METADATA,
+                                    use_floating_ips=True, log_level=logging.INFO):
     """
     Adds tests written to exercise all long-running OpenStack integration tests meaning they will be creating VM
     instances and potentially performing some SSH functions through floating IPs
@@ -145,6 +147,8 @@ def add_openstack_integration_tests(suite, source_filename, ext_net_name, proxy_
     :param ssh_proxy_cmd: the command your environment requires for creating ssh connections through a proxy
     :param use_keystone: when True, tests requiring direct access to Keystone are added as these need to be running on
                          a host that has access to the cloud's private network
+    :param flavor_metadata: dict() object containing the metadata required by your flavor based on your configuration:
+                            (i.e. {'hw:mem_page_size': 'large'})
     :param use_floating_ips: when true, all tests requiring Floating IPs will be added to the suite
     :param log_level: the logging level
     :return: None as the tests will be adding to the 'suite' parameter object
@@ -155,60 +159,62 @@ def add_openstack_integration_tests(suite, source_filename, ext_net_name, proxy_
     # Creator Object tests
     suite.addTest(OSIntegrationTestCase.parameterize(CreateSecurityGroupTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     log_level=log_level))
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(CreateImageSuccessTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     log_level=log_level))
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(CreateImageNegativeTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     log_level=log_level))
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(CreateMultiPartImageTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     log_level=log_level))
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(CreateKeypairsTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     log_level=log_level))
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(CreateNetworkSuccessTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     log_level=log_level))
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(CreateRouterSuccessTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     log_level=log_level))
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(CreateRouterNegativeTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     log_level=log_level))
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
 
     # VM Instances
     suite.addTest(OSIntegrationTestCase.parameterize(SimpleHealthCheck, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     log_level=log_level))
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(CreateInstanceSimpleTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     log_level=log_level))
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(CreateInstancePortManipulationTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     log_level=log_level))
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(InstanceSecurityGroupTests, source_filename, ext_net_name,
                                                      http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     log_level=log_level))
-    suite.addTest(OSComponentTestCase.parameterize(CreateInstanceOnComputeHost, source_filename, ext_net_name,
-                                                   http_proxy_str=proxy_settings, log_level=log_level))
-    suite.addTest(OSComponentTestCase.parameterize(CreateInstanceFromThreePartImage, source_filename, ext_net_name,
-                                                   http_proxy_str=proxy_settings, log_level=log_level))
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(CreateInstanceOnComputeHost, source_filename, ext_net_name,
+                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(CreateInstanceFromThreePartImage, source_filename, ext_net_name,
+                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
+                                                     flavor_metadata=flavor_metadata, log_level=log_level))
 
     if use_floating_ips:
         suite.addTest(OSIntegrationTestCase.parameterize(CreateInstanceSingleNetworkTests, source_filename,
                                                          ext_net_name, http_proxy_str=proxy_settings,
                                                          ssh_proxy_cmd=ssh_proxy_cmd, use_keystone=use_keystone,
-                                                         log_level=log_level))
+                                                         flavor_metadata=flavor_metadata, log_level=log_level))
         suite.addTest(OSIntegrationTestCase.parameterize(CreateInstancePubPrivNetTests, source_filename,
                                                          ext_net_name, http_proxy_str=proxy_settings,
                                                          ssh_proxy_cmd=ssh_proxy_cmd, use_keystone=use_keystone,
-                                                         log_level=log_level))
+                                                         flavor_metadata=flavor_metadata, log_level=log_level))
         suite.addTest(OSIntegrationTestCase.parameterize(AnsibleProvisioningTests, source_filename,
                                                          ext_net_name, http_proxy_str=proxy_settings,
                                                          ssh_proxy_cmd=ssh_proxy_cmd, use_keystone=use_keystone,
-                                                         log_level=log_level))
+                                                         flavor_metadata=flavor_metadata, log_level=log_level))
 
 
 def add_openstack_staging_tests(suite, source_filename, ext_net_name, proxy_settings=None, log_level=logging.INFO):
