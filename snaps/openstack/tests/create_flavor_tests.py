@@ -10,7 +10,6 @@
 import uuid
 import unittest
 
-from snaps.openstack import create_flavor
 from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import nova_utils
@@ -170,7 +169,7 @@ class FlavorSettingsUnitTests(unittest.TestCase):
         self.assertEquals(0, settings.swap)
         self.assertEquals(1.0, settings.rxtx_factor)
         self.assertEquals(True, settings.is_public)
-        self.assertEquals(create_flavor.DEFAULT_METADATA, settings.metadata)
+        self.assertEquals(None, settings.metadata)
 
     def test_config_with_name_ram_disk_vcpus_only(self):
         settings = FlavorSettings(config={'name': 'foo', 'ram': 1, 'disk': 2, 'vcpus': 3})
@@ -183,7 +182,7 @@ class FlavorSettingsUnitTests(unittest.TestCase):
         self.assertEquals(0, settings.swap)
         self.assertEquals(1.0, settings.rxtx_factor)
         self.assertEquals(True, settings.is_public)
-        self.assertEquals(create_flavor.DEFAULT_METADATA, settings.metadata)
+        self.assertEquals(None, settings.metadata)
 
     def test_all(self):
         metadata = {'foo': 'bar'}

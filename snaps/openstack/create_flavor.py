@@ -22,7 +22,8 @@ __author__ = 'spisarski'
 
 logger = logging.getLogger('create_image')
 
-DEFAULT_METADATA = {'hw:mem_page_size': 'any'}
+MEM_PAGE_SIZE_ANY = {'hw:mem_page_size': 'any'}
+MEM_PAGE_SIZE_LARGE = {'hw:mem_page_size': 'large'}
 
 
 class OpenStackFlavor:
@@ -88,7 +89,7 @@ class FlavorSettings:
     """
 
     def __init__(self, config=None, name=None, flavor_id='auto', ram=None, disk=None, vcpus=None, ephemeral=0, swap=0,
-                 rxtx_factor=1.0, is_public=True, metadata=DEFAULT_METADATA):
+                 rxtx_factor=1.0, is_public=True, metadata=None):
         """
         Constructor
         :param config: dict() object containing the configuration settings using the attribute names below as each

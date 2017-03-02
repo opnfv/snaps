@@ -19,14 +19,15 @@ from snaps import file_utils
 import openstack_tests
 import logging
 
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# To run these tests from an IDE, the CWD must be set to the python directory of this project
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 from snaps.openstack.create_project import ProjectSettings
 from snaps.openstack.create_user import UserSettings
 from snaps.openstack.utils import deploy_utils, keystone_utils
 
 dev_os_env_file = 'openstack/tests/conf/os_env.yaml'
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# To run these tests from an IDE, the CWD must be set to the snaps directory of this project
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 class OSComponentTestCase(unittest.TestCase):
@@ -68,16 +69,17 @@ class OSIntegrationTestCase(OSComponentTestCase):
     Super for test classes requiring a connection to OpenStack
     """
     def __init__(self, method_name='runTest', os_env_file=None, ext_net_name=None, http_proxy_str=None,
-                 ssh_proxy_cmd=None, use_keystone=False, log_level=logging.DEBUG):
+                 ssh_proxy_cmd=None, use_keystone=False, flavor_metadata=None, log_level=logging.DEBUG):
         super(OSIntegrationTestCase, self).__init__(method_name=method_name, os_env_file=os_env_file,
                                                     ext_net_name=ext_net_name, http_proxy_str=http_proxy_str,
                                                     ssh_proxy_cmd=ssh_proxy_cmd, log_level=log_level)
         self.use_keystone = use_keystone
         self.keystone = None
+        self.flavor_metadata = flavor_metadata
 
     @staticmethod
     def parameterize(testcase_klass, os_env_file, ext_net_name, http_proxy_str=None, ssh_proxy_cmd=None,
-                     use_keystone=False, log_level=logging.DEBUG):
+                     use_keystone=False, flavor_metadata=None, log_level=logging.DEBUG):
         """ Create a suite containing all tests taken from the given
             subclass, passing them the parameter 'param'.
         """
@@ -86,7 +88,7 @@ class OSIntegrationTestCase(OSComponentTestCase):
         suite = unittest.TestSuite()
         for name in test_names:
             suite.addTest(testcase_klass(name, os_env_file, ext_net_name, http_proxy_str, ssh_proxy_cmd, use_keystone,
-                                         log_level))
+                                         flavor_metadata, log_level))
         return suite
 
     """
