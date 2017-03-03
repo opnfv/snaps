@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dabed58f_e27943fd",
+        "filename": "snaps/openstack/tests/os_source_file_test.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 5267
+      },
+      "writtenOn": "2017-03-03T11:40:04Z",
+      "side": 1,
+      "message": "How about making this a generic metadata, set by default to None? I can reuse it for image metadata sent from the app, instead of adding a new variable for that.",
+      "range": {
+        "startLine": 72,
+        "startChar": 57,
+        "endLine": 72,
+        "endChar": 72
+      },
+      "revId": "193ec2babcb84dbae1be63ac26b29823fbe6f312",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
