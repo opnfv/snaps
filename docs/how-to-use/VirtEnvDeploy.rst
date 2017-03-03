@@ -1,52 +1,47 @@
-Overview
-========
+Try an example
+==============
 
-The main purpose of this project is to enable one to describe a virtual environment in a YAML file and enable the
-user to deploy it to an OpenStack cloud in a repeatable manner. There are also options to un-deploy that same
-environment by leveraging the original YAML file.
+Use launcher.py to deploy and clean up example environments.  These examples are described in YAML files.
 
-To deploy/clean virtual environments
-====================================
+#. Add your OpenStack connection information to the deploy-complex-network.yaml.
 
--  Clone Repository
+    Edit <path to repo>/examples/complex-network/deploy-complex-network.yaml
 
-   -  git clone https://gerrit.cablelabs.com/snaps-provisioning
+   -  openstack: the top level tag that denotes configuration for the OpenStack components
 
--  Install Library
+   -  connection: - contains the credentials and endpoints required to
+      connect with OpenStack
+   -  username: - the project's user (required)
+   -  password: - the tentant's user password (required)
+   -  auth\_url: - the URL to the OpenStack APIs (required)
+   -  project\_name: - the name of the OpenStack project for the user
+      (required)
+   -  http\_proxy: - the {{ host }}:{{ port }} of the proxy server the
+      HTTPPhotoman01(optional)
 
-   -  pip install -e /
+#. Go to the examples directory.
 
--  Deploy
+    ::
 
-   -  cd
-   -  python snaps/deploy\_venv.py -e -d
-   -  Working example:
+        cd <snaps repo>/examples/
 
-::
+#. Deploy the launcher.
 
-    python deploy_venv.py -e <path to repo>/examples/complex-network/deploy-complex-network.yaml -d
+    ::
 
--  Clean
+        $ python launcher.py -e ./complex-network/deploy-complex-network.yaml -d
 
-   -  python deploy\_venv.py -e -c
-   -  Working example (cleanup of a previously deployed virtual
-      environment where the VM has Yardstick installed):
+#. Clean the deployment.
 
-::
+    ::
 
-    python deploy_venv.py -e <path to repo>/examples/complex-network/deploy-complex-network.yaml -c
+        $ python launcher.py -e ./complex-network/deploy-complex-network.yaml -c
 
-Environment Configuration YAML File
-===================================
+#. Customize the deployment by changing the yaml file.
 
-The configuration file used to deploy and provision a virtual environment has been designed to describe the required
-images, networks, SSH public and private keys, associated VMs, as well as any required post deployment provisioning
-tasks.
-
-\*\*\* Please note that many of the more esoteric optional supported
-attributes still have not been fully tested. ***
-*** Some of the nested bullets are being hidden by GitLabs, please see
-doc/VirtEnvDeploy.md.\*\*\*
+    The configuration file used to deploy and provision a virtual environment has been designed to describe the required
+    images, networks, SSH public and private keys, associated VMs, as well as any required post deployment provisioning
+    tasks.
 
 -  openstack: the top level tag that denotes configuration for the
    OpenStack components
