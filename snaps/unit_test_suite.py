@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
+import json
 import logging
-import unittest
 import os
+import unittest
 
 from snaps import test_suite_builder
 
@@ -28,8 +29,8 @@ LOG_LEVELS = {'FATAL': logging.FATAL, 'CRITICAL': logging.CRITICAL, 'ERROR': log
               'INFO': logging.INFO, 'DEBUG': logging.DEBUG}
 
 
-def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy_cmd, run_unit_tests, use_keystone,
-                        use_floating_ips, log_level):
+def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy_cmd, run_unit_tests, flavor_metadata,
+                        use_keystone, use_floating_ips, log_level):
     """
     Compiles the tests that should run
     :param source_filename: the OpenStack credentials file (required)
@@ -37,6 +38,7 @@ def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy
     :param run_unit_tests: when true, the tests not requiring OpenStack will be added to the test suite
     :param proxy_settings: <host>:<port> of the proxy server (optional)
     :param ssh_proxy_cmd: the command used to connect via SSH over some proxy server (optional)
+    :param flavor_metadata: dict() object containing the metadata for flavors created for test VM instance
     :param use_keystone: when true, tests creating users and projects will be exercised and must be run on a host that
                          has access to the cloud's administrative network
     :param use_floating_ips: when true, tests requiring floating IPs will be executed
@@ -60,6 +62,7 @@ def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy
     # Long running integration type tests
     test_suite_builder.add_openstack_integration_tests(suite, source_filename, ext_net_name, use_keystone=use_keystone,
                                                        proxy_settings=proxy_settings, ssh_proxy_cmd=ssh_proxy_cmd,
+                                                       flavor_metadata=flavor_metadata,
                                                        use_floating_ips=use_floating_ips, log_level=log_level)
     return suite
 
@@ -74,10 +77,16 @@ def main(arguments):
 
     log_level = LOG_LEVELS.get(arguments.log_level, logging.DEBUG)
 
+    flavor_metadata = None
+
+    if arguments.flavor_metadata:
+        flavor_metadata = json.loads(arguments.flavor_metadata)
+
     suite = None
     if arguments.env and arguments.ext_net:
         suite = __create_test_suite(arguments.env, arguments.ext_net, arguments.proxy, arguments.ssh_proxy_cmd,
                                     arguments.include_units != ARG_NOT_SET,
+                                    flavor_metadata,
                                     arguments.use_keystone != ARG_NOT_SET,
                                     arguments.no_floating_ips == ARG_NOT_SET, log_level)
     else:
@@ -126,6 +135,9 @@ if __name__ == '__main__':
                         help='When argument is set, all tests requiring Floating IPs will not be executed')
     parser.add_argument('-u', '--include-units', dest='include_units', default=ARG_NOT_SET, nargs='?',
                         help='When argument is set, all tests not requiring OpenStack will be executed')
+    parser.add_argument('-fm', '--flavor-meta', dest='flavor_metadata', required=False,
+                        default='{\"hw:mem_page_size\": \"any\"}',
+                        help='JSON string to be used as flavor metadata for all test instances created')
     args = parser.parse_args()
 
     main(args)
