@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dabed58f_769f5460",
+        "filename": "snaps/openstack/tests/os_source_file_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 5267
+      },
+      "writtenOn": "2017-03-06T16:21:16Z",
+      "side": 1,
+      "message": "It\u0027s unclear to me if this variable will be used for general purpose metadata or just for flavor. If it\u0027s going to be made for general purpose it should be renamed to metadata.",
+      "range": {
+        "startLine": 72,
+        "startChar": 57,
+        "endLine": 72,
+        "endChar": 73
+      },
+      "revId": "8a6c7a2be06f25f9c8c18a80b1b54c3b3be8b62a",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
