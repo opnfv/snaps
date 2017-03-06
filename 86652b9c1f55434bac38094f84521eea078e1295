@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dabed58f_36b79cda",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-03-06T17:13:00Z",
+      "side": 1,
+      "message": "I appears that no images will be created when self.image_metadata is None which would be a bug.",
+      "revId": "86652b9c1f55434bac38094f84521eea078e1295",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_d6ce405a",
+        "filename": "snaps/test_suite_builder.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-03-06T17:13:00Z",
+      "side": 1,
+      "message": "This description is not really accurate especially as none of this data will actually be sent to Neutron. As you are only using information for tests requiring multi-part forms, you should probably explain that more comprehensively. As we add in more functionality around instance custom metadata, this will be even more important give the end-users a better understanding of this type of field.",
+      "revId": "86652b9c1f55434bac38094f84521eea078e1295",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
