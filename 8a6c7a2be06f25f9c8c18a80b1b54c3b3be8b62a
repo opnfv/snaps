@@ -22,6 +22,30 @@
       "revId": "8a6c7a2be06f25f9c8c18a80b1b54c3b3be8b62a",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_d6796030",
+        "filename": "snaps/openstack/tests/os_source_file_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-03-06T16:30:41Z",
+      "side": 1,
+      "message": "This is just for flavors. We should probably enhance for more generic usage especially as you are adding new metadata for images now, but that really should be designed properly. I\u0027ve created https://jira.opnfv.org/browse/SNAPS-42 so we can tackle later.",
+      "parentUuid": "dabed58f_769f5460",
+      "range": {
+        "startLine": 72,
+        "startChar": 57,
+        "endLine": 72,
+        "endChar": 73
+      },
+      "revId": "8a6c7a2be06f25f9c8c18a80b1b54c3b3be8b62a",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
