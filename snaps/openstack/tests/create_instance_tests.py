@@ -624,7 +624,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.assertTrue(inst_creator.vm_active(block=True))
         self.assertEquals(vm_inst, inst_creator.get_vm_inst())
 
-        validate_ssh_client(inst_creator)
+        self.assertTrue(validate_ssh_client(inst_creator))
 
     def test_ssh_client_fip_after_active(self):
         """
@@ -651,7 +651,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.assertTrue(inst_creator.vm_active(block=True))
         self.assertEquals(vm_inst, inst_creator.get_vm_inst())
 
-        validate_ssh_client(inst_creator)
+        self.assertTrue(validate_ssh_client(inst_creator))
 
     # TODO - Determine how allowed_address_pairs is supposed to operate before continuing this test
     # see http://docs.openstack.org/developer/dragonflow/specs/allowed_address_pairs.html for a functional description
