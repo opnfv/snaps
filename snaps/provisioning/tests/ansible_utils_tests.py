@@ -62,13 +62,35 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         self.flavor_creator = None
         self.router_creator = None
         self.network_creator = None
-        self.image_creator = None
+        self.image_creators = list()
 
         try:
             # Create Image
             os_image_settings = openstack_tests.ubuntu_url_image(name=guid + '-' + '-image')
-            self.image_creator = create_image.OpenStackImage(self.os_creds, os_image_settings)
-            self.image_creator.create()
+            if self.image_metadata:
+                if self.image_metadata['disk_url']:
+                    self.os_image_settings.url = self.image_metadata['disk_url']
+                if self.image_metadata['extra_properties']:
+                    self.os_image_settings.extra_properties = self.image_metadata['extra_properties']
+
+            # If this is a 3-part image create the kernel and ramdisk images first
+            if self.image_metadata:
+                if self.image_metadata['kernel_url']:
+                    kernel_image_settings = openstack_tests.cirros_url_image(
+                        name=self.os_image_settings.name+'_kernel', url=self.image_metadata['kernel_url'])
+                    self.image_creators.append(OpenStackImage(self.os_creds, kernel_image_settings))
+                    kernel_image = self.image_creators[-1].create()
+                    self.os_image_settings.extra_properties['kernel_id'] = kernel_image.id
+
+                if self.image_metadata['ramdisk_url']:
+                    ramdisk_image_settings = openstack_tests.cirros_url_image(
+                        name=self.os_image_settings.name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
+                    self.image_creators.append(OpenStackImage(self.os_creds, ramdisk_image_settings))
+                    ramdisk_image = self.image_creators[-1].create()
+                    self.os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
+
+            self.image_creators.append(OpenStackImage(self.os_creds, self.os_image_settings))
+            self.image_creators[-1].create()
 
             # First network is public
             self.pub_net_config = openstack_tests.get_pub_net_config(
@@ -109,7 +131,7 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
                     router_name=self.pub_net_config.router_settings.name)])
 
             self.inst_creator = create_instance.OpenStackVmInstance(
-                self.os_creds, instance_settings, self.image_creator.image_settings,
+                self.os_creds, instance_settings, self.image_creators[-1].image_settings,
                 keypair_settings=self.keypair_creator.keypair_settings)
         except Exception as e:
             self.tearDown()
@@ -140,8 +162,10 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         if self.network_creator:
             self.network_creator.clean()
 
-        if self.image_creator:
-            self.image_creator.clean()
+        if self.image_creators:
+            while self.image_creators:
+                self.image_creators[-1].clean()
+                self.image_creators.pop()
 
         if os.path.isfile(self.test_file_local_path):
             os.remove(self.test_file_local_path)

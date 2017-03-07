@@ -197,6 +197,7 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
 
         self.nova = nova_utils.nova_client(self.os_creds)
         self.glance = glance_utils.glance_client(self.os_creds)
+        self.image_creators = list()
 
         self.tmp_dir = 'tmp/' + str(guid)
         if not os.path.exists(self.tmp_dir):
@@ -206,8 +207,10 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         """
         Cleans the image and downloaded image file
         """
-        if self.image_creator:
-            self.image_creator.clean()
+        if self.image_creators:
+            while self.image_creators:
+                self.image_creators[-1].clean()
+                self.image_creators.pop()
 
         if os.path.exists(self.tmp_dir) and os.path.isdir(self.tmp_dir):
             shutil.rmtree(self.tmp_dir)
@@ -219,10 +222,32 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack image from a URL.
         """
         # Create Image
+        # Set the default image settings, then set any custom parameters sent from the app
         os_image_settings = openstack_tests.cirros_url_image(name=self.image_name)
-        self.image_creator = create_image.OpenStackImage(self.os_creds, os_image_settings)
+        if self.image_metadata:
+            if self.image_metadata['disk_url']:
+                os_image_settings.url = self.image_metadata['disk_url']
+            if self.image_metadata['extra_properties']:
+                os_image_settings.extra_properties = self.image_metadata['extra_properties']
 
-        created_image = self.image_creator.create()
+        # If this is a 3-part image create the kernel and ramdisk images first
+        if self.image_metadata:
+            if self.image_metadata['kernel_url']:
+                kernel_image_settings = openstack_tests.cirros_url_image(
+                    name=self.image_name+'_kernel', url=self.image_metadata['kernel_url'])
+                self.image_creators.append(create_image.OpenStackImage(self.os_creds, kernel_image_settings))
+                kernel_image = self.image_creators[-1].create()
+                os_image_settings.extra_properties['kernel_id'] = kernel_image.id
+
+            if self.image_metadata['ramdisk_url']:
+                ramdisk_image_settings = openstack_tests.cirros_url_image(
+                    name=self.image_name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
+                self.image_creators.append(create_image.OpenStackImage(self.os_creds, ramdisk_image_settings))
+                ramdisk_image = self.image_creators[-1].create()
+                os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
+
+        self.image_creators.append(create_image.OpenStackImage(self.os_creds, os_image_settings))
+        created_image = self.image_creators[-1].create()
         self.assertIsNotNone(created_image)
 
         retrieved_image = glance_utils.get_image(self.nova, self.glance, os_image_settings.name)
@@ -235,16 +260,37 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         """
         Tests the creation of an OpenStack image from a URL and set properties.
         """
-        # Set properties
-        properties = {}
-        properties['hw_video_model'] = 'vga'
-
         # Create Image
+        # Set the default image settings, then set any custom parameters sent from the app
         os_image_settings = openstack_tests.cirros_url_image(name=self.image_name)
-        os_image_settings.extra_properties = properties
-        self.image_creator = create_image.OpenStackImage(self.os_creds, os_image_settings)
+        # Set properties
+        os_image_settings.extra_properties = {'hw_video_model' :  'vga'}
+ 
+        if self.image_metadata:
+            if self.image_metadata['disk_url']:
+                os_image_settings.url = self.image_metadata['disk_url']
+            if self.image_metadata['extra_properties']:
+                os_image_settings.extra_properties = dict(os_image_settings.extra_properties.items()
+                    + self.image_metadata['extra_properties'].items())
 
-        created_image = self.image_creator.create()
+        # If this is a 3-part image create the kernel and ramdisk images first
+        if self.image_metadata:
+            if self.image_metadata['kernel_url']:
+                kernel_image_settings = openstack_tests.cirros_url_image(
+                    name=self.image_name+'_kernel', url=self.image_metadata['kernel_url'])
+                self.image_creators.append(create_image.OpenStackImage(self.os_creds, kernel_image_settings))
+                kernel_image = self.image_creators[-1].create()
+                os_image_settings.extra_properties['kernel_id'] = kernel_image.id
+
+            if self.image_metadata['ramdisk_url']:
+                ramdisk_image_settings = openstack_tests.cirros_url_image(
+                    name=self.image_name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
+                self.image_creators.append(create_image.OpenStackImage(self.os_creds, ramdisk_image_settings))
+                ramdisk_image = self.image_creators[-1].create()
+                os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
+
+        self.image_creators.append(create_image.OpenStackImage(self.os_creds, os_image_settings))
+        created_image = self.image_creators[-1].create()
         self.assertIsNotNone(created_image)
 
         retrieved_image = glance_utils.get_image(self.nova, self.glance, os_image_settings.name)
@@ -258,17 +304,45 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         """
         Tests the creation of an OpenStack image from a file.
         """
+
+        # Create Image
+        # Set the default image settings, then set any custom parameters sent from the app
         url_image_settings = openstack_tests.cirros_url_image('foo')
+        if self.image_metadata:
+            if self.image_metadata['disk_url']:
+                url_image_settings.url = self.image_metadata['disk_url']
+
+        # Download the file of the image
         image_file = file_utils.download(url_image_settings.url, self.tmp_dir)
         file_image_settings = openstack_tests.file_image_test_settings(name=self.image_name, file_path=image_file.name)
-        self.image_creator = create_image.OpenStackImage(self.os_creds, file_image_settings)
 
-        self.image = self.image_creator.create()
-        self.assertIsNotNone(self.image)
-        self.assertEqual(self.image_name, self.image.name)
+        # Set extra properties sent from the app (if any)
+        if self.image_metadata:
+            if self.image_metadata['extra_properties']:
+                file_image_settings.extra_properties = self.image_metadata['extra_properties']
 
-        created_image = self.image_creator.create()
+        # If this is a 3-part image create the kernel and ramdisk images first
+        if self.image_metadata:
+            if self.image_metadata['kernel_url']:
+                kernel_image_file = file_utils.download(self.image_metadata['kernel_url'], self.tmp_dir)
+                kernel_image_settings = openstack_tests.file_image_test_settings(
+                    name=self.image_name+'_kernel', file_path=kernel_image_file.name)
+                self.image_creators.append(create_image.OpenStackImage(self.os_creds, kernel_image_settings))
+                kernel_image = self.image_creators[-1].create()
+                file_image_settings.extra_properties['kernel_id'] = kernel_image.id
+
+            if self.image_metadata['ramdisk_url']:
+                ramdisk_image_file = file_utils.download(self.image_metadata['ramdisk_url'], self.tmp_dir)
+                ramdisk_image_settings = openstack_tests.file_image_test_settings(
+                    name=self.image_name+'_ramdisk', file_path=ramdisk_image_file.name)
+                self.image_creators.append(create_image.OpenStackImage(self.os_creds, ramdisk_image_settings))
+                ramdisk_image = self.image_creators[-1].create()
+                file_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
+
+        self.image_creators.append(create_image.OpenStackImage(self.os_creds, file_image_settings))
+        created_image = self.image_creators[-1].create()
         self.assertIsNotNone(created_image)
+        self.assertEqual(self.image_name, created_image.name)
 
         retrieved_image = glance_utils.get_image(self.nova, self.glance, file_image_settings.name)
         self.assertIsNotNone(retrieved_image)
@@ -281,28 +355,76 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         Tests the creation then deletion of an OpenStack image to ensure clean() does not raise an Exception.
         """
         # Create Image
+        # Set the default image settings, then set any custom parameters sent from the app
         os_image_settings = openstack_tests.cirros_url_image(name=self.image_name)
-        self.image_creator = create_image.OpenStackImage(self.os_creds, os_image_settings)
-        created_image = self.image_creator.create()
+        if self.image_metadata:
+            if self.image_metadata['disk_url']:
+                os_image_settings.url = self.image_metadata['disk_url']
+            if self.image_metadata['extra_properties']:
+                os_image_settings.extra_properties = self.image_metadata['extra_properties']
+
+        # If this is a 3-part image create the kernel and ramdisk images first
+        if self.image_metadata:
+            if self.image_metadata['kernel_url']:
+                kernel_image_settings = openstack_tests.cirros_url_image(
+                    name=self.image_name+'_kernel', url=self.image_metadata['kernel_url'])
+                self.image_creators.append(create_image.OpenStackImage(self.os_creds, kernel_image_settings))
+                kernel_image = self.image_creators[-1].create()
+                os_image_settings.extra_properties['kernel_id'] = kernel_image.id
+
+            if self.image_metadata['ramdisk_url']:
+                ramdisk_image_settings = openstack_tests.cirros_url_image(
+                    name=self.image_name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
+                self.image_creators.append(create_image.OpenStackImage(self.os_creds, ramdisk_image_settings))
+                ramdisk_image = self.image_creators[-1].create()
+                os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
+
+        self.image_creators.append(create_image.OpenStackImage(self.os_creds, os_image_settings))
+        created_image = self.image_creators[-1].create()
         self.assertIsNotNone(created_image)
 
         # Delete Image manually
         glance_utils.delete_image(self.glance, created_image)
 
-        self.assertIsNone(glance_utils.get_image(self.nova, self.glance, self.image_creator.image_settings.name))
+        self.assertIsNone(glance_utils.get_image(self.nova, self.glance, self.image_creators[-1].image_settings.name))
 
         # Must not throw an exception when attempting to cleanup non-existent image
-        self.image_creator.clean()
-        self.assertIsNone(self.image_creator.get_image())
+        self.image_creators[-1].clean()
+        self.assertIsNone(self.image_creators[-1].get_image())
+        self.image_creators.pop()
 
     def test_create_same_image(self):
         """
         Tests the creation of an OpenStack image when the image already exists.
         """
         # Create Image
+        # Set the default image settings, then set any custom parameters sent from the app
         os_image_settings = openstack_tests.cirros_url_image(name=self.image_name)
-        self.image_creator = create_image.OpenStackImage(self.os_creds, os_image_settings)
-        image1 = self.image_creator.create()
+        if self.image_metadata:
+            if self.image_metadata['disk_url']:
+                os_image_settings.url = self.image_metadata['disk_url']
+            if self.image_metadata['extra_properties']:
+                os_image_settings.extra_properties = self.image_metadata['extra_properties']
+
+        # If this is a 3-part image create the kernel and ramdisk images first
+        if self.image_metadata:
+            if self.image_metadata['kernel_url']:
+                kernel_image_settings = openstack_tests.cirros_url_image(
+                    name=self.image_name+'_kernel', url=self.image_metadata['kernel_url'])
+                self.image_creators.append(create_image.OpenStackImage(self.os_creds, kernel_image_settings))
+                kernel_image = self.image_creators[-1].create()
+                os_image_settings.extra_properties['kernel_id'] = kernel_image.id
+
+            if self.image_metadata['ramdisk_url']:
+                ramdisk_image_settings = openstack_tests.cirros_url_image(
+                    name=self.image_name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
+                self.image_creators.append(create_image.OpenStackImage(self.os_creds, ramdisk_image_settings))
+                ramdisk_image = self.image_creators[-1].create()
+                os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
+
+        self.image_creators.append(create_image.OpenStackImage(self.os_creds, os_image_settings))
+        image1 = self.image_creators[-1].create()
+
         # Should be retrieving the instance data
         os_image_2 = create_image.OpenStackImage(self.os_creds, os_image_settings)
         image2 = os_image_2.create()
@@ -437,8 +559,8 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         Cleans the images and downloaded image file
         """
         while self.image_creators:
-            self.image_creators[0].clean()
-            self.image_creators.pop(0)
+            self.image_creators[-1].clean()
+            self.image_creators.pop()
 
         if os.path.exists(self.tmp_dir) and os.path.isdir(self.tmp_dir):
             shutil.rmtree(self.tmp_dir)
@@ -451,10 +573,14 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         """
         # Set properties
         properties = {}
+        if self.image_metadata and  self.image_metadata['extra_properties']:
+            properties = self.image_metadata['extra_properties']
 
         # Create the kernel image
         kernel_image_settings = openstack_tests.cirros_url_image(name=self.image_name+'_kernel',
             url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel')
+        if self.image_metadata and self.image_metadata['kernel_url']:
+            kernel_image_settings.url = self.image_metadata['kernel_url']
         self.image_creators.append(create_image.OpenStackImage(self.os_creds, kernel_image_settings))
         kernel_image = self.image_creators[-1].create()
         self.assertIsNotNone(kernel_image)
@@ -462,6 +588,8 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         # Create the ramdisk image
         ramdisk_image_settings = openstack_tests.cirros_url_image(name=self.image_name+'_ramdisk',
             url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs')
+        if self.image_metadata and self.image_metadata['ramdisk_url']:
+            ramdisk_image_settings.url = self.image_metadata['ramdisk_url']
         self.image_creators.append(create_image.OpenStackImage(self.os_creds, ramdisk_image_settings))
         ramdisk_image = self.image_creators[-1].create()
         self.assertIsNotNone(ramdisk_image)
@@ -469,9 +597,13 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         # Create the main image
         os_image_settings = openstack_tests.cirros_url_image(name=self.image_name,
             url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img')
+        if self.image_metadata and self.image_metadata['disk_url']:
+            os_image_settings.url = self.image_metadata['disk_url']
+
         properties['kernel_id'] = kernel_image.id
         properties['ramdisk_id'] = ramdisk_image.id
         os_image_settings.extra_properties = properties
+
         self.image_creators.append(create_image.OpenStackImage(self.os_creds, os_image_settings))
         created_image = self.image_creators[-1].create()
         self.assertIsNotNone(created_image)
@@ -490,11 +622,13 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         """
         # Set properties
         properties = {}
-
+        if self.image_metadata and  self.image_metadata['extra_properties']:
+            properties = self.image_metadata['extra_properties']
         # Create the kernel image
-        url_image_settings = openstack_tests.cirros_url_image('foo_kernel',
-            url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel')
-        kernel_image_file = file_utils.download(url_image_settings.url, self.tmp_dir)
+        kernel_url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel'
+        if self.image_metadata and self.image_metadata['kernel_url']:
+            kernel_url = self.image_metadata['kernel_url']
+        kernel_image_file = file_utils.download(kernel_url, self.tmp_dir)
         kernel_file_image_settings = openstack_tests.file_image_test_settings(
             name=self.image_name+'_kernel', file_path=kernel_image_file.name)
         self.image_creators.append(create_image.OpenStackImage(self.os_creds, kernel_file_image_settings))
@@ -502,9 +636,10 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         self.assertIsNotNone(kernel_image)
 
         # Create the ramdisk image
-        url_image_settings = openstack_tests.cirros_url_image('foo_ramdisk',
-            url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs')
-        ramdisk_image_file = file_utils.download(url_image_settings.url, self.tmp_dir)
+        ramdisk_url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs'
+        if self.image_metadata and self.image_metadata['ramdisk_url']:
+            ramdisk_url = self.image_metadata['ramdisk_url']
+        ramdisk_image_file = file_utils.download(ramdisk_url, self.tmp_dir)
         ramdisk_file_image_settings = openstack_tests.file_image_test_settings(
             name=self.image_name+'_ramdisk', file_path=ramdisk_image_file.name)
         self.image_creators.append(create_image.OpenStackImage(self.os_creds, ramdisk_file_image_settings))
@@ -512,9 +647,10 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         self.assertIsNotNone(ramdisk_image)
 
         # Create the main image
-        url_image_settings = openstack_tests.cirros_url_image('foo',
-            url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img')
-        image_file = file_utils.download(url_image_settings.url, self.tmp_dir)
+        image_url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'
+        if self.image_metadata and self.image_metadata['disk_url']:
+            umage_url = self.image_metadata['disk_url']
+        image_file = file_utils.download(image_url, self.tmp_dir)
         file_image_settings = openstack_tests.file_image_test_settings(name=self.image_name, file_path=image_file.name)
         properties['kernel_id'] = kernel_image.id
         properties['ramdisk_id'] = ramdisk_image.id
