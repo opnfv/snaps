@@ -1,0 +1,8 @@
+Verified+1: jenkins-ci <jenkins-opnfv-ci@opnfv.org>
+Code-Review+1: Morgan Richomme <morgan.richomme@orange.com>
+Code-Review+2: Steven Pisarski <s.pisarski@cablelabs.com>
+Submitted-by: Steven Pisarski <s.pisarski@cablelabs.com>
+Submitted-at: Wed, 08 Mar 2017 14:57:38 +0000
+Reviewed-on: https://gerrit.opnfv.org/gerrit/29989
+Project: snaps
+Branch: refs/heads/master
