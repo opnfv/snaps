@@ -290,7 +290,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=1024, disk=10, vcpus=1, metadata=self.flavor_metadata))
+                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10, vcpus=1, metadata=self.flavor_metadata))
             self.flavor_creator.create()
         except Exception as e:
             self.tearDown()
