@@ -336,7 +336,8 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creators[-1].image_settings)
         vm = self.inst_creator.create()
 
         ip = self.inst_creator.get_port_ip(self.port_settings.name)
@@ -350,8 +351,10 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         match_value = 'Lease of.*obtained'
 
         logger.info("Looking for expression %s in the console log" % match_value)
+        full_log = ''
         while timeout > time.time() - start_time:
             output = vm.get_console_output()
+            full_log = full_log + output
             if re.search(match_value, output):
                 logger.info('DHCP lease obtained logged in console')
                 if ip in output:
@@ -360,6 +363,11 @@ class SimpleHealthCheck(OSIntegrationTestCase):
                 else:
                     logger.error('With incorrect IP address')
                 break
+
+        if not found:
+            logger.error('Full console output -\n' + full_log)
+        else:
+            logger.debug('Full console output -\n' + full_log)
 
         self.assertTrue(found)
 
@@ -784,8 +792,8 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
     #     inst_creator_3.create(block=True)
     #
     #     print 'foo'
-    # I expected that this feature would block/allow traffic from specific endpoints (VMs). In this case, I would expect
-    # inst_1 to be able to access inst_2 but not inst_3; however, they all can access each other.
+    # I expected that this feature would block/allow traffic from specific endpoints (VMs). In this case, I would
+    # expect inst_1 to be able to access inst_2 but not inst_3; however, they all can access each other.
     # TODO - Add validation
 
 
@@ -903,7 +911,8 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creators[-1].image_settings)
         self.inst_creator.create()
 
         self.assertEquals(ip, self.inst_creator.get_port_ip(
@@ -921,7 +930,8 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creators[-1].image_settings)
 
         with self.assertRaises(Exception):
             self.inst_creator.create()
@@ -937,7 +947,8 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creators[-1].image_settings)
         self.inst_creator.create()
 
         self.assertEquals(mac_addr, self.inst_creator.get_port_mac(self.port_1_name))
@@ -972,7 +983,8 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creators[-1].image_settings)
         self.inst_creator.create()
 
         self.assertEquals(ip, self.inst_creator.get_port_ip(
@@ -992,7 +1004,8 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creators[-1].image_settings)
         self.inst_creator.create()
 
         port = self.inst_creator.get_port_by_name(port_settings.name)
@@ -1017,7 +1030,8 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creators[-1].image_settings)
         with self.assertRaises(Exception):
             self.inst_creator.create()
 
@@ -1037,7 +1051,8 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creators[-1].image_settings)
         with self.assertRaises(Exception):
             self.inst_creator.create()
 
@@ -1496,7 +1511,8 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         # Create instance
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creators[-1].image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
@@ -1522,7 +1538,8 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         # Create instance
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creators[-1].image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
@@ -1556,7 +1573,8 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name,
             security_group_names=[sec_grp_settings.name], port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creators[-1].image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
@@ -1582,7 +1600,8 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         # Create instance
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creators[-1].image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
@@ -1609,7 +1628,8 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name,
             security_group_names=[sec_grp_settings.name], port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creators[-1].image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
@@ -1695,15 +1715,13 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
             # Create Images
             # Set properties
             properties = {}
-            if self.image_metadata and  self.image_metadata['extra_properties']:
+            if self.image_metadata and self.image_metadata['extra_properties']:
                 properties = self.image_metadata['extra_properties']
 
             # Create the kernel image
             kernel_image_settings = openstack_tests.cirros_url_image(
                 name=self.image_name+'_kernel',
                 url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel')
-            if self.image_metadata and self.image_metadata['kernel_url']:
-                kernel_url = self.image_metadata['kernel_url']
             self.image_creators.append(OpenStackImage(self.os_creds, kernel_image_settings))
             kernel_image = self.image_creators[-1].create()
 
@@ -1711,8 +1729,6 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
             ramdisk_image_settings = openstack_tests.cirros_url_image(
                 name=self.image_name+'_ramdisk',
                 url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs')
-            if self.image_metadata and self.image_metadata['ramdisk_url']:
-                ramdisk_url = self.image_metadata['ramdisk_url']
             self.image_creators.append(OpenStackImage(self.os_creds, ramdisk_image_settings))
             ramdisk_image = self.image_creators[-1].create()
             self.assertIsNotNone(ramdisk_image)
@@ -1721,8 +1737,6 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
             os_image_settings = openstack_tests.cirros_url_image(
                 name=self.image_name,
                 url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img')
-            if self.image_metadata and self.image_metadata['disk_url']:
-                umage_url = self.image_metadata['disk_url']
             properties['kernel_id'] = kernel_image.id
             properties['ramdisk_id'] = ramdisk_image.id
             os_image_settings.extra_properties = properties
