@@ -290,7 +290,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=1024, disk=10, vcpus=1, metadata=self.flavor_metadata))
+                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10, vcpus=1, metadata=self.flavor_metadata))
             self.flavor_creator.create()
         except Exception as e:
             self.tearDown()
@@ -422,7 +422,7 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=2048, disk=10, vcpus=2, metadata=self.flavor_metadata))
+                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10, vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
             # Create Network
@@ -564,7 +564,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=2048, disk=10, vcpus=2, metadata=self.flavor_metadata))
+                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10, vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
             self.keypair_creator = OpenStackKeypair(
@@ -853,7 +853,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=2048, disk=10, vcpus=2, metadata=self.flavor_metadata))
+                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10, vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
         except Exception as e:
             self.tearDown()
@@ -1262,7 +1262,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=self.guid + '-flavor-name', ram=2048, disk=10, vcpus=2,
+                FlavorSettings(name=self.guid + '-flavor-name', ram=128, disk=10, vcpus=2,
                                metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
@@ -1441,7 +1441,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=self.guid + '-flavor-name', ram=2048, disk=10, vcpus=2,
+                FlavorSettings(name=self.guid + '-flavor-name', ram=128, disk=10, vcpus=2,
                                metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
@@ -1733,7 +1733,7 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=2048, disk=10, vcpus=2, metadata=self.flavor_metadata))
+                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10, vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
             # Create Network
