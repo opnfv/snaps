@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dabed58f_55347ddd",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1265,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-03-09T15:05:38Z",
+      "side": 1,
+      "message": "Need to increase RAM as instance will not start. I tried 512 which worked.",
+      "revId": "4c1517b85c1d9686fec6cea6190cc053b5dfc81c",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
