@@ -352,6 +352,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         logger.info("Looking for expression %s in the console log" % match_value)
         while timeout > time.time() - start_time:
             output = vm.get_console_output()
+            logger.debug('Console output -\n' + output)
             if re.search(match_value, output):
                 logger.info('DHCP lease obtained logged in console')
                 if ip in output:
