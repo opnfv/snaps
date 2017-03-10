@@ -22,6 +22,30 @@
       "revId": "9353b8d27df7ca56d00a62eb6a2d0eb8c01f64a0",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_661795ee",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1706,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-03-10T13:53:15Z",
+      "side": 0,
+      "message": "The value kernel_url was never being referenced after its being set. Can you explain what is going on there then?",
+      "parentUuid": "dabed58f_4b1a9a18",
+      "range": {
+        "startLine": 1705,
+        "startChar": 0,
+        "endLine": 1706,
+        "endChar": 62
+      },
+      "revId": "9353b8d27df7ca56d00a62eb6a2d0eb8c01f64a0",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
