@@ -16,6 +16,24 @@
       "revId": "4c1517b85c1d9686fec6cea6190cc053b5dfc81c",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dabed58f_b0c70745",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1265,
+      "author": {
+        "id": 2651
+      },
+      "writtenOn": "2017-03-10T01:26:32Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "dabed58f_55347ddd",
+      "revId": "4c1517b85c1d9686fec6cea6190cc053b5dfc81c",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
