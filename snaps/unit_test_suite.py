@@ -19,6 +19,7 @@ import os
 import unittest
 
 from snaps import test_suite_builder
+from snaps.openstack.tests import openstack_tests
 
 __author__ = 'spisarski'
 
@@ -47,23 +48,25 @@ def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy
     """
     suite = unittest.TestSuite()
 
+    os_creds = openstack_tests.get_credentials(os_env_file=source_filename, proxy_settings_str=proxy_settings,
+                                               ssh_proxy_cmd=ssh_proxy_cmd)
+
     # Tests that do not require a remote connection to an OpenStack cloud
     if run_unit_tests:
         test_suite_builder.add_unit_tests(suite)
 
     # Basic connection tests
-    test_suite_builder.add_openstack_client_tests(suite, source_filename, ext_net_name, use_keystone=use_keystone,
-                                                  http_proxy_str=proxy_settings, log_level=log_level)
+    test_suite_builder.add_openstack_client_tests(
+        suite=suite, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone, log_level=log_level)
 
     # Tests the OpenStack API calls
-    test_suite_builder.add_openstack_api_tests(suite, source_filename, ext_net_name, use_keystone=use_keystone,
-                                               http_proxy_str=proxy_settings, log_level=log_level)
+    test_suite_builder.add_openstack_api_tests(
+        suite=suite, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone, log_level=log_level)
 
     # Long running integration type tests
-    test_suite_builder.add_openstack_integration_tests(suite, source_filename, ext_net_name, use_keystone=use_keystone,
-                                                       proxy_settings=proxy_settings, ssh_proxy_cmd=ssh_proxy_cmd,
-                                                       flavor_metadata=flavor_metadata,
-                                                       use_floating_ips=use_floating_ips, log_level=log_level)
+    test_suite_builder.add_openstack_integration_tests(
+        suite=suite, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, use_floating_ips=use_floating_ips, log_level=log_level)
     return suite
 
 
