@@ -64,41 +64,37 @@ def add_unit_tests(suite):
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(VmInstanceSettingsUnitTests))
 
 
-def add_openstack_client_tests(suite, source_filename, ext_net_name, use_keystone=True, http_proxy_str=None,
-                               log_level=logging.INFO):
+def add_openstack_client_tests(suite, os_creds, ext_net_name, use_keystone=True, log_level=logging.INFO):
     """
     Adds tests written to exercise OpenStack client retrieval
     :param suite: the unittest.TestSuite object to which to add the tests
-    :param source_filename: the OpenStack credentials filename
+    :param os_creds: and instance of OSCreds that holds the credentials required by OpenStack
     :param ext_net_name: the name of an external network on the cloud under test
-    :param http_proxy_str: <host>:<port> of the proxy server (optional)
     :param use_keystone: when True, tests requiring direct access to Keystone are added as these need to be running on
                          a host that has access to the cloud's private network
     :param log_level: the logging level
     :return: None as the tests will be adding to the 'suite' parameter object
     """
     # Basic connection tests
-    suite.addTest(OSComponentTestCase.parameterize(GlanceSmokeTests, source_filename, ext_net_name,
-                                                   http_proxy_str=http_proxy_str, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(GlanceSmokeTests, os_creds=os_creds, ext_net_name=ext_net_name,
+                                                   log_level=log_level))
 
     if use_keystone:
-        suite.addTest(OSComponentTestCase.parameterize(KeystoneSmokeTests, source_filename, ext_net_name,
-                                                       http_proxy_str=http_proxy_str, log_level=log_level))
+        suite.addTest(OSComponentTestCase.parameterize(KeystoneSmokeTests, os_creds=os_creds, ext_net_name=ext_net_name,
+                                                       log_level=log_level))
 
-    suite.addTest(OSComponentTestCase.parameterize(NeutronSmokeTests, source_filename, ext_net_name,
-                                                   http_proxy_str=http_proxy_str, log_level=log_level))
-    suite.addTest(OSComponentTestCase.parameterize(NovaSmokeTests, source_filename, ext_net_name,
-                                                   http_proxy_str=http_proxy_str, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(NeutronSmokeTests, os_creds=os_creds, ext_net_name=ext_net_name,
+                                                   log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(NovaSmokeTests, os_creds=os_creds, ext_net_name=ext_net_name,
+                                                   log_level=log_level))
 
 
-def add_openstack_api_tests(suite, source_filename, ext_net_name, http_proxy_str=None, use_keystone=True,
-                            log_level=logging.INFO):
+def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True, log_level=logging.INFO):
     """
     Adds tests written to exercise all existing OpenStack APIs
     :param suite: the unittest.TestSuite object to which to add the tests
-    :param source_filename: the OpenStack credentials filename
+    :param os_creds: and instance of OSCreds that holds the credentials required by OpenStack
     :param ext_net_name: the name of an external network on the cloud under test
-    :param http_proxy_str: <host>:<port> of the proxy server (optional)
     :param use_keystone: when True, tests requiring direct access to Keystone are added as these need to be running on
                          a host that has access to the cloud's private network
     :param log_level: the logging level
@@ -106,44 +102,41 @@ def add_openstack_api_tests(suite, source_filename, ext_net_name, http_proxy_str
     """
     # Tests the OpenStack API calls
     if use_keystone:
-        suite.addTest(OSComponentTestCase.parameterize(KeystoneUtilsTests, source_filename, ext_net_name,
-                                                       http_proxy_str=http_proxy_str, log_level=log_level))
-        suite.addTest(OSComponentTestCase.parameterize(CreateUserSuccessTests, source_filename, ext_net_name,
-                                                       http_proxy_str=http_proxy_str, log_level=log_level))
-        suite.addTest(OSComponentTestCase.parameterize(CreateProjectSuccessTests, source_filename, ext_net_name,
-                                                       http_proxy_str=http_proxy_str, log_level=log_level))
-        suite.addTest(OSComponentTestCase.parameterize(CreateProjectUserTests, source_filename, ext_net_name,
-                                                       http_proxy_str=http_proxy_str, log_level=log_level))
+        suite.addTest(OSComponentTestCase.parameterize(
+            KeystoneUtilsTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
+        suite.addTest(OSComponentTestCase.parameterize(
+            CreateUserSuccessTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
+        suite.addTest(OSComponentTestCase.parameterize(
+            CreateProjectSuccessTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
+        suite.addTest(OSComponentTestCase.parameterize(
+            CreateProjectUserTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
 
-    suite.addTest(OSComponentTestCase.parameterize(GlanceUtilsTests, source_filename, ext_net_name,
-                                                   http_proxy_str=http_proxy_str, log_level=log_level))
-    suite.addTest(OSComponentTestCase.parameterize(NeutronUtilsNetworkTests, source_filename, ext_net_name,
-                                                   http_proxy_str=http_proxy_str, log_level=log_level))
-    suite.addTest(OSComponentTestCase.parameterize(NeutronUtilsSubnetTests, source_filename, ext_net_name,
-                                                   http_proxy_str=http_proxy_str, log_level=log_level))
-    suite.addTest(OSComponentTestCase.parameterize(NeutronUtilsRouterTests, source_filename, ext_net_name,
-                                                   http_proxy_str=http_proxy_str, log_level=log_level))
-    suite.addTest(OSComponentTestCase.parameterize(NeutronUtilsSecurityGroupTests, source_filename, ext_net_name,
-                                                   http_proxy_str=http_proxy_str, log_level=log_level))
-    suite.addTest(OSComponentTestCase.parameterize(NovaUtilsKeypairTests, source_filename, ext_net_name,
-                                                   http_proxy_str=http_proxy_str, log_level=log_level))
-    suite.addTest(OSComponentTestCase.parameterize(NovaUtilsFlavorTests, source_filename, ext_net_name,
-                                                   http_proxy_str=http_proxy_str, log_level=log_level))
-    suite.addTest(OSComponentTestCase.parameterize(CreateFlavorTests, source_filename, ext_net_name,
-                                                   http_proxy_str=http_proxy_str, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        GlanceUtilsTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        NeutronUtilsNetworkTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        NeutronUtilsSubnetTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        NeutronUtilsRouterTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        NeutronUtilsSecurityGroupTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        NovaUtilsKeypairTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        NovaUtilsFlavorTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        CreateFlavorTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
 
 
-def add_openstack_integration_tests(suite, source_filename, ext_net_name, proxy_settings=None, ssh_proxy_cmd=None,
-                                    use_keystone=True, flavor_metadata=None, image_metadata=None,
-                                    use_floating_ips=True, log_level=logging.INFO):
+def add_openstack_integration_tests(suite, os_creds, ext_net_name, use_keystone=True, flavor_metadata=None,
+                                    image_metadata=None, use_floating_ips=True, log_level=logging.INFO):
     """
     Adds tests written to exercise all long-running OpenStack integration tests meaning they will be creating VM
     instances and potentially performing some SSH functions through floating IPs
     :param suite: the unittest.TestSuite object to which to add the tests
-    :param source_filename: the OpenStack credentials filename
+    :param os_creds: and instance of OSCreds that holds the credentials required by OpenStack
     :param ext_net_name: the name of an external network on the cloud under test
-    :param proxy_settings: <host>:<port> of the proxy server (optional)
-    :param ssh_proxy_cmd: the command your environment requires for creating ssh connections through a proxy
     :param use_keystone: when True, tests requiring direct access to Keystone are added as these need to be running on
                          a host that has access to the cloud's private network
     :param image_metadata: dict() object containing metadata for creating an image with custom config:
@@ -159,92 +152,71 @@ def add_openstack_integration_tests(suite, source_filename, ext_net_name, proxy_
     # and project
 
     # Creator Object tests
-    suite.addTest(OSIntegrationTestCase.parameterize(CreateSecurityGroupTests, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
-    suite.addTest(OSIntegrationTestCase.parameterize(CreateImageSuccessTests, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
-    suite.addTest(OSIntegrationTestCase.parameterize(CreateImageNegativeTests, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
-    suite.addTest(OSIntegrationTestCase.parameterize(CreateMultiPartImageTests, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
-    suite.addTest(OSIntegrationTestCase.parameterize(CreateKeypairsTests, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
-    suite.addTest(OSIntegrationTestCase.parameterize(CreateNetworkSuccessTests, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
-    suite.addTest(OSIntegrationTestCase.parameterize(CreateRouterSuccessTests, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
-    suite.addTest(OSIntegrationTestCase.parameterize(CreateRouterNegativeTests, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateSecurityGroupTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateImageSuccessTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateImageNegativeTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateMultiPartImageTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateKeypairsTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateNetworkSuccessTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateRouterSuccessTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateRouterNegativeTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
 
     # VM Instances
-    suite.addTest(OSIntegrationTestCase.parameterize(SimpleHealthCheck, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
-    suite.addTest(OSIntegrationTestCase.parameterize(CreateInstanceSimpleTests, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
-    suite.addTest(OSIntegrationTestCase.parameterize(CreateInstancePortManipulationTests, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
-    suite.addTest(OSIntegrationTestCase.parameterize(InstanceSecurityGroupTests, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
-    suite.addTest(OSIntegrationTestCase.parameterize(CreateInstanceOnComputeHost, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
-    suite.addTest(OSIntegrationTestCase.parameterize(CreateInstanceFromThreePartImage, source_filename, ext_net_name,
-                                                     http_proxy_str=proxy_settings, use_keystone=use_keystone,
-                                                     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                     log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        SimpleHealthCheck, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateInstanceSimpleTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateInstancePortManipulationTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        InstanceSecurityGroupTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateInstanceOnComputeHost, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateInstanceFromThreePartImage, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
 
     if use_floating_ips:
-        suite.addTest(OSIntegrationTestCase.parameterize(CreateInstanceSingleNetworkTests, source_filename,
-                                                         ext_net_name, http_proxy_str=proxy_settings,
-                                                         ssh_proxy_cmd=ssh_proxy_cmd, use_keystone=use_keystone,
-                                                         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                         log_level=log_level))
-        suite.addTest(OSIntegrationTestCase.parameterize(CreateInstancePubPrivNetTests, source_filename,
-                                                         ext_net_name, http_proxy_str=proxy_settings,
-                                                         ssh_proxy_cmd=ssh_proxy_cmd, use_keystone=use_keystone,
-                                                         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                         log_level=log_level))
-        suite.addTest(OSIntegrationTestCase.parameterize(AnsibleProvisioningTests, source_filename,
-                                                         ext_net_name, http_proxy_str=proxy_settings,
-                                                         ssh_proxy_cmd=ssh_proxy_cmd, use_keystone=use_keystone,
-                                                         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-                                                         log_level=log_level))
+        suite.addTest(OSIntegrationTestCase.parameterize(
+            CreateInstanceSingleNetworkTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+            flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+        suite.addTest(OSIntegrationTestCase.parameterize(
+            CreateInstancePubPrivNetTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+            flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+        suite.addTest(OSIntegrationTestCase.parameterize(
+            AnsibleProvisioningTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+            flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
 
 
-def add_openstack_staging_tests(suite, source_filename, ext_net_name, proxy_settings=None, log_level=logging.INFO):
+def add_openstack_staging_tests(suite, os_creds, ext_net_name, log_level=logging.INFO):
     """
     Adds tests that are still in development have not been designed to run successfully against all OpenStack pods
     :param suite: the unittest.TestSuite object to which to add the tests
-    :param source_filename: the OpenStack credentials filename
+    :param os_creds: and instance of OSCreds that holds the credentials required by OpenStack
     :param ext_net_name: the name of an external network on the cloud under test
-    :param proxy_settings: <host>:<port> of the proxy server (optional)
     :param log_level: the logging level
     :return: None as the tests will be adding to the 'suite' parameter object
     """
-    suite.addTest(OSComponentTestCase.parameterize(CreateNetworkTypeTests, source_filename, ext_net_name,
-                                                   http_proxy_str=proxy_settings, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        CreateNetworkTypeTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))

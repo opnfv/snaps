@@ -32,17 +32,23 @@ dev_os_env_file = 'openstack/tests/conf/os_env.yaml'
 
 class OSComponentTestCase(unittest.TestCase):
 
-    """
-    Super for test classes requiring a connection to OpenStack
-    """
-    def __init__(self, method_name='runTest', os_env_file=None, ext_net_name=None, http_proxy_str=None,
-                 ssh_proxy_cmd=None, log_level=logging.DEBUG):
+    def __init__(self, method_name='runTest', os_creds=None, ext_net_name=None, log_level=logging.DEBUG):
+        """
+        Super for test classes requiring a connection to OpenStack
+        :param method_name: default 'runTest'
+        :param os_creds: the OSCreds object, when null it searches for the file {cwd}/openstack/tests/conf/os_env.yaml
+        :param ext_net_name: the name of the external network that is used for creating routers for floating IPs
+        :param log_level: the logging level of your test run (default DEBUG)
+        """
         super(OSComponentTestCase, self).__init__(method_name)
 
         logging.basicConfig(level=log_level)
 
-        self.os_creds = openstack_tests.get_credentials(os_env_file=os_env_file, proxy_settings_str=http_proxy_str,
-                                                        ssh_proxy_cmd=ssh_proxy_cmd, dev_os_env_file=dev_os_env_file)
+        if os_creds:
+            self.os_creds = os_creds
+        else:
+            self.os_creds = openstack_tests.get_credentials(dev_os_env_file=dev_os_env_file)
+
         self.ext_net_name = ext_net_name
 
         if not self.ext_net_name and file_utils.file_exists(dev_os_env_file):
@@ -50,8 +56,7 @@ class OSComponentTestCase(unittest.TestCase):
             self.ext_net_name = test_conf.get('ext_net')
 
     @staticmethod
-    def parameterize(testcase_klass, os_env_file, ext_net_name, http_proxy_str=None, ssh_proxy_cmd=None,
-                     log_level=logging.DEBUG):
+    def parameterize(testcase_klass, os_creds, ext_net_name, log_level=logging.DEBUG):
         """ Create a suite containing all tests taken from the given
             subclass, passing them the parameter 'param'.
         """
@@ -59,38 +64,44 @@ class OSComponentTestCase(unittest.TestCase):
         test_names = test_loader.getTestCaseNames(testcase_klass)
         suite = unittest.TestSuite()
         for name in test_names:
-            suite.addTest(testcase_klass(name, os_env_file, ext_net_name, http_proxy_str, ssh_proxy_cmd, log_level))
+            suite.addTest(testcase_klass(name, os_creds, ext_net_name, log_level))
         return suite
 
 
 class OSIntegrationTestCase(OSComponentTestCase):
 
-    """
-    Super for test classes requiring a connection to OpenStack
-    """
-    def __init__(self, method_name='runTest', os_env_file=None, ext_net_name=None, http_proxy_str=None,
-                 ssh_proxy_cmd=None, use_keystone=False, flavor_metadata=None, image_metadata=None,
-                 log_level=logging.DEBUG):
-        super(OSIntegrationTestCase, self).__init__(method_name=method_name, os_env_file=os_env_file,
-                                                    ext_net_name=ext_net_name, http_proxy_str=http_proxy_str,
-                                                    ssh_proxy_cmd=ssh_proxy_cmd, log_level=log_level)
+    def __init__(self, method_name='runTest', os_creds=None, ext_net_name=None, use_keystone=False,
+                 flavor_metadata=None, image_metadata=None, log_level=logging.DEBUG):
+        """
+        Super for integration tests requiring a connection to OpenStack
+        :param method_name: default 'runTest'
+        :param os_creds: the OSCreds object, when null it searches for the file {cwd}/openstack/tests/conf/os_env.yaml
+        :param ext_net_name: the name of the external network that is used for creating routers for floating IPs
+        :param use_keystone: when true, these tests will create a new user/project under which to run the test
+        :param flavor_metadata: dict() to be sent directly into the Nova client generally used for page sizes
+        :param image_metadata: dict() to be sent directly into the Nova client generally used for multi-part images
+        :param log_level: the logging level of your test run (default DEBUG)
+        """
+        super(OSIntegrationTestCase, self).__init__(method_name=method_name, os_creds=os_creds,
+                                                    ext_net_name=ext_net_name, log_level=log_level)
         self.use_keystone = use_keystone
         self.keystone = None
         self.flavor_metadata = flavor_metadata
         self.image_metadata = image_metadata
 
     @staticmethod
-    def parameterize(testcase_klass, os_env_file, ext_net_name, http_proxy_str=None, ssh_proxy_cmd=None,
-                     use_keystone=False, flavor_metadata=None, image_metadata=None, log_level=logging.DEBUG):
-        """ Create a suite containing all tests taken from the given
-            subclass, passing them the parameter 'param'.
+    def parameterize(testcase_klass, os_creds, ext_net_name, use_keystone=False, flavor_metadata=None,
+                     image_metadata=None, log_level=logging.DEBUG):
+        """
+        Create a suite containing all tests taken from the given
+        subclass, passing them the parameter 'param'.
         """
         test_loader = unittest.TestLoader()
         test_names = test_loader.getTestCaseNames(testcase_klass)
         suite = unittest.TestSuite()
         for name in test_names:
-            suite.addTest(testcase_klass(name, os_env_file, ext_net_name, http_proxy_str, ssh_proxy_cmd, use_keystone,
-                                         flavor_metadata, image_metadata, log_level))
+            suite.addTest(testcase_klass(name, os_creds, ext_net_name, use_keystone, flavor_metadata, image_metadata,
+                                         log_level))
         return suite
 
     """
