@@ -17,13 +17,13 @@ CentOS 7
 
 ::
 
-    # yum install -7 git gcc python-pip python-devel openssl-devel
+    sudo yum install -7 git gcc python-pip python-devel openssl-devel
 
 Ubuntu
 ------
 ::
 
-      # apt-get install git python2.7-dev libssl-dev
+      sudo apt-get install git python2.7-dev libssl-dev
 
 Optional: Setup a Python virtual environment
 --------------------------------------------
@@ -39,6 +39,6 @@ The "pip" command below needs to be executed as root, if you are not using a vir
 
 ::
 
-   #  pip install -e <path to repo>/snaps/
+   sudo pip install -e <path to repo>/snaps/
 
 The install should now be complete and you can start using the SNAPS-OO libraries.

@@ -6,8 +6,8 @@ Execute the tests
 
 ::
 
-cd <path to repo>
-python snaps/unit_test_suite.py -e <path to RC file> -n <external network name>
+    cd <path to repo>
+    python snaps/unit_test_suite.py -e <path to RC file> -n <external network name>
 
 | \* All Supported Arguments
 | \* -e [required - The path to the OpenStack RC file]

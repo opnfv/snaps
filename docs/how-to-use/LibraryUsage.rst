@@ -49,8 +49,8 @@ Create OS Credentials Object
 .. code:: python
 
     from snaps.openstack.os_credentials import OSCreds
-    os_creds=OSCreds(username='admin', password`='admin'
-                     auth_url='http://localhost:5000/v3, project_name='admin',
+    os_creds=OSCreds(username='admin', password='admin',
+                     auth_url='http://localhost:5000/v3', project_name='admin',
                      identity_api_version=3)
 
 SNAPS Object Creators
@@ -84,7 +84,7 @@ Create User
 .. code:: python
 
     from snaps.openstack.create_user import UserSettings, OpenStackUser
-    user_settings = UserSettings(name='username', password='password)
+    user_settings = UserSettings(name='username', password='password')
     user_creator = OpenStackUser(os_creds, user_settings)
     user_creator.create()
 
@@ -109,10 +109,11 @@ Create Project
       -  enables - flag to determine whether or not the project should
          be enabled (default=True)
 
+
 .. code:: python
 
     from snaps.openstack.create_project import ProjectSettings, OpenStackProject
-    project_settings = ProjectSettings(name='username', password='password)
+    project_settings = ProjectSettings(name='username', password='password')
     project_creator = OpenStackProject(os_creds, project_settings)
     project_creator.create()
 
@@ -311,8 +312,7 @@ Create Security Group
 
 .. code:: python
 
-    from snaps.openstack.create_security_group import SecurityGroupSettings, SecurityGroupRuleSettings, Direction,
-        OpenStackSecurityGroup
+    from snaps.openstack.create_security_group import SecurityGroupSettings, SecurityGroupRuleSettings, Direction, OpenStackSecurityGroup
 
     rule_settings = SubnetSettings(name='subnet-name', cidr='10.0.0.0/24')
     network_settings = NetworkSettings(name='network-name', subnet_settings=[subnet_settings])
@@ -437,9 +437,9 @@ Create VM Instance
     from snaps.openstack.create_network import PortSettings
 
     port_settings = PortSettings(name='port-name', network_name=network_settings.name)
-    floating_ip_settings = FloatingIpSettings(name='fip1', port_name=port_settings.name, router_name=router_settings.name
-    instance_settings = VmInstanceSettings(name='vm-name', flavor='flavor_settings.name, port_settings=[port_settings],
-                                           floating_ip_settings=[floating_ip_settings]
+    floating_ip_settings = FloatingIpSettings(name='fip1', port_name=port_settings.name, router_name=router_settings.name)
+    instance_settings = VmInstanceSettings(name='vm-name', flavor='flavor_settings.name', port_settings=[port_settings],
+                                           floating_ip_settings=[floating_ip_settings])
 
     instance_creator = OpenStackVmInstance(os_creds, instance_settings, image_settings, kepair_settings)
     instance_creator.create()
@@ -480,14 +480,11 @@ Apply Ansible Playbook Utility
 
     from snaps.provisioning import ansible_utils
 
-    ansible_utils.apply_playbook(playbook_path='/tmp/playbook.yml',
-                                 hosts_inv=[instance_creator.get_port_ip(instance_settings.port_settings[0].name,
-                                 host_user=instance_creator.get_image_user(),
-                                 ssh_priv_key_file_path=instance_creator.keypair_settings.private_filepath)
-
+    ansible_utils.apply_playbook('provisioning/tests/playbooks/simple_playbook.yml', [ip], user, priv_key,
+                                              proxy_setting=self.os_creds.proxy_settings)
 
 OpenStack Utilities
-=======================================
+===================
 
 For those who do like working procedurally, SNAPS-OO also leverages
 utilitarian functions for nearly every query or request made to
