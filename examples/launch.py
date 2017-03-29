@@ -246,7 +246,7 @@ def __create_instances(os_conn_config, instances_config, image_dict, keypairs_di
             raise e
 
         logger.info('Created configured instances')
-
+    # TODO Should there be an error if there isn't an instances config
     return vm_dict
 
 
@@ -525,7 +525,7 @@ def main(arguments):
 
     logger.info('Starting to Deploy')
     config = file_utils.read_yaml(arguments.environment)
-    logger.info('Read configuration file - ' + arguments.environment)
+    logger.debug('Read configuration file - ' + arguments.environment)
 
     if config:
         os_config = config.get('openstack')
@@ -542,7 +542,7 @@ def main(arguments):
 
                 # Create flavors
                 flavor_dict = __create_flavors(os_conn_config, os_config.get('flavors'),
-                                              arguments.clean is not ARG_NOT_SET)
+                                               arguments.clean is not ARG_NOT_SET)
 
                 # Create images
                 image_dict = __create_images(os_conn_config, os_config.get('images'),
@@ -568,7 +568,6 @@ def main(arguments):
                 logger.error('Unexpected error deploying environment. Rolling back due to - ' + e.message)
                 __cleanup(vm_dict, keypairs_dict, router_dict, network_dict, image_dict, flavor_dict, True)
                 raise e
-
 
         # Must enter either block
         if arguments.clean is not ARG_NOT_SET:
@@ -600,9 +599,15 @@ def __cleanup(vm_dict, keypairs_dict, router_dict, network_dict, image_dict, fla
     for key, kp_inst in keypairs_dict.iteritems():
         kp_inst.clean()
     for key, router_inst in router_dict.iteritems():
-        router_inst.clean()
+        try:
+            router_inst.clean()
+        except Exception:
+            logger.warning("Router not found continuing to next component")
     for key, net_inst in network_dict.iteritems():
-        net_inst.clean()
+        try:
+            net_inst.clean()
+        except Exception:
+            logger.warning("Network not found continuing to next component")
     if clean_image:
         for key, image_inst in image_dict.iteritems():
             image_inst.clean()
