@@ -480,8 +480,9 @@ Apply Ansible Playbook Utility
 
     from snaps.provisioning import ansible_utils
 
-    ansible_utils.apply_playbook('provisioning/tests/playbooks/simple_playbook.yml', [ip], user, priv_key,
-                                              proxy_setting=self.os_creds.proxy_settings)
+    ansible_utils.apply_playbook(playbook_path='provisioning/tests/playbooks/simple_playbook.yml',
+                                 hosts_inv=[ip], host_user=user, ssh_priv_key_file_path=priv_key,
+                                 proxy_setting=self.os_creds.proxy_settings)
 
 OpenStack Utilities
 ===================
