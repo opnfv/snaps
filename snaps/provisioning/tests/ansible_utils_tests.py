@@ -68,21 +68,21 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
             # Create Image
             os_image_settings = openstack_tests.ubuntu_url_image(name=guid + '-' + '-image')
             if self.image_metadata:
-                if self.image_metadata['disk_url']:
+                if 'disk_url' in self.image_metadata and self.image_metadata['disk_url']:
                     os_image_settings.url = self.image_metadata['disk_url']
-                if self.image_metadata['extra_properties']:
+                if 'extra_properties' in self.image_metadata and self.image_metadata['extra_properties']:
                     os_image_settings.extra_properties = self.image_metadata['extra_properties']
 
             # If this is a 3-part image create the kernel and ramdisk images first
             if self.image_metadata:
-                if self.image_metadata['kernel_url']:
+                if 'kernel_url' in self.image_metadata and self.image_metadata['kernel_url']:
                     kernel_image_settings = openstack_tests.cirros_url_image(
                         name=os_image_settings.name+'_kernel', url=self.image_metadata['kernel_url'])
                     self.image_creators.append(create_image.OpenStackImage(self.os_creds, kernel_image_settings))
                     kernel_image = self.image_creators[-1].create()
                     os_image_settings.extra_properties['kernel_id'] = kernel_image.id
 
-                if self.image_metadata['ramdisk_url']:
+                if 'ramdisk_url' in self.image_metadata and self.image_metadata['ramdisk_url']:
                     ramdisk_image_settings = openstack_tests.cirros_url_image(
                         name=os_image_settings.name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
                     self.image_creators.append(create_image.OpenStackImage(self.os_creds, ramdisk_image_settings))
