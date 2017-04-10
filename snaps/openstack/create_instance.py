@@ -146,7 +146,10 @@ class OpenStackVmInstance:
         # TODO - the call above should add security groups. The return object shows they exist but the association
         # had never been made by OpenStack. This call is here to ensure they have been added
         for sec_grp_name in self.instance_settings.security_group_names:
-            nova_utils.add_security_group(self.__nova, self.__vm, sec_grp_name)
+            if self.vm_active(block=True):
+                nova_utils.add_security_group(self.__nova, self.__vm, sec_grp_name)
+            else:
+                raise Exception('Cannot apply security groups')
 
         self.__apply_floating_ips()
 
