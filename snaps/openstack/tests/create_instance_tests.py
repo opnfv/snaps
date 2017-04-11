@@ -312,11 +312,17 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         if os.path.isfile(self.keypair_priv_filepath):
             os.remove(self.keypair_priv_filepath)
 
+        if self.network_creator:
+            try:
+                self.network_creator.clean()
+            except Exception as e:
+                logger.error('Unexpected exception cleaning network with message - ' + e.message)
+
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + e.message)
+                logger.error('Unexpected exception cleaning flavor with message - ' + e.message)
 
         if self.image_creators:
             try:
@@ -396,7 +402,7 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
         self.image_creators = list()
         self.flavor_creator = None
 
-        self.net_creator = None
+        self.network_creator = None
         self.inst_creator = None
 
         try:
@@ -460,9 +466,9 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning flavor with message - ' + e.message)
 
-        if self.net_creator:
+        if self.network_creator:
             try:
-                self.net_creator.clean()
+                self.network_creator.clean()
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + e.message)
 
