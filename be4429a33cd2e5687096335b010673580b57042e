@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ab8dda7_4c96264e",
+        "filename": "docs/how-to-use/Testing.rst",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 489
+      },
+      "writtenOn": "2017-04-12T16:51:02Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be optional and moved to the optional section?",
+      "revId": "be4429a33cd2e5687096335b010673580b57042e",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_6c91aa51",
+        "filename": "snaps/test_runner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 489
+      },
+      "writtenOn": "2017-04-12T16:51:02Z",
+      "side": 1,
+      "message": "Option and later in the list",
+      "revId": "be4429a33cd2e5687096335b010673580b57042e",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
