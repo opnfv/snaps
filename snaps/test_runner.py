@@ -94,11 +94,18 @@ def main(arguments):
 
     suite = None
     if arguments.env and arguments.ext_net:
+        unit = arguments.include_unit != ARG_NOT_SET
+        connection = arguments.include_connection != ARG_NOT_SET
+        api = arguments.include_api != ARG_NOT_SET
+        integration = arguments.include_integration != ARG_NOT_SET
+        if not unit and not connection and not api and not integration:
+            unit = True
+            connection = True
+            api = True
+            integration = True
+
         suite = __create_test_suite(arguments.env, arguments.ext_net, arguments.proxy, arguments.ssh_proxy_cmd,
-                                    arguments.include_unit != ARG_NOT_SET,
-                                    arguments.include_connection != ARG_NOT_SET,
-                                    arguments.include_api != ARG_NOT_SET,
-                                    arguments.include_integration != ARG_NOT_SET,
+                                    unit, connection, api, integration,
                                     flavor_metadata,
                                     arguments.use_keystone != ARG_NOT_SET,
                                     arguments.floating_ips != ARG_NOT_SET, log_level)
