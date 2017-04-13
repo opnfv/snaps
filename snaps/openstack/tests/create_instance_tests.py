@@ -919,7 +919,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
 
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
                                                 self.image_creators[-1].image_settings)
-        self.inst_creator.create()
+        self.inst_creator.create(block=True)
 
         self.assertEquals(ip, self.inst_creator.get_port_ip(
             self.port_1_name, subnet_name=self.net_config.network_settings.subnet_settings[0].name))
@@ -955,7 +955,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
 
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
                                                 self.image_creators[-1].image_settings)
-        self.inst_creator.create()
+        self.inst_creator.create(block=True)
 
         self.assertEquals(mac_addr, self.inst_creator.get_port_mac(self.port_1_name))
 
@@ -991,7 +991,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
 
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
                                                 self.image_creators[-1].image_settings)
-        self.inst_creator.create()
+        self.inst_creator.create(block=True)
 
         self.assertEquals(ip, self.inst_creator.get_port_ip(
             self.port_1_name, subnet_name=self.net_config.network_settings.subnet_settings[0].name))
@@ -1012,7 +1012,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
 
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
                                                 self.image_creators[-1].image_settings)
-        self.inst_creator.create()
+        self.inst_creator.create(block=True)
 
         port = self.inst_creator.get_port_by_name(port_settings.name)
         self.assertIsNotNone(port)

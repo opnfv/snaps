@@ -141,7 +141,8 @@ class OpenStackVmInstance:
         logger.info('Created instance with name - ' + self.instance_settings.name)
 
         if block:
-            self.vm_active(block=True)
+            if not self.vm_active(block=True):
+                raise Exception('Fatal error, VM did not become ACTIVE within the alloted time')
 
         # TODO - the call above should add security groups. The return object shows they exist but the association
         # had never been made by OpenStack. This call is here to ensure they have been added
