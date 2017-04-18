@@ -12,10 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
-import time
 
 from glanceclient.exc import HTTPNotFound
+import logging
+import time
 
 from snaps.openstack.utils import glance_utils, nova_utils
 
@@ -43,6 +43,8 @@ class OpenStackImage:
         self.__os_creds = os_creds
         self.image_settings = image_settings
         self.__image = None
+        self.__kernel_image = None
+        self.__ramdisk_image = None
         self.__glance = glance_utils.glance_client(os_creds)
 
     def create(self, cleanup=False):
@@ -59,6 +61,28 @@ class OpenStackImage:
             logger.info('Found image with name - ' + self.image_settings.name)
             return self.__image
         elif not cleanup:
+            extra_properties = self.image_settings.extra_properties or dict()
+
+            if self.image_settings.kernel_image_settings:
+                self.__kernel_image = glance_utils.get_image(
+                    nova, self.__glance, self.image_settings.kernel_image_settings.name)
+
+                if not self.__kernel_image and not cleanup:
+                    logger.info('Creating associated kernel image')
+                    self.__kernel_image = glance_utils.create_image(
+                        self.__glance, self.image_settings.kernel_image_settings)
+                extra_properties['kernel_id'] = self.__kernel_image.id
+            if self.image_settings.ramdisk_image_settings:
+                self.__ramdisk_image = glance_utils.get_image(
+                    nova, self.__glance, self.image_settings.ramdisk_image_settings.name)
+
+                if not self.__ramdisk_image and not cleanup:
+                    logger.info('Creating associated ramdisk image')
+                    self.__ramdisk_image = glance_utils.create_image(
+                        self.__glance, self.image_settings.ramdisk_image_settings)
+                extra_properties['ramdisk_id'] = self.__ramdisk_image.id
+
+            self.image_settings.extra_properties = extra_properties
             self.__image = glance_utils.create_image(self.__glance, self.image_settings)
             logger.info('Creating image')
             if self.image_active(block=True):
@@ -76,12 +100,16 @@ class OpenStackImage:
         Cleanse environment of all artifacts
         :return: void
         """
-        if self.__image:
-            try:
-                glance_utils.delete_image(self.__glance, self.__image)
-            except HTTPNotFound:
-                pass
-            self.__image = None
+        for image in [self.__image, self.__kernel_image, self.__ramdisk_image]:
+            if image:
+                try:
+                    glance_utils.delete_image(self.__glance, image)
+                except HTTPNotFound:
+                    pass
+
+        self.__image = None
+        self.__kernel_image = None
+        self.__ramdisk_image = None
 
     def get_image(self):
         """
@@ -89,6 +117,20 @@ class OpenStackImage:
         :return: the object
         """
         return self.__image
+
+    def get_kernel_image(self):
+        """
+        Returns the OpenStack kernel image object as it was populated when create() was called
+        :return: the object
+        """
+        return self.__kernel_image
+
+    def get_ramdisk_image(self):
+        """
+        Returns the OpenStack ramdisk image object as it was populated when create() was called
+        :return: the object
+        """
+        return self.__ramdisk_image
 
     def image_active(self, block=False, timeout=IMAGE_ACTIVE_TIMEOUT, poll_interval=POLL_INTERVAL):
         """
@@ -150,7 +192,8 @@ class OpenStackImage:
 
 class ImageSettings:
     def __init__(self, config=None, name=None, image_user=None, img_format=None, url=None, image_file=None,
-                 extra_properties=None, nic_config_pb_loc=None):
+                 extra_properties=None, nic_config_pb_loc=None, kernel_image_settings=None,
+                 ramdisk_image_settings=None):
         """
 
         :param config: dict() object containing the configuration settings using the attribute names below as each
@@ -163,6 +206,8 @@ class ImageSettings:
         :param extra_properties: dict() object containing extra parameters to pass when loading the image;
                                  can be ids of kernel and initramfs images for a 3-part image
         :param nic_config_pb_loc: the file location to the Ansible Playbook that can configure multiple NICs
+        :param kernel_image_settings: the settings for a kernel image
+        :param ramdisk_image_settings: the settings for a kernel image
         """
 
         if config:
@@ -173,6 +218,16 @@ class ImageSettings:
             self.image_file = config.get('image_file')
             self.extra_properties = config.get('extra_properties')
             self.nic_config_pb_loc = config.get('nic_config_pb_loc')
+            if config.get('kernel_image_settings'):
+                self.kernel_image_settings = ImageSettings(config=config['kernel_image_settings'])
+            else:
+                self.kernel_image_settings = None
+
+            if config.get('ramdisk_image_settings'):
+                self.ramdisk_image_settings = ImageSettings(config=config['ramdisk_image_settings'])
+            else:
+                self.ramdisk_image_settings = None
+
         else:
             self.name = name
             self.image_user = image_user
@@ -181,6 +236,8 @@ class ImageSettings:
             self.image_file = image_file
             self.extra_properties = extra_properties
             self.nic_config_pb_loc = nic_config_pb_loc
+            self.kernel_image_settings = kernel_image_settings
+            self.ramdisk_image_settings = ramdisk_image_settings
 
         if not self.name or not self.image_user or not self.format:
             raise Exception("The attributes name, image_user, format, and url are required for ImageSettings")

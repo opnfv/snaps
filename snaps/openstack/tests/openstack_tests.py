@@ -92,29 +92,101 @@ def get_credentials(os_env_file=None, proxy_settings_str=None, ssh_proxy_cmd=Non
     return os_creds
 
 
-def cirros_url_image(name, url=None):
+def cirros_url_image(name, url=None, image_metadata=None, kernel_settings=None, ramdisk_settings=None):
+    if image_metadata and 'disk_url' in image_metadata:
+        url = image_metadata['disk_url']
     if not url:
-        url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'
-    return ImageSettings(name=name, image_user='cirros', img_format='qcow2', url=url)
+        url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'
+
+    if image_metadata and 'kernel_url' in image_metadata and kernel_settings is None:
+        kernel_image_settings = ImageSettings(name=name + '-kernel', image_user='cirros', img_format='qcow2',
+                                              url=image_metadata['kernel_url'])
+    else:
+        kernel_image_settings = kernel_settings
+
+    if image_metadata and 'ramdisk_url' in image_metadata and ramdisk_settings is None:
+        ramdisk_image_settings = ImageSettings(name=name + '-ramdisk', image_user='cirros', img_format='qcow2',
+                                               url=image_metadata['ramdisk_url'])
+    else:
+        ramdisk_image_settings = ramdisk_settings
+
+    extra_properties = None
+    if image_metadata and 'extra_properties' in image_metadata:
+        extra_properties = image_metadata['extra_properties']
+
+    return ImageSettings(name=name, image_user='cirros', img_format='qcow2', url=url,
+                         extra_properties=extra_properties,
+                         kernel_image_settings=kernel_image_settings,
+                         ramdisk_image_settings=ramdisk_image_settings)
 
 
-def file_image_test_settings(name, file_path):
-    return ImageSettings(name=name, image_user='cirros', img_format='qcow2',
-                         image_file=file_path)
+def file_image_test_settings(name, file_path, image_user='cirros', image_metadata=None):
+    kernel_image_settings = None
+    if image_metadata and 'kernel_url' in image_metadata:
+        kernel_image_settings = ImageSettings(name=name + '-kernel', url=image_metadata['kernel_url'])
+    ramdisk_image_settings = None
+    if image_metadata and 'ramdisk_url' in image_metadata:
+        ramdisk_image_settings = ImageSettings(name=name + '-ramdisk', url=image_metadata['ramdisk_url'])
+
+    extra_properties = None
+    if image_metadata and 'extra_properties' in image_metadata:
+        extra_properties = image_metadata['extra_properties']
+
+    return ImageSettings(name=name, image_user=image_user, img_format='qcow2',
+                         extra_properties=extra_properties,
+                         image_file=file_path,
+                         kernel_image_settings=kernel_image_settings,
+                         ramdisk_image_settings=ramdisk_image_settings)
 
 
-def centos_url_image(name, url=None):
+def centos_url_image(name, url=None, image_metadata=None):
+    if image_metadata and 'disk_url' in image_metadata:
+        url = image_metadata['disk_url']
     if not url:
-        url='http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2'
-    return ImageSettings(name=name, image_user='centos', img_format='qcow2', url=url,
-        nic_config_pb_loc='./provisioning/ansible/centos-network-setup/playbooks/configure_host.yml')
+        url = 'http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2'
+
+    kernel_image_settings = None
+    if image_metadata and 'kernel_url' in image_metadata:
+        kernel_image_settings = ImageSettings(name=name + '-kernel', url=image_metadata['kernel_url'])
+    ramdisk_image_settings = None
+    if image_metadata and 'ramdisk_url' in image_metadata:
+        ramdisk_image_settings = ImageSettings(name=name + '-ramdisk', url=image_metadata['ramdisk_url'])
+
+    extra_properties = None
+    if image_metadata and 'extra_properties' in image_metadata:
+        extra_properties = image_metadata['extra_properties']
+
+    return ImageSettings(
+        name=name, image_user='centos', img_format='qcow2',
+        extra_properties=extra_properties, url=url,
+        nic_config_pb_loc='./provisioning/ansible/centos-network-setup/playbooks/configure_host.yml',
+        kernel_image_settings=kernel_image_settings,
+        ramdisk_image_settings=ramdisk_image_settings)
 
 
-def ubuntu_url_image(name, url=None):
+def ubuntu_url_image(name, url=None, image_metadata=None):
+    if image_metadata and 'disk_url' in image_metadata:
+        url = image_metadata['disk_url']
     if not url:
-        url='http://uec-images.ubuntu.com/releases/trusty/14.04/ubuntu-14.04-server-cloudimg-amd64-disk1.img'
-    return ImageSettings(name=name, image_user='ubuntu', img_format='qcow2', url=url,
-        nic_config_pb_loc='./provisioning/ansible/ubuntu-network-setup/playbooks/configure_host.yml')
+        url = 'http://uec-images.ubuntu.com/releases/trusty/14.04/ubuntu-14.04-server-cloudimg-amd64-disk1.img'
+
+    kernel_image_settings = None
+    if image_metadata and 'kernel_url' in image_metadata:
+        kernel_image_settings = ImageSettings(name=name + '-kernel', url=image_metadata['kernel_url'])
+    ramdisk_image_settings = None
+    if image_metadata and 'ramdisk_url' in image_metadata:
+        ramdisk_image_settings = ImageSettings(name=name + '-ramdisk', url=image_metadata['ramdisk_url'])
+
+    extra_properties = None
+    if image_metadata and 'extra_properties' in image_metadata:
+        extra_properties = image_metadata['extra_properties']
+
+    return ImageSettings(
+        name=name, image_user='ubuntu', img_format='qcow2',
+        extra_properties=extra_properties, url=url,
+        nic_config_pb_loc='./provisioning/ansible/ubuntu-network-setup/playbooks/configure_host.yml',
+        kernel_image_settings=kernel_image_settings,
+        ramdisk_image_settings=ramdisk_image_settings)
 
 
 def get_priv_net_config(net_name, subnet_name, router_name=None, cidr='10.55.0.0/24', external_net=None):
