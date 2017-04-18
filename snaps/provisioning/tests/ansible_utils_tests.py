@@ -15,18 +15,17 @@
 
 import os
 import uuid
+from scp import SCPClient
 
+from snaps.openstack import create_flavor
 from snaps.openstack import create_instance
+from snaps.openstack import create_image
 from snaps.openstack import create_keypairs
 from snaps.openstack import create_network
 from snaps.openstack import create_router
-from snaps.openstack import create_image
-from snaps.openstack import create_flavor
-from scp import SCPClient
-
-from snaps.provisioning import ansible_utils
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
+from snaps.provisioning import ansible_utils
 
 VM_BOOT_TIMEOUT = 600
 
@@ -62,35 +61,14 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         self.flavor_creator = None
         self.router_creator = None
         self.network_creator = None
-        self.image_creators = list()
+        self.image_creator = None
 
         try:
             # Create Image
-            os_image_settings = openstack_tests.ubuntu_url_image(name=guid + '-' + '-image')
-            if self.image_metadata:
-                if 'disk_url' in self.image_metadata and self.image_metadata['disk_url']:
-                    os_image_settings.url = self.image_metadata['disk_url']
-                if 'extra_properties' in self.image_metadata and self.image_metadata['extra_properties']:
-                    os_image_settings.extra_properties = self.image_metadata['extra_properties']
-
-            # If this is a 3-part image create the kernel and ramdisk images first
-            if self.image_metadata:
-                if 'kernel_url' in self.image_metadata and self.image_metadata['kernel_url']:
-                    kernel_image_settings = openstack_tests.cirros_url_image(
-                        name=os_image_settings.name+'_kernel', url=self.image_metadata['kernel_url'])
-                    self.image_creators.append(create_image.OpenStackImage(self.os_creds, kernel_image_settings))
-                    kernel_image = self.image_creators[-1].create()
-                    os_image_settings.extra_properties['kernel_id'] = kernel_image.id
-
-                if 'ramdisk_url' in self.image_metadata and self.image_metadata['ramdisk_url']:
-                    ramdisk_image_settings = openstack_tests.cirros_url_image(
-                        name=os_image_settings.name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
-                    self.image_creators.append(create_image.OpenStackImage(self.os_creds, ramdisk_image_settings))
-                    ramdisk_image = self.image_creators[-1].create()
-                    os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
-
-            self.image_creators.append(create_image.OpenStackImage(self.os_creds, os_image_settings))
-            self.image_creators[-1].create()
+            os_image_settings = openstack_tests.ubuntu_url_image(name=guid + '-' + '-image',
+                                                                 image_metadata=self.image_metadata)
+            self.image_creator = create_image.OpenStackImage(self.os_creds, os_image_settings)
+            self.image_creator.create()
 
             # First network is public
             self.pub_net_config = openstack_tests.get_pub_net_config(
@@ -131,7 +109,7 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
                     router_name=self.pub_net_config.router_settings.name)])
 
             self.inst_creator = create_instance.OpenStackVmInstance(
-                self.os_creds, instance_settings, self.image_creators[-1].image_settings,
+                self.os_creds, instance_settings, self.image_creator.image_settings,
                 keypair_settings=self.keypair_creator.keypair_settings)
         except Exception as e:
             self.tearDown()
@@ -162,10 +140,8 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         if self.network_creator:
             self.network_creator.clean()
 
-        if self.image_creators:
-            while self.image_creators:
-                self.image_creators[-1].clean()
-                self.image_creators.pop()
+        if self.image_creator:
+            self.image_creator.clean()
 
         if os.path.isfile(self.test_file_local_path):
             os.remove(self.test_file_local_path)

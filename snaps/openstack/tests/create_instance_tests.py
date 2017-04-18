@@ -243,7 +243,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         self.floating_ip_name = guid + 'fip1'
 
         # Initialize for tearDown()
-        self.image_creators = list()
+        self.image_creator = None
         self.network_creator = None
         self.flavor_creator = None
         self.inst_creator = None
@@ -255,33 +255,12 @@ class SimpleHealthCheck(OSIntegrationTestCase):
 
         # Create Image
         # Set the default image settings, then set any custom parameters sent from the app
-        self.os_image_settings = openstack_tests.cirros_url_image(name=guid + '-image')
-
-        if self.image_metadata:
-            if 'disk_url' in self.image_metadata and self.image_metadata['disk_url']:
-                self.os_image_settings.url = self.image_metadata['disk_url']
-            if 'extra_properties' in self.image_metadata and self.image_metadata['extra_properties']:
-                self.os_image_settings.extra_properties = self.image_metadata['extra_properties']
+        self.os_image_settings = openstack_tests.cirros_url_image(
+            name=guid + '-image', image_metadata=self.image_metadata)
 
         try:
-            # If this is a 3-part image create the kernel and ramdisk images first
-            if self.image_metadata:
-                if 'kernel_url' in self.image_metadata and self.image_metadata['kernel_url']:
-                    kernel_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_kernel', url=self.image_metadata['kernel_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, kernel_image_settings))
-                    kernel_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['kernel_id'] = kernel_image.id
-
-                if 'ramdisk_url' in self.image_metadata and self.image_metadata['ramdisk_url']:
-                    ramdisk_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, ramdisk_image_settings))
-                    ramdisk_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
-
-            self.image_creators.append(OpenStackImage(self.os_creds, self.os_image_settings))
-            self.image_creators[-1].create()
+            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator.create()
 
             # Create Network
             self.network_creator = OpenStackNetwork(self.os_creds, self.priv_net_config.network_settings)
@@ -324,11 +303,9 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning flavor with message - ' + e.message)
 
-        if self.image_creators:
+        if self.image_creator:
             try:
-                while self.image_creators:
-                    self.image_creators[-1].clean()
-                    self.image_creators.pop()
+                self.image_creator.clean()
             except Exception as e:
                 logger.error('Unexpected exception cleaning image with message - ' + e.message)
 
@@ -343,7 +320,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
 
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creators[-1].image_settings)
+                                                self.image_creator.image_settings)
         vm = self.inst_creator.create()
 
         ip = self.inst_creator.get_port_ip(self.port_settings.name)
@@ -392,14 +369,15 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.vm_inst_name = guid + '-inst'
         self.nova = nova_utils.nova_client(self.os_creds)
-        self.os_image_settings = openstack_tests.cirros_url_image(name=guid + '-image')
+        self.os_image_settings = openstack_tests.cirros_url_image(
+            name=guid + '-image', image_metadata=self.image_metadata)
 
         net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
             router_name=guid + '-pub-router', external_net=self.ext_net_name)
 
         # Initialize for tearDown()
-        self.image_creators = list()
+        self.image_creator = None
         self.flavor_creator = None
 
         self.network_creator = None
@@ -407,31 +385,8 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
 
         try:
             # Create Image
-            # Set any custom parameters sent from the app
-            if self.image_metadata:
-                if 'disk_url' in self.image_metadata and self.image_metadata['disk_url']:
-                    self.os_image_settings.url = self.image_metadata['disk_url']
-                if 'extra_properties' in self.image_metadata and  self.image_metadata['extra_properties']:
-                    self.os_image_settings.extra_properties = self.image_metadata['extra_properties']
-
-            # If this is a 3-part image create the kernel and ramdisk images first
-            if self.image_metadata:
-                if 'kernel_url' in self.image_metadata and self.image_metadata['kernel_url']:
-                    kernel_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_kernel', url=self.image_metadata['kernel_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, kernel_image_settings))
-                    kernel_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['kernel_id'] = kernel_image.id
-
-                if 'ramdisk_url' in self.image_metadata and self.image_metadata['ramdisk_url']:
-                    ramdisk_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, ramdisk_image_settings))
-                    ramdisk_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
-
-            self.image_creators.append(OpenStackImage(self.os_creds, self.os_image_settings))
-            self.image_creators[-1].create()
+            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator.create()
 
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
@@ -472,11 +427,9 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + e.message)
 
-        if self.image_creators:
+        if self.image_creator:
             try:
-                while self.image_creators:
-                    self.image_creators[-1].clean()
-                    self.image_creators.pop()
+                self.image_creator.clean()
             except Exception as e:
                 logger.error('Unexpected exception cleaning image with message - ' + e.message)
 
@@ -490,7 +443,7 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
                                                port_settings=[self.port_settings])
 
         self.inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+            self.os_creds, instance_settings, self.image_creator.image_settings)
 
         vm_inst = self.inst_creator.create()
         self.assertEquals(1, len(nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
@@ -527,7 +480,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.floating_ip_name = guid + 'fip1'
 
         # Initialize for tearDown()
-        self.image_creators = list()
+        self.image_creator = None
         self.network_creator = None
         self.router_creator = None
         self.flavor_creator = None
@@ -537,35 +490,12 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.pub_net_config = openstack_tests.get_pub_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
             router_name=guid + '-pub-router', external_net=self.ext_net_name)
-        self.os_image_settings = openstack_tests.cirros_url_image(name=guid + '-image')
-
+        self.os_image_settings = openstack_tests.cirros_url_image(
+            name=guid + '-image', image_metadata=self.image_metadata)
         try:
             # Create Image
-            # Set any custom parameters sent from the app
-            if self.image_metadata:
-                if 'disk_url' in self.image_metadata and self.image_metadata['disk_url']:
-                    self.os_image_settings.url = self.image_metadata['disk_url']
-                if 'extra_properties' in self.image_metadata and self.image_metadata['extra_properties']:
-                    self.os_image_settings.extra_properties = self.image_metadata['extra_properties']
-
-            # If this is a 3-part image create the kernel and ramdisk images first
-            if self.image_metadata:
-                if 'kernel_url' in self.image_metadata and self.image_metadata['kernel_url']:
-                    kernel_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_kernel', url=self.image_metadata['kernel_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, kernel_image_settings))
-                    kernel_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['kernel_id'] = kernel_image.id
-
-                if 'ramdisk_url' in self.image_metadata and self.image_metadata['ramdisk_url']:
-                    ramdisk_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, ramdisk_image_settings))
-                    ramdisk_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
-
-            self.image_creators.append(OpenStackImage(self.os_creds, self.os_image_settings))
-            self.image_creators[-1].create()
+            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator.create()
 
             # Create Network
             self.network_creator = OpenStackNetwork(self.os_creds, self.pub_net_config.network_settings)
@@ -630,11 +560,9 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + e.message)
 
-        if self.image_creators:
+        if self.image_creator:
             try:
-                while self.image_creators:
-                    self.image_creators[-1].clean()
-                    self.image_creators.pop()
+                self.image_creator.clean()
             except Exception as e:
                 logger.error('Unexpected exception cleaning image with message - ' + e.message)
 
@@ -657,7 +585,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
                 router_name=self.pub_net_config.router_settings.name)])
 
         inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creators[-1].image_settings,
+            self.os_creds, instance_settings, self.image_creator.image_settings,
             keypair_settings=self.keypair_creator.keypair_settings)
         self.inst_creators.append(inst_creator)
         vm_inst = inst_creator.create()
@@ -680,7 +608,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
                 router_name=self.pub_net_config.router_settings.name)])
 
         inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creators[-1].image_settings,
+            self.os_creds, instance_settings, self.image_creator.image_settings,
             keypair_settings=self.keypair_creator.keypair_settings)
         self.inst_creators.append(inst_creator)
         vm_inst = inst_creator.create()
@@ -705,7 +633,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
                 router_name=self.pub_net_config.router_settings.name)])
 
         inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creators[-1].image_settings,
+            self.os_creds, instance_settings, self.image_creator.image_settings,
             keypair_settings=self.keypair_creator.keypair_settings)
         self.inst_creators.append(inst_creator)
 
@@ -717,90 +645,6 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.assertEquals(vm_inst, inst_creator.get_vm_inst())
 
         self.assertTrue(validate_ssh_client(inst_creator))
-
-    # TODO - Determine how allowed_address_pairs is supposed to operate before continuing this test
-    # see http://docs.openstack.org/developer/dragonflow/specs/allowed_address_pairs.html for a functional description
-    # def test_allowed_address_port_access(self):
-    #     """
-    #     Tests to ensure that setting allowed_address_pairs on a port functions as designed
-    #     """
-    #     port_settings_1 = PortSettings(
-    #         name=self.port_1_name + '-1', network_name=self.pub_net_config.network_settings.name)
-    #
-    #     instance_settings_1 = VmInstanceSettings(
-    #         name=self.vm_inst_name + '-1', flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings_1],
-    #         floating_ip_settings=[FloatingIpSettings(
-    #             name=self.floating_ip_name + '-1', port_name=port_settings_1.name,
-    #             router_name=self.pub_net_config.router_settings.name)])
-    #
-    #     inst_creator_1 = OpenStackVmInstance(
-    #         self.os_creds, instance_settings_1, self.image_creators[-1].image_settings,
-    #         keypair_settings=self.keypair_creator.keypair_settings)
-    #     self.inst_creators.append(inst_creator_1)
-    #
-    #     # block=True will force the create() method to block until the
-    #     vm_inst_1 = inst_creator_1.create(block=True)
-    #     self.assertIsNotNone(vm_inst_1)
-    #
-    #     port_settings_1 = PortSettings(
-    #         name=self.port_1_name + '-1', network_name=self.pub_net_config.network_settings.name)
-    #
-    #     instance_settings_1 = VmInstanceSettings(
-    #         name=self.vm_inst_name + '-1', flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings_1],
-    #         floating_ip_settings=[FloatingIpSettings(
-    #             name=self.floating_ip_name + '-1', port_name=port_settings_1.name,
-    #             router_name=self.pub_net_config.router_settings.name)])
-    #
-    #     inst_creator_1 = OpenStackVmInstance(
-    #         self.os_creds, instance_settings_1, self.image_creators[-1].image_settings,
-    #         keypair_settings=self.keypair_creator.keypair_settings)
-    #     self.inst_creators.append(inst_creator_1)
-    #     inst_creator_1.create(block=True)
-    #
-    #     ip = inst_creator_1.get_port_ip(port_settings_1.name,
-    #                                     subnet_name=self.pub_net_config.network_settings.subnet_settings[0].name)
-    #     self.assertIsNotNone(ip)
-    #     mac_addr = inst_creator_1.get_port_mac(port_settings_1.name)
-    #     self.assertIsNotNone(mac_addr)
-    #
-    #     allowed_address_pairs = [{'ip_address': ip, 'mac_address': mac_addr}]
-    #
-    #     # Create VM that can be accessed by vm_inst_1
-    #     port_settings_2 = PortSettings(
-    #         name=self.port_1_name + '-2', network_name=self.pub_net_config.network_settings.name,
-    #         allowed_address_pairs=allowed_address_pairs)
-    #
-    #     instance_settings_2 = VmInstanceSettings(
-    #         name=self.vm_inst_name + '-2', flavor=self.flavor_creator.flavor_settings.name,
-    #         port_settings=[port_settings_2])
-    #
-    #     inst_creator_2 = OpenStackVmInstance(
-    #         self.os_creds, instance_settings_2, self.image_creators[-1].image_settings)
-    #     self.inst_creators.append(inst_creator_2)
-    #     inst_creator_2.create(block=True)
-    #
-    #     # Create VM that cannot be accessed by vm_inst_1
-    #     ip = '10.55.0.101'
-    #     mac_addr = '0a:1b:2c:3d:4e:5f'
-    #     invalid_address_pairs = [{'ip_address': ip, 'mac_address': mac_addr}]
-    #
-    #     port_settings_3 = PortSettings(
-    #         name=self.port_1_name + '-3', network_name=self.pub_net_config.network_settings.name,
-    #         allowed_address_pairs=invalid_address_pairs)
-    #
-    #     instance_settings_3 = VmInstanceSettings(
-    #         name=self.vm_inst_name + '-3', flavor=self.flavor_creator.flavor_settings.name,
-    #         port_settings=[port_settings_3])
-    #
-    #     inst_creator_3 = OpenStackVmInstance(
-    #         self.os_creds, instance_settings_3, self.image_creators[-1].image_settings)
-    #     self.inst_creators.append(inst_creator_3)
-    #     inst_creator_3.create(block=True)
-    #
-    #     print 'foo'
-    # I expected that this feature would block/allow traffic from specific endpoints (VMs). In this case, I would
-    # expect inst_1 to be able to access inst_2 but not inst_3; however, they all can access each other.
-    # TODO - Add validation
 
 
 class CreateInstancePortManipulationTests(OSIntegrationTestCase):
@@ -822,7 +666,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         self.floating_ip_name = guid + 'fip1'
 
         # Initialize for tearDown()
-        self.image_creators = list()
+        self.image_creator = None
         self.network_creator = None
         self.flavor_creator = None
         self.inst_creator = None
@@ -830,35 +674,13 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         self.net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
             router_name=guid + '-pub-router', external_net=self.ext_net_name)
-        self.os_image_settings = openstack_tests.cirros_url_image(name=guid + '-image')
+        self.os_image_settings = openstack_tests.cirros_url_image(
+            name=guid + '-image', image_metadata=self.image_metadata)
 
         try:
             # Create Image
-            # Set any custom parameters sent from the app
-            if self.image_metadata:
-                if 'disk_url' in self.image_metadata and self.image_metadata['disk_url']:
-                    self.os_image_settings.url = self.image_metadata['disk_url']
-                if 'extra_properties' in self.image_metadata and self.image_metadata['extra_properties']:
-                    self.os_image_settings.extra_properties = self.image_metadata['extra_properties']
-
-            # If this is a 3-part image create the kernel and ramdisk images first
-            if self.image_metadata:
-                if 'kernel_url' in self.image_metadata and self.image_metadata['kernel_url']:
-                    kernel_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_kernel', url=self.image_metadata['kernel_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, kernel_image_settings))
-                    kernel_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['kernel_id'] = kernel_image.id
-
-                if 'ramdisk_url' in self.image_metadata and self.image_metadata['ramdisk_url']:
-                    ramdisk_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, ramdisk_image_settings))
-                    ramdisk_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
-
-            self.image_creators.append(OpenStackImage(self.os_creds, self.os_image_settings))
-            self.image_creators[-1].create()
+            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator.create()
 
             # Create Network
             self.network_creator = OpenStackNetwork(self.os_creds, self.net_config.network_settings)
@@ -895,11 +717,9 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + e.message)
 
-        if self.image_creators:
+        if self.image_creator:
             try:
-                while self.image_creators:
-                    self.image_creators[-1].clean()
-                    self.image_creators.pop()
+                self.image_creator.clean()
             except Exception as e:
                 logger.error('Unexpected exception cleaning image with message - ' + e.message)
 
@@ -918,7 +738,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creators[-1].image_settings)
+                                                self.image_creator.image_settings)
         self.inst_creator.create(block=True)
 
         self.assertEquals(ip, self.inst_creator.get_port_ip(
@@ -937,7 +757,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creators[-1].image_settings)
+                                                self.image_creator.image_settings)
 
         with self.assertRaises(Exception):
             self.inst_creator.create()
@@ -954,7 +774,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creators[-1].image_settings)
+                                                self.image_creator.image_settings)
         self.inst_creator.create(block=True)
 
         self.assertEquals(mac_addr, self.inst_creator.get_port_mac(self.port_1_name))
@@ -971,7 +791,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
         self.inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+            self.os_creds, instance_settings, self.image_creator.image_settings)
 
         with self.assertRaises(Exception):
             self.inst_creator.create()
@@ -990,7 +810,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creators[-1].image_settings)
+                                                self.image_creator.image_settings)
         self.inst_creator.create(block=True)
 
         self.assertEquals(ip, self.inst_creator.get_port_ip(
@@ -1011,7 +831,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creators[-1].image_settings)
+                                                self.image_creator.image_settings)
         self.inst_creator.create(block=True)
 
         port = self.inst_creator.get_port_by_name(port_settings.name)
@@ -1037,7 +857,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creators[-1].image_settings)
+                                                self.image_creator.image_settings)
         with self.assertRaises(Exception):
             self.inst_creator.create()
 
@@ -1058,7 +878,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
 
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creators[-1].image_settings)
+                                                self.image_creator.image_settings)
         with self.assertRaises(Exception):
             self.inst_creator.create()
 
@@ -1080,7 +900,7 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
         self.port_base_name = guid + 'port'
 
         # Initialize for tearDown()
-        self.image_creators = list()
+        self.image_creator = None
         self.flavor_creator = None
         self.network_creator = None
         self.inst_creators = list()
@@ -1088,7 +908,8 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
         self.priv_net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-priv-net', subnet_name=guid + '-priv-subnet')
 
-        self.os_image_settings = openstack_tests.cirros_url_image(name=guid + '-image')
+        self.os_image_settings = openstack_tests.cirros_url_image(
+            name=guid + '-image', image_metadata=self.image_metadata)
 
         try:
             # Create Network
@@ -1102,31 +923,8 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
             self.flavor_creator.create()
 
             # Create Image
-            # Set any custom parameters sent from the app
-            if self.image_metadata:
-                if 'disk_url' in self.image_metadata and self.image_metadata['disk_url']:
-                    self.os_image_settings.url = self.image_metadata['disk_url']
-                if 'extra_properties' in self.image_metadata and self.image_metadata['extra_properties']:
-                    self.os_image_settings.extra_properties = self.image_metadata['extra_properties']
-
-            # If this is a 3-part image create the kernel and ramdisk images first
-            if self.image_metadata:
-                if 'kernel_url' in self.image_metadata and self.image_metadata['kernel_url']:
-                    kernel_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_kernel', url=self.image_metadata['kernel_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, kernel_image_settings))
-                    kernel_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['kernel_id'] = kernel_image.id
-
-                if 'ramdisk_url' in self.image_metadata and self.image_metadata['ramdisk_url']:
-                    ramdisk_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, ramdisk_image_settings))
-                    ramdisk_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
-
-            self.image_creators.append(OpenStackImage(self.os_creds, self.os_image_settings))
-            self.image_creators[-1].create()
+            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator.create()
 
         except Exception as e:
             self.tearDown()
@@ -1154,11 +952,9 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + e.message)
 
-        if self.image_creators:
+        if self.image_creator:
             try:
-                while self.image_creators:
-                    self.image_creators[-1].clean()
-                    self.image_creators.pop()
+                self.image_creator.clean()
             except Exception as e:
                 logger.error('Unexpected exception cleaning image with message - ' + e.message)
 
@@ -1184,7 +980,7 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
                 name=inst_name, flavor=self.flavor_creator.flavor_settings.name, availability_zone=zone,
                 port_settings=[port_settings])
             inst_creator = OpenStackVmInstance(
-                self.admin_os_creds, instance_settings, self.image_creators[-1].image_settings)
+                self.admin_os_creds, instance_settings, self.image_creator.image_settings)
             self.inst_creators.append(inst_creator)
             inst_creator.create()
 
@@ -1214,7 +1010,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
         super(self.__class__, self).__start__()
 
         # Initialize for tearDown()
-        self.image_creators = list()
+        self.image_creator = None
         self.network_creators = list()
         self.router_creators = list()
         self.flavor_creator = None
@@ -1235,36 +1031,14 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
         self.pub_net_config = openstack_tests.get_pub_net_config(
             net_name=self.guid + '-pub-net', subnet_name=self.guid + '-pub-subnet',
             router_name=self.guid + '-pub-router', external_net=self.ext_net_name)
+
         image_name = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        self.os_image_settings = openstack_tests.centos_url_image(name=image_name)
+        self.os_image_settings = openstack_tests.centos_url_image(name=image_name, image_metadata=self.image_metadata)
 
         try:
             # Create Image
-            # Set any custom parameters sent from the app
-            if self.image_metadata:
-                if 'disk_url' in self.image_metadata and self.image_metadata['disk_url']:
-                    self.os_image_settings.url = self.image_metadata['disk_url']
-                if 'extra_properties' in self.image_metadata and self.image_metadata['extra_properties']:
-                    self.os_image_settings.extra_properties = self.image_metadata['extra_properties']
-
-            # If this is a 3-part image create the kernel and ramdisk images first
-            if self.image_metadata:
-                if 'kernel_url' in self.image_metadata and self.image_metadata['kernel_url']:
-                    kernel_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_kernel', url=self.image_metadata['kernel_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, kernel_image_settings))
-                    kernel_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['kernel_id'] = kernel_image.id
-
-                if 'ramdisk_url' in self.image_metadata and self.image_metadata['ramdisk_url']:
-                    ramdisk_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, ramdisk_image_settings))
-                    ramdisk_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
-
-            self.image_creators.append(OpenStackImage(self.os_creds, self.os_image_settings))
-            self.image_creators[-1].create()
+            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator.create()
 
             # First network is public
             self.network_creators.append(OpenStackNetwork(self.os_creds, self.pub_net_config.network_settings))
@@ -1337,11 +1111,9 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + e.message)
 
-        if self.image_creators:
+        if self.image_creator:
             try:
-                while self.image_creators:
-                    self.image_creators[-1].clean()
-                    self.image_creators.pop()
+                self.image_creator.clean()
             except Exception as e:
                 logger.error('Unexpected exception cleaning image with message - ' + e.message)
 
@@ -1373,7 +1145,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
                 router_name=self.pub_net_config.router_settings.name)])
 
         self.inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creators[-1].image_settings,
+            self.os_creds, instance_settings, self.image_creator.image_settings,
             keypair_settings=self.keypair_creator.keypair_settings)
 
         vm_inst = self.inst_creator.create(block=True)
@@ -1408,7 +1180,8 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.vm_inst_name = self.guid + '-inst'
         self.nova = nova_utils.nova_client(self.os_creds)
-        self.os_image_settings = openstack_tests.cirros_url_image(name=self.guid + '-image')
+        self.os_image_settings = openstack_tests.cirros_url_image(
+            name=self.guid + '-image', image_metadata=self.image_metadata)
 
         self.vm_inst_name = self.guid + '-inst'
         self.port_1_name = self.guid + 'port-1'
@@ -1420,7 +1193,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
             router_name=self.guid + '-pub-router', external_net=self.ext_net_name)
 
         # Initialize for tearDown()
-        self.image_creators = list()
+        self.image_creator = None
         self.flavor_creator = None
         self.network_creator = None
         self.router_creator = None
@@ -1429,31 +1202,8 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
 
         try:
             # Create Image
-            # Set any custom parameters sent from the app
-            if self.image_metadata:
-                if 'disk_url' in self.image_metadata and self.image_metadata['disk_url']:
-                    self.os_image_settings.url = self.image_metadata['disk_url']
-                if 'extra_properties' in self.image_metadata and self.image_metadata['extra_properties']:
-                    self.os_image_settings.extra_properties = self.image_metadata['extra_properties']
-
-            # If this is a 3-part image create the kernel and ramdisk images first
-            if self.image_metadata:
-                if 'kernel_url' in self.image_metadata and self.image_metadata['kernel_url']:
-                    kernel_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_kernel', url=self.image_metadata['kernel_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, kernel_image_settings))
-                    kernel_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['kernel_id'] = kernel_image.id
-
-                if 'ramdisk_url' in self.image_metadata and self.image_metadata['ramdisk_url']:
-                    ramdisk_image_settings = openstack_tests.cirros_url_image(
-                        name=self.os_image_settings.name+'_ramdisk', url=self.image_metadata['ramdisk_url'])
-                    self.image_creators.append(OpenStackImage(self.os_creds, ramdisk_image_settings))
-                    ramdisk_image = self.image_creators[-1].create()
-                    self.os_image_settings.extra_properties['ramdisk_id'] = ramdisk_image.id
-
-            self.image_creators.append(OpenStackImage(self.os_creds, self.os_image_settings))
-            self.image_creators[-1].create()
+            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator.create()
 
             # Create Network
             self.network_creator = OpenStackNetwork(self.os_creds, net_config.network_settings)
@@ -1500,11 +1250,9 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + e.message)
 
-        if self.image_creators:
+        if self.image_creator:
             try:
-                while self.image_creators:
-                    self.image_creators[-1].clean()
-                    self.image_creators.pop()
+                self.image_creator.clean()
             except Exception as e:
                 logger.error('Unexpected exception cleaning image with message - ' + e.message)
 
@@ -1518,7 +1266,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creators[-1].image_settings)
+                                                self.image_creator.image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
@@ -1545,7 +1293,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creators[-1].image_settings)
+                                                self.image_creator.image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
@@ -1580,7 +1328,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name,
             security_group_names=[sec_grp_settings.name], port_settings=[self.port_settings])
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creators[-1].image_settings)
+                                                self.image_creator.image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
@@ -1607,7 +1355,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         instance_settings = VmInstanceSettings(
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creators[-1].image_settings)
+                                                self.image_creator.image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
@@ -1635,7 +1383,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
             name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name,
             security_group_names=[sec_grp_settings.name], port_settings=[self.port_settings])
         self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creators[-1].image_settings)
+                                                self.image_creator.image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
@@ -1712,58 +1460,20 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
             router_name=guid + '-pub-router', external_net=self.ext_net_name)
 
         # Initialize for tearDown()
-        self.image_creators = list()
+        self.image_creator = None
         self.network_creator = None
         self.flavor_creator = None
         self.inst_creator = None
 
         try:
-            # Create Images
-            # Set properties
-            properties = {}
-            if self.image_metadata:
-                if 'extra_properties' in self.image_metadata and self.image_metadata['extra_properties']:
-                    properties = self.image_metadata['extra_properties']
-
-            # Create the kernel image
-            kernel_image_settings = openstack_tests.cirros_url_image(
-                name=self.image_name+'_kernel',
-                url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel')
-
-            if self.image_metadata:
-                if 'kernel_url' in self.image_metadata and self.image_metadata['kernel_url']:
-                    kernel_image_settings.url = self.image_metadata['kernel_url']
-
-            self.image_creators.append(OpenStackImage(self.os_creds, kernel_image_settings))
-            kernel_image = self.image_creators[-1].create()
-
-            # Create the ramdisk image
-            ramdisk_image_settings = openstack_tests.cirros_url_image(
-                name=self.image_name+'_ramdisk',
-                url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs')
-
-            if self.image_metadata:
-                if 'ramdisk_url' in self.image_metadata and self.image_metadata['ramdisk_url']:
-                    ramdisk_image_settings.url = self.image_metadata['ramdisk_url']
-
-            self.image_creators.append(OpenStackImage(self.os_creds, ramdisk_image_settings))
-            ramdisk_image = self.image_creators[-1].create()
-            self.assertIsNotNone(ramdisk_image)
-
-            # Create the main image
-            os_image_settings = openstack_tests.cirros_url_image(
+            image_settings = openstack_tests.cirros_url_image(
                 name=self.image_name,
-                url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img')
-            if self.image_metadata:
-                if 'disk_url' in self.image_metadata and self.image_metadata['disk_url']:
-                    os_image_settings.url = self.image_metadata['disk_url']
+                image_metadata={'disk_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img',
+                                'kernel_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel',
+                                'ramdisk_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs'})
 
-            properties['kernel_id'] = kernel_image.id
-            properties['ramdisk_id'] = ramdisk_image.id
-            os_image_settings.extra_properties = properties
-            self.image_creators.append(OpenStackImage(self.os_creds, os_image_settings))
-            created_image = self.image_creators[-1].create()
-            self.assertIsNotNone(created_image)
+            self.image_creator = OpenStackImage(self.os_creds, image_settings)
+            self.image_creator.create()
 
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
@@ -1803,17 +1513,15 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + e.message)
 
-        if self.image_creators:
+        if self.image_creator:
             try:
-                while self.image_creators:
-                    self.image_creators[0].clean()
-                    self.image_creators.pop(0)
+               self.image_creator.clean()
             except Exception as e:
                 logger.error('Unexpected exception cleaning image with message - ' + e.message)
 
         super(self.__class__, self).__clean__()
 
-    def test_create_delete_instance_from_three_part_image(self):
+    def test_create_instance_from_three_part_image(self):
         """
         Tests the creation of an OpenStack instance from a 3-part image.
         """
@@ -1822,18 +1530,8 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
 
         # The last created image is the main image from which we create the instance
         self.inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creators[-1].image_settings)
+            self.os_creds, instance_settings, self.image_creator.image_settings)
 
         vm_inst = self.inst_creator.create()
-        self.assertEquals(1, len(nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
-
+        self.assertIsNotNone(vm_inst)
         self.assertTrue(self.inst_creator.vm_active(block=True))
-
-        # Delete instance
-        nova_utils.delete_vm_instance(self.nova, vm_inst)
-
-        self.assertTrue(self.inst_creator.vm_deleted(block=True))
-        self.assertEquals(0, len(nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
-
-        # Exception should not be thrown
-        self.inst_creator.clean()
