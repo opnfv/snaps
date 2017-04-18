@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ab8dda7_67a220b0",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 2997
+      },
+      "writtenOn": "2017-04-18T23:18:16Z",
+      "side": 1,
+      "message": "could be compacted into\nextra_properties \u003d self.image_settings.extra_properties or dict()",
+      "range": {
+        "startLine": 64,
+        "startChar": 12,
+        "endLine": 67,
+        "endChar": 41
+      },
+      "revId": "139653b9141b13c6c90ba7875dd41d459acf14c5",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_87a5d4b6",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 2997
+      },
+      "writtenOn": "2017-04-18T23:18:16Z",
+      "side": 1,
+      "message": "this could be compacted usging a loop",
+      "range": {
+        "startLine": 106,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 39
+      },
+      "revId": "139653b9141b13c6c90ba7875dd41d459acf14c5",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_27ac28a0",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 2997
+      },
+      "writtenOn": "2017-04-18T23:18:16Z",
+      "side": 1,
+      "message": "this files has a few lines past 80col, not really a big deal",
+      "range": {
+        "startLine": 91,
+        "startChar": 62,
+        "endLine": 91,
+        "endChar": 104
+      },
+      "revId": "139653b9141b13c6c90ba7875dd41d459acf14c5",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_47afdc94",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 2997
+      },
+      "writtenOn": "2017-04-18T23:18:16Z",
+      "side": 1,
+      "message": "unrelated to this patch, but we should:\n1. make cirros image configurable (even for tests)\n2. switch to 0.3.5",
+      "range": {
+        "startLine": 480,
+        "startChar": 77,
+        "endLine": 480,
+        "endChar": 78
+      },
+      "revId": "139653b9141b13c6c90ba7875dd41d459acf14c5",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
