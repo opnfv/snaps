@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9ab8dda7_4a392140",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-04-19T15:12:30Z",
+      "side": 1,
+      "message": "thanks for the Python shortcut!",
+      "parentUuid": "9ab8dda7_67a220b0",
+      "range": {
+        "startLine": 64,
+        "startChar": 12,
+        "endLine": 67,
+        "endChar": 41
+      },
+      "revId": "139653b9141b13c6c90ba7875dd41d459acf14c5",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ab8dda7_87a5d4b6",
         "filename": "snaps/openstack/create_image.py",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2017-04-18T23:18:16Z",
       "side": 1,
       "message": "this could be compacted usging a loop",
+      "range": {
+        "startLine": 106,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 39
+      },
+      "revId": "139653b9141b13c6c90ba7875dd41d459acf14c5",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_ea3fb523",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-04-19T15:12:30Z",
+      "side": 1,
+      "message": "I love the idea and am going to try out the following means:\n\n        for image in [self.__image, self.__kernel_image, self.__ramdisk_image]:\n            try:\n                glance_utils.delete_image(self.__glance, image)\n            except HTTPNotFound:\n                pass\n            \n        self.__image \u003d None\n        self.__kernel_image \u003d None\n        self.__ramdisk_image \u003d None",
+      "parentUuid": "9ab8dda7_87a5d4b6",
       "range": {
         "startLine": 106,
         "startChar": 0,
@@ -82,6 +130,30 @@
       "writtenOn": "2017-04-18T23:18:16Z",
       "side": 1,
       "message": "unrelated to this patch, but we should:\n1. make cirros image configurable (even for tests)\n2. switch to 0.3.5",
+      "range": {
+        "startLine": 480,
+        "startChar": 77,
+        "endLine": 480,
+        "endChar": 78
+      },
+      "revId": "139653b9141b13c6c90ba7875dd41d459acf14c5",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_2a362d53",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-04-19T15:12:30Z",
+      "side": 1,
+      "message": "great idea. I am looking into ways to expand the image_metadata coming over from the test client to not only add support for offline cloud testing but also for handling different images as not all SNAPS-OO tests can properly execute with Cirros. I have created the ticket https://jira.opnfv.org/browse/SNAPS-68 so we do not forget to address.",
+      "parentUuid": "9ab8dda7_47afdc94",
       "range": {
         "startLine": 480,
         "startChar": 77,
