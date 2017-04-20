@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -122,7 +122,7 @@ class OpenStackVmInstance:
         if not flavor:
             raise Exception('Flavor not found with name - ' + self.instance_settings.flavor)
 
-        image = glance_utils.get_image(self.__nova, glance_utils.glance_client(self.__os_creds),
+        image = glance_utils.get_image(glance_utils.glance_client(self.__os_creds),
                                        self.image_settings.name)
         if image:
             self.__vm = self.__nova.servers.create(

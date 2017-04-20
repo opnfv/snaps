@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,7 @@ class OSCreds:
     Represents the credentials required to connect with OpenStack servers
     """
 
-    def __init__(self, username, password, auth_url, project_name, identity_api_version=2, image_api_version=1,
+    def __init__(self, username, password, auth_url, project_name, identity_api_version=2, image_api_version=2,
                  network_api_version=2, compute_api_version=2, user_domain_id='default', project_domain_id='default',
                  proxy_settings=None):
         """

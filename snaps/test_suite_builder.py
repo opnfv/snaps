@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 import logging
 import unittest
 
+from snaps.domain.test.image_tests import ImageDomainObjectTests
 from snaps.openstack.utils.tests.glance_utils_tests import GlanceSmokeTests, GlanceUtilsTests
 from snaps.openstack.tests.create_flavor_tests import CreateFlavorTests
 from snaps.tests.file_utils_tests import FileUtilsTests
@@ -54,6 +55,7 @@ def add_unit_tests(suite):
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(SecurityGroupRuleSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(SecurityGroupSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(ImageSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(ImageDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(KeypairSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(UserSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(ProjectSettingsUnitTests))
