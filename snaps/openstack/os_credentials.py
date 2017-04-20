@@ -20,7 +20,7 @@ class OSCreds:
     Represents the credentials required to connect with OpenStack servers
     """
 
-    def __init__(self, username, password, auth_url, project_name, identity_api_version=2, image_api_version=1,
+    def __init__(self, username, password, auth_url, project_name, identity_api_version=2, image_api_version=2,
                  network_api_version=2, compute_api_version=2, user_domain_id='default', project_domain_id='default',
                  proxy_settings=None):
         """
