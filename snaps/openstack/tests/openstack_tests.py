@@ -15,6 +15,7 @@
 import re
 
 from snaps import file_utils
+from snaps.openstack.utils import glance_utils
 from snaps.openstack.create_network import NetworkSettings, SubnetSettings
 from snaps.openstack.create_router import RouterSettings
 from snaps.openstack.os_credentials import OSCreds, ProxySettings
@@ -77,6 +78,10 @@ def get_credentials(os_env_file=None, proxy_settings_str=None, ssh_proxy_cmd=Non
         if not identity_api_version:
             identity_api_version = 2
 
+        image_api_version = config.get('image_api_version')
+        if not image_api_version:
+            image_api_version = glance_utils.VERSION_2
+
         proxy_settings = None
         proxy_str = config.get('http_proxy')
         if proxy_str:
@@ -85,7 +90,7 @@ def get_credentials(os_env_file=None, proxy_settings_str=None, ssh_proxy_cmd=Non
 
         os_creds = OSCreds(username=config['username'], password=config['password'],
                            auth_url=config['os_auth_url'], project_name=config['project_name'],
-                           identity_api_version=identity_api_version,
+                           identity_api_version=identity_api_version, image_api_version=image_api_version,
                            proxy_settings=proxy_settings)
 
     logger.info('OS Credentials = ' + str(os_creds))
@@ -94,7 +99,7 @@ def get_credentials(os_env_file=None, proxy_settings_str=None, ssh_proxy_cmd=Non
 
 def cirros_url_image(name, url=None):
     if not url:
-        url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'
+        url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'
     return ImageSettings(name=name, image_user='cirros', img_format='qcow2', url=url)
 
 
@@ -105,15 +110,17 @@ def file_image_test_settings(name, file_path):
 
 def centos_url_image(name, url=None):
     if not url:
-        url='http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2'
-    return ImageSettings(name=name, image_user='centos', img_format='qcow2', url=url,
+        url = 'http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2'
+    return ImageSettings(
+        name=name, image_user='centos', img_format='qcow2', url=url,
         nic_config_pb_loc='./provisioning/ansible/centos-network-setup/playbooks/configure_host.yml')
 
 
 def ubuntu_url_image(name, url=None):
     if not url:
-        url='http://uec-images.ubuntu.com/releases/trusty/14.04/ubuntu-14.04-server-cloudimg-amd64-disk1.img'
-    return ImageSettings(name=name, image_user='ubuntu', img_format='qcow2', url=url,
+        url = 'http://uec-images.ubuntu.com/releases/trusty/14.04/ubuntu-14.04-server-cloudimg-amd64-disk1.img'
+    return ImageSettings(
+        name=name, image_user='ubuntu', img_format='qcow2', url=url,
         nic_config_pb_loc='./provisioning/ansible/ubuntu-network-setup/playbooks/configure_host.yml')
 
 

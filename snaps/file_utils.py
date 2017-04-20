@@ -51,14 +51,16 @@ def get_file(file_path):
         raise Exception('File with path cannot be found - ' + file_path)
 
 
-def download(url, dest_path):
+def download(url, dest_path, name=None):
     """
     Download a file to a destination path given a URL
     :rtype : File object
     """
-    name = url.rsplit('/')[-1]
+    if not name:
+        name = url.rsplit('/')[-1]
     dest = dest_path + '/' + name
     try:
+        logger.debug('Downloading file from - ' + url)
         # Override proxy settings to use localhost to download file
         proxy_handler = urllib2.ProxyHandler({})
         opener = urllib2.build_opener(proxy_handler)
@@ -68,8 +70,22 @@ def download(url, dest_path):
         raise Exception
 
     with open(dest, 'wb') as f:
+        logger.debug('Saving file to - ' + dest)
         f.write(response.read())
     return f
+
+
+def get_content_length(url):
+    """
+    Returns the number of bytes to be downloaded from the given URL
+    :param url: the URL to inspect
+    :return: the number of bytes
+    """
+    proxy_handler = urllib2.ProxyHandler({})
+    opener = urllib2.build_opener(proxy_handler)
+    urllib2.install_opener(opener)
+    response = urllib2.urlopen(url)
+    return response.headers['Content-Length']
 
 
 def read_yaml(config_file_path):

@@ -17,7 +17,7 @@ import time
 
 from glanceclient.exc import HTTPNotFound
 
-from snaps.openstack.utils import glance_utils, nova_utils
+from snaps.openstack.utils import glance_utils
 
 __author__ = 'spisarski'
 
@@ -47,25 +47,22 @@ class OpenStackImage:
 
     def create(self, cleanup=False):
         """
-        Creates the image in OpenStack if it does not already exist
+        Creates the image in OpenStack if it does not already exist and returns the domain Image object
         :param cleanup: Denotes whether or not this is being called for cleanup or not
         :return: The OpenStack Image object
         """
-        from snaps.openstack.utils import nova_utils
-        nova = nova_utils.nova_client(self.__os_creds)
-
-        self.__image = glance_utils.get_image(nova, self.__glance, self.image_settings.name)
+        self.__image = glance_utils.get_image(self.__glance, self.image_settings.name)
         if self.__image:
             logger.info('Found image with name - ' + self.image_settings.name)
             return self.__image
         elif not cleanup:
             self.__image = glance_utils.create_image(self.__glance, self.image_settings)
             logger.info('Creating image')
-            if self.image_active(block=True):
+            if self.__image and self.image_active(block=True):
                 logger.info('Image is now active with name - ' + self.image_settings.name)
                 return self.__image
             else:
-                raise Exception('Image did not activate in the alloted amount of time')
+                raise Exception('Image was not created or activated in the alloted amount of time')
         else:
             logger.info('Did not create image due to cleanup mode')
 
@@ -85,7 +82,7 @@ class OpenStackImage:
 
     def get_image(self):
         """
-        Returns the OpenStack image object as it was populated when create() was called
+        Returns the domain Image object as it was populated when create() was called
         :return: the object
         """
         return self.__image
@@ -135,17 +132,15 @@ class OpenStackImage:
         :return: T/F
         """
         # TODO - Place this API call into glance_utils.
-        nova = nova_utils.nova_client(self.__os_creds)
-        instance = glance_utils.get_image(nova, self.__glance, self.image_settings.name)
-        # instance = self.__glance.images.get(self.__image)
-        if not instance:
-            logger.warn('Cannot find instance with id - ' + self.__image.id)
+        status = glance_utils.get_image_status(self.__glance, self.__image)
+        if not status:
+            logger.warn('Cannot image status for image with ID - ' + self.__image.id)
             return False
 
-        if instance.status == 'ERROR':
+        if status == 'ERROR':
             raise Exception('Instance had an error during deployment')
-        logger.debug('Instance status is - ' + instance.status)
-        return instance.status == expected_status_code
+        logger.debug('Instance status is - ' + status)
+        return status == expected_status_code
 
 
 class ImageSettings:

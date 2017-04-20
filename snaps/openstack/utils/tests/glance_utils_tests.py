@@ -19,7 +19,6 @@ import uuid
 from snaps import file_utils
 from snaps.openstack.tests import openstack_tests
 
-from snaps.openstack.utils import nova_utils
 from snaps.openstack.tests import validation_utils
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import glance_utils
@@ -65,7 +64,6 @@ class GlanceUtilsTests(OSComponentTestCase):
         guid = uuid.uuid4()
         self.image_name = self.__class__.__name__ + '-' + str(guid)
         self.image = None
-        self.nova = nova_utils.nova_client(self.os_creds)
         self.glance = glance_utils.glance_client(self.os_creds)
 
         self.tmp_dir = 'tmp/' + str(guid)
@@ -93,7 +91,7 @@ class GlanceUtilsTests(OSComponentTestCase):
 
         self.assertEqual(self.image_name, self.image.name)
 
-        image = glance_utils.get_image(self.nova, self.glance, os_image_settings.name)
+        image = glance_utils.get_image(self.glance, os_image_settings.name)
         self.assertIsNotNone(image)
 
         validation_utils.objects_equivalent(self.image, image)
@@ -110,6 +108,6 @@ class GlanceUtilsTests(OSComponentTestCase):
         self.assertIsNotNone(self.image)
         self.assertEqual(self.image_name, self.image.name)
 
-        image = glance_utils.get_image(self.nova, self.glance, file_image_settings.name)
+        image = glance_utils.get_image(self.glance, file_image_settings.name)
         self.assertIsNotNone(image)
         validation_utils.objects_equivalent(self.image, image)

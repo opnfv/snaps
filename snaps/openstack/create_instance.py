@@ -122,7 +122,7 @@ class OpenStackVmInstance:
         if not flavor:
             raise Exception('Flavor not found with name - ' + self.instance_settings.flavor)
 
-        image = glance_utils.get_image(self.__nova, glance_utils.glance_client(self.__os_creds),
+        image = glance_utils.get_image(glance_utils.glance_client(self.__os_creds),
                                        self.image_settings.name)
         if image:
             self.__vm = self.__nova.servers.create(
