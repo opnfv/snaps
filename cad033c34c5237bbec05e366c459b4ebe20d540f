@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "9ab8dda7_0a732481",
+        "filename": "snaps/domain/__init__.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 2997
+      },
+      "writtenOn": "2017-04-24T15:29:03Z",
+      "side": 1,
+      "message": "minor nitpick: should be 2016,2017 or just 2017",
+      "range": {
+        "startLine": 1,
+        "startChar": 16,
+        "endLine": 1,
+        "endChar": 20
+      },
+      "revId": "cad033c34c5237bbec05e366c459b4ebe20d540f",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_2a6e2897",
+        "filename": "snaps/domain/image.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 2997
+      },
+      "writtenOn": "2017-04-24T15:29:03Z",
+      "side": 1,
+      "message": "Line too long",
+      "range": {
+        "startLine": 19,
+        "startChar": 4,
+        "endLine": 19,
+        "endChar": 101
+      },
+      "revId": "cad033c34c5237bbec05e366c459b4ebe20d540f",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ab8dda7_9b9f695f",
         "filename": "snaps/domain/image.py",
         "patchSetId": 1
@@ -30,6 +76,75 @@
       "writtenOn": "2017-04-21T14:11:09Z",
       "side": 1,
       "message": "I generally prefer the usage of %s and %url  or format, but I\u0027m also ok with this.",
+      "revId": "cad033c34c5237bbec05e366c459b4ebe20d540f",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_ca6c2c9f",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 2997
+      },
+      "writtenOn": "2017-04-24T15:29:03Z",
+      "side": 1,
+      "message": "trailing ws",
+      "range": {
+        "startLine": 268,
+        "startChar": 0,
+        "endLine": 268,
+        "endChar": 1
+      },
+      "revId": "cad033c34c5237bbec05e366c459b4ebe20d540f",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_ea67b0b5",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 2997
+      },
+      "writtenOn": "2017-04-24T15:29:03Z",
+      "side": 1,
+      "message": "Unless I missed something, duplicate assignment?",
+      "range": {
+        "startLine": 446,
+        "startChar": 16,
+        "endLine": 446,
+        "endChar": 64
+      },
+      "revId": "cad033c34c5237bbec05e366c459b4ebe20d540f",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_8a0634cd",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 2997
+      },
+      "writtenOn": "2017-04-24T15:29:03Z",
+      "side": 1,
+      "message": "trailing ws",
+      "range": {
+        "startLine": 723,
+        "startChar": 12,
+        "endLine": 723,
+        "endChar": 13
+      },
       "revId": "cad033c34c5237bbec05e366c459b4ebe20d540f",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
