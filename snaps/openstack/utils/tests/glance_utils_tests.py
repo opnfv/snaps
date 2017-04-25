@@ -36,9 +36,9 @@ class GlanceSmokeTests(OSComponentTestCase):
         Tests to ensure that the proper credentials can connect.
         """
         glance = glance_utils.glance_client(self.os_creds)
-
-        users = glance.images.list()
-        self.assertIsNotNone(users)
+        nova = nova_utils.nova_client(self.os_creds)
+        image = glance_utils.get_image(nova, glance, 'foo')
+        self.assertIsNone(image)
 
     def test_glance_connect_fail(self):
         """
@@ -47,8 +47,9 @@ class GlanceSmokeTests(OSComponentTestCase):
         from snaps.openstack.os_credentials import OSCreds
 
         with self.assertRaises(Exception):
-            neutron = glance_utils.glance_client(OSCreds('user', 'pass', 'url', 'project'))
-            neutron.list_networks()
+            glance = glance_utils.glance_client(OSCreds('user', 'pass', 'url', 'project'))
+            nova = nova_utils.nova_client(self.os_creds)
+            glance_utils.get_image(nova, glance, 'foo')
 
 
 class GlanceUtilsTests(OSComponentTestCase):
