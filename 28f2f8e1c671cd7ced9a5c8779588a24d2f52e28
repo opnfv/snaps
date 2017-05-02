@@ -22,6 +22,30 @@
       "revId": "28f2f8e1c671cd7ced9a5c8779588a24d2f52e28",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_4e65a743",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-05-02T15:13:55Z",
+      "side": 1,
+      "message": "I believe you are correct; however the variable \"found\" must be set to True though before \"break\"",
+      "parentUuid": "9ab8dda7_8e1cffc2",
+      "range": {
+        "startLine": 365,
+        "startChar": 0,
+        "endLine": 369,
+        "endChar": 61
+      },
+      "revId": "28f2f8e1c671cd7ced9a5c8779588a24d2f52e28",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
