@@ -354,14 +354,13 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         found = False
         timeout = 160
         start_time = time.time()
-        match_value = 'Lease of.*obtained'
 
-        logger.info("Looking for expression %s in the console log" % match_value)
+        logger.info("Looking for IP %s in the console log" % ip)
         full_log = ''
         while timeout > time.time() - start_time:
             output = vm.get_console_output()
             full_log = full_log + output
-            if re.search(match_value, output):
+            if re.search(ip, output):
                 logger.info('DHCP lease obtained logged in console')
                 if ip in output:
                     logger.info('With correct IP address')
