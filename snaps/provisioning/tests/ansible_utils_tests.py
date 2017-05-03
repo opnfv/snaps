@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -65,8 +65,8 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
 
         try:
             # Create Image
-            os_image_settings = openstack_tests.ubuntu_url_image(name=guid + '-' + '-image',
-                                                                 image_metadata=self.image_metadata)
+            os_image_settings = openstack_tests.ubuntu_image_settings(name=guid + '-' + '-image',
+                                                                      image_metadata=self.image_metadata)
             self.image_creator = create_image.OpenStackImage(self.os_creds, os_image_settings)
             self.image_creator.create()
 
