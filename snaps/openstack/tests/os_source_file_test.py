@@ -12,15 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import unittest
+import logging
 import uuid
+import unittest
 
 from snaps import file_utils
-import openstack_tests
-import logging
-
 from snaps.openstack.create_project import ProjectSettings
 from snaps.openstack.create_user import UserSettings
+from snaps.openstack.tests import openstack_tests
 from snaps.openstack.utils import deploy_utils, keystone_utils
 
 dev_os_env_file = 'openstack/tests/conf/os_env.yaml'
@@ -78,8 +77,12 @@ class OSIntegrationTestCase(OSComponentTestCase):
         :param os_creds: the OSCreds object, when null it searches for the file {cwd}/openstack/tests/conf/os_env.yaml
         :param ext_net_name: the name of the external network that is used for creating routers for floating IPs
         :param use_keystone: when true, these tests will create a new user/project under which to run the test
+        :param image_metadata: dict() containing the URLs for the disk, kernel, and ramdisk images when multi-part
+                               images are required.
+            image_metadata={'disk_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img',
+                            'kernel_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel',
+                            'ramdisk_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs'})
         :param flavor_metadata: dict() to be sent directly into the Nova client generally used for page sizes
-        :param image_metadata: dict() to be sent directly into the Nova client generally used for multi-part images
         :param log_level: the logging level of your test run (default DEBUG)
         """
         super(OSIntegrationTestCase, self).__init__(method_name=method_name, os_creds=os_creds,
