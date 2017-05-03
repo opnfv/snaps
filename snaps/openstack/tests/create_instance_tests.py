@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -255,7 +255,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
 
         # Create Image
         # Set the default image settings, then set any custom parameters sent from the app
-        self.os_image_settings = openstack_tests.cirros_url_image(
+        self.os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
 
         try:
@@ -364,7 +364,7 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.vm_inst_name = guid + '-inst'
         self.nova = nova_utils.nova_client(self.os_creds)
-        self.os_image_settings = openstack_tests.cirros_url_image(
+        self.os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
 
         net_config = openstack_tests.get_priv_net_config(
@@ -485,7 +485,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.pub_net_config = openstack_tests.get_pub_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
             router_name=guid + '-pub-router', external_net=self.ext_net_name)
-        self.os_image_settings = openstack_tests.cirros_url_image(
+        self.os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
         try:
             # Create Image
@@ -669,7 +669,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         self.net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
             router_name=guid + '-pub-router', external_net=self.ext_net_name)
-        self.os_image_settings = openstack_tests.cirros_url_image(
+        self.os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
 
         try:
@@ -903,7 +903,7 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
         self.priv_net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-priv-net', subnet_name=guid + '-priv-subnet')
 
-        self.os_image_settings = openstack_tests.cirros_url_image(
+        self.os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
 
         try:
@@ -1028,7 +1028,8 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             router_name=self.guid + '-pub-router', external_net=self.ext_net_name)
 
         image_name = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        self.os_image_settings = openstack_tests.centos_url_image(name=image_name, image_metadata=self.image_metadata)
+        self.os_image_settings = openstack_tests.centos_image_settings(name=image_name,
+                                                                       image_metadata=self.image_metadata)
 
         try:
             # Create Image
@@ -1175,7 +1176,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.vm_inst_name = self.guid + '-inst'
         self.nova = nova_utils.nova_client(self.os_creds)
-        self.os_image_settings = openstack_tests.cirros_url_image(
+        self.os_image_settings = openstack_tests.cirros_image_settings(
             name=self.guid + '-image', image_metadata=self.image_metadata)
 
         self.vm_inst_name = self.guid + '-inst'
@@ -1461,7 +1462,7 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
         self.inst_creator = None
 
         try:
-            image_settings = openstack_tests.cirros_url_image(
+            image_settings = openstack_tests.cirros_image_settings(
                 name=self.image_name,
                 image_metadata={'disk_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img',
                                 'kernel_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel',
@@ -1510,7 +1511,7 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
 
         if self.image_creator:
             try:
-               self.image_creator.clean()
+                self.image_creator.clean()
             except Exception as e:
                 logger.error('Unexpected exception cleaning image with message - ' + e.message)
 

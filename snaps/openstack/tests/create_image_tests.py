@@ -218,6 +218,9 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         if not os.path.exists(self.tmp_dir):
             os.makedirs(self.tmp_dir)
 
+        self.image_settings = openstack_tests.cirros_image_settings(name=self.image_name,
+                                                                    image_metadata=self.image_metadata)
+
     def tearDown(self):
         """
         Cleans the image and downloaded image file
@@ -236,16 +239,15 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         """
         # Create Image
         # Set the default image settings, then set any custom parameters sent from the app
-        os_image_settings = openstack_tests.cirros_url_image(name=self.image_name, image_metadata=self.image_metadata)
 
-        self.image_creator = create_image.OpenStackImage(self.os_creds, os_image_settings)
+        self.image_creator = create_image.OpenStackImage(self.os_creds, self.image_settings)
         created_image = self.image_creator.create()
         self.assertIsNotNone(created_image)
 
-        retrieved_image = glance_utils.get_image(self.glance, os_image_settings.name)
+        retrieved_image = glance_utils.get_image(self.glance, self.image_settings.name)
         self.assertIsNotNone(retrieved_image)
         self.assertEquals(created_image.size, retrieved_image.size)
-        self.assertEquals(get_image_size(os_image_settings), retrieved_image.size)
+        self.assertEquals(get_image_size(self.image_settings), retrieved_image.size)
         self.assertEquals(created_image.name, retrieved_image.name)
         self.assertEquals(created_image.id, retrieved_image.id)
 
@@ -255,16 +257,14 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         """
         # Create Image
         # Set the default image settings, then set any custom parameters sent from the app
-        os_image_settings = openstack_tests.cirros_url_image(name=self.image_name, image_metadata=self.image_metadata)
-
-        self.image_creator = create_image.OpenStackImage(self.os_creds, os_image_settings)
+        self.image_creator = create_image.OpenStackImage(self.os_creds, self.image_settings)
         created_image = self.image_creator.create()
         self.assertIsNotNone(created_image)
 
-        retrieved_image = glance_utils.get_image(self.glance, os_image_settings.name)
+        retrieved_image = glance_utils.get_image(self.glance, self.image_settings.name)
         self.assertIsNotNone(retrieved_image)
         self.assertEquals(self.image_creator.get_image().size, retrieved_image.size)
-        self.assertEquals(get_image_size(os_image_settings), retrieved_image.size)
+        self.assertEquals(get_image_size(self.image_settings), retrieved_image.size)
         self.assertEquals(created_image.name, retrieved_image.name)
         self.assertEquals(created_image.id, retrieved_image.id)
         self.assertEquals(created_image.properties, retrieved_image.properties)
@@ -275,13 +275,11 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         """
 
         # Create Image
-        # Set the default image settings, then set any custom parameters sent from the app
-        url_image_settings = openstack_tests.cirros_url_image(self.image_name, image_metadata=self.image_metadata)
 
         # Download the file of the image
-        image_file = file_utils.download(url_image_settings.url, self.tmp_dir)
+        image_file = file_utils.download(self.image_settings.url, self.tmp_dir)
         file_image_settings = openstack_tests.file_image_test_settings(
-            name=self.image_name, file_path=image_file.name, image_metadata=self.image_metadata)
+            name=self.image_name, file_path=image_file.name)
 
         self.image_creator = create_image.OpenStackImage(self.os_creds, file_image_settings)
         created_image = self.image_creator.create()
@@ -301,17 +299,14 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         Tests the creation then deletion of an OpenStack image to ensure clean() does not raise an Exception.
         """
         # Create Image
-        # Set the default image settings, then set any custom parameters sent from the app
-        os_image_settings = openstack_tests.cirros_url_image(name=self.image_name, image_metadata=self.image_metadata)
-
-        self.image_creator = create_image.OpenStackImage(self.os_creds, os_image_settings)
+        self.image_creator = create_image.OpenStackImage(self.os_creds, self.image_settings)
         created_image = self.image_creator.create()
         self.assertIsNotNone(created_image)
 
-        retrieved_image = glance_utils.get_image(self.glance, os_image_settings.name)
+        retrieved_image = glance_utils.get_image(self.glance, self.image_settings.name)
         self.assertIsNotNone(retrieved_image)
         self.assertEquals(self.image_creator.get_image().size, retrieved_image.size)
-        self.assertEquals(get_image_size(os_image_settings), retrieved_image.size)
+        self.assertEquals(get_image_size(self.image_settings), retrieved_image.size)
 
         # Delete Image manually
         glance_utils.delete_image(self.glance, created_image)
@@ -327,22 +322,19 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack image when the image already exists.
         """
         # Create Image
-        # Set the default image settings, then set any custom parameters sent from the app
-        os_image_settings = openstack_tests.cirros_url_image(name=self.image_name, image_metadata=self.image_metadata)
-
-        self.image_creator = create_image.OpenStackImage(self.os_creds, os_image_settings)
+        self.image_creator = create_image.OpenStackImage(self.os_creds, self.image_settings)
         image1 = self.image_creator.create()
 
-        retrieved_image = glance_utils.get_image(self.glance, os_image_settings.name)
+        retrieved_image = glance_utils.get_image(self.glance, self.image_settings.name)
         self.assertIsNotNone(retrieved_image)
         self.assertEquals(self.image_creator.get_image().size, retrieved_image.size)
-        self.assertEquals(get_image_size(os_image_settings), retrieved_image.size)
+        self.assertEquals(get_image_size(self.image_settings), retrieved_image.size)
         self.assertEquals(image1.name, retrieved_image.name)
         self.assertEquals(image1.id, retrieved_image.id)
         self.assertEquals(image1.properties, retrieved_image.properties)
 
         # Should be retrieving the instance data
-        os_image_2 = create_image.OpenStackImage(self.os_creds, os_image_settings)
+        os_image_2 = create_image.OpenStackImage(self.os_creds, self.image_settings)
         image2 = os_image_2.create()
         self.assertEquals(image1.id, image2.id)
 
@@ -368,7 +360,7 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
         """
         Expect an exception when the image name is None
         """
-        os_image_settings = openstack_tests.cirros_url_image(name=self.image_name)
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
         with self.assertRaises(Exception):
             self.image_creator = create_image.OpenStackImage(
                 self.os_creds, create_image.ImageSettings(
@@ -381,7 +373,7 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
         """
         Expect an exception when the image download url is bad
         """
-        os_image_settings = openstack_tests.cirros_url_image(name=self.image_name)
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
         self.image_creator = create_image.OpenStackImage(self.os_creds, create_image.ImageSettings(
             name=os_image_settings.name, image_user=os_image_settings.image_user,
             img_format=os_image_settings.format, url="http://foo.bar"))
@@ -392,7 +384,7 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
         """
         Expect an exception when the image file does not exist
         """
-        os_image_settings = openstack_tests.cirros_url_image(name=self.image_name)
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
         self.image_creator = create_image.OpenStackImage(
             self.os_creds,
             create_image.ImageSettings(name=os_image_settings.name, image_user=os_image_settings.image_user,
@@ -404,7 +396,7 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
         """
         Expect an exception when the project name is None
         """
-        os_image_settings = openstack_tests.cirros_url_image(name=self.image_name)
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
         with self.assertRaises(Exception):
             self.image_creator = create_image.OpenStackImage(
                 os_credentials.OSCreds(self.os_creds.username, self.os_creds.password, self.os_creds.auth_url, None,
@@ -416,7 +408,7 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
         """
         Expect an exception when the project name is None
         """
-        os_image_settings = openstack_tests.cirros_url_image(name=self.image_name)
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
         with self.assertRaises(Exception):
             self.image_creator = create_image.OpenStackImage(
                 os_credentials.OSCreds(self.os_creds.username, self.os_creds.password, None,
@@ -428,7 +420,7 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
         """
         Expect an exception when the project name is None
         """
-        os_image_settings = openstack_tests.cirros_url_image(name=self.image_name)
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
         with self.assertRaises(Exception):
             self.image_creator = create_image.OpenStackImage(
                 os_credentials.OSCreds(self.os_creds.username, None, self.os_creds.os_auth_url,
@@ -439,7 +431,7 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
         """
         Expect an exception when the project name is None
         """
-        os_image_settings = openstack_tests.cirros_url_image(name=self.image_name)
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
         with self.assertRaises(Exception):
             self.image_creator = create_image.OpenStackImage(
                 os_credentials.OSCreds(None, self.os_creds.password, self.os_creds.os_auth_url,
@@ -485,7 +477,7 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         Tests the creation of a 3-part OpenStack image from a URL.
         """
         # Create the kernel image
-        image_settings = openstack_tests.cirros_url_image(
+        image_settings = openstack_tests.cirros_image_settings(
             name=self.image_name,
             image_metadata={'disk_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img',
                             'kernel_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel',
@@ -576,7 +568,7 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
             properties = self.image_metadata['extra_properties']
 
         # Create the kernel image
-        kernel_image_settings = openstack_tests.cirros_url_image(
+        kernel_image_settings = openstack_tests.cirros_image_settings(
             name=self.image_name+'_kernel',
             url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel')
 
@@ -589,7 +581,7 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         self.assertEquals(get_image_size(kernel_image_settings), kernel_image.size)
 
         # Create the ramdisk image
-        ramdisk_image_settings = openstack_tests.cirros_url_image(
+        ramdisk_image_settings = openstack_tests.cirros_image_settings(
             name=self.image_name+'_ramdisk',
             url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs')
         if self.image_metadata:
@@ -601,7 +593,7 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         self.assertEquals(get_image_size(ramdisk_image_settings), ramdisk_image.size)
 
         # Create the main image
-        os_image_settings = openstack_tests.cirros_url_image(
+        os_image_settings = openstack_tests.cirros_image_settings(
             name=self.image_name,
             url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img')
         if self.image_metadata:

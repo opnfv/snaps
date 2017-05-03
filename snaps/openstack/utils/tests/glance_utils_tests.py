@@ -83,7 +83,7 @@ class GlanceUtilsTests(OSComponentTestCase):
         """
         Tests the glance_utils.create_image() function with a URL
         """
-        os_image_settings = openstack_tests.cirros_url_image(name=self.image_name)
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
 
         self.image = glance_utils.create_image(self.glance, os_image_settings)
         self.assertIsNotNone(self.image)
@@ -99,7 +99,7 @@ class GlanceUtilsTests(OSComponentTestCase):
         """
         Tests the glance_utils.create_image() function with a file
         """
-        url_image_settings = openstack_tests.cirros_url_image('foo')
+        url_image_settings = openstack_tests.cirros_image_settings('foo')
         image_file = file_utils.download(url_image_settings.url, self.tmp_dir)
         file_image_settings = openstack_tests.file_image_test_settings(name=self.image_name, file_path=image_file.name)
 

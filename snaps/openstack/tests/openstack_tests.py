@@ -97,27 +97,41 @@ def get_credentials(os_env_file=None, proxy_settings_str=None, ssh_proxy_cmd=Non
     return os_creds
 
 
-def cirros_url_image(name, url=None, image_metadata=None, kernel_settings=None, ramdisk_settings=None):
-    if image_metadata and 'disk_url' in image_metadata:
-        url = image_metadata['disk_url']
+def cirros_image_settings(name, url=None, image_metadata=None, kernel_settings=None, ramdisk_settings=None):
+    """
+    Returns the image settings for a Cirros QCOW2 image
+    :param name: the name of the image
+    :param url: the image's URL
+    :param image_metadata: dict() values to override URLs for disk, kernel, and ramdisk
+    :param kernel_settings: override to the kernel settings from the image_metadata
+    :param ramdisk_settings: override to the ramdisk settings from the image_metadata
+    :return: 
+    """
+    if image_metadata and 'cirros' in image_metadata:
+        metadata = image_metadata['cirros']
+    else:
+        metadata = image_metadata
+
+    if metadata and 'disk_url' in metadata:
+        url = metadata['disk_url']
     if not url:
         url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'
 
-    if image_metadata and 'kernel_url' in image_metadata and kernel_settings is None:
+    if metadata and 'kernel_url' in metadata and kernel_settings is None:
         kernel_image_settings = ImageSettings(name=name + '-kernel', image_user='cirros', img_format='qcow2',
-                                              url=image_metadata['kernel_url'])
+                                              url=metadata['kernel_url'])
     else:
         kernel_image_settings = kernel_settings
 
-    if image_metadata and 'ramdisk_url' in image_metadata and ramdisk_settings is None:
+    if metadata and 'ramdisk_url' in metadata and ramdisk_settings is None:
         ramdisk_image_settings = ImageSettings(name=name + '-ramdisk', image_user='cirros', img_format='qcow2',
-                                               url=image_metadata['ramdisk_url'])
+                                               url=metadata['ramdisk_url'])
     else:
         ramdisk_image_settings = ramdisk_settings
 
     extra_properties = None
-    if image_metadata and 'extra_properties' in image_metadata:
-        extra_properties = image_metadata['extra_properties']
+    if metadata and 'extra_properties' in metadata:
+        extra_properties = metadata['extra_properties']
 
     return ImageSettings(name=name, image_user='cirros', img_format='qcow2', url=url,
                          extra_properties=extra_properties,
@@ -125,41 +139,40 @@ def cirros_url_image(name, url=None, image_metadata=None, kernel_settings=None, 
                          ramdisk_image_settings=ramdisk_image_settings)
 
 
-def file_image_test_settings(name, file_path, image_user='cirros', image_metadata=None):
-    kernel_image_settings = None
-    if image_metadata and 'kernel_url' in image_metadata:
-        kernel_image_settings = ImageSettings(name=name + '-kernel', url=image_metadata['kernel_url'])
-    ramdisk_image_settings = None
-    if image_metadata and 'ramdisk_url' in image_metadata:
-        ramdisk_image_settings = ImageSettings(name=name + '-ramdisk', url=image_metadata['ramdisk_url'])
-
-    extra_properties = None
-    if image_metadata and 'extra_properties' in image_metadata:
-        extra_properties = image_metadata['extra_properties']
-
-    return ImageSettings(name=name, image_user=image_user, img_format='qcow2',
-                         extra_properties=extra_properties,
-                         image_file=file_path,
-                         kernel_image_settings=kernel_image_settings,
-                         ramdisk_image_settings=ramdisk_image_settings)
+def file_image_test_settings(name, file_path, image_user='cirros'):
+    return ImageSettings(name=name, image_user=image_user, img_format='qcow2', image_file=file_path)
 
 
-def centos_url_image(name, url=None, image_metadata=None):
-    if image_metadata and 'disk_url' in image_metadata:
-        url = image_metadata['disk_url']
+def centos_image_settings(name, url=None, image_metadata=None):
+    """
+    Returns the image settings for a Centos QCOW2 image
+    :param name: the name of the image
+    :param url: the image's URL
+    :param image_metadata: dict() values to override URLs for disk, kernel, and ramdisk
+    :return: 
+    """
+    if image_metadata and 'centos' in image_metadata:
+        metadata = image_metadata['centos']
+    else:
+        metadata = image_metadata
+
+    if metadata and 'disk_url' in metadata:
+        url = metadata['disk_url']
     if not url:
         url = 'http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2'
 
     kernel_image_settings = None
-    if image_metadata and 'kernel_url' in image_metadata:
-        kernel_image_settings = ImageSettings(name=name + '-kernel', url=image_metadata['kernel_url'])
+    if metadata and 'kernel_url' in metadata:
+        kernel_image_settings = ImageSettings(name=name + '-kernel', image_user='centos', img_format='qcow2',
+                                              url=metadata['kernel_url'])
     ramdisk_image_settings = None
-    if image_metadata and 'ramdisk_url' in image_metadata:
-        ramdisk_image_settings = ImageSettings(name=name + '-ramdisk', url=image_metadata['ramdisk_url'])
+    if metadata and 'ramdisk_url' in metadata:
+        ramdisk_image_settings = ImageSettings(name=name + '-ramdisk', image_user='centos', img_format='qcow2',
+                                               url=metadata['ramdisk_url'])
 
     extra_properties = None
-    if image_metadata and 'extra_properties' in image_metadata:
-        extra_properties = image_metadata['extra_properties']
+    if metadata and 'extra_properties' in metadata:
+        extra_properties = metadata['extra_properties']
 
     return ImageSettings(
         name=name, image_user='centos', img_format='qcow2',
@@ -169,22 +182,34 @@ def centos_url_image(name, url=None, image_metadata=None):
         ramdisk_image_settings=ramdisk_image_settings)
 
 
-def ubuntu_url_image(name, url=None, image_metadata=None):
-    if image_metadata and 'disk_url' in image_metadata:
-        url = image_metadata['disk_url']
+def ubuntu_image_settings(name, url=None, image_metadata=None):
+    """
+    Returns the image settings for a Ubuntu QCOW2 image
+    :param name: the name of the image
+    :param url: the image's URL
+    :param image_metadata: dict() values to override URLs for disk, kernel, and ramdisk
+    :return: 
+    """
+    if image_metadata and 'ubuntu' in image_metadata:
+        metadata = image_metadata['ubuntu']
+    else:
+        metadata = image_metadata
+
+    if metadata and 'disk_url' in metadata:
+        url = metadata['disk_url']
     if not url:
         url = 'http://uec-images.ubuntu.com/releases/trusty/14.04/ubuntu-14.04-server-cloudimg-amd64-disk1.img'
 
     kernel_image_settings = None
-    if image_metadata and 'kernel_url' in image_metadata:
-        kernel_image_settings = ImageSettings(name=name + '-kernel', url=image_metadata['kernel_url'])
+    if metadata and 'kernel_url' in metadata:
+        kernel_image_settings = ImageSettings(name=name + '-kernel', url=metadata['kernel_url'])
     ramdisk_image_settings = None
-    if image_metadata and 'ramdisk_url' in image_metadata:
-        ramdisk_image_settings = ImageSettings(name=name + '-ramdisk', url=image_metadata['ramdisk_url'])
+    if metadata and 'ramdisk_url' in metadata:
+        ramdisk_image_settings = ImageSettings(name=name + '-ramdisk', url=metadata['ramdisk_url'])
 
     extra_properties = None
-    if image_metadata and 'extra_properties' in image_metadata:
-        extra_properties = image_metadata['extra_properties']
+    if metadata and 'extra_properties' in metadata:
+        extra_properties = metadata['extra_properties']
 
     return ImageSettings(
         name=name, image_user='ubuntu', img_format='qcow2',
