@@ -85,6 +85,91 @@
       "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_9742cb3c",
+        "filename": "snaps/openstack/create_router.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-04T20:54:10Z",
+      "side": 1,
+      "message": "I think this is just  try/finally\n\nIf you don\u0027t want to modify the exception, then we don\u0027t need to catch it, just use finally.",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_b73d8fbd",
+        "filename": "snaps/openstack/create_security_group.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-04T20:54:10Z",
+      "side": 1,
+      "message": "should be isinstance(protocol, Protocol)",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_574c5370",
+        "filename": "snaps/openstack/create_security_group.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-04T20:54:10Z",
+      "side": 1,
+      "message": "these things are usually done as a dict lookup \n\npylint also complains about constant \u003d\u003d var, we prefer var \u003d\u003d constant style.\n\n  try:\n    return PROTOCOL_MAP[proto_str]\n  except KeyError:\n    raise KeyError(\u0027Invalid Protocol - \u0027 + proto_str)\n\nalso tend to prefer re-using existing defined exceptions, instead of raising base exceptions.   This type of thing is usually a KeyError, ValueError, or maybe a TypeError depending on context.  Otherwise RunTimeError is good.",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_37799f93",
+        "filename": "snaps/openstack/utils/glance_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-04T20:54:10Z",
+      "side": 1,
+      "message": "isn\u0027t this the same as dict.update()\n\n kwargs.update(image_settings.extra_properties)",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_b764afe5",
+        "filename": "snaps/provisioning/tests/ansible_utils_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-04T20:54:10Z",
+      "side": 1,
+      "message": "finally?",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
