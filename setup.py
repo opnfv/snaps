@@ -26,7 +26,7 @@ config = {
     'download_url': 'Where to download it.',
     'author_email': 's.pisarski@cablelabs.com',
     'version': '1.0',
-    'install_requires': ['python-novaclient>=6.0.0',
+    'install_requires': ['python-novaclient>=6.0.0,<8.0.0',
                          'python-neutronclient>=5.1.0',
                          'python-keystoneclient>=2.3.1',
                          'python-glanceclient>=2.5.0',
