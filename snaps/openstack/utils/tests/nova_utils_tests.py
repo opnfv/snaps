@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,6 @@
 import logging
 import os
 import uuid
-
-from Crypto.PublicKey import RSA
 
 from snaps.openstack.utils import nova_utils
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
@@ -71,8 +69,8 @@ class NovaUtilsKeypairTests(OSComponentTestCase):
         self.pub_key_file_path = self.priv_key_file_path + '.pub'
 
         self.nova = nova_utils.nova_client(self.os_creds)
-        self.keys = RSA.generate(1024)
-        self.public_key = self.keys.publickey().exportKey('OpenSSH')
+        self.keys = nova_utils.create_keys()
+        self.public_key = nova_utils.public_key_openssh(self.keys)
         self.keypair_name = guid
         self.keypair = None
         self.floating_ip = None
@@ -106,9 +104,9 @@ class NovaUtilsKeypairTests(OSComponentTestCase):
         """
         self.keypair = nova_utils.upload_keypair(self.nova, self.keypair_name, self.public_key)
         result = nova_utils.keypair_exists(self.nova, self.keypair)
-        self.assertEquals(self.keypair, result)
+        self.assertEqual(self.keypair, result)
         keypair = nova_utils.get_keypair_by_name(self.nova, self.keypair_name)
-        self.assertEquals(self.keypair, keypair)
+        self.assertEqual(self.keypair, keypair)
 
     def test_create_delete_keypair(self):
         """
@@ -116,7 +114,7 @@ class NovaUtilsKeypairTests(OSComponentTestCase):
         """
         self.keypair = nova_utils.upload_keypair(self.nova, self.keypair_name, self.public_key)
         result = nova_utils.keypair_exists(self.nova, self.keypair)
-        self.assertEquals(self.keypair, result)
+        self.assertEqual(self.keypair, result)
         nova_utils.delete_keypair(self.nova, self.keypair)
         result2 = nova_utils.keypair_exists(self.nova, self.keypair)
         self.assertIsNone(result2)
@@ -129,7 +127,7 @@ class NovaUtilsKeypairTests(OSComponentTestCase):
         nova_utils.save_keys_to_files(self.keys, self.pub_key_file_path, self.priv_key_file_path)
         self.keypair = nova_utils.upload_keypair_file(self.nova, self.keypair_name, self.pub_key_file_path)
         pub_key = open(os.path.expanduser(self.pub_key_file_path)).read()
-        self.assertEquals(self.keypair.public_key, pub_key)
+        self.assertEqual(self.keypair.public_key, pub_key)
 
     def test_floating_ips(self):
         """
@@ -141,7 +139,7 @@ class NovaUtilsKeypairTests(OSComponentTestCase):
 
         self.floating_ip = nova_utils.create_floating_ip(self.nova, self.ext_net_name)
         returned = nova_utils.get_floating_ip(self.nova, self.floating_ip)
-        self.assertEquals(self.floating_ip, returned)
+        self.assertEqual(self.floating_ip, returned)
 
 
 class NovaUtilsFlavorTests(OSComponentTestCase):
@@ -192,17 +190,17 @@ class NovaUtilsFlavorTests(OSComponentTestCase):
         Validates the flavor_settings against the OpenStack flavor object
         """
         self.assertIsNotNone(self.flavor)
-        self.assertEquals(self.flavor_settings.name, self.flavor.name)
-        self.assertEquals(self.flavor_settings.flavor_id, self.flavor.id)
-        self.assertEquals(self.flavor_settings.ram, self.flavor.ram)
-        self.assertEquals(self.flavor_settings.disk, self.flavor.disk)
-        self.assertEquals(self.flavor_settings.vcpus, self.flavor.vcpus)
-        self.assertEquals(self.flavor_settings.ephemeral, self.flavor.ephemeral)
+        self.assertEqual(self.flavor_settings.name, self.flavor.name)
+        self.assertEqual(self.flavor_settings.flavor_id, self.flavor.id)
+        self.assertEqual(self.flavor_settings.ram, self.flavor.ram)
+        self.assertEqual(self.flavor_settings.disk, self.flavor.disk)
+        self.assertEqual(self.flavor_settings.vcpus, self.flavor.vcpus)
+        self.assertEqual(self.flavor_settings.ephemeral, self.flavor.ephemeral)
 
         if self.flavor_settings.swap == 0:
-            self.assertEquals('', self.flavor.swap)
+            self.assertEqual('', self.flavor.swap)
         else:
-            self.assertEquals(self.flavor_settings.swap, self.flavor.swap)
+            self.assertEqual(self.flavor_settings.swap, self.flavor.swap)
 
-        self.assertEquals(self.flavor_settings.rxtx_factor, self.flavor.rxtx_factor)
-        self.assertEquals(self.flavor_settings.is_public, self.flavor.is_public)
+        self.assertEqual(self.flavor_settings.rxtx_factor, self.flavor.rxtx_factor)
+        self.assertEqual(self.flavor_settings.is_public, self.flavor.is_public)

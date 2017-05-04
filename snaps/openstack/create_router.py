@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,46 +59,42 @@ class OpenStackRouter:
         :return: the router object
         """
         logger.debug('Creating Router with name - ' + self.router_settings.name)
-        try:
-            existing = False
-            router_inst = neutron_utils.get_router_by_name(self.__neutron, self.router_settings.name)
-            if router_inst:
-                self.__router = router_inst
-                existing = True
+        existing = False
+        router_inst = neutron_utils.get_router_by_name(self.__neutron, self.router_settings.name)
+        if router_inst:
+            self.__router = router_inst
+            existing = True
+        else:
+            if not cleanup:
+                self.__router = neutron_utils.create_router(self.__neutron, self.__os_creds, self.router_settings)
+
+        for internal_subnet_name in self.router_settings.internal_subnets:
+            internal_subnet = neutron_utils.get_subnet_by_name(self.__neutron, internal_subnet_name)
+            if internal_subnet:
+                self.__internal_subnets.append(internal_subnet)
+                if internal_subnet and not cleanup and not existing:
+                    logger.debug('Adding router to subnet...')
+                    self.__internal_router_interface = neutron_utils.add_interface_router(
+                        self.__neutron, self.__router, subnet=internal_subnet)
             else:
-                if not cleanup:
-                    self.__router = neutron_utils.create_router(self.__neutron, self.__os_creds, self.router_settings)
+                raise Exception('Subnet not found with name ' + internal_subnet_name)
 
-            for internal_subnet_name in self.router_settings.internal_subnets:
-                internal_subnet = neutron_utils.get_subnet_by_name(self.__neutron, internal_subnet_name)
-                if internal_subnet:
-                    self.__internal_subnets.append(internal_subnet)
-                    if internal_subnet and not cleanup and not existing:
-                        logger.debug('Adding router to subnet...')
-                        self.__internal_router_interface = neutron_utils.add_interface_router(
-                            self.__neutron, self.__router, subnet=internal_subnet)
-                else:
-                    raise Exception('Subnet not found with name ' + internal_subnet_name)
+        for port_setting in self.router_settings.port_settings:
+            port = neutron_utils.get_port_by_name(self.__neutron, port_setting.name)
+            logger.info('Retrieved port ' + port_setting.name + ' for router - ' + self.router_settings.name)
+            if port:
+                self.__ports.append(port)
 
-            for port_setting in self.router_settings.port_settings:
-                port = neutron_utils.get_port_by_name(self.__neutron, port_setting.name)
-                logger.info('Retrieved port ' + port_setting.name + ' for router - ' + self.router_settings.name)
+            if not port and not cleanup and not existing:
+                port = neutron_utils.create_port(self.__neutron, self.__os_creds, port_setting)
                 if port:
+                    logger.info('Created port ' + port_setting.name + ' for router - ' + self.router_settings.name)
                     self.__ports.append(port)
+                    neutron_utils.add_interface_router(self.__neutron, self.__router, port=port)
+                else:
+                    raise Exception('Error creating port with name - ' + port_setting.name)
 
-                if not port and not cleanup and not existing:
-                    port = neutron_utils.create_port(self.__neutron, self.__os_creds, port_setting)
-                    if port:
-                        logger.info('Created port ' + port_setting.name + ' for router - ' + self.router_settings.name)
-                        self.__ports.append(port)
-                        neutron_utils.add_interface_router(self.__neutron, self.__router, port=port)
-                    else:
-                        raise Exception('Error creating port with name - ' + port_setting.name)
-
-            return self.__router
-        except Exception as e:
-            self.clean()
-            raise Exception(e.message)
+        return self.__router
 
     def clean(self):
         """
@@ -163,8 +159,6 @@ class RouterSettings:
                              policies.
         :param external_gateway: Name of the external network to which to route
         :param admin_state_up: The administrative status of the router. True = up / False = down (default True)
-        :param enable_snat: Boolean value. Enable Source NAT (SNAT) attribute. Default is True. To persist this
-                            attribute value, set the enable_snat_by_default option in the neutron.conf file.
         :param external_fixed_ips: Dictionary containing the IP address parameters.
         :param internal_subnets: List of subnet names to which to connect this router for Floating IP purposes
         :param port_settings: List of PortSettings objects
@@ -238,7 +232,7 @@ class RouterSettings:
             else:
                 raise Exception('Could not find the external network named - ' + self.external_gateway)
 
-        #TODO: Enable SNAT option for Router
-        #TODO: Add external_fixed_ips Tests
+        # TODO: Enable SNAT option for Router
+        # TODO: Add external_fixed_ips Tests
 
         return {'router': out}

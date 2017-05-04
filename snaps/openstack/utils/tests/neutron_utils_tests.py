@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -109,14 +109,16 @@ class NeutronUtilsNetworkTests(OSComponentTestCase):
         Tests the neutron_utils.create_neutron_net() function with an empty network name
         """
         with self.assertRaises(Exception):
-            self.network = neutron_utils.create_network(self.neutron, NetworkSettings(name=''))
+            self.network = neutron_utils.create_network(self.neutron, self.os_creds,
+                                                        network_settings=NetworkSettings(name=''))
 
     def test_create_network_null_name(self):
         """
         Tests the neutron_utils.create_neutron_net() function when the network name is None
         """
         with self.assertRaises(Exception):
-            self.network = neutron_utils.create_network(self.neutron, NetworkSettings())
+            self.network = neutron_utils.create_network(self.neutron, self.os_creds,
+                                                        network_settings=NetworkSettings())
 
 
 class NeutronUtilsSubnetTests(OSComponentTestCase):
@@ -644,7 +646,7 @@ def validate_port(neutron, port_obj, this_port_name):
     :return: True/False
     """
     ports = neutron.list_ports()
-    for port, port_insts in ports.iteritems():
+    for port, port_insts in ports.items():
         for inst in port_insts:
             if inst['id'] == port_obj['port']['id']:
                 return inst['name'] == this_port_name

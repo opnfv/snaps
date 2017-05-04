@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -105,4 +105,4 @@ def ssh_client(ip, user, private_key_filepath, proxy_settings=None):
         ssh.connect(ip, username=user, key_filename=private_key_filepath, sock=proxy_cmd)
         return ssh
     except Exception as e:
-        logger.warn('Unable to connect via SSH with message - ' + e.message)
+        logger.warning('Unable to connect via SSH with message - ' + str(e))
