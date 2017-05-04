@@ -33,6 +33,23 @@
       "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_b4082d2e",
+        "filename": "snaps/openstack/create_project.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-04T19:58:22Z",
+      "side": 1,
+      "message": "just \u0027raise\u0027 without args will re-raise the exception.\n\n\u0027raise e\u0027 will also mutate the traceback, whereas \u0027raise\u0027 will keep the original traceback",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
