@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "9ab8dda7_372bdf83",
+        "filename": "snaps/file_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-04T20:15:10Z",
+      "side": 1,
+      "message": "see also http://www.ouah.org/secure-faq.html#FILE1",
+      "parentUuid": "9ab8dda7_7402b50c",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ab8dda7_f416a554",
         "filename": "snaps/openstack/create_instance.py",
         "patchSetId": 1
