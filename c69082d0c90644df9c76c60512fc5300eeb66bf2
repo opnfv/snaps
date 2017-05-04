@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "9ab8dda7_7402b50c",
+        "filename": "snaps/file_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-04T20:06:37Z",
+      "side": 1,
+      "message": "ah, but this is actually poor form and introduces file system race conditions.\n\nThe file could be deleted in between the file_exists() call and the open().\n\nThe only standard POSIX way to ensure a file actually exists is to open it and catch ENOENT atomically.\n\ne.g.\n\ndef find_relative_file(path, task_path):\n    try:\n        with open(path):\n            pass\n        return path\n    except IOError as e:\n        if e.errno !\u003d errno.ENOENT:\n            raise\n        else:\n            rel_path \u003d os.path.join(task_path, path)\n            with open(rel_path):\n                pass\n            return rel_path",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ab8dda7_f416a554",
         "filename": "snaps/openstack/create_instance.py",
         "patchSetId": 1
