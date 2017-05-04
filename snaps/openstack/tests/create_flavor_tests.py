@@ -1,3 +1,8 @@
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at:
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
@@ -160,60 +165,60 @@ class FlavorSettingsUnitTests(unittest.TestCase):
 
     def test_name_ram_disk_vcpus_only(self):
         settings = FlavorSettings(name='foo', ram=1, disk=2, vcpus=3)
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('auto', settings.flavor_id)
-        self.assertEquals(1, settings.ram)
-        self.assertEquals(2, settings.disk)
-        self.assertEquals(3, settings.vcpus)
-        self.assertEquals(0, settings.ephemeral)
-        self.assertEquals(0, settings.swap)
-        self.assertEquals(1.0, settings.rxtx_factor)
-        self.assertEquals(True, settings.is_public)
-        self.assertEquals(None, settings.metadata)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('auto', settings.flavor_id)
+        self.assertEqual(1, settings.ram)
+        self.assertEqual(2, settings.disk)
+        self.assertEqual(3, settings.vcpus)
+        self.assertEqual(0, settings.ephemeral)
+        self.assertEqual(0, settings.swap)
+        self.assertEqual(1.0, settings.rxtx_factor)
+        self.assertEqual(True, settings.is_public)
+        self.assertEqual(None, settings.metadata)
 
     def test_config_with_name_ram_disk_vcpus_only(self):
         settings = FlavorSettings(config={'name': 'foo', 'ram': 1, 'disk': 2, 'vcpus': 3})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('auto', settings.flavor_id)
-        self.assertEquals(1, settings.ram)
-        self.assertEquals(2, settings.disk)
-        self.assertEquals(3, settings.vcpus)
-        self.assertEquals(0, settings.ephemeral)
-        self.assertEquals(0, settings.swap)
-        self.assertEquals(1.0, settings.rxtx_factor)
-        self.assertEquals(True, settings.is_public)
-        self.assertEquals(None, settings.metadata)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('auto', settings.flavor_id)
+        self.assertEqual(1, settings.ram)
+        self.assertEqual(2, settings.disk)
+        self.assertEqual(3, settings.vcpus)
+        self.assertEqual(0, settings.ephemeral)
+        self.assertEqual(0, settings.swap)
+        self.assertEqual(1.0, settings.rxtx_factor)
+        self.assertEqual(True, settings.is_public)
+        self.assertEqual(None, settings.metadata)
 
     def test_all(self):
         metadata = {'foo': 'bar'}
         settings = FlavorSettings(name='foo', flavor_id='bar', ram=1, disk=2, vcpus=3, ephemeral=4, swap=5,
                                   rxtx_factor=6.0, is_public=False, metadata=metadata)
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.flavor_id)
-        self.assertEquals(1, settings.ram)
-        self.assertEquals(2, settings.disk)
-        self.assertEquals(3, settings.vcpus)
-        self.assertEquals(4, settings.ephemeral)
-        self.assertEquals(5, settings.swap)
-        self.assertEquals(6.0, settings.rxtx_factor)
-        self.assertEquals(False, settings.is_public)
-        self.assertEquals(metadata, settings.metadata)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.flavor_id)
+        self.assertEqual(1, settings.ram)
+        self.assertEqual(2, settings.disk)
+        self.assertEqual(3, settings.vcpus)
+        self.assertEqual(4, settings.ephemeral)
+        self.assertEqual(5, settings.swap)
+        self.assertEqual(6.0, settings.rxtx_factor)
+        self.assertEqual(False, settings.is_public)
+        self.assertEqual(metadata, settings.metadata)
 
     def test_config_all(self):
         metadata = {'foo': 'bar'}
         settings = FlavorSettings(config={'name': 'foo', 'flavor_id': 'bar', 'ram': 1, 'disk': 2, 'vcpus': 3,
                                           'ephemeral': 4, 'swap': 5, 'rxtx_factor': 6.0, 'is_public': False,
                                           'metadata': metadata})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.flavor_id)
-        self.assertEquals(1, settings.ram)
-        self.assertEquals(2, settings.disk)
-        self.assertEquals(3, settings.vcpus)
-        self.assertEquals(4, settings.ephemeral)
-        self.assertEquals(5, settings.swap)
-        self.assertEquals(6.0, settings.rxtx_factor)
-        self.assertEquals(False, settings.is_public)
-        self.assertEquals(metadata, settings.metadata)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.flavor_id)
+        self.assertEqual(1, settings.ram)
+        self.assertEqual(2, settings.disk)
+        self.assertEqual(3, settings.vcpus)
+        self.assertEqual(4, settings.ephemeral)
+        self.assertEqual(5, settings.swap)
+        self.assertEqual(6.0, settings.rxtx_factor)
+        self.assertEqual(False, settings.is_public)
+        self.assertEqual(metadata, settings.metadata)
 
 
 class CreateFlavorTests(OSComponentTestCase):
@@ -264,7 +269,7 @@ class CreateFlavorTests(OSComponentTestCase):
         flavor_creator_2 = OpenStackFlavor(self.os_creds, flavor_settings)
         flavor2 = flavor_creator_2.create()
 
-        self.assertEquals(flavor.id, flavor2.id)
+        self.assertEqual(flavor.id, flavor2.id)
 
     def test_create_clean_flavor(self):
         """

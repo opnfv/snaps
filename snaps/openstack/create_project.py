@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,7 +59,7 @@ class OpenStackProject:
         except Exception as e:
             logger.error('Unexpected error. Rolling back')
             self.clean()
-            raise Exception(e.message)
+            raise e
 
         return self.__project
 

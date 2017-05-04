@@ -69,33 +69,33 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
     def test_name_flavor_port_only(self):
         port_settings = PortSettings(name='foo-port', network_name='bar-net')
         settings = VmInstanceSettings(name='foo', flavor='bar', port_settings=[port_settings])
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.flavor)
-        self.assertEquals(1, len(settings.port_settings))
-        self.assertEquals('foo-port', settings.port_settings[0].name)
-        self.assertEquals('bar-net', settings.port_settings[0].network_name)
-        self.assertEquals(0, len(settings.security_group_names))
-        self.assertEquals(0, len(settings.floating_ip_settings))
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.flavor)
+        self.assertEqual(1, len(settings.port_settings))
+        self.assertEqual('foo-port', settings.port_settings[0].name)
+        self.assertEqual('bar-net', settings.port_settings[0].network_name)
+        self.assertEqual(0, len(settings.security_group_names))
+        self.assertEqual(0, len(settings.floating_ip_settings))
         self.assertIsNone(settings.sudo_user)
-        self.assertEquals(900, settings.vm_boot_timeout)
-        self.assertEquals(300, settings.vm_delete_timeout)
-        self.assertEquals(180, settings.ssh_connect_timeout)
+        self.assertEqual(900, settings.vm_boot_timeout)
+        self.assertEqual(300, settings.vm_delete_timeout)
+        self.assertEqual(180, settings.ssh_connect_timeout)
         self.assertIsNone(settings.availability_zone)
 
     def test_config_with_name_flavor_port_only(self):
         port_settings = PortSettings(name='foo-port', network_name='bar-net')
         settings = VmInstanceSettings(config={'name': 'foo', 'flavor': 'bar', 'ports': [port_settings]})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.flavor)
-        self.assertEquals(1, len(settings.port_settings))
-        self.assertEquals('foo-port', settings.port_settings[0].name)
-        self.assertEquals('bar-net', settings.port_settings[0].network_name)
-        self.assertEquals(0, len(settings.security_group_names))
-        self.assertEquals(0, len(settings.floating_ip_settings))
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.flavor)
+        self.assertEqual(1, len(settings.port_settings))
+        self.assertEqual('foo-port', settings.port_settings[0].name)
+        self.assertEqual('bar-net', settings.port_settings[0].network_name)
+        self.assertEqual(0, len(settings.security_group_names))
+        self.assertEqual(0, len(settings.floating_ip_settings))
         self.assertIsNone(settings.sudo_user)
-        self.assertEquals(900, settings.vm_boot_timeout)
-        self.assertEquals(300, settings.vm_delete_timeout)
-        self.assertEquals(180, settings.ssh_connect_timeout)
+        self.assertEqual(900, settings.vm_boot_timeout)
+        self.assertEqual(300, settings.vm_delete_timeout)
+        self.assertEqual(180, settings.ssh_connect_timeout)
         self.assertIsNone(settings.availability_zone)
 
     def test_all(self):
@@ -106,22 +106,22 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
                                       security_group_names=['sec_grp_1'], floating_ip_settings=[fip_settings],
                                       sudo_user='joe', vm_boot_timeout=999, vm_delete_timeout=333,
                                       ssh_connect_timeout=111, availability_zone='server name')
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.flavor)
-        self.assertEquals(1, len(settings.port_settings))
-        self.assertEquals('foo-port', settings.port_settings[0].name)
-        self.assertEquals('bar-net', settings.port_settings[0].network_name)
-        self.assertEquals(1, len(settings.security_group_names))
-        self.assertEquals('sec_grp_1', settings.security_group_names[0])
-        self.assertEquals(1, len(settings.floating_ip_settings))
-        self.assertEquals('foo-fip', settings.floating_ip_settings[0].name)
-        self.assertEquals('bar-port', settings.floating_ip_settings[0].port_name)
-        self.assertEquals('foo-bar-router', settings.floating_ip_settings[0].router_name)
-        self.assertEquals('joe', settings.sudo_user)
-        self.assertEquals(999, settings.vm_boot_timeout)
-        self.assertEquals(333, settings.vm_delete_timeout)
-        self.assertEquals(111, settings.ssh_connect_timeout)
-        self.assertEquals('server name', settings.availability_zone)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.flavor)
+        self.assertEqual(1, len(settings.port_settings))
+        self.assertEqual('foo-port', settings.port_settings[0].name)
+        self.assertEqual('bar-net', settings.port_settings[0].network_name)
+        self.assertEqual(1, len(settings.security_group_names))
+        self.assertEqual('sec_grp_1', settings.security_group_names[0])
+        self.assertEqual(1, len(settings.floating_ip_settings))
+        self.assertEqual('foo-fip', settings.floating_ip_settings[0].name)
+        self.assertEqual('bar-port', settings.floating_ip_settings[0].port_name)
+        self.assertEqual('foo-bar-router', settings.floating_ip_settings[0].router_name)
+        self.assertEqual('joe', settings.sudo_user)
+        self.assertEqual(999, settings.vm_boot_timeout)
+        self.assertEqual(333, settings.vm_delete_timeout)
+        self.assertEqual(111, settings.ssh_connect_timeout)
+        self.assertEqual('server name', settings.availability_zone)
 
     def test_config_all(self):
         port_settings = PortSettings(name='foo-port', network_name='bar-net')
@@ -132,21 +132,21 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
                                               'floating_ips': [fip_settings], 'sudo_user': 'joe',
                                               'vm_boot_timeout': 999, 'vm_delete_timeout': 333,
                                               'ssh_connect_timeout': 111, 'availability_zone': 'server name'})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.flavor)
-        self.assertEquals(1, len(settings.port_settings))
-        self.assertEquals('foo-port', settings.port_settings[0].name)
-        self.assertEquals('bar-net', settings.port_settings[0].network_name)
-        self.assertEquals(1, len(settings.security_group_names))
-        self.assertEquals(1, len(settings.floating_ip_settings))
-        self.assertEquals('foo-fip', settings.floating_ip_settings[0].name)
-        self.assertEquals('bar-port', settings.floating_ip_settings[0].port_name)
-        self.assertEquals('foo-bar-router', settings.floating_ip_settings[0].router_name)
-        self.assertEquals('joe', settings.sudo_user)
-        self.assertEquals(999, settings.vm_boot_timeout)
-        self.assertEquals(333, settings.vm_delete_timeout)
-        self.assertEquals(111, settings.ssh_connect_timeout)
-        self.assertEquals('server name', settings.availability_zone)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.flavor)
+        self.assertEqual(1, len(settings.port_settings))
+        self.assertEqual('foo-port', settings.port_settings[0].name)
+        self.assertEqual('bar-net', settings.port_settings[0].network_name)
+        self.assertEqual(1, len(settings.security_group_names))
+        self.assertEqual(1, len(settings.floating_ip_settings))
+        self.assertEqual('foo-fip', settings.floating_ip_settings[0].name)
+        self.assertEqual('bar-port', settings.floating_ip_settings[0].port_name)
+        self.assertEqual('foo-bar-router', settings.floating_ip_settings[0].router_name)
+        self.assertEqual('joe', settings.sudo_user)
+        self.assertEqual(999, settings.vm_boot_timeout)
+        self.assertEqual(333, settings.vm_delete_timeout)
+        self.assertEqual(111, settings.ssh_connect_timeout)
+        self.assertEqual('server name', settings.availability_zone)
 
 
 class FloatingIpSettingsUnitTests(unittest.TestCase):
@@ -188,36 +188,36 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
 
     def test_name_port_router_only(self):
         settings = FloatingIpSettings(name='foo', port_name='foo-port', router_name='bar-router')
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('foo-port', settings.port_name)
-        self.assertEquals('bar-router', settings.router_name)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('foo-port', settings.port_name)
+        self.assertEqual('bar-router', settings.router_name)
         self.assertIsNone(settings.subnet_name)
         self.assertTrue(settings.provisioning)
 
     def test_config_with_name_port_router_only(self):
         settings = FloatingIpSettings(config={'name': 'foo', 'port_name': 'foo-port', 'router_name': 'bar-router'})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('foo-port', settings.port_name)
-        self.assertEquals('bar-router', settings.router_name)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('foo-port', settings.port_name)
+        self.assertEqual('bar-router', settings.router_name)
         self.assertIsNone(settings.subnet_name)
         self.assertTrue(settings.provisioning)
 
     def test_all(self):
         settings = FloatingIpSettings(name='foo', port_name='foo-port', router_name='bar-router',
                                       subnet_name='bar-subnet', provisioning=False)
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('foo-port', settings.port_name)
-        self.assertEquals('bar-router', settings.router_name)
-        self.assertEquals('bar-subnet', settings.subnet_name)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('foo-port', settings.port_name)
+        self.assertEqual('bar-router', settings.router_name)
+        self.assertEqual('bar-subnet', settings.subnet_name)
         self.assertFalse(settings.provisioning)
 
     def test_config_all(self):
         settings = FloatingIpSettings(config={'name': 'foo', 'port_name': 'foo-port', 'router_name': 'bar-router',
                                               'subnet_name': 'bar-subnet', 'provisioning': False})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('foo-port', settings.port_name)
-        self.assertEquals('bar-router', settings.router_name)
-        self.assertEquals('bar-subnet', settings.subnet_name)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('foo-port', settings.port_name)
+        self.assertEqual('bar-router', settings.router_name)
+        self.assertEqual('bar-subnet', settings.subnet_name)
         self.assertFalse(settings.provisioning)
 
 
@@ -283,7 +283,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             try:
                 self.inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + e.message)
+                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
 
         if os.path.isfile(self.keypair_pub_filepath):
             os.remove(self.keypair_pub_filepath)
@@ -295,19 +295,19 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + e.message)
+                logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + e.message)
+                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
 
         if self.image_creator:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + e.message)
+                logger.error('Unexpected exception cleaning image with message - ' + str(e))
 
         super(self.__class__, self).__clean__()
 
@@ -408,25 +408,25 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
             try:
                 self.inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + e.message)
+                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
 
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + e.message)
+                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + e.message)
+                logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
         if self.image_creator:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + e.message)
+                logger.error('Unexpected exception cleaning image with message - ' + str(e))
 
         super(self.__class__, self).__clean__()
 
@@ -441,13 +441,13 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
             self.os_creds, instance_settings, self.image_creator.image_settings)
 
         vm_inst = self.inst_creator.create()
-        self.assertEquals(1, len(nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
+        self.assertEqual(1, len(nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
 
         # Delete instance
         nova_utils.delete_vm_instance(self.nova, vm_inst)
 
         self.assertTrue(self.inst_creator.vm_deleted(block=True))
-        self.assertEquals(0, len(nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
+        self.assertEqual(0, len(nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
 
         # Exception should not be thrown
         self.inst_creator.clean()
@@ -523,13 +523,13 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             try:
                 inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + e.message)
+                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
 
         if self.keypair_creator:
             try:
                 self.keypair_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning keypair with message - ' + e.message)
+                logger.error('Unexpected exception cleaning keypair with message - ' + str(e))
 
         if os.path.isfile(self.keypair_pub_filepath):
             os.remove(self.keypair_pub_filepath)
@@ -541,25 +541,25 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + e.message)
+                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
 
         if self.router_creator:
             try:
                 self.router_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning router with message - ' + e.message)
+                logger.error('Unexpected exception cleaning router with message - ' + str(e))
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + e.message)
+                logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
         if self.image_creator:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + e.message)
+                logger.error('Unexpected exception cleaning image with message - ' + str(e))
 
         super(self.__class__, self).__clean__()
 
@@ -585,9 +585,9 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.inst_creators.append(inst_creator)
         vm_inst = inst_creator.create()
 
-        self.assertEquals(ip_1, inst_creator.get_port_ip(self.port_1_name))
+        self.assertEqual(ip_1, inst_creator.get_port_ip(self.port_1_name))
         self.assertTrue(inst_creator.vm_active(block=True))
-        self.assertEquals(vm_inst, inst_creator.get_vm_inst())
+        self.assertEqual(vm_inst, inst_creator.get_vm_inst())
 
     def test_ssh_client_fip_before_active(self):
         """
@@ -610,7 +610,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.assertIsNotNone(vm_inst)
 
         self.assertTrue(inst_creator.vm_active(block=True))
-        self.assertEquals(vm_inst, inst_creator.get_vm_inst())
+        self.assertEqual(vm_inst, inst_creator.get_vm_inst())
 
         self.assertTrue(validate_ssh_client(inst_creator))
 
@@ -637,7 +637,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.assertIsNotNone(vm_inst)
 
         self.assertTrue(inst_creator.vm_active(block=True))
-        self.assertEquals(vm_inst, inst_creator.get_vm_inst())
+        self.assertEqual(vm_inst, inst_creator.get_vm_inst())
 
         self.assertTrue(validate_ssh_client(inst_creator))
 
@@ -698,25 +698,25 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             try:
                 self.inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + e.message)
+                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
 
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + e.message)
+                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + e.message)
+                logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
         if self.image_creator:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + e.message)
+                logger.error('Unexpected exception cleaning image with message - ' + str(e))
 
         super(self.__class__, self).__clean__()
 
@@ -736,7 +736,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
                                                 self.image_creator.image_settings)
         self.inst_creator.create(block=True)
 
-        self.assertEquals(ip, self.inst_creator.get_port_ip(
+        self.assertEqual(ip, self.inst_creator.get_port_ip(
             self.port_1_name, subnet_name=self.net_config.network_settings.subnet_settings[0].name))
 
     def test_set_custom_invalid_ip_one_subnet(self):
@@ -772,7 +772,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
                                                 self.image_creator.image_settings)
         self.inst_creator.create(block=True)
 
-        self.assertEquals(mac_addr, self.inst_creator.get_port_mac(self.port_1_name))
+        self.assertEqual(mac_addr, self.inst_creator.get_port_mac(self.port_1_name))
 
     def test_set_custom_invalid_mac(self):
         """
@@ -808,9 +808,9 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
                                                 self.image_creator.image_settings)
         self.inst_creator.create(block=True)
 
-        self.assertEquals(ip, self.inst_creator.get_port_ip(
+        self.assertEqual(ip, self.inst_creator.get_port_ip(
             self.port_1_name, subnet_name=self.net_config.network_settings.subnet_settings[0].name))
-        self.assertEquals(mac_addr, self.inst_creator.get_port_mac(self.port_1_name))
+        self.assertEqual(mac_addr, self.inst_creator.get_port_mac(self.port_1_name))
 
     def test_set_allowed_address_pairs(self):
         """
@@ -832,7 +832,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         port = self.inst_creator.get_port_by_name(port_settings.name)
         self.assertIsNotNone(port)
         self.assertIsNotNone(port['port'].get('allowed_address_pairs'))
-        self.assertEquals(1, len(port['port']['allowed_address_pairs']))
+        self.assertEqual(1, len(port['port']['allowed_address_pairs']))
         validation_utils.objects_equivalent(pair, port['port']['allowed_address_pairs'][0])
 
     def test_set_allowed_address_pairs_bad_mac(self):
@@ -933,25 +933,25 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
             try:
                 inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + e.message)
+                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
 
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + e.message)
+                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + e.message)
+                logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
         if self.image_creator:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + e.message)
+                logger.error('Unexpected exception cleaning image with message - ' + str(e))
 
         super(self.__class__, self).__clean__()
 
@@ -987,7 +987,7 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
             vm = creator.get_vm_inst()
             deployed_zone = vm._info['OS-EXT-AZ:availability_zone']
             deployed_host = vm._info['OS-EXT-SRV-ATTR:host']
-            self.assertEquals(zone, deployed_zone + ':' + deployed_host)
+            self.assertEqual(zone, deployed_zone + ':' + deployed_host)
             index += 1
 
 
@@ -1065,7 +1065,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             self.keypair_creator.create()
         except Exception as e:
             self.tearDown()
-            raise Exception(e.message)
+            raise Exception(str(e))
 
     def tearDown(self):
         """
@@ -1075,13 +1075,13 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             try:
                 self.inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + e.message)
+                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
 
         if self.keypair_creator:
             try:
                 self.keypair_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning keypair with message - ' + e.message)
+                logger.error('Unexpected exception cleaning keypair with message - ' + str(e))
 
         if os.path.isfile(self.keypair_pub_filepath):
             os.remove(self.keypair_pub_filepath)
@@ -1093,25 +1093,25 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + e.message)
+                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
 
         for router_creator in self.router_creators:
             try:
                 router_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning router with message - ' + e.message)
+                logger.error('Unexpected exception cleaning router with message - ' + str(e))
 
         for network_creator in self.network_creators:
             try:
                 network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + e.message)
+                logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
         if self.image_creator:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + e.message)
+                logger.error('Unexpected exception cleaning image with message - ' + str(e))
 
         super(self.__class__, self).__clean__()
 
@@ -1146,7 +1146,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
 
         vm_inst = self.inst_creator.create(block=True)
 
-        self.assertEquals(vm_inst, self.inst_creator.get_vm_inst())
+        self.assertEqual(vm_inst, self.inst_creator.get_vm_inst())
 
         # Effectively blocks until VM has been properly activated
         self.assertTrue(self.inst_creator.vm_active(block=True))
@@ -1226,31 +1226,31 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
             try:
                 self.inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + e.message)
+                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
 
         for sec_grp_creator in self.sec_grp_creators:
             try:
                 sec_grp_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning security group with message - ' + e.message)
+                logger.error('Unexpected exception cleaning security group with message - ' + str(e))
 
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + e.message)
+                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + e.message)
+                logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
         if self.image_creator:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + e.message)
+                logger.error('Unexpected exception cleaning image with message - ' + str(e))
 
         super(self.__class__, self).__clean__()
 
@@ -1495,25 +1495,25 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
             try:
                 self.inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + e.message)
+                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
 
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + e.message)
+                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + e.message)
+                logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
         if self.image_creator:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + e.message)
+                logger.error('Unexpected exception cleaning image with message - ' + str(e))
 
         super(self.__class__, self).__clean__()
 

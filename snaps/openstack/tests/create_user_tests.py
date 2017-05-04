@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,35 +52,35 @@ class UserSettingsUnitTests(unittest.TestCase):
 
     def test_name_pass_only(self):
         settings = UserSettings(name='foo', password='bar')
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.password)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.password)
         self.assertIsNone(settings.project_name)
         self.assertIsNone(settings.email)
         self.assertTrue(settings.enabled)
 
     def test_config_with_name_pass_only(self):
         settings = UserSettings(config={'name': 'foo', 'password': 'bar'})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.password)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.password)
         self.assertIsNone(settings.project_name)
         self.assertIsNone(settings.email)
         self.assertTrue(settings.enabled)
 
     def test_all(self):
         settings = UserSettings(name='foo', password='bar', project_name='proj-foo', email='foo@bar.com', enabled=False)
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.password)
-        self.assertEquals('proj-foo', settings.project_name)
-        self.assertEquals('foo@bar.com', settings.email)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.password)
+        self.assertEqual('proj-foo', settings.project_name)
+        self.assertEqual('foo@bar.com', settings.email)
         self.assertFalse(settings.enabled)
 
     def test_config_all(self):
         settings = UserSettings(config={'name': 'foo', 'password': 'bar', 'project_name': 'proj-foo',
                                         'email': 'foo@bar.com', 'enabled': False})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.password)
-        self.assertEquals('proj-foo', settings.project_name)
-        self.assertEquals('foo@bar.com', settings.email)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.password)
+        self.assertEqual('proj-foo', settings.project_name)
+        self.assertEqual('foo@bar.com', settings.email)
         self.assertFalse(settings.enabled)
 
 
@@ -120,7 +120,7 @@ class CreateUserSuccessTests(OSComponentTestCase):
 
         retrieved_user = keystone_utils.get_user(self.keystone, self.user_settings.name)
         self.assertIsNotNone(retrieved_user)
-        self.assertEquals(created_user, retrieved_user)
+        self.assertEqual(created_user, retrieved_user)
 
     def test_create_user_2x(self):
         """
@@ -132,11 +132,11 @@ class CreateUserSuccessTests(OSComponentTestCase):
 
         retrieved_user = keystone_utils.get_user(self.keystone, self.user_settings.name)
         self.assertIsNotNone(retrieved_user)
-        self.assertEquals(created_user, retrieved_user)
+        self.assertEqual(created_user, retrieved_user)
 
         # Create user for the second time to ensure it is the same
         user2 = OpenStackUser(self.os_creds, self.user_settings).create()
-        self.assertEquals(retrieved_user, user2)
+        self.assertEqual(retrieved_user, user2)
 
     def test_create_delete_user(self):
         """
@@ -152,4 +152,3 @@ class CreateUserSuccessTests(OSComponentTestCase):
         # Delete user
         self.user_creator.clean()
         self.assertIsNone(self.user_creator.get_user())
-

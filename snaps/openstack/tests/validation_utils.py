@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +42,7 @@ def dicts_equivalent(dict1, dict2):
     :return: T/F
     """
     if (type(dict1) is dict or type(dict1) is _DictWithMeta) and (type(dict2) is dict or type(dict2) is _DictWithMeta):
-        for key, value1 in dict1.iteritems():
+        for key, value1 in dict1.items():
             if not objects_equivalent(value1, dict2.get(key)):
                 return False
         return True

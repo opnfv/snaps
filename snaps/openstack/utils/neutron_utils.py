@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@ import logging
 
 from neutronclient.common.exceptions import NotFound
 from neutronclient.neutron.client import Client
-import keystone_utils
+from snaps.openstack.utils import keystone_utils
 
 __author__ = 'spisarski'
 
@@ -80,7 +80,7 @@ def get_network(neutron, network_name, project_id=None):
         net_filter['project_id'] = project_id
 
     networks = neutron.list_networks(**net_filter)
-    for network, netInsts in networks.iteritems():
+    for network, netInsts in networks.items():
         for inst in netInsts:
             if inst.get('name') == network_name:
                 if project_id and inst.get('project_id') == project_id:
@@ -98,7 +98,7 @@ def get_network_by_id(neutron, network_id):
     :return:
     """
     networks = neutron.list_networks(**{'id': network_id})
-    for network, netInsts in networks.iteritems():
+    for network, netInsts in networks.items():
         for inst in netInsts:
             if inst.get('id') == network_id:
                 return {'network': inst}
@@ -144,7 +144,7 @@ def get_subnet_by_name(neutron, subnet_name):
     :return:
     """
     subnets = neutron.list_subnets(**{'name': subnet_name})
-    for subnet, subnetInst in subnets.iteritems():
+    for subnet, subnetInst in subnets.items():
         for inst in subnetInst:
             if inst.get('name') == subnet_name:
                 return {'subnet': inst}
@@ -189,7 +189,7 @@ def get_router_by_name(neutron, router_name):
     :return:
     """
     routers = neutron.list_routers(**{'name': router_name})
-    for router, routerInst in routers.iteritems():
+    for router, routerInst in routers.items():
         for inst in routerInst:
             if inst.get('name') == router_name:
                 return {'router': inst}
@@ -228,10 +228,10 @@ def remove_interface_router(neutron, router, subnet=None, port=None):
             logger.info('Removing router interface from router named ' + router['router']['name'])
             neutron.remove_interface_router(router=router['router']['id'], body=__create_port_json_body(subnet, port))
         except NotFound as e:
-            logger.warn('Could not remove router interface. NotFound - ' + e.message)
+            logger.warning('Could not remove router interface. NotFound - ' + str(e))
             pass
     else:
-        logger.warn('Could not remove router interface, No router object')
+        logger.warning('Could not remove router interface, No router object')
 
 
 def __create_port_json_body(subnet=None, port=None):

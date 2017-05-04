@@ -13,8 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import urllib2
 import logging
+try:
+    import urllib.request as urllib
+except ImportError:
+    import urllib2 as urllib
 
 import yaml
 
@@ -46,7 +49,7 @@ def get_file(file_path):
     :raise Exception when file cannot be found
     """
     if file_exists(file_path):
-        return open(file_path, 'r')
+        return open(file_path, 'rb')
     else:
         raise Exception('File with path cannot be found - ' + file_path)
 
@@ -59,18 +62,11 @@ def download(url, dest_path, name=None):
     if not name:
         name = url.rsplit('/')[-1]
     dest = dest_path + '/' + name
-    try:
-        logger.debug('Downloading file from - ' + url)
-        # Override proxy settings to use localhost to download file
-        proxy_handler = urllib2.ProxyHandler({})
-        opener = urllib2.build_opener(proxy_handler)
-        urllib2.install_opener(opener)
-        response = urllib2.urlopen(url)
-    except (urllib2.HTTPError, urllib2.URLError):
-        raise Exception
-
+    logger.debug('Downloading file from - ' + url)
+    # Override proxy settings to use localhost to download file
     with open(dest, 'wb') as f:
         logger.debug('Saving file to - ' + dest)
+        response = __get_url_response(url)
         f.write(response.read())
     return f
 
@@ -81,11 +77,20 @@ def get_content_length(url):
     :param url: the URL to inspect
     :return: the number of bytes
     """
-    proxy_handler = urllib2.ProxyHandler({})
-    opener = urllib2.build_opener(proxy_handler)
-    urllib2.install_opener(opener)
-    response = urllib2.urlopen(url)
+    response = __get_url_response(url)
     return response.headers['Content-Length']
+
+
+def __get_url_response(url):
+    """
+    Returns a response object for a given URL
+    :param url: the URL
+    :return: the response
+    """
+    proxy_handler = urllib.ProxyHandler({})
+    opener = urllib.build_opener(proxy_handler)
+    urllib.install_opener(opener)
+    return urllib.urlopen(url)
 
 
 def read_yaml(config_file_path):

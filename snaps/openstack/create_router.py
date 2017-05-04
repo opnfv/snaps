@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -98,7 +98,7 @@ class OpenStackRouter:
             return self.__router
         except Exception as e:
             self.clean()
-            raise Exception(e.message)
+            raise e
 
     def clean(self):
         """

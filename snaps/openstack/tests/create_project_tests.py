@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,30 +41,30 @@ class ProjectSettingsUnitTests(unittest.TestCase):
 
     def test_name_only(self):
         settings = ProjectSettings(name='foo')
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('default', settings.domain)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('default', settings.domain)
         self.assertIsNone(settings.description)
         self.assertTrue(settings.enabled)
 
     def test_config_with_name_only(self):
         settings = ProjectSettings(config={'name': 'foo'})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('default', settings.domain)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('default', settings.domain)
         self.assertIsNone(settings.description)
         self.assertTrue(settings.enabled)
 
     def test_all(self):
         settings = ProjectSettings(name='foo', domain='bar', description='foobar', enabled=False)
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.domain)
-        self.assertEquals('foobar', settings.description)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.domain)
+        self.assertEqual('foobar', settings.description)
         self.assertFalse(settings.enabled)
 
     def test_config_all(self):
         settings = ProjectSettings(config={'name': 'foo', 'domain': 'bar', 'description': 'foobar', 'enabled': False})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.domain)
-        self.assertEquals('foobar', settings.description)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.domain)
+        self.assertEqual('foobar', settings.description)
         self.assertFalse(settings.enabled)
 
 
@@ -104,7 +104,7 @@ class CreateProjectSuccessTests(OSComponentTestCase):
 
         retrieved_project = keystone_utils.get_project(keystone=self.keystone, project_name=self.project_settings.name)
         self.assertIsNotNone(retrieved_project)
-        self.assertEquals(created_project, retrieved_project)
+        self.assertEqual(created_project, retrieved_project)
 
     def test_create_project_2x(self):
         """
@@ -116,10 +116,10 @@ class CreateProjectSuccessTests(OSComponentTestCase):
 
         retrieved_project = keystone_utils.get_project(keystone=self.keystone, project_name=self.project_settings.name)
         self.assertIsNotNone(retrieved_project)
-        self.assertEquals(created_project, retrieved_project)
+        self.assertEqual(created_project, retrieved_project)
 
         project2 = OpenStackProject(self.os_creds, self.project_settings).create()
-        self.assertEquals(retrieved_project, project2)
+        self.assertEqual(retrieved_project, project2)
 
     def test_create_delete_project(self):
         """
@@ -194,9 +194,9 @@ class CreateProjectUserTests(OSComponentTestCase):
         self.sec_grp_creators.append(sec_grp_creator)
 
         if 'tenant_id' in sec_grp['security_group']:
-            self.assertEquals(self.project_creator.get_project().id, sec_grp['security_group']['tenant_id'])
+            self.assertEqual(self.project_creator.get_project().id, sec_grp['security_group']['tenant_id'])
         elif 'project_id' in sec_grp['security_group']:
-            self.assertEquals(self.project_creator.get_project().id, sec_grp['security_group']['project_id'])
+            self.assertEqual(self.project_creator.get_project().id, sec_grp['security_group']['project_id'])
         else:
             self.fail('Cannot locate the project or tenant ID')
 
@@ -229,8 +229,8 @@ class CreateProjectUserTests(OSComponentTestCase):
             self.sec_grp_creators.append(sec_grp_creator)
 
             if 'tenant_id' in sec_grp['security_group']:
-                self.assertEquals(self.project_creator.get_project().id, sec_grp['security_group']['tenant_id'])
+                self.assertEqual(self.project_creator.get_project().id, sec_grp['security_group']['tenant_id'])
             elif 'project_id' in sec_grp['security_group']:
-                self.assertEquals(self.project_creator.get_project().id, sec_grp['security_group']['project_id'])
+                self.assertEqual(self.project_creator.get_project().id, sec_grp['security_group']['project_id'])
             else:
                 self.fail('Cannot locate the project or tenant ID')
