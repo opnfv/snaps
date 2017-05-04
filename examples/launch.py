@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -63,7 +63,6 @@ def __parse_ports_config(config):
     """
     Parses the "ports" configuration
     :param config: The dictionary to parse
-    :param os_creds: The OpenStack credentials object
     :return: a list of PortConfig objects
     """
     out = list()
@@ -92,7 +91,7 @@ def __create_flavors(os_conn_config, flavors_config, cleanup=False):
                     flavor_creator.create(cleanup=cleanup)
                     flavors[flavor_config['name']] = flavor_creator
         except Exception as e:
-            for key, flavor_creator in flavors.iteritems():
+            for key, flavor_creator in flavors.items():
                 flavor_creator.clean()
             raise e
         logger.info('Created configured flavors')
@@ -118,7 +117,7 @@ def __create_images(os_conn_config, images_config, cleanup=False):
                     images[image_config['name']] = deploy_utils.create_image(__get_os_credentials(os_conn_config),
                                                                              ImageSettings(image_config), cleanup)
         except Exception as e:
-            for key, image_creator in images.iteritems():
+            for key, image_creator in images.items():
                 image_creator.clean()
             raise e
         logger.info('Created configured images')
@@ -144,7 +143,7 @@ def __create_networks(os_conn_config, network_confs, cleanup=False):
                 network_dict[net_name] = deploy_utils.create_network(
                     os_creds, NetworkSettings(config=network_conf['network']), cleanup)
         except Exception as e:
-            for key, net_creator in network_dict.iteritems():
+            for key, net_creator in network_dict.items():
                 net_creator.clean()
             raise e
 
@@ -171,7 +170,7 @@ def __create_routers(os_conn_config, router_confs, cleanup=False):
                 router_dict[router_name] = deploy_utils.create_router(
                     os_creds, RouterSettings(config=router_conf['router']), cleanup)
         except Exception as e:
-            for key, router_creator in router_dict.iteritems():
+            for key, router_creator in router_dict.items():
                 router_creator.clean()
             raise e
 
@@ -197,7 +196,7 @@ def __create_keypairs(os_conn_config, keypair_confs, cleanup=False):
                 keypairs_dict[keypair_config['name']] = deploy_utils.create_keypair(
                     __get_os_credentials(os_conn_config), kp_settings, cleanup)
         except Exception as e:
-            for key, keypair_creator in keypairs_dict.iteritems():
+            for key, keypair_creator in keypairs_dict.items():
                 keypair_creator.clean()
             raise e
 
@@ -240,8 +239,8 @@ def __create_instances(os_conn_config, instances_config, image_dict, keypairs_di
                 else:
                     raise Exception('Instance configuration is None. Cannot instantiate')
         except Exception as e:
-            logger.error('Unexpected error creating instances. Attempting to cleanup environment - ' + e.message)
-            for key, inst_creator in vm_dict.iteritems():
+            logger.error('Unexpected error creating instances. Attempting to cleanup environment - ' + str(e))
+            for key, inst_creator in vm_dict.items():
                 inst_creator.clean()
             raise e
 
@@ -265,9 +264,9 @@ def __apply_ansible_playbooks(ansible_configs, os_conn_config, vm_dict, image_di
     logger.info("Applying Ansible Playbooks")
     if ansible_configs:
         # Ensure all hosts are accepting SSH session requests
-        for vm_inst in vm_dict.values():
+        for vm_inst in list(vm_dict.values()):
             if not vm_inst.vm_ssh_active(block=True):
-                logger.warn("Timeout waiting for instance to respond to SSH requests")
+                logger.warning("Timeout waiting for instance to respond to SSH requests")
                 return False
 
         # Set CWD so the deployment file's playbook location can leverage relative paths
@@ -304,7 +303,7 @@ def __apply_ansible_playbook(ansible_config, os_creds, vm_dict, image_dict, flav
                 proxy_setting=proxy_settings)
             if retval != 0:
                 # Not a fatal type of event
-                logger.warn('Unable to apply playbook found at location - ' + ansible_config('playbook_location'))
+                logger.warning('Unable to apply playbook found at location - ' + ansible_config('playbook_location'))
 
 
 def __get_connection_info(ansible_config, vm_dict):
@@ -357,13 +356,13 @@ def __get_variables(var_config, os_creds, vm_dict, image_dict, flavor_dict):
     """
     if var_config and vm_dict and len(vm_dict) > 0:
         variables = dict()
-        for key, value in var_config.iteritems():
+        for key, value in var_config.items():
             value = __get_variable_value(value, os_creds, vm_dict, image_dict, flavor_dict)
             if key and value:
                 variables[key] = value
                 logger.info("Set Jinga2 variable with key [" + key + "] the value [" + value + ']')
             else:
-                logger.warn('Key [' + str(key) + '] or Value [' + str(value) + '] must not be None')
+                logger.warning('Key [' + str(key) + '] or Value [' + str(value) + '] must not be None')
         return variables
     return None
 
@@ -530,6 +529,8 @@ def main(arguments):
     if config:
         os_config = config.get('openstack')
 
+        os_conn_config = None
+        flavor_dict = {}
         image_dict = {}
         network_dict = {}
         router_dict = {}
@@ -565,7 +566,7 @@ def main(arguments):
                                              arguments.clean is not ARG_NOT_SET)
                 logger.info('Completed creating/retrieving all configured instances')
             except Exception as e:
-                logger.error('Unexpected error deploying environment. Rolling back due to - ' + e.message)
+                logger.error('Unexpected error deploying environment. Rolling back due to - ' + str(e))
                 __cleanup(vm_dict, keypairs_dict, router_dict, network_dict, image_dict, flavor_dict, True)
                 raise e
 
@@ -576,7 +577,7 @@ def main(arguments):
                       arguments.clean_image is not ARG_NOT_SET)
         elif arguments.deploy is not ARG_NOT_SET:
             logger.info('Configuring NICs where required')
-            for vm in vm_dict.itervalues():
+            for vm in vm_dict.values():
                 vm.config_nics()
             logger.info('Completed NIC configuration')
 
@@ -594,24 +595,24 @@ def main(arguments):
 
 
 def __cleanup(vm_dict, keypairs_dict, router_dict, network_dict, image_dict, flavor_dict, clean_image=False):
-    for key, vm_inst in vm_dict.iteritems():
+    for key, vm_inst in vm_dict.items():
         vm_inst.clean()
-    for key, kp_inst in keypairs_dict.iteritems():
+    for key, kp_inst in keypairs_dict.items():
         kp_inst.clean()
-    for key, router_inst in router_dict.iteritems():
+    for key, router_inst in router_dict.items():
         try:
             router_inst.clean()
         except Exception:
             logger.warning("Router not found continuing to next component")
-    for key, net_inst in network_dict.iteritems():
+    for key, net_inst in network_dict.items():
         try:
             net_inst.clean()
         except Exception:
             logger.warning("Network not found continuing to next component")
     if clean_image:
-        for key, image_inst in image_dict.iteritems():
+        for key, image_inst in image_dict.items():
             image_inst.clean()
-    for key, flavor_inst in flavor_dict.iteritems():
+    for key, flavor_inst in flavor_dict.items():
         flavor_inst.clean()
 
 
@@ -632,9 +633,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.deploy is ARG_NOT_SET and args.clean is ARG_NOT_SET:
-        print 'Must enter either -d for deploy or -c for cleaning up and environment'
+        print('Must enter either -d for deploy or -c for cleaning up and environment')
         exit(1)
     if args.deploy is not ARG_NOT_SET and args.clean is not ARG_NOT_SET:
-        print 'Cannot enter both options -d/--deploy and -c/--clean'
+        print('Cannot enter both options -d/--deploy and -c/--clean')
         exit(1)
     main(args)

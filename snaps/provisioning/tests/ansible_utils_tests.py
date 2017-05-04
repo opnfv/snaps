@@ -111,9 +111,9 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
             self.inst_creator = create_instance.OpenStackVmInstance(
                 self.os_creds, instance_settings, self.image_creator.image_settings,
                 keypair_settings=self.keypair_creator.keypair_settings)
-        except Exception as e:
+        except:
             self.tearDown()
-            raise Exception(e.message)
+            raise
 
     def tearDown(self):
         """
@@ -173,7 +173,7 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
 
         retval = ansible_utils.apply_playbook('provisioning/tests/playbooks/simple_playbook.yml', [ip], user, priv_key,
                                               proxy_setting=self.os_creds.proxy_settings)
-        self.assertEquals(0, retval)
+        self.assertEqual(0, retval)
 
         ssh = ansible_utils.ssh_client(ip, user, priv_key, self.os_creds.proxy_settings)
         self.assertIsNotNone(ssh)
@@ -184,7 +184,7 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
 
         with open(self.test_file_local_path) as f:
             file_contents = f.readline()
-            self.assertEquals('Hello World!', file_contents)
+            self.assertEqual('Hello World!', file_contents)
 
     def test_apply_template_playbook(self):
         """
@@ -215,4 +215,4 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
 
         with open(self.test_file_local_path) as f:
             file_contents = f.readline()
-            self.assertEquals('Hello Foo!', file_contents)
+            self.assertEqual('Hello Foo!', file_contents)

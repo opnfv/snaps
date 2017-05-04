@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,37 +40,37 @@ class NetworkSettingsUnitTests(unittest.TestCase):
 
     def test_name_only(self):
         settings = NetworkSettings(name='foo')
-        self.assertEquals('foo', settings.name)
+        self.assertEqual('foo', settings.name)
         self.assertTrue(settings.admin_state_up)
         self.assertIsNone(settings.shared)
         self.assertIsNone(settings.project_name)
         self.assertFalse(settings.external)
         self.assertIsNone(settings.network_type)
-        self.assertEquals(0, len(settings.subnet_settings))
+        self.assertEqual(0, len(settings.subnet_settings))
 
     def test_config_with_name_only(self):
         settings = NetworkSettings(config={'name': 'foo'})
-        self.assertEquals('foo', settings.name)
+        self.assertEqual('foo', settings.name)
         self.assertTrue(settings.admin_state_up)
         self.assertIsNone(settings.shared)
         self.assertIsNone(settings.project_name)
         self.assertFalse(settings.external)
         self.assertIsNone(settings.network_type)
-        self.assertEquals(0, len(settings.subnet_settings))
+        self.assertEqual(0, len(settings.subnet_settings))
 
     def test_all(self):
         sub_settings = SubnetSettings(name='foo-subnet', cidr='10.0.0.0/24')
         settings = NetworkSettings(name='foo', admin_state_up=False, shared=True, project_name='bar', external=True,
                                    network_type='flat', physical_network='phy', subnet_settings=[sub_settings])
-        self.assertEquals('foo', settings.name)
+        self.assertEqual('foo', settings.name)
         self.assertFalse(settings.admin_state_up)
         self.assertTrue(settings.shared)
-        self.assertEquals('bar', settings.project_name)
+        self.assertEqual('bar', settings.project_name)
         self.assertTrue(settings.external)
-        self.assertEquals('flat', settings.network_type)
-        self.assertEquals('phy', settings.physical_network)
-        self.assertEquals(1, len(settings.subnet_settings))
-        self.assertEquals('foo-subnet', settings.subnet_settings[0].name)
+        self.assertEqual('flat', settings.network_type)
+        self.assertEqual('phy', settings.physical_network)
+        self.assertEqual(1, len(settings.subnet_settings))
+        self.assertEqual('foo-subnet', settings.subnet_settings[0].name)
 
     def test_config_all(self):
         settings = NetworkSettings(config={'name': 'foo', 'admin_state_up': False, 'shared': True,
@@ -78,15 +78,15 @@ class NetworkSettingsUnitTests(unittest.TestCase):
                                            'physical_network': 'phy',
                                            'subnets':
                                                [{'subnet': {'name': 'foo-subnet', 'cidr': '10.0.0.0/24'}}]})
-        self.assertEquals('foo', settings.name)
+        self.assertEqual('foo', settings.name)
         self.assertFalse(settings.admin_state_up)
         self.assertTrue(settings.shared)
-        self.assertEquals('bar', settings.project_name)
+        self.assertEqual('bar', settings.project_name)
         self.assertTrue(settings.external)
-        self.assertEquals('flat', settings.network_type)
-        self.assertEquals('phy', settings.physical_network)
-        self.assertEquals(1, len(settings.subnet_settings))
-        self.assertEquals('foo-subnet', settings.subnet_settings[0].name)
+        self.assertEqual('flat', settings.network_type)
+        self.assertEqual('phy', settings.physical_network)
+        self.assertEqual(1, len(settings.subnet_settings))
+        self.assertEqual('foo-subnet', settings.subnet_settings[0].name)
 
 
 class SubnetSettingsUnitTests(unittest.TestCase):
@@ -112,15 +112,15 @@ class SubnetSettingsUnitTests(unittest.TestCase):
 
     def test_name_cidr_only(self):
         settings = SubnetSettings(name='foo', cidr='10.0.0.0/24')
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('10.0.0.0/24', settings.cidr)
-        self.assertEquals(4, settings.ip_version)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('10.0.0.0/24', settings.cidr)
+        self.assertEqual(4, settings.ip_version)
         self.assertIsNone(settings.project_name)
         self.assertIsNone(settings.start)
         self.assertIsNone(settings.end)
         self.assertIsNone(settings.enable_dhcp)
-        self.assertEquals(1, len(settings.dns_nameservers))
-        self.assertEquals('8.8.8.8', settings.dns_nameservers[0])
+        self.assertEqual(1, len(settings.dns_nameservers))
+        self.assertEqual('8.8.8.8', settings.dns_nameservers[0])
         self.assertIsNone(settings.host_routes)
         self.assertIsNone(settings.destination)
         self.assertIsNone(settings.nexthop)
@@ -129,16 +129,16 @@ class SubnetSettingsUnitTests(unittest.TestCase):
 
     def test_config_with_name_cidr_only(self):
         settings = SubnetSettings(config={'name': 'foo', 'cidr': '10.0.0.0/24'})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('10.0.0.0/24', settings.cidr)
-        self.assertEquals(4, settings.ip_version)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('10.0.0.0/24', settings.cidr)
+        self.assertEqual(4, settings.ip_version)
         self.assertIsNone(settings.project_name)
         self.assertIsNone(settings.start)
         self.assertIsNone(settings.end)
         self.assertIsNone(settings.gateway_ip)
         self.assertIsNone(settings.enable_dhcp)
-        self.assertEquals(1, len(settings.dns_nameservers))
-        self.assertEquals('8.8.8.8', settings.dns_nameservers[0])
+        self.assertEqual(1, len(settings.dns_nameservers))
+        self.assertEqual('8.8.8.8', settings.dns_nameservers[0])
         self.assertIsNone(settings.host_routes)
         self.assertIsNone(settings.destination)
         self.assertIsNone(settings.nexthop)
@@ -151,22 +151,22 @@ class SubnetSettingsUnitTests(unittest.TestCase):
                                   start='10.0.0.2', end='10.0.0.101', gateway_ip='10.0.0.1', enable_dhcp=False,
                                   dns_nameservers=['8.8.8.8'], host_routes=[host_routes], destination='dest',
                                   nexthop='hop', ipv6_ra_mode='dhcpv6-stateful', ipv6_address_mode='slaac')
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('10.0.0.0/24', settings.cidr)
-        self.assertEquals(6, settings.ip_version)
-        self.assertEquals('bar-project', settings.project_name)
-        self.assertEquals('10.0.0.2', settings.start)
-        self.assertEquals('10.0.0.101', settings.end)
-        self.assertEquals('10.0.0.1', settings.gateway_ip)
-        self.assertEquals(False, settings.enable_dhcp)
-        self.assertEquals(1, len(settings.dns_nameservers))
-        self.assertEquals('8.8.8.8', settings.dns_nameservers[0])
-        self.assertEquals(1, len(settings.host_routes))
-        self.assertEquals(host_routes, settings.host_routes[0])
-        self.assertEquals('dest', settings.destination)
-        self.assertEquals('hop', settings.nexthop)
-        self.assertEquals('dhcpv6-stateful', settings.ipv6_ra_mode)
-        self.assertEquals('slaac', settings.ipv6_address_mode)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('10.0.0.0/24', settings.cidr)
+        self.assertEqual(6, settings.ip_version)
+        self.assertEqual('bar-project', settings.project_name)
+        self.assertEqual('10.0.0.2', settings.start)
+        self.assertEqual('10.0.0.101', settings.end)
+        self.assertEqual('10.0.0.1', settings.gateway_ip)
+        self.assertEqual(False, settings.enable_dhcp)
+        self.assertEqual(1, len(settings.dns_nameservers))
+        self.assertEqual('8.8.8.8', settings.dns_nameservers[0])
+        self.assertEqual(1, len(settings.host_routes))
+        self.assertEqual(host_routes, settings.host_routes[0])
+        self.assertEqual('dest', settings.destination)
+        self.assertEqual('hop', settings.nexthop)
+        self.assertEqual('dhcpv6-stateful', settings.ipv6_ra_mode)
+        self.assertEqual('slaac', settings.ipv6_address_mode)
 
     def test_config_all(self):
         host_routes = {'destination': '0.0.0.0/0', 'nexthop': '123.456.78.9'}
@@ -176,22 +176,22 @@ class SubnetSettingsUnitTests(unittest.TestCase):
                                           'dns_nameservers': ['8.8.8.8'], 'host_routes': [host_routes],
                                           'destination': 'dest', 'nexthop': 'hop', 'ipv6_ra_mode': 'dhcpv6-stateful',
                                           'ipv6_address_mode': 'slaac'})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('10.0.0.0/24', settings.cidr)
-        self.assertEquals(6, settings.ip_version)
-        self.assertEquals('bar-project', settings.project_name)
-        self.assertEquals('10.0.0.2', settings.start)
-        self.assertEquals('10.0.0.101', settings.end)
-        self.assertEquals('10.0.0.1', settings.gateway_ip)
-        self.assertEquals(False, settings.enable_dhcp)
-        self.assertEquals(1, len(settings.dns_nameservers))
-        self.assertEquals('8.8.8.8', settings.dns_nameservers[0])
-        self.assertEquals(1, len(settings.host_routes))
-        self.assertEquals(host_routes, settings.host_routes[0])
-        self.assertEquals('dest', settings.destination)
-        self.assertEquals('hop', settings.nexthop)
-        self.assertEquals('dhcpv6-stateful', settings.ipv6_ra_mode)
-        self.assertEquals('slaac', settings.ipv6_address_mode)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('10.0.0.0/24', settings.cidr)
+        self.assertEqual(6, settings.ip_version)
+        self.assertEqual('bar-project', settings.project_name)
+        self.assertEqual('10.0.0.2', settings.start)
+        self.assertEqual('10.0.0.101', settings.end)
+        self.assertEqual('10.0.0.1', settings.gateway_ip)
+        self.assertEqual(False, settings.enable_dhcp)
+        self.assertEqual(1, len(settings.dns_nameservers))
+        self.assertEqual('8.8.8.8', settings.dns_nameservers[0])
+        self.assertEqual(1, len(settings.host_routes))
+        self.assertEqual(host_routes, settings.host_routes[0])
+        self.assertEqual('dest', settings.destination)
+        self.assertEqual('hop', settings.nexthop)
+        self.assertEqual('dhcpv6-stateful', settings.ipv6_ra_mode)
+        self.assertEqual('slaac', settings.ipv6_address_mode)
 
 
 class PortSettingsUnitTests(unittest.TestCase):
@@ -217,8 +217,8 @@ class PortSettingsUnitTests(unittest.TestCase):
 
     def test_name_netname_only(self):
         settings = PortSettings(name='foo', network_name='bar')
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.network_name)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.network_name)
         self.assertTrue(settings.admin_state_up)
         self.assertIsNone(settings.project_name)
         self.assertIsNone(settings.mac_address)
@@ -233,8 +233,8 @@ class PortSettingsUnitTests(unittest.TestCase):
 
     def test_config_with_name_netname_only(self):
         settings = PortSettings(config={'name': 'foo', 'network_name': 'bar'})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.network_name)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.network_name)
         self.assertTrue(settings.admin_state_up)
         self.assertIsNone(settings.project_name)
         self.assertIsNone(settings.mac_address)
@@ -257,20 +257,20 @@ class PortSettingsUnitTests(unittest.TestCase):
                                 security_groups=['foo_grp_id'], allowed_address_pairs=allowed_address_pairs,
                                 opt_value='opt value', opt_name='opt name', device_owner='owner',
                                 device_id='device number')
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.network_name)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.network_name)
         self.assertFalse(settings.admin_state_up)
-        self.assertEquals('foo-project', settings.project_name)
-        self.assertEquals('1234', settings.mac_address)
-        self.assertEquals(ip_addrs, settings.ip_addrs)
-        self.assertEquals(fixed_ips, settings.fixed_ips)
-        self.assertEquals(1, len(settings.security_groups))
-        self.assertEquals('foo_grp_id', settings.security_groups[0])
-        self.assertEquals(allowed_address_pairs, settings.allowed_address_pairs)
-        self.assertEquals('opt value', settings.opt_value)
-        self.assertEquals('opt name', settings.opt_name)
-        self.assertEquals('owner', settings.device_owner)
-        self.assertEquals('device number', settings.device_id)
+        self.assertEqual('foo-project', settings.project_name)
+        self.assertEqual('1234', settings.mac_address)
+        self.assertEqual(ip_addrs, settings.ip_addrs)
+        self.assertEqual(fixed_ips, settings.fixed_ips)
+        self.assertEqual(1, len(settings.security_groups))
+        self.assertEqual('foo_grp_id', settings.security_groups[0])
+        self.assertEqual(allowed_address_pairs, settings.allowed_address_pairs)
+        self.assertEqual('opt value', settings.opt_value)
+        self.assertEqual('opt name', settings.opt_name)
+        self.assertEqual('owner', settings.device_owner)
+        self.assertEqual('device number', settings.device_id)
 
     def test_config_all(self):
         ip_addrs = [{'subnet_name', 'foo-sub', 'ip', '10.0.0.10'}]
@@ -282,20 +282,20 @@ class PortSettingsUnitTests(unittest.TestCase):
                                         'fixed_ips': fixed_ips, 'security_groups': ['foo_grp_id'],
                                         'allowed_address_pairs': allowed_address_pairs, 'opt_value': 'opt value',
                                         'opt_name': 'opt name', 'device_owner': 'owner', 'device_id': 'device number'})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('bar', settings.network_name)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.network_name)
         self.assertFalse(settings.admin_state_up)
-        self.assertEquals('foo-project', settings.project_name)
-        self.assertEquals('1234', settings.mac_address)
-        self.assertEquals(ip_addrs, settings.ip_addrs)
-        self.assertEquals(fixed_ips, settings.fixed_ips)
-        self.assertEquals(1, len(settings.security_groups))
-        self.assertEquals('foo_grp_id', settings.security_groups[0])
-        self.assertEquals(allowed_address_pairs, settings.allowed_address_pairs)
-        self.assertEquals('opt value', settings.opt_value)
-        self.assertEquals('opt name', settings.opt_name)
-        self.assertEquals('owner', settings.device_owner)
-        self.assertEquals('device number', settings.device_id)
+        self.assertEqual('foo-project', settings.project_name)
+        self.assertEqual('1234', settings.mac_address)
+        self.assertEqual(ip_addrs, settings.ip_addrs)
+        self.assertEqual(fixed_ips, settings.fixed_ips)
+        self.assertEqual(1, len(settings.security_groups))
+        self.assertEqual('foo_grp_id', settings.security_groups[0])
+        self.assertEqual(allowed_address_pairs, settings.allowed_address_pairs)
+        self.assertEqual('opt value', settings.opt_value)
+        self.assertEqual('opt name', settings.opt_name)
+        self.assertEqual('owner', settings.device_owner)
+        self.assertEqual('device number', settings.device_id)
 
 
 class CreateNetworkSuccessTests(OSIntegrationTestCase):
@@ -415,8 +415,8 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         self.net_creator2 = OpenStackNetwork(self.os_creds, self.net_config.network_settings)
         self.net_creator2.create()
 
-        self.assertEquals(self.net_creator.get_network()['network']['id'],
-                          self.net_creator2.get_network()['network']['id'])
+        self.assertEqual(self.net_creator.get_network()['network']['id'],
+                         self.net_creator2.get_network()['network']['id'])
 
 
 class CreateNetworkTypeTests(OSComponentTestCase):
@@ -492,7 +492,7 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         # Validate network was created
         neutron_utils_tests.validate_network(self.neutron, net_settings.name, True)
 
-        self.assertEquals(network_type, network['network']['provider:network_type'])
+        self.assertEqual(network_type, network['network']['provider:network_type'])
 
     # TODO - determine what value we need to place into physical_network
     #        - Do not know what vaule to place into the 'physical_network' setting.

@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 import logging
 import os
 
-from Crypto.PublicKey import RSA
 from novaclient.exceptions import NotFound
 
 from snaps.openstack.utils import nova_utils
@@ -50,28 +49,23 @@ class OpenStackKeypair:
         """
         logger.info('Creating keypair %s...' % self.keypair_settings.name)
 
-        try:
-            self.__keypair = nova_utils.get_keypair_by_name(self.__nova, self.keypair_settings.name)
+        self.__keypair = nova_utils.get_keypair_by_name(self.__nova, self.keypair_settings.name)
 
-            if not self.__keypair and not cleanup:
-                if self.keypair_settings.public_filepath and os.path.isfile(self.keypair_settings.public_filepath):
-                    logger.info("Uploading existing keypair")
-                    self.__keypair = nova_utils.upload_keypair_file(self.__nova, self.keypair_settings.name,
-                                                                    self.keypair_settings.public_filepath)
-                else:
-                    logger.info("Creating new keypair")
-                    # TODO - Make this value configurable
-                    keys = RSA.generate(1024)
-                    self.__keypair = nova_utils.upload_keypair(self.__nova, self.keypair_settings.name,
-                                                               keys.publickey().exportKey('OpenSSH'))
-                    nova_utils.save_keys_to_files(keys, self.keypair_settings.public_filepath,
-                                                  self.keypair_settings.private_filepath)
+        if not self.__keypair and not cleanup:
+            if self.keypair_settings.public_filepath and os.path.isfile(self.keypair_settings.public_filepath):
+                logger.info("Uploading existing keypair")
+                self.__keypair = nova_utils.upload_keypair_file(self.__nova, self.keypair_settings.name,
+                                                                self.keypair_settings.public_filepath)
+            else:
+                logger.info("Creating new keypair")
+                # TODO - Make this value configurable
+                keys = nova_utils.create_keys(1024)
+                self.__keypair = nova_utils.upload_keypair(self.__nova, self.keypair_settings.name,
+                                                           nova_utils.public_key_openssh(keys))
+                nova_utils.save_keys_to_files(keys, self.keypair_settings.public_filepath,
+                                              self.keypair_settings.private_filepath)
 
-            return self.__keypair
-        except Exception as e:
-            logger.error('Unexpected error creating keypair named - ' + self.keypair_settings.name)
-            self.clean()
-            raise Exception(e.message)
+        return self.__keypair
 
     def clean(self):
         """

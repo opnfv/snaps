@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,28 +48,28 @@ class SecurityGroupRuleSettingsUnitTests(unittest.TestCase):
 
     def test_name_and_direction(self):
         settings = SecurityGroupRuleSettings(sec_grp_name='foo', direction=Direction.ingress)
-        self.assertEquals('foo', settings.sec_grp_name)
-        self.assertEquals(Direction.ingress, settings.direction)
+        self.assertEqual('foo', settings.sec_grp_name)
+        self.assertEqual(Direction.ingress, settings.direction)
 
     def test_config_name_and_direction(self):
         settings = SecurityGroupRuleSettings(config={'sec_grp_name': 'foo', 'direction': 'ingress'})
-        self.assertEquals('foo', settings.sec_grp_name)
-        self.assertEquals(Direction.ingress, settings.direction)
+        self.assertEqual('foo', settings.sec_grp_name)
+        self.assertEqual(Direction.ingress, settings.direction)
 
     def test_all(self):
         settings = SecurityGroupRuleSettings(
             sec_grp_name='foo', description='fubar', direction=Direction.egress, remote_group_id='rgi',
             protocol=Protocol.icmp, ethertype=Ethertype.IPv6, port_range_min=1, port_range_max=2,
             remote_ip_prefix='prfx')
-        self.assertEquals('foo', settings.sec_grp_name)
-        self.assertEquals('fubar', settings.description)
-        self.assertEquals(Direction.egress, settings.direction)
-        self.assertEquals('rgi', settings.remote_group_id)
-        self.assertEquals(Protocol.icmp, settings.protocol)
-        self.assertEquals(Ethertype.IPv6, settings.ethertype)
-        self.assertEquals(1, settings.port_range_min)
-        self.assertEquals(2, settings.port_range_max)
-        self.assertEquals('prfx', settings.remote_ip_prefix)
+        self.assertEqual('foo', settings.sec_grp_name)
+        self.assertEqual('fubar', settings.description)
+        self.assertEqual(Direction.egress, settings.direction)
+        self.assertEqual('rgi', settings.remote_group_id)
+        self.assertEqual(Protocol.icmp, settings.protocol)
+        self.assertEqual(Ethertype.IPv6, settings.ethertype)
+        self.assertEqual(1, settings.port_range_min)
+        self.assertEqual(2, settings.port_range_max)
+        self.assertEqual('prfx', settings.remote_ip_prefix)
 
     def test_config_all(self):
         settings = SecurityGroupRuleSettings(
@@ -82,15 +82,15 @@ class SecurityGroupRuleSettingsUnitTests(unittest.TestCase):
                     'port_range_min': 1,
                     'port_range_max': 2,
                     'remote_ip_prefix': 'prfx'})
-        self.assertEquals('foo', settings.sec_grp_name)
-        self.assertEquals('fubar', settings.description)
-        self.assertEquals(Direction.egress, settings.direction)
-        self.assertEquals('rgi', settings.remote_group_id)
-        self.assertEquals(Protocol.tcp, settings.protocol)
-        self.assertEquals(Ethertype.IPv6, settings.ethertype)
-        self.assertEquals(1, settings.port_range_min)
-        self.assertEquals(2, settings.port_range_max)
-        self.assertEquals('prfx', settings.remote_ip_prefix)
+        self.assertEqual('foo', settings.sec_grp_name)
+        self.assertEqual('fubar', settings.description)
+        self.assertEqual(Direction.egress, settings.direction)
+        self.assertEqual('rgi', settings.remote_group_id)
+        self.assertEqual(Protocol.tcp, settings.protocol)
+        self.assertEqual(Ethertype.IPv6, settings.ethertype)
+        self.assertEqual(1, settings.port_range_min)
+        self.assertEqual(2, settings.port_range_max)
+        self.assertEqual('prfx', settings.remote_ip_prefix)
 
 
 class SecurityGroupSettingsUnitTests(unittest.TestCase):
@@ -108,11 +108,11 @@ class SecurityGroupSettingsUnitTests(unittest.TestCase):
 
     def test_name_only(self):
         settings = SecurityGroupSettings(name='foo')
-        self.assertEquals('foo', settings.name)
+        self.assertEqual('foo', settings.name)
 
     def test_config_with_name_only(self):
         settings = SecurityGroupSettings(config={'name': 'foo'})
-        self.assertEquals('foo', settings.name)
+        self.assertEqual('foo', settings.name)
 
     def test_invalid_rule(self):
         rule_setting = SecurityGroupRuleSettings(sec_grp_name='bar', direction=Direction.ingress)
@@ -126,11 +126,11 @@ class SecurityGroupSettingsUnitTests(unittest.TestCase):
         settings = SecurityGroupSettings(
             name='bar', description='fubar', project_name='foo', rule_settings=rule_settings)
 
-        self.assertEquals('bar', settings.name)
-        self.assertEquals('fubar', settings.description)
-        self.assertEquals('foo', settings.project_name)
-        self.assertEquals(rule_settings[0], settings.rule_settings[0])
-        self.assertEquals(rule_settings[1], settings.rule_settings[1])
+        self.assertEqual('bar', settings.name)
+        self.assertEqual('fubar', settings.description)
+        self.assertEqual('foo', settings.project_name)
+        self.assertEqual(rule_settings[0], settings.rule_settings[0])
+        self.assertEqual(rule_settings[1], settings.rule_settings[1])
 
     def test_config_all(self):
         settings = SecurityGroupSettings(
@@ -139,12 +139,12 @@ class SecurityGroupSettingsUnitTests(unittest.TestCase):
                     'project_name': 'foo',
                     'rules': [{'sec_grp_name': 'bar', 'direction': 'ingress'}]})
 
-        self.assertEquals('bar', settings.name)
-        self.assertEquals('fubar', settings.description)
-        self.assertEquals('foo', settings.project_name)
-        self.assertEquals(1, len(settings.rule_settings))
-        self.assertEquals('bar', settings.rule_settings[0].sec_grp_name)
-        self.assertEquals(Direction.ingress, settings.rule_settings[0].direction)
+        self.assertEqual('bar', settings.name)
+        self.assertEqual('fubar', settings.description)
+        self.assertEqual('foo', settings.project_name)
+        self.assertEqual(1, len(settings.rule_settings))
+        self.assertEqual('bar', settings.rule_settings[0].sec_grp_name)
+        self.assertEqual(Direction.ingress, settings.rule_settings[0].direction)
 
 
 class CreateSecurityGroupTests(OSIntegrationTestCase):
@@ -189,7 +189,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
         validation_utils.objects_equivalent(self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(self.neutron, self.sec_grp_creator.get_security_group())
-        self.assertEquals(len(self.sec_grp_creator.get_rules()), len(rules))
+        self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
         validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(), rules)
 
     def test_create_delete_group(self):
@@ -224,7 +224,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         validation_utils.objects_equivalent(self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(self.neutron,
                                                           self.sec_grp_creator.get_security_group())
-        self.assertEquals(len(self.sec_grp_creator.get_rules()), len(rules))
+        self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
         validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(), rules)
 
     def test_create_group_with_several_rules(self):
@@ -253,7 +253,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         sec_grp = neutron_utils.get_security_group(self.neutron, self.sec_grp_name)
         validation_utils.objects_equivalent(self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(self.neutron, self.sec_grp_creator.get_security_group())
-        self.assertEquals(len(self.sec_grp_creator.get_rules()), len(rules))
+        self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
         validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(), rules)
 
     def test_add_rule(self):
@@ -273,13 +273,13 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         validation_utils.objects_equivalent(self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(self.neutron,
                                                           self.sec_grp_creator.get_security_group())
-        self.assertEquals(len(self.sec_grp_creator.get_rules()), len(rules))
+        self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
         validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(), rules)
 
         self.sec_grp_creator.add_rule(SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_creator.sec_grp_settings.name,
                                                                 direction=Direction.egress, protocol=Protocol.icmp))
         rules2 = neutron_utils.get_rules_by_security_group(self.neutron, self.sec_grp_creator.get_security_group())
-        self.assertEquals(len(rules) + 1, len(rules2))
+        self.assertEqual(len(rules) + 1, len(rules2))
 
     def test_remove_rule_by_id(self):
         """
@@ -308,13 +308,13 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         validation_utils.objects_equivalent(self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(self.neutron,
                                                           self.sec_grp_creator.get_security_group())
-        self.assertEquals(len(self.sec_grp_creator.get_rules()), len(rules))
+        self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
         validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(), rules)
 
         self.sec_grp_creator.remove_rule(rule_id=rules[0]['security_group_rule']['id'])
         rules_after_del = neutron_utils.get_rules_by_security_group(self.neutron,
                                                                     self.sec_grp_creator.get_security_group())
-        self.assertEquals(len(rules) - 1, len(rules_after_del))
+        self.assertEqual(len(rules) - 1, len(rules_after_del))
 
     def test_remove_rule_by_setting(self):
         """
@@ -344,12 +344,12 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         validation_utils.objects_equivalent(self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(self.neutron,
                                                           self.sec_grp_creator.get_security_group())
-        self.assertEquals(len(self.sec_grp_creator.get_rules()), len(rules))
+        self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
         validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(), rules)
 
         self.sec_grp_creator.remove_rule(rule_setting=sec_grp_rule_settings[0])
         rules_after_del = neutron_utils.get_rules_by_security_group(self.neutron,
                                                                     self.sec_grp_creator.get_security_group())
-        self.assertEquals(len(rules) - 1, len(rules_after_del))
+        self.assertEqual(len(rules) - 1, len(rules_after_del))
 
 # TODO - Add more tests with different rules. Rule creation parameters can be somewhat complex

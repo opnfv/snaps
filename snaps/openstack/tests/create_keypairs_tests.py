@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,6 @@
 import os
 import uuid
 import unittest
-
-from Crypto.PublicKey import RSA
 
 from snaps.openstack.create_keypairs import KeypairSettings, OpenStackKeypair
 from snaps.openstack.utils import nova_utils
@@ -40,52 +38,52 @@ class KeypairSettingsUnitTests(unittest.TestCase):
 
     def test_name_only(self):
         settings = KeypairSettings(name='foo')
-        self.assertEquals('foo', settings.name)
+        self.assertEqual('foo', settings.name)
         self.assertIsNone(settings.public_filepath)
         self.assertIsNone(settings.private_filepath)
 
     def test_config_with_name_only(self):
         settings = KeypairSettings(config={'name': 'foo'})
-        self.assertEquals('foo', settings.name)
+        self.assertEqual('foo', settings.name)
         self.assertIsNone(settings.public_filepath)
         self.assertIsNone(settings.private_filepath)
 
     def test_name_pub_only(self):
         settings = KeypairSettings(name='foo', public_filepath='/foo/bar.pub')
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('/foo/bar.pub', settings.public_filepath)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertIsNone(settings.private_filepath)
 
     def test_config_with_name_pub_only(self):
         settings = KeypairSettings(config={'name': 'foo', 'public_filepath': '/foo/bar.pub'})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('/foo/bar.pub', settings.public_filepath)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertIsNone(settings.private_filepath)
 
     def test_name_priv_only(self):
         settings = KeypairSettings(name='foo', private_filepath='/foo/bar')
-        self.assertEquals('foo', settings.name)
+        self.assertEqual('foo', settings.name)
         self.assertIsNone(settings.public_filepath)
-        self.assertEquals('/foo/bar', settings.private_filepath)
+        self.assertEqual('/foo/bar', settings.private_filepath)
 
     def test_config_with_name_priv_only(self):
         settings = KeypairSettings(config={'name': 'foo', 'private_filepath': '/foo/bar'})
-        self.assertEquals('foo', settings.name)
+        self.assertEqual('foo', settings.name)
         self.assertIsNone(settings.public_filepath)
-        self.assertEquals('/foo/bar', settings.private_filepath)
+        self.assertEqual('/foo/bar', settings.private_filepath)
 
     def test_all(self):
         settings = KeypairSettings(name='foo', public_filepath='/foo/bar.pub', private_filepath='/foo/bar')
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('/foo/bar.pub', settings.public_filepath)
-        self.assertEquals('/foo/bar', settings.private_filepath)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('/foo/bar.pub', settings.public_filepath)
+        self.assertEqual('/foo/bar', settings.private_filepath)
 
     def test_config_all(self):
         settings = KeypairSettings(config={'name': 'foo', 'public_filepath': '/foo/bar.pub',
                                            'private_filepath': '/foo/bar'})
-        self.assertEquals('foo', settings.name)
-        self.assertEquals('/foo/bar.pub', settings.public_filepath)
-        self.assertEquals('/foo/bar', settings.private_filepath)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('/foo/bar.pub', settings.public_filepath)
+        self.assertEqual('/foo/bar', settings.private_filepath)
 
 
 class CreateKeypairsTests(OSIntegrationTestCase):
@@ -132,7 +130,7 @@ class CreateKeypairsTests(OSIntegrationTestCase):
         self.keypair_creator.create()
 
         keypair = nova_utils.keypair_exists(self.nova, self.keypair_creator.get_keypair())
-        self.assertEquals(self.keypair_creator.get_keypair(), keypair)
+        self.assertEqual(self.keypair_creator.get_keypair(), keypair)
 
     def test_create_delete_keypair(self):
         """
@@ -162,10 +160,10 @@ class CreateKeypairsTests(OSIntegrationTestCase):
         self.keypair_creator.create()
 
         keypair = nova_utils.keypair_exists(self.nova, self.keypair_creator.get_keypair())
-        self.assertEquals(self.keypair_creator.get_keypair(), keypair)
+        self.assertEqual(self.keypair_creator.get_keypair(), keypair)
 
         file_key = open(os.path.expanduser(self.pub_file_path)).read()
-        self.assertEquals(self.keypair_creator.get_keypair().public_key, file_key)
+        self.assertEqual(self.keypair_creator.get_keypair().public_key, file_key)
 
     def test_create_keypair_save_both(self):
         """
@@ -178,10 +176,10 @@ class CreateKeypairsTests(OSIntegrationTestCase):
         self.keypair_creator.create()
 
         keypair = nova_utils.keypair_exists(self.nova, self.keypair_creator.get_keypair())
-        self.assertEquals(self.keypair_creator.get_keypair(), keypair)
+        self.assertEqual(self.keypair_creator.get_keypair(), keypair)
 
         file_key = open(os.path.expanduser(self.pub_file_path)).read()
-        self.assertEquals(self.keypair_creator.get_keypair().public_key, file_key)
+        self.assertEqual(self.keypair_creator.get_keypair().public_key, file_key)
 
         self.assertTrue(os.path.isfile(self.priv_file_path))
 
@@ -190,14 +188,14 @@ class CreateKeypairsTests(OSIntegrationTestCase):
         Tests the creation of an existing public keypair from a file
         :return:
         """
-        keys = RSA.generate(1024)
+        keys = nova_utils.create_keys()
         nova_utils.save_keys_to_files(keys=keys, pub_file_path=self.pub_file_path)
         self.keypair_creator = OpenStackKeypair(
             self.os_creds, KeypairSettings(name=self.keypair_name, public_filepath=self.pub_file_path))
         self.keypair_creator.create()
 
         keypair = nova_utils.keypair_exists(self.nova, self.keypair_creator.get_keypair())
-        self.assertEquals(self.keypair_creator.get_keypair(), keypair)
+        self.assertEqual(self.keypair_creator.get_keypair(), keypair)
 
         file_key = open(os.path.expanduser(self.pub_file_path)).read()
-        self.assertEquals(self.keypair_creator.get_keypair().public_key, file_key)
+        self.assertEqual(self.keypair_creator.get_keypair().public_key, file_key)

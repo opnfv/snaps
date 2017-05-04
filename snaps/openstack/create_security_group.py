@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,7 +58,7 @@ class OpenStackSecurityGroup:
         if not self.__security_group and not cleanup:
             # Create the security group
             self.__security_group = neutron_utils.create_security_group(self.__neutron, self.__keystone,
-                                                                      self.sec_grp_settings)
+                                                                        self.sec_grp_settings)
 
             # Get the rules added for free
             auto_rules = neutron_utils.get_rules_by_security_group(self.__neutron, self.__security_group)
@@ -118,11 +118,11 @@ class OpenStackSecurityGroup:
         """
         Removes and deletes the rules then the security group.
         """
-        for setting, rule in self.__rules.iteritems():
+        for setting, rule in self.__rules.items():
             try:
                 neutron_utils.delete_security_group_rule(self.__neutron, rule)
             except NotFound as e:
-                logger.warn('Rule not found, cannot delete - ' + e.message)
+                logger.warning('Rule not found, cannot delete - ' + str(e))
                 pass
         self.__rules = dict()
 
@@ -130,7 +130,7 @@ class OpenStackSecurityGroup:
             try:
                 neutron_utils.delete_security_group(self.__neutron, self.__security_group)
             except NotFound as e:
-                logger.warn('Security Group not found, cannot delete - ' + e.message)
+                logger.warning('Security Group not found, cannot delete - ' + str(e))
 
             self.__security_group = None
 
@@ -177,7 +177,7 @@ class OpenStackSecurityGroup:
             if rule_setting:
                 self.__rules.pop(rule_setting)
             else:
-                logger.warn('Rule setting is None, cannot remove rule')
+                logger.warning('Rule setting is None, cannot remove rule')
 
     def __get_setting_from_rule(self, rule):
         """
@@ -460,17 +460,16 @@ def map_direction(direction):
     """
     if not direction:
         return None
-    if type(direction) is Direction:
+    if isinstance(direction, Direction):
         return direction
-    elif isinstance(direction, basestring):
-        if direction == 'egress':
+    else:
+        dir_str = str(direction)
+        if dir_str == 'egress':
             return Direction.egress
-        elif direction == 'ingress':
+        elif dir_str == 'ingress':
             return Direction.ingress
         else:
-            raise Exception('Invalid Direction - ' + direction)
-    else:
-        raise Exception('Invalid Direction object - ' + str(direction))
+            raise Exception('Invalid Direction - ' + dir_str)
 
 
 def map_protocol(protocol):
@@ -482,21 +481,20 @@ def map_protocol(protocol):
     """
     if not protocol:
         return None
-    elif type(protocol) is Protocol:
+    elif isinstance(protocol, Protocol):
         return protocol
-    elif isinstance(protocol, basestring):
-        if protocol == 'icmp':
+    else:
+        proto_str = str(protocol)
+        if proto_str == 'icmp':
             return Protocol.icmp
-        elif protocol == 'tcp':
+        elif proto_str == 'tcp':
             return Protocol.tcp
-        elif protocol == 'udp':
+        elif proto_str == 'udp':
             return Protocol.udp
-        elif protocol == 'null':
+        elif proto_str == 'null':
             return Protocol.null
         else:
-            raise Exception('Invalid Protocol - ' + protocol)
-    else:
-        raise Exception('Invalid Protocol object - ' + str(protocol))
+            raise Exception('Invalid Protocol - ' + proto_str)
 
 
 def map_ethertype(ethertype):
@@ -508,14 +506,13 @@ def map_ethertype(ethertype):
     """
     if not ethertype:
         return None
-    elif type(ethertype) is Ethertype:
+    elif isinstance(ethertype, Ethertype):
         return ethertype
-    elif isinstance(ethertype, basestring):
-        if ethertype == 'IPv6':
+    else:
+        eth_str = str(ethertype)
+        if eth_str == 'IPv6':
             return Ethertype.IPv6
-        elif ethertype == 'IPv4':
+        elif eth_str == 'IPv4':
             return Ethertype.IPv4
         else:
-            raise Exception('Invalid Ethertype - ' + ethertype)
-    else:
-        raise Exception('Invalid Ethertype object - ' + str(ethertype))
+            raise Exception('Invalid Ethertype - ' + eth_str)
