@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ab8dda7_5430d100",
+        "filename": "snaps/file_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-04T19:52:10Z",
+      "side": 1,
+      "message": "are these text files you are opening?  If you do just \u0027r\u0027 Python3 should open in text mode and decode() for you.\n\n\nhttps://docs.python.org/3/library/functions.html#open\n\nAs mentioned in the Overview, Python distinguishes between binary and text I/O. Files opened in binary mode (including \u0027b\u0027 in the mode argument) return contents as bytes objects without any decoding. In text mode (the default, or when \u0027t\u0027 is included in the mode argument), the contents of the file are returned as str, the bytes having been first decoded using a platform-dependent encoding or using the specified encoding if given.",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_f416a554",
+        "filename": "snaps/openstack/create_instance.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-04T19:52:10Z",
+      "side": 1,
+      "message": "I assume these were automatically generated, so it is probably not possible to change them, but this is not proper logging usage.\n\nThe first arg to logger is a % fmt string, and logging does deferred interpolation for you.\n\nThis should be\n\n  logging.error(\u0027Error deleting Floating IP - %s\u0027, e)\n\n(%s calls str() automatically)\n\nI do have a lib2to3 module that does logger message conversion that I used on yardstick.  I can dig it up.  \n\nBut again, this is not too important for automated conversion.\n\n\nMore info on logging:\n\n\nhttps://docs.python.org/2/library/logging.html#logging.Logger.debug\n\n  Logger.debug(msg, *args, **kwargs)\n\nLogs a message with level DEBUG on this logger. The msg is the message format string, and the args are the arguments which are merged into msg using the string formatting operator. (Note that this means that you can use keywords in the format string, together with a single dictionary argument.)\n\nThere are two keyword arguments in kwargs which are inspected: exc_info which, if it does not evaluate as false, causes exception information to be added to the logging message. If an exception tuple (in the format returned by sys.exc_info()) is provided, it is used; otherwise, sys.exc_info() is called to get the exception informatio\n\n\nDeferred interpolation:\n\nString interpolation involves evaluating arguments, so it can introduce significant computation.  The logging module tries to be smart about deferring interpolation until the last possible moment.\n\nThe logging methods check isEnabledFor for the log level and won\u0027t interpolate if the level is not enabled.",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
