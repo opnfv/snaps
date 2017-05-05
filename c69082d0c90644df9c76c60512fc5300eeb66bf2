@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9ab8dda7_6a8f2ecd",
+        "filename": "snaps/file_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-05-05T16:56:59Z",
+      "side": 1,
+      "message": "This method is generally used for image files. Glance in py3 requires them to be done in \u0027b\u0027 mode.",
+      "parentUuid": "9ab8dda7_5430d100",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ab8dda7_7402b50c",
         "filename": "snaps/file_utils.py",
         "patchSetId": 1
@@ -54,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "9ab8dda7_2ac136e4",
+        "filename": "snaps/file_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-05-05T16:56:59Z",
+      "side": 1,
+      "message": "Created ticket SNAPS-77 for further analysis on your concerns",
+      "parentUuid": "9ab8dda7_7402b50c",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ab8dda7_f416a554",
         "filename": "snaps/openstack/create_instance.py",
         "patchSetId": 1
@@ -65,6 +101,24 @@
       "writtenOn": "2017-05-04T19:52:10Z",
       "side": 1,
       "message": "I assume these were automatically generated, so it is probably not possible to change them, but this is not proper logging usage.\n\nThe first arg to logger is a % fmt string, and logging does deferred interpolation for you.\n\nThis should be\n\n  logging.error(\u0027Error deleting Floating IP - %s\u0027, e)\n\n(%s calls str() automatically)\n\nI do have a lib2to3 module that does logger message conversion that I used on yardstick.  I can dig it up.  \n\nBut again, this is not too important for automated conversion.\n\n\nMore info on logging:\n\n\nhttps://docs.python.org/2/library/logging.html#logging.Logger.debug\n\n  Logger.debug(msg, *args, **kwargs)\n\nLogs a message with level DEBUG on this logger. The msg is the message format string, and the args are the arguments which are merged into msg using the string formatting operator. (Note that this means that you can use keywords in the format string, together with a single dictionary argument.)\n\nThere are two keyword arguments in kwargs which are inspected: exc_info which, if it does not evaluate as false, causes exception information to be added to the logging message. If an exception tuple (in the format returned by sys.exc_info()) is provided, it is used; otherwise, sys.exc_info() is called to get the exception informatio\n\n\nDeferred interpolation:\n\nString interpolation involves evaluating arguments, so it can introduce significant computation.  The logging module tries to be smart about deferring interpolation until the last possible moment.\n\nThe logging methods check isEnabledFor for the log level and won\u0027t interpolate if the level is not enabled.",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_4a94aae1",
+        "filename": "snaps/openstack/create_instance.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-05-05T16:56:59Z",
+      "side": 1,
+      "message": "Excellent comments on my poor logging. Will address the logging issues in SNAPS-2. One of my first issues but never had a chance to really look into it. Your analysis will definitely help me out!",
+      "parentUuid": "9ab8dda7_f416a554",
       "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
@@ -88,6 +142,24 @@
     },
     {
       "key": {
+        "uuid": "9ab8dda7_aa8526ae",
+        "filename": "snaps/openstack/create_project.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-05-05T16:56:59Z",
+      "side": 1,
+      "message": "decided not to catch the exception here",
+      "parentUuid": "9ab8dda7_b4082d2e",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ab8dda7_9742cb3c",
         "filename": "snaps/openstack/create_router.py",
         "patchSetId": 1
@@ -99,6 +171,24 @@
       "writtenOn": "2017-05-04T20:54:10Z",
       "side": 1,
       "message": "I think this is just  try/finally\n\nIf you don\u0027t want to modify the exception, then we don\u0027t need to catch it, just use finally.",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_8a8aa2bd",
+        "filename": "snaps/openstack/create_router.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-05-05T16:56:59Z",
+      "side": 1,
+      "message": "decided to not catch the exception after all.",
+      "parentUuid": "9ab8dda7_9742cb3c",
       "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
@@ -122,6 +212,24 @@
     },
     {
       "key": {
+        "uuid": "9ab8dda7_caa09a45",
+        "filename": "snaps/openstack/create_security_group.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-05-05T16:56:59Z",
+      "side": 1,
+      "message": "applied same suggestions to map_direction() and map_ethertype()",
+      "parentUuid": "9ab8dda7_b73d8fbd",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ab8dda7_574c5370",
         "filename": "snaps/openstack/create_security_group.py",
         "patchSetId": 1
@@ -133,6 +241,24 @@
       "writtenOn": "2017-05-04T20:54:10Z",
       "side": 1,
       "message": "these things are usually done as a dict lookup \n\npylint also complains about constant \u003d\u003d var, we prefer var \u003d\u003d constant style.\n\n  try:\n    return PROTOCOL_MAP[proto_str]\n  except KeyError:\n    raise KeyError(\u0027Invalid Protocol - \u0027 + proto_str)\n\nalso tend to prefer re-using existing defined exceptions, instead of raising base exceptions.   This type of thing is usually a KeyError, ValueError, or maybe a TypeError depending on context.  Otherwise RunTimeError is good.",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_eaa31e4d",
+        "filename": "snaps/openstack/create_security_group.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-05-05T16:56:59Z",
+      "side": 1,
+      "message": "I\u0027ve applied the change to the boolean expressions here and to mat_direction() and map_ethertype(). I will be addressing the exception handling issues with SNAPS-22 and added your additional comments to that ticket.",
+      "parentUuid": "9ab8dda7_574c5370",
       "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
@@ -156,6 +282,24 @@
     },
     {
       "key": {
+        "uuid": "9ab8dda7_0a9792ed",
+        "filename": "snaps/openstack/utils/glance_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-05-05T16:56:59Z",
+      "side": 1,
+      "message": "much more elegant, thanks!",
+      "parentUuid": "9ab8dda7_37799f93",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ab8dda7_b764afe5",
         "filename": "snaps/provisioning/tests/ansible_utils_tests.py",
         "patchSetId": 1
@@ -167,6 +311,24 @@
       "writtenOn": "2017-05-04T20:54:10Z",
       "side": 1,
       "message": "finally?",
+      "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_2a9a9614",
+        "filename": "snaps/provisioning/tests/ansible_utils_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-05-05T16:56:59Z",
+      "side": 1,
+      "message": "going with\n\nexcept:\n    self.tearDown()\n    raise",
+      "parentUuid": "9ab8dda7_b764afe5",
       "revId": "c69082d0c90644df9c76c60512fc5300eeb66bf2",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
