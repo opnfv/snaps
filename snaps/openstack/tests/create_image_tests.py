@@ -509,12 +509,12 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         # Set properties
         properties = {}
         if self.image_metadata:
-            if 'extra_properties' in self.image_metadata and self.image_metadata['extra_properties']:
+            if 'extra_properties' in self.image_metadata:
                 properties = self.image_metadata['extra_properties']
         # Create the kernel image
         kernel_url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel'
         if self.image_metadata:
-            if 'kernel_url' in self.image_metadata and self.image_metadata['kernel_url']:
+            if 'kernel_url' in self.image_metadata:
                 kernel_url = self.image_metadata['kernel_url']
         kernel_image_file = file_utils.download(kernel_url, self.tmp_dir)
         kernel_file_image_settings = openstack_tests.file_image_test_settings(
@@ -527,7 +527,7 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         # Create the ramdisk image
         ramdisk_url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs'
         if self.image_metadata:
-            if 'ramdisk_url' in self.image_metadata and self.image_metadata['ramdisk_url']:
+            if 'ramdisk_url' in self.image_metadata:
                 ramdisk_url = self.image_metadata['ramdisk_url']
         ramdisk_image_file = file_utils.download(ramdisk_url, self.tmp_dir)
         ramdisk_file_image_settings = openstack_tests.file_image_test_settings(
@@ -564,7 +564,7 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         """
         # Set properties
         properties = {}
-        if self.image_metadata and self.image_metadata['extra_properties']:
+        if self.image_metadata and 'extra_properties' in self.image_metadata:
             properties = self.image_metadata['extra_properties']
 
         # Create the kernel image
@@ -573,7 +573,7 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
             url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel')
 
         if self.image_metadata:
-            if 'kernel_url' in self.image_metadata and self.image_metadata['kernel_url']:
+            if 'kernel_url' in self.image_metadata:
                 kernel_image_settings.url = self.image_metadata['kernel_url']
         self.image_creators.append(create_image.OpenStackImage(self.os_creds, kernel_image_settings))
         kernel_image = self.image_creators[-1].create()
@@ -585,7 +585,7 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
             name=self.image_name+'_ramdisk',
             url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs')
         if self.image_metadata:
-            if 'ramdisk_url' in self.image_metadata and self.image_metadata['ramdisk_url']:
+            if 'ramdisk_url' in self.image_metadata:
                 ramdisk_image_settings.url = self.image_metadata['ramdisk_url']
         self.image_creators.append(create_image.OpenStackImage(self.os_creds, ramdisk_image_settings))
         ramdisk_image = self.image_creators[-1].create()
@@ -597,7 +597,7 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
             name=self.image_name,
             url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img')
         if self.image_metadata:
-            if 'disk_url' in self.image_metadata and self.image_metadata['disk_url']:
+            if 'disk_url' in self.image_metadata:
                 os_image_settings.url = self.image_metadata['disk_url']
 
         properties['kernel_id'] = kernel_image.id
