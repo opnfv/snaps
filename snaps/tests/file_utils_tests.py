@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -96,7 +96,7 @@ class FileUtilsTests(unittest.TestCase):
         :return:
         """
         os_env_dict = file_utils.read_os_env_file('openstack/tests/conf/overcloudrc_test')
-        self.assertEquals('test_pw', os_env_dict['OS_PASSWORD'])
-        self.assertEquals('http://foo:5000/v2.0/', os_env_dict['OS_AUTH_URL'])
-        self.assertEquals('admin', os_env_dict['OS_USERNAME'])
-        self.assertEquals('admin', os_env_dict['OS_TENANT_NAME'])
+        self.assertEqual('test_pw', os_env_dict['OS_PASSWORD'])
+        self.assertEqual('http://foo:5000/v2.0/', os_env_dict['OS_AUTH_URL'])
+        self.assertEqual('admin', os_env_dict['OS_USERNAME'])
+        self.assertEqual('admin', os_env_dict['OS_TENANT_NAME'])

@@ -210,7 +210,7 @@ class OpenStackVmInstance:
                 logger.info('Deleting Floating IP - ' + floating_ip.ip)
                 nova_utils.delete_floating_ip(self.__nova, floating_ip)
             except Exception as e:
-                logger.error('Error deleting Floating IP - ' + e.message)
+                logger.error('Error deleting Floating IP - ' + str(e))
         self.__floating_ips = list()
         self.__floating_ip_dict = dict()
 
@@ -220,7 +220,7 @@ class OpenStackVmInstance:
             try:
                 neutron_utils.delete_port(self.__neutron, port)
             except PortNotFoundClient as e:
-                logger.warn('Unexpected error deleting port - ' + e.message)
+                logger.warning('Unexpected error deleting port - ' + str(e))
                 pass
         self.__ports = list()
 
@@ -243,7 +243,7 @@ class OpenStackVmInstance:
                     logger.error('VM not deleted within the timeout period of ' +
                                  str(self.instance_settings.vm_delete_timeout) + ' seconds')
             except Exception as e:
-                logger.error('Unexpected error while checking VM instance status - ' + e.message)
+                logger.error('Unexpected error while checking VM instance status - ' + str(e))
 
     def __setup_ports(self, port_settings, cleanup):
         """
@@ -303,7 +303,7 @@ class OpenStackVmInstance:
                                 ' on instance - ' + self.instance_settings.name)
                     return
                 except Exception as e:
-                    logger.debug('Retry adding floating IP to instance. Last attempt failed with - ' + e.message)
+                    logger.debug('Retry adding floating IP to instance. Last attempt failed with - ' + str(e))
                     time.sleep(poll_interval)
                     count -= 1
                     pass
@@ -341,7 +341,7 @@ class OpenStackVmInstance:
             if subnet_name:
                 subnet = neutron_utils.get_subnet_by_name(self.__neutron, subnet_name)
                 if not subnet:
-                    logger.warn('Cannot retrieve port IP as subnet could not be located with name - ' + subnet_name)
+                    logger.warning('Cannot retrieve port IP as subnet could not be located with name - ' + subnet_name)
                     return None
                 for fixed_ip in port_dict['fixed_ips']:
                     if fixed_ip['subnet_id'] == subnet['subnet']['id']:
@@ -374,7 +374,7 @@ class OpenStackVmInstance:
         for key, port in self.__ports:
             if key == port_name:
                 return port
-        logger.warn('Cannot find port with name - ' + port_name)
+        logger.warning('Cannot find port with name - ' + port_name)
         return None
 
     def config_nics(self):
@@ -427,7 +427,7 @@ class OpenStackVmInstance:
                                          [floating_ip], self.get_image_user(), self.keypair_settings.private_filepath,
                                          variables, self.__os_creds.proxy_settings)
         else:
-            logger.warn('VM ' + self.instance_settings.name + ' cannot self configure NICs eth1++. ' +
+            logger.warning('VM ' + self.instance_settings.name + ' cannot self configure NICs eth1++. ' +
                         'No playbook  or keypairs found.')
 
     def get_image_user(self):
@@ -452,7 +452,7 @@ class OpenStackVmInstance:
             return self.__vm_status_check(STATUS_DELETED, block, self.instance_settings.vm_delete_timeout,
                                           poll_interval)
         except NotFound as e:
-            logger.debug("Instance not found when querying status for " + STATUS_DELETED + ' with message ' + e.message)
+            logger.debug("Instance not found when querying status for " + STATUS_DELETED + ' with message ' + str(e))
             return True
 
     def vm_active(self, block=False, poll_interval=POLL_INTERVAL):
@@ -500,7 +500,7 @@ class OpenStackVmInstance:
         """
         instance = self.__nova.servers.get(self.__vm.id)
         if not instance:
-            logger.warn('Cannot find instance with id - ' + self.__vm.id)
+            logger.warning('Cannot find instance with id - ' + self.__vm.id)
             return False
 
         if instance.status == 'ERROR':
@@ -575,7 +575,7 @@ class OpenStackVmInstance:
                                             self.keypair_settings.private_filepath,
                                             proxy_settings=self.__os_creds.proxy_settings)
         else:
-            logger.warn('Cannot return an SSH client. No Floating IP configured')
+            logger.warning('Cannot return an SSH client. No Floating IP configured')
 
     def add_security_group(self, security_group):
         """
@@ -586,14 +586,14 @@ class OpenStackVmInstance:
         self.vm_active(block=True)
 
         if not security_group:
-            logger.warn('Security group object is None, cannot add')
+            logger.warning('Security group object is None, cannot add')
             return False
 
         try:
             nova_utils.add_security_group(self.__nova, self.get_vm_inst(), security_group['security_group']['name'])
             return True
         except NotFound as e:
-            logger.warn('Security group not added - ' + e.message)
+            logger.warning('Security group not added - ' + str(e))
             return False
 
     def remove_security_group(self, security_group):
@@ -605,14 +605,14 @@ class OpenStackVmInstance:
         self.vm_active(block=True)
 
         if not security_group:
-            logger.warn('Security group object is None, cannot remove')
+            logger.warning('Security group object is None, cannot remove')
             return False
 
         try:
             nova_utils.remove_security_group(self.__nova, self.get_vm_inst(), security_group)
             return True
         except NotFound as e:
-            logger.warn('Security group not removed - ' + e.message)
+            logger.warning('Security group not removed - ' + str(e))
             return False
 
 
@@ -659,7 +659,7 @@ class VmInstanceSettings:
                     self.security_group_names = set(config['security_group_names'])
                 elif isinstance(config['security_group_names'], set):
                     self.security_group_names = config['security_group_names']
-                elif isinstance(config['security_group_names'], basestring):
+                elif isinstance(config['security_group_names'], str):
                     self.security_group_names = [config['security_group_names']]
                 else:
                     raise Exception('Invalid data type for security_group_names attribute')

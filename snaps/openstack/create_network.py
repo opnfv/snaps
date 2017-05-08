@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,7 +89,7 @@ class OpenStackNetwork:
                 logger.info('Deleting subnet with name ' + subnet['subnet']['name'])
                 neutron_utils.delete_subnet(self.__neutron, subnet)
             except NotFound as e:
-                logger.warn('Error deleting subnet with message - ' + e.message)
+                logger.warning('Error deleting subnet with message - ' + str(e))
                 pass
         self.__subnets = list()
 

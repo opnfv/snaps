@@ -25,15 +25,15 @@ class ImageDomainObjectTests(unittest.TestCase):
     def test_construction_positional(self):
         props = {'foo': 'bar'}
         image = Image('name', 'id', 100, props)
-        self.assertEquals('name', image.name)
-        self.assertEquals('id', image.id)
-        self.assertEquals(100, image.size)
-        self.assertEquals(props, image.properties)
+        self.assertEqual('name', image.name)
+        self.assertEqual('id', image.id)
+        self.assertEqual(100, image.size)
+        self.assertEqual(props, image.properties)
 
     def test_construction_named(self):
         props = {'foo': 'bar'}
         image = Image(image_id='id', properties=props, name='name', size=101)
-        self.assertEquals('name', image.name)
-        self.assertEquals('id', image.id)
-        self.assertEquals(101, image.size)
-        self.assertEquals(props, image.properties)
+        self.assertEqual('name', image.name)
+        self.assertEqual('id', image.id)
+        self.assertEqual(101, image.size)
+        self.assertEqual(props, image.properties)

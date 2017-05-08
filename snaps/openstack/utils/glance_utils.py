@@ -151,10 +151,8 @@ def __create_image_v2(glance, image_settings):
         kwargs['name'] = image_settings.name
         kwargs['disk_format'] = image_settings.format
         kwargs['container_format'] = 'bare'
-
         if image_settings.extra_properties:
-            for key, value in image_settings.extra_properties.iteritems():
-                kwargs[key] = value
+            kwargs.update(image_settings.extra_properties)
 
         created_image = glance.images.create(**kwargs)
         image_file = file_utils.get_file(image_filename)

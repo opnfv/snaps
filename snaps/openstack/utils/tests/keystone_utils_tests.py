@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -93,8 +93,8 @@ class KeystoneUtilsTests(OSComponentTestCase):
         """
         project_settings = ProjectSettings(name=self.project_name)
         self.project = keystone_utils.create_project(self.keystone, project_settings)
-        self.assertEquals(self.project_name, self.project.name)
+        self.assertEqual(self.project_name, self.project.name)
 
         project = keystone_utils.get_project(keystone=self.keystone, project_name=project_settings.name)
         self.assertIsNotNone(project)
-        self.assertEquals(self.project_name, self.project.name)
+        self.assertEqual(self.project_name, self.project.name)

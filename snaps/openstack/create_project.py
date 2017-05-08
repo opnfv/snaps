@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,19 +47,14 @@ class OpenStackProject:
         :param cleanup: Denotes whether or not this is being called for cleanup or not
         :return: The OpenStack Image object
         """
-        try:
-            self.__project = keystone_utils.get_project(keystone=self.__keystone,
-                                                        project_name=self.project_settings.name)
-            if self.__project:
-                logger.info('Found project with name - ' + self.project_settings.name)
-            elif not cleanup:
-                self.__project = keystone_utils.create_project(self.__keystone, self.project_settings)
-            else:
-                logger.info('Did not create image due to cleanup mode')
-        except Exception as e:
-            logger.error('Unexpected error. Rolling back')
-            self.clean()
-            raise Exception(e.message)
+        self.__project = keystone_utils.get_project(keystone=self.__keystone,
+                                                    project_name=self.project_settings.name)
+        if self.__project:
+            logger.info('Found project with name - ' + self.project_settings.name)
+        elif not cleanup:
+            self.__project = keystone_utils.create_project(self.__keystone, self.project_settings)
+        else:
+            logger.info('Did not create image due to cleanup mode')
 
         return self.__project
 

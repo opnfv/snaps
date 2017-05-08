@@ -176,7 +176,7 @@ class OpenStackImage:
         # TODO - Place this API call into glance_utils.
         status = glance_utils.get_image_status(self.__glance, self.__image)
         if not status:
-            logger.warn('Cannot image status for image with ID - ' + self.__image.id)
+            logger.warning('Cannot image status for image with ID - ' + self.__image.id)
             return False
 
         if status == 'ERROR':
