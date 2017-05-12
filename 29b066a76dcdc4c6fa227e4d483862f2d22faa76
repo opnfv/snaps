@@ -1,0 +1,276 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ab8dda7_ec4ed16e",
+        "filename": "snaps/custom_image_test_runner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "usually I think we try to avoid incremental initialization and prefer list and dict literals.\n\nOne advantage at least is that initializing all at once gives Python sizing hints and Python doesn\u0027t have to resize.\n\n    meta_list \u003d [\n        # Create images from default\n        None,\n        # Create images from specified URL\n        {\n            \u0027glance_tests\u0027: {\u0027disk_url\u0027: openstack_tests.CIRROS_DEFAULT_IMAGE_URL},\n            \u0027cirros\u0027: {\u0027disk_url\u0027: openstack_tests.CIRROS_DEFAULT_IMAGE_URL},\n            \u0027centos\u0027: {\u0027disk_url\u0027: openstack_tests.CENTOS_DEFAULT_IMAGE_URL},\n            \u0027ubuntu\u0027: {\u0027disk_url\u0027: openstack_tests.UBUNTU_DEFAULT_IMAGE_URL}},\n        # Create images from file\n        {\n            \u0027glance_tests\u0027: {\u0027disk_file\u0027: \u0027../images/cirros-0.3.4-x86_64-disk.img\u0027},\n            \u0027cirros\u0027: {\u0027disk_file\u0027: \u0027../images/cirros-0.3.4-x86_64-disk.img\u0027},\n            \u0027centos\u0027: {\u0027disk_file\u0027: \u0027../images/CentOS-7-x86_64-GenericCloud.qcow2\u0027},\n            \u0027ubuntu\u0027: {\u0027disk_file\u0027: \u0027../images/ubuntu-14.04-server-cloudimg-amd64-disk1.img\u0027}},\n        # Create images from Existing\n        {\u0027glance_tests\u0027: {\n            \u0027disk_file\u0027: \u0027../images/cirros-0.3.4-x86_64-disk.img\u0027},\n            \u0027cirros\u0027: {\u0027config\u0027: {\u0027name\u0027: image_creators[\u0027cirros\u0027].image_settings.name,\n                                  \u0027exists\u0027: True, \u0027image_user\u0027: \u0027cirros\u0027}},\n            \u0027centos\u0027: {\u0027config\u0027: {\u0027name\u0027: image_creators[\u0027centos\u0027].image_settings.name,\n                                  \u0027exists\u0027: True, \u0027image_user\u0027: \u0027centos\u0027}},\n            \u0027ubuntu\u0027: {\u0027config\u0027: {\u0027name\u0027: image_creators[\u0027ubuntu\u0027].image_settings.name,\n                                  \u0027exists\u0027: True, \u0027image_user\u0027: \u0027ubuntu\u0027}}}\n    ]",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_6c42e13f",
+        "filename": "snaps/custom_image_test_runner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "logger.error(\"%s ERROR with %s\", test, message)",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_8c3dd5bd",
+        "filename": "snaps/custom_image_test_runner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "empty containers are false, so we usually don\u0027t use len(x) \u003e 0.\n\njust checking boolean on the values should work.\n\n  if result.errors or result.failures:",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_cc5bcd2c",
+        "filename": "snaps/custom_image_test_runner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "can we use deferred interpolation?\n\nlogger.info(\u0027Total number of errors \u003d %s\u0027, error_count)",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_ac58d932",
+        "filename": "snaps/custom_image_test_runner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "you can use\n\n logger.error(..., exc_info\u003dTrue) to get traceback\n\nor \n\n logger.exception(...)\n\nFor testing use cases it seems better to just dump full tracebacks.",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_2c4ce96f",
+        "filename": "snaps/custom_image_test_runner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "whitespace?",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_0c524513",
+        "filename": "snaps/custom_image_test_runner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "similar here, creating a dict all at once is preferred.\n\n    out \u003d {\n        \u0027cirros\u0027: OpenStackImage(os_creds, cirros_image_settings),\n        \u0027centos\u0027: OpenStackImage(os_creds, centos_image_settings),\n        \u0027ubuntu\u0027: OpenStackImage(os_creds, ubuntu_image_settings),\n    }\n    for image in out.values():\n        image.create()",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_4c47dd4b",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "we can assign bool values of conditionals\n\n  self.exists \u003d \u0027exists\u0027 in config and config[\u0027exists\u0027] is True\n\nbut it looks like this can simplify to .get() and bool()\n\n  self.exists \u003d bool(config.get(exists))\n\n\nalso usually improper to check \u0027x is True\u0027.  \u0027is\u0027 is for object identity, and you rarely need to check if x is the same object as the singleton boolean called True.",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_cc72edac",
+        "filename": "snaps/openstack/create_image.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "I think we want to call super.  Or that seems to be convention, instead of static superclass names.\n\n  super(ImageSettingsError, self).__init__(self, message)",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_8c64f5e5",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "as long as self.image_metadata is initialized to {} this can simplify to\n  \n  glance_test_meta \u003d self.image_metadata.get(\u0027glance_tests\u0027)",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_2c6389dd",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "maybe\n\n  self.glance_test_meta \u003d self.image_metadata.get(\u0027glance_tests\u0027, {})",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_4c5efd13",
+        "filename": "snaps/openstack/tests/create_image_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "more idiomatic Python would be something like\n\n        try:\n            kernel_file_name \u003d self.glance_test_meta[\u0027kernel_file\u0027]\n        except KeyError:\n            kernel_url \u003d self.glance_test_meta.get(\u0027kernel_url\u0027,\n                                                   \u0027http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel\u0027)\n            kernel_file_name \u003d file_utils.download(kernel_url, self.tmp_dir).name\n\nwe try to avoid double-hashing, and prefer atomic dict lookups.",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_ec9c91c2",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1553,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "usually prefer tempfile.mkdtemp()  as it handles most cases.\n\nif you can use pytest then there is pytest.tmpdir fixture.\n\nhttps://docs.pytest.org/en/latest/tmpdir.html",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_8cab95d5",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1596,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "you could catch the AttributeError if .clean() doesn\u0027t exist.\n\n  try:",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_cca98de0",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1617,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "I think rmtree checks this for you.  \n\nbetter to catch the OSError or use ignore_errors\u003dTrue",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab8dda7_6cb0a143",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1730,
+      "author": {
+        "id": 1402
+      },
+      "writtenOn": "2017-05-12T20:56:23Z",
+      "side": 1,
+      "message": "whitespace?",
+      "revId": "29b066a76dcdc4c6fa227e4d483862f2d22faa76",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
