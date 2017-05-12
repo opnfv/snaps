@@ -19,16 +19,18 @@ import time
 import unittest
 import uuid
 
+import shutil
+from snaps import file_utils
 from snaps.openstack.create_instance import VmInstanceSettings, OpenStackVmInstance, FloatingIpSettings
 from snaps.openstack.create_flavor import OpenStackFlavor, FlavorSettings
 from snaps.openstack.create_keypairs import OpenStackKeypair, KeypairSettings
 from snaps.openstack.create_network import OpenStackNetwork, PortSettings
 from snaps.openstack.create_router import OpenStackRouter
-from snaps.openstack.create_image import OpenStackImage
+from snaps.openstack.create_image import OpenStackImage, ImageSettings
 from snaps.openstack.create_security_group import SecurityGroupSettings, OpenStackSecurityGroup
 from snaps.openstack.tests import openstack_tests, validation_utils
 from snaps.openstack.utils import nova_utils
-from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
+from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase, OSComponentTestCase
 
 __author__ = 'spisarski'
 
@@ -234,13 +236,8 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         super(self.__class__, self).__start__()
 
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        self.keypair_priv_filepath = 'tmp/' + guid
-        self.keypair_pub_filepath = self.keypair_priv_filepath + '.pub'
-        self.keypair_name = guid + '-kp'
         self.vm_inst_name = guid + '-inst'
         self.port_1_name = guid + 'port-1'
-        self.port_2_name = guid + 'port-2'
-        self.floating_ip_name = guid + 'fip1'
 
         # Initialize for tearDown()
         self.image_creator = None
@@ -255,11 +252,11 @@ class SimpleHealthCheck(OSIntegrationTestCase):
 
         # Create Image
         # Set the default image settings, then set any custom parameters sent from the app
-        self.os_image_settings = openstack_tests.cirros_image_settings(
+        os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
 
         try:
-            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
             self.image_creator.create()
 
             # Create Network
@@ -285,12 +282,6 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
 
-        if os.path.isfile(self.keypair_pub_filepath):
-            os.remove(self.keypair_pub_filepath)
-
-        if os.path.isfile(self.keypair_priv_filepath):
-            os.remove(self.keypair_priv_filepath)
-
         if self.network_creator:
             try:
                 self.network_creator.clean()
@@ -303,7 +294,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
 
-        if self.image_creator:
+        if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
@@ -364,7 +355,7 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.vm_inst_name = guid + '-inst'
         self.nova = nova_utils.nova_client(self.os_creds)
-        self.os_image_settings = openstack_tests.cirros_image_settings(
+        os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
 
         net_config = openstack_tests.get_priv_net_config(
@@ -380,7 +371,7 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
 
         try:
             # Create Image
-            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
             self.image_creator.create()
 
             # Create Flavor
@@ -422,7 +413,7 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
-        if self.image_creator:
+        if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
@@ -485,11 +476,11 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.pub_net_config = openstack_tests.get_pub_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
             router_name=guid + '-pub-router', external_net=self.ext_net_name)
-        self.os_image_settings = openstack_tests.cirros_image_settings(
+        os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
         try:
             # Create Image
-            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
             self.image_creator.create()
 
             # Create Network
@@ -555,7 +546,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
-        if self.image_creator:
+        if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
@@ -669,12 +660,12 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         self.net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
             router_name=guid + '-pub-router', external_net=self.ext_net_name)
-        self.os_image_settings = openstack_tests.cirros_image_settings(
+        os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
 
         try:
             # Create Image
-            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
             self.image_creator.create()
 
             # Create Network
@@ -712,7 +703,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
-        if self.image_creator:
+        if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
@@ -903,7 +894,7 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
         self.priv_net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-priv-net', subnet_name=guid + '-priv-subnet')
 
-        self.os_image_settings = openstack_tests.cirros_image_settings(
+        os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
 
         try:
@@ -918,7 +909,7 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
             self.flavor_creator.create()
 
             # Create Image
-            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
             self.image_creator.create()
 
         except Exception as e:
@@ -947,7 +938,7 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
-        if self.image_creator:
+        if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
@@ -1028,12 +1019,11 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             router_name=self.guid + '-pub-router', external_net=self.ext_net_name)
 
         image_name = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        self.os_image_settings = openstack_tests.centos_image_settings(name=image_name,
-                                                                       image_metadata=self.image_metadata)
+        os_image_settings = openstack_tests.centos_image_settings(name=image_name, image_metadata=self.image_metadata)
 
         try:
             # Create Image
-            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
             self.image_creator.create()
 
             # First network is public
@@ -1107,7 +1097,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
-        if self.image_creator:
+        if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
@@ -1177,7 +1167,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.vm_inst_name = self.guid + '-inst'
         self.nova = nova_utils.nova_client(self.os_creds)
-        self.os_image_settings = openstack_tests.cirros_image_settings(
+        os_image_settings = openstack_tests.cirros_image_settings(
             name=self.guid + '-image', image_metadata=self.image_metadata)
 
         self.vm_inst_name = self.guid + '-inst'
@@ -1199,7 +1189,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
 
         try:
             # Create Image
-            self.image_creator = OpenStackImage(self.os_creds, self.os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
             self.image_creator.create()
 
             # Create Network
@@ -1247,7 +1237,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
-        if self.image_creator:
+        if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
@@ -1463,11 +1453,22 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
         self.inst_creator = None
 
         try:
+            if self.image_metadata and 'disk_file' in self.image_metadata:
+                metadata = self.image_metadata
+            elif self.image_metadata and 'cirros' in self.image_metadata \
+                    and 'disk_file' in self.image_metadata['cirros']:
+                metadata = self.image_metadata['cirros']
+            else:
+                metadata = {'disk_url': openstack_tests.CIRROS_DEFAULT_IMAGE_URL,
+                            'kernel_url': openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL,
+                            'ramdisk_url': openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL}
+
             image_settings = openstack_tests.cirros_image_settings(
                 name=self.image_name,
-                image_metadata={'disk_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img',
-                                'kernel_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel',
-                                'ramdisk_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs'})
+                image_metadata=metadata)
+
+            if not image_settings.ramdisk_image_settings or not image_settings.kernel_image_settings:
+                logger.warn('3 Part image will not be tested. Image metadata has overridden this functionality')
 
             self.image_creator = OpenStackImage(self.os_creds, image_settings)
             self.image_creator.create()
@@ -1510,7 +1511,7 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
-        if self.image_creator:
+        if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
@@ -1531,4 +1532,387 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
 
         vm_inst = self.inst_creator.create()
         self.assertIsNotNone(vm_inst)
+        self.assertTrue(self.inst_creator.vm_active(block=True))
+
+
+class CreateInstanceMockOfflineTests(OSComponentTestCase):
+    """
+    Tests the custom image_metadata that can be set by clients for handling images differently than the
+    default behavior of the existing tests primarily for offline testing
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateImage object that is responsible for downloading and creating an OS image file
+        within OpenStack
+        """
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+
+        self.tmpDir = 'tmp/' + str(self.guid)
+        if not os.path.exists(self.tmpDir):
+            os.makedirs(self.tmpDir)
+
+        self.image_name = self.guid + '-image'
+        self.vm_inst_name = self.guid + '-inst'
+        self.port_1_name = self.guid + 'port-1'
+
+        # Initialize for tearDown()
+        self.image_creator = None
+        self.network_creator = None
+        self.flavor_creator = None
+        self.inst_creator = None
+
+        self.priv_net_config = openstack_tests.get_priv_net_config(
+            net_name=self.guid + '-priv-net', subnet_name=self.guid + '-priv-subnet')
+        self.port_settings = PortSettings(
+            name=self.port_1_name, network_name=self.priv_net_config.network_settings.name)
+
+        try:
+            # Download image file
+            self.image_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_IMAGE_URL, self.tmpDir)
+
+            # Create Network
+            self.network_creator = OpenStackNetwork(self.os_creds, self.priv_net_config.network_settings)
+            self.network_creator.create()
+
+            # Create Flavor
+            self.flavor_creator = OpenStackFlavor(
+                self.os_creds,
+                FlavorSettings(
+                    name=self.guid + '-flavor-name', ram=128, disk=10, vcpus=1))
+            self.flavor_creator.create()
+        except Exception as e:
+            self.tearDown()
+            raise e
+
+    def tearDown(self):
+        """
+        Cleans the created object
+        """
+        if self.inst_creator:
+            try:
+                self.inst_creator.clean()
+            except Exception as e:
+                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
+
+        if self.network_creator:
+            try:
+                self.network_creator.clean()
+            except Exception as e:
+                logger.error('Unexpected exception cleaning network with message - ' + str(e))
+
+        if self.flavor_creator:
+            try:
+                self.flavor_creator.clean()
+            except Exception as e:
+                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
+
+        if self.image_creator:
+            try:
+                self.image_creator.clean()
+            except Exception as e:
+                logger.error('Unexpected exception cleaning image with message - ' + str(e))
+
+        if os.path.exists(self.tmpDir) and os.path.isdir(self.tmpDir):
+            shutil.rmtree(self.tmpDir)
+
+    def test_inst_from_file_image_simple_flat(self):
+        """
+        Creates a VM instance from a locally sourced file image using simply the 'disk_file' attribute vs.
+        using the 'config' option which completely overrides all image settings
+        :return: 
+        """
+        metadata = {'disk_file': self.image_file.name}
+
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name, image_metadata=metadata)
+        self.assertEqual(self.image_file.name, os_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.image_user)
+        self.assertIsNone(os_image_settings.url)
+        self.assertFalse(os_image_settings.exists)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.format)
+
+        self.assertIsNone(os_image_settings.kernel_image_settings)
+        self.assertIsNone(os_image_settings.ramdisk_image_settings)
+
+        self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+        self.image_creator.create()
+
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creator.image_settings)
+        self.inst_creator.create()
+
+        self.assertTrue(self.inst_creator.vm_active(block=True))
+
+    def test_inst_from_file_image_simple_nested(self):
+        """
+        Creates a VM instance from a locally sourced file image using simply the 'disk_file' attribute under 'cirros'
+        vs. using the 'config' option which completely overrides all image settings
+        :return: 
+        """
+        metadata = {'cirros': {'disk_file': self.image_file.name}}
+
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name, image_metadata=metadata)
+        self.assertEqual(self.image_file.name, os_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.image_user)
+        self.assertIsNone(os_image_settings.url)
+        self.assertFalse(os_image_settings.exists)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.format)
+
+        self.assertIsNone(os_image_settings.kernel_image_settings)
+        self.assertIsNone(os_image_settings.ramdisk_image_settings)
+
+        self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+        self.image_creator.create()
+
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creator.image_settings)
+        self.inst_creator.create()
+
+        self.assertTrue(self.inst_creator.vm_active(block=True))
+
+    def test_inst_from_existing(self):
+        """
+        Creates a VM instance from a image creator that has been configured to use an existing image
+        :return: 
+        """
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
+        self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+        self.image_creator.create()
+
+        test_image_creator = OpenStackImage(
+            self.os_creds, ImageSettings(name=self.image_creator.image_settings.name,
+                                         image_user=self.image_creator.image_settings.image_user, exists=True))
+        test_image_creator.create()
+        self.assertEqual(self.image_creator.get_image().id, test_image_creator.get_image().id)
+
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                test_image_creator.image_settings)
+        self.inst_creator.create()
+
+        self.assertTrue(self.inst_creator.vm_active(block=True))
+
+    def test_inst_from_file_image_complex(self):
+        """
+        Creates a VM instance from a locally sourced file image by overriding the default settings by using a dict()
+        that can be read in by ImageSettings
+        :return: 
+        """
+
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
+        self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+        self.image_creator.create()
+
+        metadata = {'cirros': {'config':
+                                   {'name': os_image_settings.name, 'image_user': os_image_settings.image_user,
+                                    'exists': True}}}
+        test_image_settings = openstack_tests.cirros_image_settings(image_metadata=metadata)
+        test_image = OpenStackImage(self.os_creds, test_image_settings)
+        test_image.create()
+
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                test_image_settings)
+        self.inst_creator.create()
+
+        self.assertTrue(self.inst_creator.vm_active(block=True))
+
+    def test_inst_from_file_3part_image_complex(self):
+        """
+        Creates a VM instance from a locally sourced file image by overriding the default settings by using a dict()
+        that can be read in by ImageSettings
+        :return: 
+        """
+
+        kernel_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL, self.tmpDir)
+        ramdisk_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL, self.tmpDir)
+
+        metadata = {'cirros':
+                        {'config':
+                             {'name': self.image_name,
+                              'image_user': openstack_tests.CIRROS_USER,
+                              'image_file': self.image_file.name,
+                              'format': openstack_tests.DEFAULT_IMAGE_FORMAT,
+                              'kernel_image_settings':
+                                  {'name': self.image_name + '-kernel',
+                                   'image_user': openstack_tests.CIRROS_USER,
+                                   'image_file': kernel_file.name,
+                                   'format': openstack_tests.DEFAULT_IMAGE_FORMAT},
+                              'ramdisk_image_settings':
+                                  {'name': self.image_name + '-ramdisk',
+                                   'image_user': openstack_tests.CIRROS_USER,
+                                   'image_file': ramdisk_file.name,
+                                   'format': openstack_tests.DEFAULT_IMAGE_FORMAT}}}}
+
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name, image_metadata=metadata)
+        self.assertEqual(self.image_name, os_image_settings.name)
+        self.assertEqual(self.image_file.name, os_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.image_user)
+        self.assertIsNone(os_image_settings.url)
+        self.assertFalse(os_image_settings.exists)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.format)
+
+        self.assertIsNotNone(os_image_settings.kernel_image_settings)
+        self.assertEqual(self.image_name + '-kernel', os_image_settings.kernel_image_settings.name)
+        self.assertEqual(kernel_file.name, os_image_settings.kernel_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.kernel_image_settings.image_user)
+        self.assertIsNone(os_image_settings.kernel_image_settings.url)
+        self.assertFalse(os_image_settings.kernel_image_settings.exists)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.kernel_image_settings.format)
+
+        self.assertIsNotNone(os_image_settings.ramdisk_image_settings)
+        self.assertEqual(self.image_name + '-ramdisk', os_image_settings.ramdisk_image_settings.name)
+        self.assertEqual(ramdisk_file.name, os_image_settings.ramdisk_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.ramdisk_image_settings.image_user)
+        self.assertIsNone(os_image_settings.ramdisk_image_settings.url)
+        self.assertFalse(os_image_settings.ramdisk_image_settings.exists)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.ramdisk_image_settings.format)
+
+        self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+        self.image_creator.create()
+
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creator.image_settings)
+        self.inst_creator.create()
+
+        self.assertTrue(self.inst_creator.vm_active(block=True))
+
+    def test_inst_from_file_3part_image_simple_flat(self):
+        """
+        Creates a VM instance from a 3-part image locally sourced from file images using simply the 'disk_file',
+        'kernel_file', and 'ramdisk_file' attributes vs. using the 'config' option which completely overrides all
+        image settings
+        :return: 
+        """
+        kernel_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL, self.tmpDir)
+        ramdisk_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL, self.tmpDir)
+
+        metadata = {'disk_file': self.image_file.name, 'kernel_file': kernel_file.name,
+                    'ramdisk_file': ramdisk_file.name}
+
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name, image_metadata=metadata)
+
+        self.assertEqual(self.image_name, os_image_settings.name)
+        self.assertEqual(self.image_file.name, os_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.image_user)
+        self.assertIsNone(os_image_settings.url)
+        self.assertFalse(os_image_settings.exists)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.format)
+
+        self.assertIsNotNone(os_image_settings.kernel_image_settings)
+        self.assertEqual(self.image_name + '-kernel', os_image_settings.kernel_image_settings.name)
+        self.assertEqual(kernel_file.name, os_image_settings.kernel_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.kernel_image_settings.image_user)
+        self.assertIsNone(os_image_settings.kernel_image_settings.url)
+        self.assertFalse(os_image_settings.kernel_image_settings.exists)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.kernel_image_settings.format)
+
+        self.assertIsNotNone(os_image_settings.ramdisk_image_settings)
+        self.assertEqual(self.image_name + '-ramdisk', os_image_settings.ramdisk_image_settings.name)
+        self.assertEqual(ramdisk_file.name, os_image_settings.ramdisk_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.ramdisk_image_settings.image_user)
+        self.assertIsNone(os_image_settings.ramdisk_image_settings.url)
+        self.assertFalse(os_image_settings.ramdisk_image_settings.exists)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.ramdisk_image_settings.format)
+
+        self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+        self.image_creator.create()
+
+        self.assertIsNotNone(self.image_creator.get_kernel_image())
+        self.assertIsNotNone(self.image_creator.get_ramdisk_image())
+
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creator.image_settings)
+        self.inst_creator.create()
+
+        self.assertTrue(self.inst_creator.vm_active(block=True))
+
+    def test_inst_from_file_3part_image_simple_nested(self):
+        """
+        Creates a VM instance from a 3-part image locally sourced from file images using simply the 'disk_file',
+        'kernel_file', and 'ramdisk_file' attributes under 'cirros' vs. using the 'config' option which completely
+        overrides all image settings
+        :return: 
+        """
+        kernel_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL, self.tmpDir)
+        ramdisk_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL, self.tmpDir)
+
+        metadata = {'cirros': {'disk_file': self.image_file.name, 'kernel_file': kernel_file.name,
+                               'ramdisk_file': ramdisk_file.name}}
+
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name, image_metadata=metadata)
+
+        self.assertEqual(self.image_name, os_image_settings.name)
+        self.assertEqual(self.image_file.name, os_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.image_user)
+        self.assertIsNone(os_image_settings.url)
+        self.assertFalse(os_image_settings.exists)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.format)
+
+        self.assertIsNotNone(os_image_settings.kernel_image_settings)
+        self.assertEqual(self.image_name + '-kernel', os_image_settings.kernel_image_settings.name)
+        self.assertEqual(kernel_file.name, os_image_settings.kernel_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.kernel_image_settings.image_user)
+        self.assertIsNone(os_image_settings.kernel_image_settings.url)
+        self.assertFalse(os_image_settings.kernel_image_settings.exists)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.kernel_image_settings.format)
+
+        self.assertIsNotNone(os_image_settings.ramdisk_image_settings)
+        self.assertEqual(self.image_name + '-ramdisk', os_image_settings.ramdisk_image_settings.name)
+        self.assertEqual(ramdisk_file.name, os_image_settings.ramdisk_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.ramdisk_image_settings.image_user)
+        self.assertIsNone(os_image_settings.ramdisk_image_settings.url)
+        self.assertFalse(os_image_settings.ramdisk_image_settings.exists)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.ramdisk_image_settings.format)
+
+        self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+        self.image_creator.create()
+
+        self.assertIsNotNone(self.image_creator.get_kernel_image())
+        self.assertIsNotNone(self.image_creator.get_ramdisk_image())
+
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                self.image_creator.image_settings)
+        self.inst_creator.create()
+
+        self.assertTrue(self.inst_creator.vm_active(block=True))
+
+    def test_inst_from_file_3part_image_existing(self):
+        """
+        Creates a VM instance from a 3-part image that is existing
+        :return: 
+        """
+        kernel_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL, self.tmpDir)
+        ramdisk_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL, self.tmpDir)
+
+        metadata = {'cirros': {'disk_file': self.image_file.name, 'kernel_file': kernel_file.name,
+                               'ramdisk_file': ramdisk_file.name}}
+
+        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name, image_metadata=metadata)
+        self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+        self.image_creator.create()
+
+        test_image_creator = OpenStackImage(
+            self.os_creds, ImageSettings(name=self.image_creator.image_settings.name,
+                                         image_user=self.image_creator.image_settings.image_user, exists=True))
+        test_image_creator.create()
+        self.assertEqual(self.image_creator.get_image().id, test_image_creator.get_image().id)
+
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+                                                test_image_creator.image_settings)
+        self.inst_creator.create()
+
         self.assertTrue(self.inst_creator.vm_active(block=True))

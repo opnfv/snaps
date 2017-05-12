@@ -42,21 +42,12 @@ def file_exists(file_path):
     return False
 
 
-def get_file(file_path):
-    """
-    Returns True if the image file has already been downloaded
-    :return: the image file object
-    :raise Exception when file cannot be found
-    """
-    if file_exists(file_path):
-        return open(file_path, 'rb')
-    else:
-        raise Exception('File with path cannot be found - ' + file_path)
-
-
 def download(url, dest_path, name=None):
     """
     Download a file to a destination path given a URL
+    :param url: the endpoint to the file to download
+    :param dest_path: the directory to save the file
+    :param name: the file name (optional)
     :rtype : File object
     """
     if not name:

@@ -105,23 +105,27 @@ def __create_image_v1(glance, image_settings):
     """
     created_image = None
 
+    # TODO/REFACTOR - replace each call with one including kwargs
     if image_settings.url:
         if image_settings.extra_properties:
             created_image = glance.images.create(
                 name=image_settings.name, disk_format=image_settings.format, container_format="bare",
-                location=image_settings.url, properties=image_settings.extra_properties)
+                location=image_settings.url, properties=image_settings.extra_properties,
+                is_public=image_settings.public)
         else:
             created_image = glance.images.create(name=image_settings.name, disk_format=image_settings.format,
-                                                 container_format="bare", location=image_settings.url)
+                                                 container_format="bare", location=image_settings.url,
+                                                 is_public=image_settings.public)
     elif image_settings.image_file:
-        image_file = file_utils.get_file(image_settings.image_file)
+        image_file = open(image_settings.image_file, 'rb')
         if image_settings.extra_properties:
             created_image = glance.images.create(
                 name=image_settings.name, disk_format=image_settings.format, container_format="bare", data=image_file,
-                properties=image_settings.extra_properties)
+                properties=image_settings.extra_properties, is_public=image_settings.public)
         else:
             created_image = glance.images.create(
-                name=image_settings.name, disk_format=image_settings.format, container_format="bare", data=image_file)
+                name=image_settings.name, disk_format=image_settings.format, container_format="bare", data=image_file,
+                is_public=image_settings.public)
 
     return Image(name=image_settings.name, image_id=created_image.id, size=created_image.size,
                  properties=created_image.properties)
@@ -135,13 +139,13 @@ def __create_image_v2(glance, image_settings):
     :return: the OpenStack image object
     :raise Exception if using a file and it cannot be found
     """
-    cleanup_file = False
+    cleanup_temp_file = False
     if image_settings.image_file:
         image_filename = image_settings.image_file
     elif image_settings.url:
         image_file = file_utils.download(image_settings.url, '/tmp', str(uuid.uuid4()))
         image_filename = image_file.name
-        cleanup_file = True
+        cleanup_temp_file = True
     else:
         raise Exception('Filename or URL of image not configured')
 
@@ -151,19 +155,23 @@ def __create_image_v2(glance, image_settings):
         kwargs['name'] = image_settings.name
         kwargs['disk_format'] = image_settings.format
         kwargs['container_format'] = 'bare'
+
+        if image_settings.public:
+            kwargs['visibility'] = 'public'
+
         if image_settings.extra_properties:
             kwargs.update(image_settings.extra_properties)
 
         created_image = glance.images.create(**kwargs)
-        image_file = file_utils.get_file(image_filename)
+        image_file = open(image_filename, 'rb')
         glance.images.upload(created_image['id'], image_file)
-    except Exception as e:
+    except:
         logger.error('Unexpected exception creating image. Rolling back')
         if created_image:
             delete_image(glance, created_image)
-            raise e
+        raise
     finally:
-        if cleanup_file:
+        if cleanup_temp_file:
             os.remove(image_filename)
 
     updated_image = glance.images.get(created_image['id'])

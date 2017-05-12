@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 import os
 import shutil
 import uuid
@@ -24,6 +25,9 @@ from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import glance_utils
 
 __author__ = 'spisarski'
+
+
+logger = logging.getLogger('glance_utils_tests')
 
 
 class GlanceSmokeTests(OSComponentTestCase):
@@ -64,6 +68,10 @@ class GlanceUtilsTests(OSComponentTestCase):
         self.image_name = self.__class__.__name__ + '-' + str(guid)
         self.image = None
         self.glance = glance_utils.glance_client(self.os_creds)
+        if self.image_metadata:
+            self.glance_test_meta = self.image_metadata.get('glance_tests')
+        else:
+            self.glance_test_meta = dict()
 
         self.tmp_dir = 'tmp/' + str(guid)
         if not os.path.exists(self.tmp_dir):
@@ -81,27 +89,36 @@ class GlanceUtilsTests(OSComponentTestCase):
 
     def test_create_image_minimal_url(self):
         """
-        Tests the glance_utils.create_image() function with a URL
+        Tests the glance_utils.create_image() function with a URL unless the self.glance_test_meta has configured a
+        file to be used.
         """
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
+        if 'disk_file' not in self.glance_test_meta:
+            os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name,
+                                                                      image_metadata=self.glance_test_meta)
 
-        self.image = glance_utils.create_image(self.glance, os_image_settings)
-        self.assertIsNotNone(self.image)
+            self.image = glance_utils.create_image(self.glance, os_image_settings)
+            self.assertIsNotNone(self.image)
 
-        self.assertEqual(self.image_name, self.image.name)
+            self.assertEqual(self.image_name, self.image.name)
 
-        image = glance_utils.get_image(self.glance, os_image_settings.name)
-        self.assertIsNotNone(image)
+            image = glance_utils.get_image(self.glance, os_image_settings.name)
+            self.assertIsNotNone(image)
 
-        validation_utils.objects_equivalent(self.image, image)
+            validation_utils.objects_equivalent(self.image, image)
+        else:
+            logger.warn('Test not executed as the image metadata requires image files')
 
     def test_create_image_minimal_file(self):
         """
         Tests the glance_utils.create_image() function with a file
         """
-        url_image_settings = openstack_tests.cirros_image_settings('foo')
-        image_file = file_utils.download(url_image_settings.url, self.tmp_dir)
-        file_image_settings = openstack_tests.file_image_test_settings(name=self.image_name, file_path=image_file.name)
+        if 'disk_file' not in self.glance_test_meta:
+            url_image_settings = openstack_tests.cirros_image_settings(name='foo', image_metadata=self.glance_test_meta)
+            image_file_name = file_utils.download(url_image_settings.url, self.tmp_dir).name
+        else:
+            image_file_name = self.glance_test_meta['disk_file']
+
+        file_image_settings = openstack_tests.file_image_test_settings(name=self.image_name, file_path=image_file_name)
 
         self.image = glance_utils.create_image(self.glance, file_image_settings)
         self.assertIsNotNone(self.image)

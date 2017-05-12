@@ -1,0 +1,22 @@
+---
+# Example of how to override the image settings for SNAPS VM instance testing to leverage
+# images that already exist on your pod.
+# This snippet can be placed verbatim into the snaps.images configuration for Functest
+# in config_functest.yaml as long as it is properly nested in that document
+glance_tests:
+  disk_file: ../images/cirros-0.3.4-x86_64-disk.img
+cirros:
+  config:
+    name: static_image_test-cirros
+    exists: True
+    image_user: cirros
+centos:
+  config:
+    name: static_image_test-centos
+    exists: True
+    image_user: centos
+ubuntu:
+  config:
+    name: static_image_test-ubuntu
+    exists: True
+    image_user: ubuntu
