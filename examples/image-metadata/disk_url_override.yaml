@@ -1,0 +1,12 @@
+---
+# Example of how to override the default image URL for SNAPS testing
+# This snippet can be placed verbatim into the snaps.images configuration for Functest
+# in config_functest.yaml as long as it is properly nested in that document
+glance_tests:
+  disk_url: http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
+cirros:
+  disk_url: http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
+centos:
+  disk_url: http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
+ubuntu:
+  disk_url: http://uec-images.ubuntu.com/releases/trusty/14.04/ubuntu-14.04-server-cloudimg-amd64-disk1.img

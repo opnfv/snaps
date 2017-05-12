@@ -37,7 +37,8 @@ from snaps.openstack.tests.create_router_tests import CreateRouterSuccessTests, 
 from snaps.openstack.tests.create_instance_tests import CreateInstanceSingleNetworkTests, \
     CreateInstancePubPrivNetTests, CreateInstanceOnComputeHost, CreateInstanceSimpleTests, \
     FloatingIpSettingsUnitTests, InstanceSecurityGroupTests, VmInstanceSettingsUnitTests, \
-    CreateInstancePortManipulationTests, SimpleHealthCheck, CreateInstanceFromThreePartImage
+    CreateInstancePortManipulationTests, SimpleHealthCheck, CreateInstanceFromThreePartImage, \
+    CreateInstanceMockOfflineTests
 from snaps.provisioning.tests.ansible_utils_tests import AnsibleProvisioningTests
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase, OSIntegrationTestCase
 from snaps.openstack.utils.tests.nova_utils_tests import NovaSmokeTests, NovaUtilsKeypairTests, NovaUtilsFlavorTests
@@ -91,7 +92,8 @@ def add_openstack_client_tests(suite, os_creds, ext_net_name, use_keystone=True,
                                                    log_level=log_level))
 
 
-def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True, log_level=logging.INFO):
+def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True, image_metadata=None,
+                            log_level=logging.INFO):
     """
     Adds tests written to exercise all existing OpenStack APIs
     :param suite: the unittest.TestSuite object to which to add the tests
@@ -99,6 +101,8 @@ def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True, lo
     :param ext_net_name: the name of an external network on the cloud under test
     :param use_keystone: when True, tests requiring direct access to Keystone are added as these need to be running on
                          a host that has access to the cloud's private network
+    :param image_metadata: dict() object containing metadata for creating an image with custom config
+                           (see YAML files in examples/image-metadata)
     :param log_level: the logging level
     :return: None as the tests will be adding to the 'suite' parameter object
     """
@@ -114,7 +118,8 @@ def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True, lo
             CreateProjectUserTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
 
     suite.addTest(OSComponentTestCase.parameterize(
-        GlanceUtilsTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
+        GlanceUtilsTests, os_creds=os_creds, ext_net_name=ext_net_name, image_metadata=image_metadata,
+        log_level=log_level))
     suite.addTest(OSComponentTestCase.parameterize(
         NeutronUtilsNetworkTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
     suite.addTest(OSComponentTestCase.parameterize(
@@ -141,9 +146,8 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name, use_keystone=
     :param ext_net_name: the name of an external network on the cloud under test
     :param use_keystone: when True, tests requiring direct access to Keystone are added as these need to be running on
                          a host that has access to the cloud's private network
-    :param image_metadata: dict() object containing metadata for creating an image with custom config:
-                           (i.e. {'hw_video_model' : 'vga'}). It can be used to override the default url and
-                           create 3-part images by passing kerner_url and ramdisk_url info
+    :param image_metadata: dict() object containing metadata for creating an image with custom config
+                           (see YAML files in examples/image-metadata)
     :param flavor_metadata: dict() object containing the metadata required by your flavor based on your configuration:
                             (i.e. {'hw:mem_page_size': 'large'})
     :param use_floating_ips: when true, all tests requiring Floating IPs will be added to the suite
@@ -222,3 +226,5 @@ def add_openstack_staging_tests(suite, os_creds, ext_net_name, log_level=logging
     """
     suite.addTest(OSComponentTestCase.parameterize(
         CreateNetworkTypeTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        CreateInstanceMockOfflineTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))

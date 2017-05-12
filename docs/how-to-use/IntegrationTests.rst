@@ -56,6 +56,10 @@ create_image_tests.py - CreateImageSuccessTests
 | test_create_same_image                | 1             | Ensures the OpenStackImage.create() method does not create|
 |                                       |               | another image when one already exists with the same name  |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_same_image_new_settings   | 1             | Tests the creation of an OpenStack image when the image   |
+|                                       |               | already exists and the configuration only contains the    |
+|                                       |               | the name.                                                 |
++---------------------------------------+---------------+-----------------------------------------------------------+
 
 create_image_tests.py - CreateImageNegativeTests
 ------------------------------------------------
@@ -63,7 +67,7 @@ create_image_tests.py - CreateImageNegativeTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             | Glance API    | Description                                               |
 +=======================================+===============+===========================================================+
-| test_none_image_name                  | 1             | Ensures OpenStackImage.create() results in an Exception   |
+| test_bad_image_name                   | 1             | Ensures OpenStackImage.create() results in an Exception   |
 |                                       |               | being raised when the ImageSettings.name attribute has    |
 |                                       |               | not been set                                              |
 +---------------------------------------+---------------+-----------------------------------------------------------+
@@ -72,18 +76,6 @@ create_image_tests.py - CreateImageNegativeTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | test_bad_image_file                   | 1             | Ensures OpenStackImage.create() results in an Exception   |
 |                                       |               | being raised when the image file does not exist           |
-+---------------------------------------+---------------+-----------------------------------------------------------+
-| test_none_proj_name                   | 1             | Ensures OpenStackImage.create() results in an Exception   |
-|                                       |               | being raised when the credentials project name is None    |
-+---------------------------------------+---------------+-----------------------------------------------------------+
-| test_none_auth_url                    | 1             | Ensures OpenStackImage.create() results in an Exception   |
-|                                       |               | being raised when the credentials URL is None             |
-+---------------------------------------+---------------+-----------------------------------------------------------+
-| test_none_password                    | 1             | Ensures OpenStackImage.create() results in an Exception   |
-|                                       |               | being raised when the credentials password is None        |
-+---------------------------------------+---------------+-----------------------------------------------------------+
-| test_none_user                        | 1             | Ensures OpenStackImage.create() results in an Exception   |
-|                                       |               | being raised when the credentials user is None            |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
 create_image_tests.py - CreateMultiPartImageTests

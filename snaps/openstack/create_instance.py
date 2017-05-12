@@ -428,7 +428,7 @@ class OpenStackVmInstance:
                                          variables, self.__os_creds.proxy_settings)
         else:
             logger.warning('VM ' + self.instance_settings.name + ' cannot self configure NICs eth1++. ' +
-                        'No playbook  or keypairs found.')
+                           'No playbook  or keypairs found.')
 
     def get_image_user(self):
         """
@@ -498,6 +498,9 @@ class OpenStackVmInstance:
         :param expected_status_code: instance status evaluated with this string value
         :return: T/F
         """
+        if not self.__vm:
+            return False
+
         instance = self.__nova.servers.get(self.__vm.id)
         if not instance:
             logger.warning('Cannot find instance with id - ' + self.__vm.id)

@@ -140,7 +140,7 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         if self.network_creator:
             self.network_creator.clean()
 
-        if self.image_creator:
+        if self.image_creator and not self.image_creator.image_settings.exists:
             self.image_creator.clean()
 
         if os.path.isfile(self.test_file_local_path):

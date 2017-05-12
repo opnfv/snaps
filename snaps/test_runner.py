@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@ import logging
 import os
 import unittest
 
-from snaps import test_suite_builder
+from snaps import test_suite_builder, file_utils
 from snaps.openstack.tests import openstack_tests
 
 __author__ = 'spisarski'
@@ -31,8 +31,8 @@ LOG_LEVELS = {'FATAL': logging.FATAL, 'CRITICAL': logging.CRITICAL, 'ERROR': log
 
 
 def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy_cmd, run_unit_tests,
-                        run_connection_tests, run_api_tests, run_integration_tests, flavor_metadata, use_keystone,
-                        use_floating_ips, log_level):
+                        run_connection_tests, run_api_tests, run_integration_tests, run_staging_tests, flavor_metadata,
+                        image_metadata, use_keystone, use_floating_ips, log_level):
     """
     Compiles the tests that should run
     :param source_filename: the OpenStack credentials file (required)
@@ -41,9 +41,11 @@ def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy
     :param run_connection_tests: when true, the tests that perform simple connections to OpenStack are executed
     :param run_api_tests: when true, the tests that perform simple API calls to OpenStack are executed
     :param run_integration_tests: when true, the integration tests are executed
+    :param run_staging_tests: when true, the staging tests are executed
     :param proxy_settings: <host>:<port> of the proxy server (optional)
     :param ssh_proxy_cmd: the command used to connect via SSH over some proxy server (optional)
     :param flavor_metadata: dict() object containing the metadata for flavors created for test VM instance
+    :param image_metadata: dict() object containing the metadata for overriding default images within the tests
     :param use_keystone: when true, tests creating users and projects will be exercised and must be run on a host that
                          has access to the cloud's administrative network
     :param use_floating_ips: when true, tests requiring floating IPs will be executed
@@ -67,13 +69,19 @@ def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy
     # Tests the OpenStack API calls
     if run_api_tests:
         test_suite_builder.add_openstack_api_tests(
-            suite=suite, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone, log_level=log_level)
+            suite=suite, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+            image_metadata=image_metadata, log_level=log_level)
 
     # Long running integration type tests
     if run_integration_tests:
         test_suite_builder.add_openstack_integration_tests(
             suite=suite, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
-            flavor_metadata=flavor_metadata, use_floating_ips=use_floating_ips, log_level=log_level)
+            flavor_metadata=flavor_metadata, image_metadata=image_metadata, use_floating_ips=use_floating_ips,
+            log_level=log_level)
+
+    if run_staging_tests:
+        test_suite_builder.add_openstack_staging_tests(
+            suite=suite, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level)
     return suite
 
 
@@ -88,9 +96,12 @@ def main(arguments):
     log_level = LOG_LEVELS.get(arguments.log_level, logging.DEBUG)
 
     flavor_metadata = None
-
     if arguments.flavor_metadata:
         flavor_metadata = json.loads(arguments.flavor_metadata)
+
+    image_metadata = None
+    if arguments.image_metadata_file:
+        image_metadata = file_utils.read_yaml(arguments.image_metadata_file)
 
     suite = None
     if arguments.env and arguments.ext_net:
@@ -98,15 +109,15 @@ def main(arguments):
         connection = arguments.include_connection != ARG_NOT_SET
         api = arguments.include_api != ARG_NOT_SET
         integration = arguments.include_integration != ARG_NOT_SET
-        if not unit and not connection and not api and not integration:
+        staging = arguments.include_staging != ARG_NOT_SET
+        if not unit and not connection and not api and not integration and not staging:
             unit = True
             connection = True
             api = True
             integration = True
 
         suite = __create_test_suite(arguments.env, arguments.ext_net, arguments.proxy, arguments.ssh_proxy_cmd,
-                                    unit, connection, api, integration,
-                                    flavor_metadata,
+                                    unit, connection, api, integration, staging, flavor_metadata, image_metadata,
                                     arguments.use_keystone != ARG_NOT_SET,
                                     arguments.floating_ips != ARG_NOT_SET, log_level)
     else:
@@ -151,7 +162,6 @@ if __name__ == '__main__':
                         help='Optonal SSH proxy command value')
     parser.add_argument('-l', '--log-level', dest='log_level', default='INFO',
                         help='Logging Level (FATAL|CRITICAL|ERROR|WARN|INFO|DEBUG)')
-
     parser.add_argument('-u', '--unit-tests', dest='include_unit', default=ARG_NOT_SET, nargs='?',
                         help='When argument is set, all tests not requiring OpenStack will be executed')
     parser.add_argument('-c', '--connection-tests', dest='include_connection', default=ARG_NOT_SET, nargs='?',
@@ -160,18 +170,20 @@ if __name__ == '__main__':
                         help='When argument is set, OpenStack API tests will be executed')
     parser.add_argument('-i', '--integration-tests', dest='include_integration', default=ARG_NOT_SET, nargs='?',
                         help='When argument is set, OpenStack integrations tests will be executed')
+    parser.add_argument('-st', '--staging-tests', dest='include_staging', default=ARG_NOT_SET, nargs='?',
+                        help='When argument is set, OpenStack staging tests will be executed')
     parser.add_argument('-f', '--floating-ips', dest='floating_ips', default=ARG_NOT_SET, nargs='?',
                         help='When argument is set, all integration tests requiring Floating IPs will be executed')
-
     parser.add_argument('-k', '--use-keystone', dest='use_keystone', default=ARG_NOT_SET, nargs='?',
                         help='When argument is set, the tests will exercise the keystone APIs and must be run on a ' +
                              'machine that has access to the admin network' +
                              ' and is able to create users and groups')
-
     parser.add_argument('-fm', '--flavor-meta', dest='flavor_metadata',
                         default='{\"hw:mem_page_size\": \"any\"}',
                         help='JSON string to be used as flavor metadata for all test instances created')
-
+    parser.add_argument('-im', '--image-meta', dest='image_metadata_file',
+                        default=None,
+                        help='Location of YAML file containing the image metadata')
     parser.add_argument('-r', '--num-runs', dest='num_runs', default=1,
                         help='Number of test runs to execute (default 1)')
 

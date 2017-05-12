@@ -53,10 +53,14 @@ class OpenStackImage:
         :param cleanup: Denotes whether or not this is being called for cleanup or not
         :return: The OpenStack Image object
         """
+        logger.debug('Creating image with name - ' + self.image_settings.name)
+
         self.__image = glance_utils.get_image(self.__glance, self.image_settings.name)
         if self.__image:
             logger.info('Found image with name - ' + self.image_settings.name)
             return self.__image
+        elif self.image_settings.exists and not self.image_settings.url and not self.image_settings.image_file:
+            raise ImageCreationError('Image with does not exist with name - ' + self.image_settings.name)
         elif not cleanup:
             extra_properties = self.image_settings.extra_properties or dict()
 
@@ -65,7 +69,8 @@ class OpenStackImage:
                     self.__glance, self.image_settings.kernel_image_settings.name)
 
                 if not self.__kernel_image and not cleanup:
-                    logger.info('Creating associated kernel image')
+                    logger.info('Creating associated kernel image with name - '
+                                + self.image_settings.kernel_image_settings.name)
                     self.__kernel_image = glance_utils.create_image(
                         self.__glance, self.image_settings.kernel_image_settings)
                 extra_properties['kernel_id'] = self.__kernel_image.id
@@ -74,19 +79,21 @@ class OpenStackImage:
                     self.__glance, self.image_settings.ramdisk_image_settings.name)
 
                 if not self.__ramdisk_image and not cleanup:
-                    logger.info('Creating associated ramdisk image')
+                    logger.info('Creating associated ramdisk image with name - '
+                                + self.image_settings.ramdisk_image_settings.name)
                     self.__ramdisk_image = glance_utils.create_image(
                         self.__glance, self.image_settings.ramdisk_image_settings)
                 extra_properties['ramdisk_id'] = self.__ramdisk_image.id
 
             self.image_settings.extra_properties = extra_properties
             self.__image = glance_utils.create_image(self.__glance, self.image_settings)
-            logger.info('Creating image')
+
+            logger.info('Created image with name - ' + self.image_settings.name)
             if self.__image and self.image_active(block=True):
                 logger.info('Image is now active with name - ' + self.image_settings.name)
                 return self.__image
             else:
-                raise Exception('Image was not created or activated in the alloted amount of time')
+                raise ImageCreationError('Image was not created or activated in the alloted amount of time')
         else:
             logger.info('Did not create image due to cleanup mode')
 
@@ -157,7 +164,7 @@ class OpenStackImage:
         while timeout > time.time() - start:
             status = self._status(expected_status_code)
             if status:
-                logger.info('Image is active with name - ' + self.image_settings.name)
+                logger.debug('Image is active with name - ' + self.image_settings.name)
                 return True
 
             logger.debug('Retry querying image status in ' + str(poll_interval) + ' seconds')
@@ -180,7 +187,7 @@ class OpenStackImage:
             return False
 
         if status == 'ERROR':
-            raise Exception('Instance had an error during deployment')
+            raise ImageCreationError('Instance had an error during deployment')
         logger.debug('Instance status is - ' + status)
         return status == expected_status_code
 
@@ -188,7 +195,7 @@ class OpenStackImage:
 class ImageSettings:
     def __init__(self, config=None, name=None, image_user=None, img_format=None, url=None, image_file=None,
                  extra_properties=None, nic_config_pb_loc=None, kernel_image_settings=None,
-                 ramdisk_image_settings=None):
+                 ramdisk_image_settings=None, exists=False, public=False):
         """
 
         :param config: dict() object containing the configuration settings using the attribute names below as each
@@ -203,6 +210,8 @@ class ImageSettings:
         :param nic_config_pb_loc: the file location to the Ansible Playbook that can configure multiple NICs
         :param kernel_image_settings: the settings for a kernel image
         :param ramdisk_image_settings: the settings for a kernel image
+        :param exists: When True, an image with the given name must exist
+        :param public: When True, an image will be created with public visibility
         """
 
         if config:
@@ -223,6 +232,15 @@ class ImageSettings:
             else:
                 self.ramdisk_image_settings = None
 
+            if 'exists' in config and config['exists'] is True:
+                self.exists = True
+            else:
+                self.exists = False
+
+            if 'public' in config and config['public'] is True:
+                self.public = True
+            else:
+                self.public = False
         else:
             self.name = name
             self.image_user = image_user
@@ -233,12 +251,36 @@ class ImageSettings:
             self.nic_config_pb_loc = nic_config_pb_loc
             self.kernel_image_settings = kernel_image_settings
             self.ramdisk_image_settings = ramdisk_image_settings
+            self.exists = exists
+            self.public = public
 
-        if not self.name or not self.image_user or not self.format:
-            raise Exception("The attributes name, image_user, format, and url are required for ImageSettings")
+        if not self.name:
+            raise ImageSettingsError("The attribute name is required")
 
-        if not self.url and not self.image_file:
-            raise Exception('URL or image file must be set')
+        if not (self.url or self.image_file) and not self.exists:
+            raise ImageSettingsError('URL or image file must be set or image must already exist')
 
         if self.url and self.image_file:
-            raise Exception('Please set either URL or image file, not both')
+            raise ImageSettingsError('Please set either URL or image file, not both')
+
+        if not self.image_user:
+            raise ImageSettingsError('Image user is required')
+
+        if not self.format and not self.exists:
+            raise ImageSettingsError('Format is required when the image should not already exist')
+
+
+class ImageSettingsError(Exception):
+    """
+    Exception to be thrown when an image settings are incorrect
+    """
+    def __init__(self, message):
+        Exception.__init__(self, message)
+
+
+class ImageCreationError(Exception):
+    """
+    Exception to be thrown when an image cannot be created
+    """
+    def __init__(self, message):
+        Exception.__init__(self, message)

@@ -12,67 +12,74 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+try:
+    from urllib.request import URLError
+except ImportError:
+    from urllib2 import URLError
+
+import logging
 import os
 import shutil
 import uuid
 import unittest
 
 from snaps import file_utils
-from snaps.openstack.create_image import ImageSettings
+from snaps.openstack.create_image import ImageSettings, ImageCreationError, ImageSettingsError
 
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.utils import glance_utils
 from snaps.openstack import create_image
-from snaps.openstack import os_credentials
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 
 __author__ = 'spisarski'
+
+logger = logging.getLogger('create_image_tests')
 
 
 class ImageSettingsUnitTests(unittest.TestCase):
     """
     Tests the construction of the ImageSettings class
     """
-
     def test_no_params(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ImageSettingsError):
             ImageSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ImageSettingsError):
             ImageSettings(config=dict())
 
     def test_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ImageSettingsError):
             ImageSettings(name='foo')
 
     def test_config_with_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ImageSettingsError):
             ImageSettings(config={'name': 'foo'})
 
     def test_name_user_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ImageSettingsError):
             ImageSettings(name='foo', image_user='bar')
 
     def test_config_with_name_user_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ImageSettingsError):
             ImageSettings(config={'name': 'foo', 'image_user': 'bar'})
 
     def test_name_user_format_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ImageSettingsError):
             ImageSettings(name='foo', image_user='bar', img_format='qcow2')
 
     def test_config_with_name_user_format_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ImageSettingsError):
             ImageSettings(config={'name': 'foo', 'image_user': 'bar', 'format': 'qcow2'})
 
     def test_name_user_format_url_file_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ImageSettingsError):
             ImageSettings(name='foo', image_user='bar', img_format='qcow2', url='http://foo.com',
                           image_file='/foo/bar.qcow')
 
     def test_config_with_name_user_format_url_file_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ImageSettingsError):
             ImageSettings(config={'name': 'foo', 'image_user': 'bar', 'format': 'qcow2',
                                   'download_url': 'http://foo.com', 'image_file': '/foo/bar.qcow'})
 
@@ -83,6 +90,8 @@ class ImageSettingsUnitTests(unittest.TestCase):
         self.assertEqual('qcow2', settings.format)
         self.assertEqual('http://foo.com', settings.url)
         self.assertIsNone(settings.image_file)
+        self.assertFalse(settings.exists)
+        self.assertFalse(settings.public)
         self.assertIsNone(settings.nic_config_pb_loc)
 
     def test_name_user_format_url_only_properties(self):
@@ -95,6 +104,8 @@ class ImageSettingsUnitTests(unittest.TestCase):
         self.assertEqual('http://foo.com', settings.url)
         self.assertEqual(properties, settings.extra_properties)
         self.assertIsNone(settings.image_file)
+        self.assertFalse(settings.exists)
+        self.assertFalse(settings.public)
         self.assertIsNone(settings.nic_config_pb_loc)
 
     def test_config_with_name_user_format_url_only(self):
@@ -105,6 +116,8 @@ class ImageSettingsUnitTests(unittest.TestCase):
         self.assertEqual('qcow2', settings.format)
         self.assertEqual('http://foo.com', settings.url)
         self.assertIsNone(settings.image_file)
+        self.assertFalse(settings.exists)
+        self.assertFalse(settings.public)
         self.assertIsNone(settings.nic_config_pb_loc)
 
     def test_name_user_format_file_only(self):
@@ -114,6 +127,8 @@ class ImageSettingsUnitTests(unittest.TestCase):
         self.assertEqual('qcow2', settings.format)
         self.assertIsNone(settings.url)
         self.assertEqual('/foo/bar.qcow', settings.image_file)
+        self.assertFalse(settings.exists)
+        self.assertFalse(settings.public)
         self.assertIsNone(settings.nic_config_pb_loc)
 
     def test_config_with_name_user_format_file_only(self):
@@ -124,6 +139,8 @@ class ImageSettingsUnitTests(unittest.TestCase):
         self.assertEqual('qcow2', settings.format)
         self.assertIsNone(settings.url)
         self.assertEqual('/foo/bar.qcow', settings.image_file)
+        self.assertFalse(settings.exists)
+        self.assertFalse(settings.public)
         self.assertIsNone(settings.nic_config_pb_loc)
 
     def test_all_url(self):
@@ -132,7 +149,8 @@ class ImageSettingsUnitTests(unittest.TestCase):
         ramdisk_settings = ImageSettings(name='ramdisk', url='http://ramdisk.com', image_user='bar', img_format='qcow2')
         settings = ImageSettings(name='foo', image_user='bar', img_format='qcow2', url='http://foo.com',
                                  extra_properties=properties, nic_config_pb_loc='/foo/bar',
-                                 kernel_image_settings=kernel_settings, ramdisk_image_settings=ramdisk_settings)
+                                 kernel_image_settings=kernel_settings, ramdisk_image_settings=ramdisk_settings,
+                                 exists=True, public=True)
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.image_user)
         self.assertEqual('qcow2', settings.format)
@@ -148,6 +166,8 @@ class ImageSettingsUnitTests(unittest.TestCase):
         self.assertEqual('http://ramdisk.com', settings.ramdisk_image_settings.url)
         self.assertEqual('bar', settings.ramdisk_image_settings.image_user)
         self.assertEqual('qcow2', settings.ramdisk_image_settings.format)
+        self.assertTrue(settings.exists)
+        self.assertTrue(settings.public)
 
     def test_config_all_url(self):
         settings = ImageSettings(
@@ -158,7 +178,8 @@ class ImageSettingsUnitTests(unittest.TestCase):
                     'kernel_image_settings': {'name': 'kernel', 'download_url': 'http://kernel.com',
                                               'image_user': 'bar', 'format': 'qcow2'},
                     'ramdisk_image_settings': {'name': 'ramdisk', 'download_url': 'http://ramdisk.com',
-                                               'image_user': 'bar', 'format': 'qcow2'}})
+                                               'image_user': 'bar', 'format': 'qcow2'},
+                    'exists': True, 'public': True})
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.image_user)
         self.assertEqual('qcow2', settings.format)
@@ -170,11 +191,13 @@ class ImageSettingsUnitTests(unittest.TestCase):
         self.assertEqual('http://kernel.com', settings.kernel_image_settings.url)
         self.assertEqual('ramdisk', settings.ramdisk_image_settings.name)
         self.assertEqual('http://ramdisk.com', settings.ramdisk_image_settings.url)
+        self.assertTrue(settings.exists)
+        self.assertTrue(settings.public)
 
     def test_all_file(self):
         properties = {'hw_video_model': 'vga'}
         settings = ImageSettings(name='foo', image_user='bar', img_format='qcow2', image_file='/foo/bar.qcow',
-                                 extra_properties=properties, nic_config_pb_loc='/foo/bar')
+                                 extra_properties=properties, nic_config_pb_loc='/foo/bar', exists=True, public=True)
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.image_user)
         self.assertEqual('qcow2', settings.format)
@@ -182,12 +205,14 @@ class ImageSettingsUnitTests(unittest.TestCase):
         self.assertEqual('/foo/bar.qcow', settings.image_file)
         self.assertEqual(properties, settings.extra_properties)
         self.assertEqual('/foo/bar', settings.nic_config_pb_loc)
+        self.assertTrue(settings.exists)
+        self.assertTrue(settings.public)
 
     def test_config_all_file(self):
         settings = ImageSettings(config={'name': 'foo', 'image_user': 'bar', 'format': 'qcow2',
                                          'image_file': '/foo/bar.qcow',
                                          'extra_properties': '{\'hw_video_model\' : \'vga\'}',
-                                         'nic_config_pb_loc': '/foo/bar'})
+                                         'nic_config_pb_loc': '/foo/bar', 'exists': True, 'public': True})
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.image_user)
         self.assertEqual('qcow2', settings.format)
@@ -195,6 +220,8 @@ class ImageSettingsUnitTests(unittest.TestCase):
         self.assertEqual('/foo/bar.qcow', settings.image_file)
         self.assertEqual('{\'hw_video_model\' : \'vga\'}', settings.extra_properties)
         self.assertEqual('/foo/bar', settings.nic_config_pb_loc)
+        self.assertTrue(settings.exists)
+        self.assertTrue(settings.public)
 
 
 class CreateImageSuccessTests(OSIntegrationTestCase):
@@ -214,12 +241,17 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         self.glance = glance_utils.glance_client(self.os_creds)
         self.image_creator = None
 
+        if self.image_metadata and 'glance_tests' in self.image_metadata:
+            glance_test_meta = self.image_metadata['glance_tests']
+        else:
+            glance_test_meta = None
+
         self.tmp_dir = 'tmp/' + str(guid)
         if not os.path.exists(self.tmp_dir):
             os.makedirs(self.tmp_dir)
 
         self.image_settings = openstack_tests.cirros_image_settings(name=self.image_name,
-                                                                    image_metadata=self.image_metadata)
+                                                                    image_metadata=glance_test_meta)
 
     def tearDown(self):
         """
@@ -273,26 +305,30 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         """
         Tests the creation of an OpenStack image from a file.
         """
+        if not self.image_settings.image_file and self.image_settings.url:
+            # Download the file of the image
+            image_file_name = file_utils.download(self.image_settings.url, self.tmp_dir).name
+        else:
+            image_file_name = self.image_settings.image_file
 
-        # Create Image
+        if image_file_name:
+            file_image_settings = openstack_tests.file_image_test_settings(
+                name=self.image_name, file_path=image_file_name)
 
-        # Download the file of the image
-        image_file = file_utils.download(self.image_settings.url, self.tmp_dir)
-        file_image_settings = openstack_tests.file_image_test_settings(
-            name=self.image_name, file_path=image_file.name)
+            self.image_creator = create_image.OpenStackImage(self.os_creds, file_image_settings)
+            created_image = self.image_creator.create()
+            self.assertIsNotNone(created_image)
+            self.assertEqual(self.image_name, created_image.name)
 
-        self.image_creator = create_image.OpenStackImage(self.os_creds, file_image_settings)
-        created_image = self.image_creator.create()
-        self.assertIsNotNone(created_image)
-        self.assertEqual(self.image_name, created_image.name)
+            retrieved_image = glance_utils.get_image(self.glance, file_image_settings.name)
+            self.assertIsNotNone(retrieved_image)
+            self.assertEqual(self.image_creator.get_image().size, retrieved_image.size)
+            self.assertEqual(get_image_size(file_image_settings), retrieved_image.size)
 
-        retrieved_image = glance_utils.get_image(self.glance, file_image_settings.name)
-        self.assertIsNotNone(retrieved_image)
-        self.assertEqual(self.image_creator.get_image().size, retrieved_image.size)
-        self.assertEqual(get_image_size(file_image_settings), retrieved_image.size)
-
-        self.assertEqual(created_image.name, retrieved_image.name)
-        self.assertEqual(created_image.id, retrieved_image.id)
+            self.assertEqual(created_image.name, retrieved_image.name)
+            self.assertEqual(created_image.id, retrieved_image.id)
+        else:
+            logger.warn('Test not executed as the image metadata requires image files')
 
     def test_create_delete_image(self):
         """
@@ -338,6 +374,29 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         image2 = os_image_2.create()
         self.assertEqual(image1.id, image2.id)
 
+    def test_create_same_image_new_settings(self):
+        """
+        Tests the creation of an OpenStack image when the image already exists and the configuration only contains
+        the name.
+        """
+        # Create Image
+        self.image_creator = create_image.OpenStackImage(self.os_creds, self.image_settings)
+        image1 = self.image_creator.create()
+
+        retrieved_image = glance_utils.get_image(self.glance, self.image_settings.name)
+        self.assertIsNotNone(retrieved_image)
+        self.assertEqual(self.image_creator.get_image().size, retrieved_image.size)
+        self.assertEqual(get_image_size(self.image_settings), retrieved_image.size)
+        self.assertEqual(image1.name, retrieved_image.name)
+        self.assertEqual(image1.id, retrieved_image.id)
+        self.assertEqual(image1.properties, retrieved_image.properties)
+
+        # Should be retrieving the instance data
+        image_2_settings = ImageSettings(name=self.image_settings.name, image_user='foo', exists=True)
+        os_image_2 = create_image.OpenStackImage(self.os_creds, image_2_settings)
+        image2 = os_image_2.create()
+        self.assertEqual(image1.id, image2.id)
+
 
 class CreateImageNegativeTests(OSIntegrationTestCase):
     """
@@ -356,88 +415,41 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
 
         super(self.__class__, self).__clean__()
 
-    def test_none_image_name(self):
+    def test_bad_image_name(self):
         """
-        Expect an exception when the image name is None
+        Expect an ImageCreationError when the image name does not exist when a file or URL has not been configured
         """
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
-        with self.assertRaises(Exception):
-            self.image_creator = create_image.OpenStackImage(
-                self.os_creds, create_image.ImageSettings(
-                    name=None, image_user=os_image_settings.image_user, img_format=os_image_settings.format,
-                    url=os_image_settings.url))
+        os_image_settings = ImageSettings(name='foo', image_user='bar', exists=True)
+        self.image_creator = create_image.OpenStackImage(self.os_creds, os_image_settings)
 
-            self.fail('Exception should have been thrown prior to this line')
+        with self.assertRaises(ImageCreationError):
+            self.image_creator.create()
+
+            self.fail('ImageCreationError should have been raised prior to this line')
 
     def test_bad_image_url(self):
         """
-        Expect an exception when the image download url is bad
+        Expect an ImageCreationError when the image download url is bad
         """
         os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
         self.image_creator = create_image.OpenStackImage(self.os_creds, create_image.ImageSettings(
             name=os_image_settings.name, image_user=os_image_settings.image_user,
             img_format=os_image_settings.format, url="http://foo.bar"))
-        with self.assertRaises(Exception):
+
+        with self.assertRaises(URLError):
             self.image_creator.create()
 
     def test_bad_image_file(self):
         """
-        Expect an exception when the image file does not exist
+        Expect an ImageCreationError when the image file does not exist
         """
         os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
         self.image_creator = create_image.OpenStackImage(
             self.os_creds,
             create_image.ImageSettings(name=os_image_settings.name, image_user=os_image_settings.image_user,
                                        img_format=os_image_settings.format, image_file="/foo/bar.qcow"))
-        with self.assertRaises(Exception):
+        with self.assertRaises(IOError):
             self.image_creator.create()
-
-    def test_none_proj_name(self):
-        """
-        Expect an exception when the project name is None
-        """
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
-        with self.assertRaises(Exception):
-            self.image_creator = create_image.OpenStackImage(
-                os_credentials.OSCreds(self.os_creds.username, self.os_creds.password, self.os_creds.auth_url, None,
-                                       proxy_settings=self.os_creds.proxy_settings),
-                os_image_settings)
-            self.image_creator.create()
-
-    def test_none_auth_url(self):
-        """
-        Expect an exception when the project name is None
-        """
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
-        with self.assertRaises(Exception):
-            self.image_creator = create_image.OpenStackImage(
-                os_credentials.OSCreds(self.os_creds.username, self.os_creds.password, None,
-                                       self.os_creds.project_name, proxy_settings=self.os_creds.proxy_settings),
-                os_image_settings)
-            self.image_creator.create()
-
-    def test_none_password(self):
-        """
-        Expect an exception when the project name is None
-        """
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
-        with self.assertRaises(Exception):
-            self.image_creator = create_image.OpenStackImage(
-                os_credentials.OSCreds(self.os_creds.username, None, self.os_creds.os_auth_url,
-                                       self.os_creds.project_name, proxy_settings=self.os_creds.proxy_settings),
-                os_image_settings)
-
-    def test_none_user(self):
-        """
-        Expect an exception when the project name is None
-        """
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
-        with self.assertRaises(Exception):
-            self.image_creator = create_image.OpenStackImage(
-                os_credentials.OSCreds(None, self.os_creds.password, self.os_creds.os_auth_url,
-                                       self.os_creds.project_name,
-                                       proxy_settings=self.os_creds.proxy_settings),
-                os_image_settings)
 
 
 class CreateMultiPartImageTests(OSIntegrationTestCase):
@@ -460,6 +472,11 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         if not os.path.exists(self.tmp_dir):
             os.makedirs(self.tmp_dir)
 
+        if self.image_metadata and 'glance_tests' in self.image_metadata:
+            self.glance_test_meta = self.image_metadata['glance_tests']
+        else:
+            self.glance_test_meta = dict()
+
     def tearDown(self):
         """
         Cleans the images and downloaded image file
@@ -477,30 +494,33 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         Tests the creation of a 3-part OpenStack image from a URL.
         """
         # Create the kernel image
-        image_settings = openstack_tests.cirros_image_settings(
-            name=self.image_name,
-            image_metadata={'disk_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img',
-                            'kernel_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel',
-                            'ramdisk_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs'})
+        if 'disk_file' not in self.glance_test_meta:
+            image_settings = openstack_tests.cirros_image_settings(
+                name=self.image_name,
+                image_metadata={'disk_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img',
+                                'kernel_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel',
+                                'ramdisk_url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs'})
 
-        image_creator = create_image.OpenStackImage(self.os_creds, image_settings)
-        self.image_creators.append(image_creator)
-        image_creator.create()
+            image_creator = create_image.OpenStackImage(self.os_creds, image_settings)
+            self.image_creators.append(image_creator)
+            image_creator.create()
 
-        main_image = glance_utils.get_image(self.glance, image_settings.name)
-        self.assertIsNotNone(main_image)
-        self.assertIsNotNone(image_creator.get_image())
-        self.assertEqual(image_creator.get_image().id, main_image.id)
+            main_image = glance_utils.get_image(self.glance, image_settings.name)
+            self.assertIsNotNone(main_image)
+            self.assertIsNotNone(image_creator.get_image())
+            self.assertEqual(image_creator.get_image().id, main_image.id)
 
-        kernel_image = glance_utils.get_image(self.glance, image_settings.kernel_image_settings.name)
-        self.assertIsNotNone(kernel_image)
-        self.assertIsNotNone(image_creator.get_kernel_image())
-        self.assertEqual(kernel_image.id, image_creator.get_kernel_image().id)
+            kernel_image = glance_utils.get_image(self.glance, image_settings.kernel_image_settings.name)
+            self.assertIsNotNone(kernel_image)
+            self.assertIsNotNone(image_creator.get_kernel_image())
+            self.assertEqual(kernel_image.id, image_creator.get_kernel_image().id)
 
-        ramdisk_image = glance_utils.get_image(self.glance, image_settings.ramdisk_image_settings.name)
-        self.assertIsNotNone(ramdisk_image)
-        self.assertIsNotNone(image_creator.get_ramdisk_image())
-        self.assertEqual(ramdisk_image.id, image_creator.get_ramdisk_image().id)
+            ramdisk_image = glance_utils.get_image(self.glance, image_settings.ramdisk_image_settings.name)
+            self.assertIsNotNone(ramdisk_image)
+            self.assertIsNotNone(image_creator.get_ramdisk_image())
+            self.assertEqual(ramdisk_image.id, image_creator.get_ramdisk_image().id)
+        else:
+            logger.warn('Test not executed as the image metadata requires image files')
 
     def test_create_three_part_image_from_file_3_creators(self):
         """
@@ -508,39 +528,61 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         """
         # Set properties
         properties = {}
-        if self.image_metadata:
-            if 'extra_properties' in self.image_metadata:
-                properties = self.image_metadata['extra_properties']
+        if self.glance_test_meta:
+            if 'extra_properties' in self.glance_test_meta:
+                properties = self.glance_test_meta['extra_properties']
+
         # Create the kernel image
-        kernel_url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel'
-        if self.image_metadata:
-            if 'kernel_url' in self.image_metadata:
-                kernel_url = self.image_metadata['kernel_url']
-        kernel_image_file = file_utils.download(kernel_url, self.tmp_dir)
+        kernel_file_name = None
+        kernel_url = openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL
+        if 'kernel_file' in self.glance_test_meta:
+            kernel_file_name = self.glance_test_meta['kernel_file']
+        elif 'kernel_url' in self.glance_test_meta:
+            kernel_url = self.glance_test_meta['kernel_url']
+        else:
+            kernel_url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel'
+
+        if not kernel_file_name:
+            kernel_file_name = file_utils.download(kernel_url, self.tmp_dir).name
+
         kernel_file_image_settings = openstack_tests.file_image_test_settings(
-            name=self.image_name+'_kernel', file_path=kernel_image_file.name)
+            name=self.image_name+'_kernel', file_path=kernel_file_name)
+
         self.image_creators.append(create_image.OpenStackImage(self.os_creds, kernel_file_image_settings))
         kernel_image = self.image_creators[-1].create()
         self.assertIsNotNone(kernel_image)
         self.assertEqual(get_image_size(kernel_file_image_settings), kernel_image.size)
 
         # Create the ramdisk image
-        ramdisk_url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs'
-        if self.image_metadata:
-            if 'ramdisk_url' in self.image_metadata:
-                ramdisk_url = self.image_metadata['ramdisk_url']
-        ramdisk_image_file = file_utils.download(ramdisk_url, self.tmp_dir)
+        ramdisk_file_name = None
+        ramdisk_url = openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL
+        if 'ramdisk_file' in self.glance_test_meta:
+            ramdisk_file_name = self.glance_test_meta['ramdisk_file']
+        elif 'ramdisk_url' in self.glance_test_meta:
+            ramdisk_url = self.glance_test_meta['ramdisk_url']
+
+        if not ramdisk_file_name:
+            ramdisk_file_name = file_utils.download(ramdisk_url, self.tmp_dir).name
+
         ramdisk_file_image_settings = openstack_tests.file_image_test_settings(
-            name=self.image_name+'_ramdisk', file_path=ramdisk_image_file.name)
+            name=self.image_name+'_ramdisk', file_path=ramdisk_file_name)
         self.image_creators.append(create_image.OpenStackImage(self.os_creds, ramdisk_file_image_settings))
         ramdisk_image = self.image_creators[-1].create()
         self.assertIsNotNone(ramdisk_image)
         self.assertEqual(get_image_size(ramdisk_file_image_settings), ramdisk_image.size)
 
-        # Create the main image
-        image_url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'
-        image_file = file_utils.download(image_url, self.tmp_dir)
-        file_image_settings = openstack_tests.file_image_test_settings(name=self.image_name, file_path=image_file.name)
+        # Create the main disk image
+        disk_file_name = None
+        disk_url = openstack_tests.CIRROS_DEFAULT_IMAGE_URL
+        if 'disk_file' in self.glance_test_meta:
+            disk_file_name = self.glance_test_meta['disk_file']
+        elif 'disk_url' in self.glance_test_meta:
+            disk_url = self.glance_test_meta['disk_url']
+
+        if not disk_file_name:
+            disk_file_name = file_utils.download(disk_url, self.tmp_dir).name
+
+        file_image_settings = openstack_tests.file_image_test_settings(name=self.image_name, file_path=disk_file_name)
         properties['kernel_id'] = kernel_image.id
         properties['ramdisk_id'] = ramdisk_image.id
         file_image_settings.extra_properties = properties
@@ -562,62 +604,65 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         """
         Tests the creation of a 3-part OpenStack image from a URL.
         """
-        # Set properties
-        properties = {}
-        if self.image_metadata and 'extra_properties' in self.image_metadata:
-            properties = self.image_metadata['extra_properties']
+        if 'disk_file' not in self.glance_test_meta:
+            # Set properties
+            properties = {}
+            if self.glance_test_meta and 'extra_properties' in self.glance_test_meta:
+                properties = self.glance_test_meta['extra_properties']
 
-        # Create the kernel image
-        kernel_image_settings = openstack_tests.cirros_image_settings(
-            name=self.image_name+'_kernel',
-            url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel')
+            # Create the kernel image
+            kernel_image_settings = openstack_tests.cirros_image_settings(
+                name=self.image_name+'_kernel',
+                url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-kernel')
 
-        if self.image_metadata:
-            if 'kernel_url' in self.image_metadata:
-                kernel_image_settings.url = self.image_metadata['kernel_url']
-        self.image_creators.append(create_image.OpenStackImage(self.os_creds, kernel_image_settings))
-        kernel_image = self.image_creators[-1].create()
-        self.assertIsNotNone(kernel_image)
-        self.assertEqual(get_image_size(kernel_image_settings), kernel_image.size)
+            if self.glance_test_meta:
+                if 'kernel_url' in self.glance_test_meta:
+                    kernel_image_settings.url = self.glance_test_meta['kernel_url']
+            self.image_creators.append(create_image.OpenStackImage(self.os_creds, kernel_image_settings))
+            kernel_image = self.image_creators[-1].create()
+            self.assertIsNotNone(kernel_image)
+            self.assertEqual(get_image_size(kernel_image_settings), kernel_image.size)
 
-        # Create the ramdisk image
-        ramdisk_image_settings = openstack_tests.cirros_image_settings(
-            name=self.image_name+'_ramdisk',
-            url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs')
-        if self.image_metadata:
-            if 'ramdisk_url' in self.image_metadata:
-                ramdisk_image_settings.url = self.image_metadata['ramdisk_url']
-        self.image_creators.append(create_image.OpenStackImage(self.os_creds, ramdisk_image_settings))
-        ramdisk_image = self.image_creators[-1].create()
-        self.assertIsNotNone(ramdisk_image)
-        self.assertEqual(get_image_size(ramdisk_image_settings), ramdisk_image.size)
+            # Create the ramdisk image
+            ramdisk_image_settings = openstack_tests.cirros_image_settings(
+                name=self.image_name+'_ramdisk',
+                url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-initramfs')
+            if self.glance_test_meta:
+                if 'ramdisk_url' in self.glance_test_meta:
+                    ramdisk_image_settings.url = self.glance_test_meta['ramdisk_url']
+            self.image_creators.append(create_image.OpenStackImage(self.os_creds, ramdisk_image_settings))
+            ramdisk_image = self.image_creators[-1].create()
+            self.assertIsNotNone(ramdisk_image)
+            self.assertEqual(get_image_size(ramdisk_image_settings), ramdisk_image.size)
 
-        # Create the main image
-        os_image_settings = openstack_tests.cirros_image_settings(
-            name=self.image_name,
-            url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img')
-        if self.image_metadata:
-            if 'disk_url' in self.image_metadata:
-                os_image_settings.url = self.image_metadata['disk_url']
+            # Create the main image
+            os_image_settings = openstack_tests.cirros_image_settings(
+                name=self.image_name,
+                url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img')
+            if self.glance_test_meta:
+                if 'disk_url' in self.glance_test_meta:
+                    os_image_settings.url = self.glance_test_meta['disk_url']
 
-        properties['kernel_id'] = kernel_image.id
-        properties['ramdisk_id'] = ramdisk_image.id
-        os_image_settings.extra_properties = properties
+            properties['kernel_id'] = kernel_image.id
+            properties['ramdisk_id'] = ramdisk_image.id
+            os_image_settings.extra_properties = properties
 
-        self.image_creators.append(create_image.OpenStackImage(self.os_creds, os_image_settings))
-        created_image = self.image_creators[-1].create()
-        self.assertIsNotNone(created_image)
-        self.assertEqual(self.image_name, created_image.name)
+            self.image_creators.append(create_image.OpenStackImage(self.os_creds, os_image_settings))
+            created_image = self.image_creators[-1].create()
+            self.assertIsNotNone(created_image)
+            self.assertEqual(self.image_name, created_image.name)
 
-        retrieved_image = glance_utils.get_image(self.glance, os_image_settings.name)
-        self.assertIsNotNone(retrieved_image)
+            retrieved_image = glance_utils.get_image(self.glance, os_image_settings.name)
+            self.assertIsNotNone(retrieved_image)
 
-        self.assertEqual(self.image_creators[-1].get_image().size, retrieved_image.size)
-        self.assertEqual(get_image_size(os_image_settings), retrieved_image.size)
+            self.assertEqual(self.image_creators[-1].get_image().size, retrieved_image.size)
+            self.assertEqual(get_image_size(os_image_settings), retrieved_image.size)
 
-        self.assertEqual(created_image.name, retrieved_image.name)
-        self.assertEqual(created_image.id, retrieved_image.id)
-        self.assertEqual(created_image.properties, retrieved_image.properties)
+            self.assertEqual(created_image.name, retrieved_image.name)
+            self.assertEqual(created_image.id, retrieved_image.id)
+            self.assertEqual(created_image.properties, retrieved_image.properties)
+        else:
+            logger.warn('Test not executed as the image metadata requires image files')
 
 
 def get_image_size(image_settings):
