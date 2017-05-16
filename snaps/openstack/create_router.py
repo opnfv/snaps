@@ -42,7 +42,7 @@ class OpenStackRouter:
             raise Exception('router_settings is required')
 
         self.router_settings = router_settings
-        self.__neutron = neutron_utils.neutron_client(os_creds)
+        self.__neutron = None
 
         # Attributes instantiated on create()
         self.__router = None
@@ -58,6 +58,8 @@ class OpenStackRouter:
         :param cleanup: When true, only perform lookups for OpenStack objects.
         :return: the router object
         """
+        self.__neutron = neutron_utils.neutron_client(self.__os_creds)
+
         logger.debug('Creating Router with name - ' + self.router_settings.name)
         existing = False
         router_inst = neutron_utils.get_router_by_name(self.__neutron, self.router_settings.name)

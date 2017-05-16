@@ -49,8 +49,8 @@ class OpenStackVmInstance:
         """
         self.__os_creds = os_creds
 
-        self.__nova = nova_utils.nova_client(self.__os_creds)
-        self.__neutron = neutron_utils.neutron_client(self.__os_creds)
+        self.__nova = None
+        self.__neutron = None
 
         self.instance_settings = instance_settings
         self.image_settings = image_settings
@@ -74,16 +74,14 @@ class OpenStackVmInstance:
                       Additionally, when True, floating IPs will not be applied until VM is active.
         :return: The VM reference object
         """
-        try:
-            self.__ports = self.__setup_ports(self.instance_settings.port_settings, cleanup)
-            self.__lookup_existing_vm_by_name()
-            if not self.__vm and not cleanup:
-                self.__create_vm(block)
-            return self.__vm
-        except Exception as e:
-            logger.exception('Error occurred while setting up instance')
-            self.clean()
-            raise e
+        self.__nova = nova_utils.nova_client(self.__os_creds)
+        self.__neutron = neutron_utils.neutron_client(self.__os_creds)
+
+        self.__ports = self.__setup_ports(self.instance_settings.port_settings, cleanup)
+        self.__lookup_existing_vm_by_name()
+        if not self.__vm and not cleanup:
+            self.__create_vm(block)
+        return self.__vm
 
     def __lookup_existing_vm_by_name(self):
         """

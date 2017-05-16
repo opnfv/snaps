@@ -37,8 +37,8 @@ class OpenStackSecurityGroup:
         """
         self.__os_creds = os_creds
         self.sec_grp_settings = sec_grp_settings
-        self.__neutron = neutron_utils.neutron_client(os_creds)
-        self.__keystone = keystone_utils.keystone_client(os_creds)
+        self.__neutron = None
+        self.__keystone = None
 
         # Attributes instantiated on create()
         self.__security_group = None
@@ -52,6 +52,9 @@ class OpenStackSecurityGroup:
         :param cleanup: Denotes whether or not this is being called for cleanup or not
         :return: the OpenStack security group object
         """
+        self.__neutron = neutron_utils.neutron_client(self.__os_creds)
+        self.__keystone = keystone_utils.keystone_client(self.__os_creds)
+
         logger.info('Creating security group %s...' % self.sec_grp_settings.name)
 
         self.__security_group = neutron_utils.get_security_group(self.__neutron, self.sec_grp_settings.name)

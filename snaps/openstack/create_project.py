@@ -39,7 +39,7 @@ class OpenStackProject:
         self.project_settings = project_settings
         self.__project = None
         self.__role = None
-        self.__keystone = keystone_utils.keystone_client(self.__os_creds)
+        self.__keystone = None
 
     def create(self, cleanup=False):
         """
@@ -47,6 +47,7 @@ class OpenStackProject:
         :param cleanup: Denotes whether or not this is being called for cleanup or not
         :return: The OpenStack Image object
         """
+        self.__keystone = keystone_utils.keystone_client(self.__os_creds)
         self.__project = keystone_utils.get_project(keystone=self.__keystone,
                                                     project_name=self.project_settings.name)
         if self.__project:

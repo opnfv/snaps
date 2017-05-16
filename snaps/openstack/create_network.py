@@ -36,7 +36,7 @@ class OpenStackNetwork:
         """
         self.__os_creds = os_creds
         self.network_settings = network_settings
-        self.__neutron = neutron_utils.neutron_client(self.__os_creds)
+        self.__neutron = None
 
         # Attributes instantiated on create()
         self.__network = None
@@ -48,37 +48,34 @@ class OpenStackNetwork:
         :param cleanup: When true, only perform lookups for OpenStack objects.
         :return: the created network object or None
         """
-        try:
-            logger.info('Creating neutron network %s...' % self.network_settings.name)
-            net_inst = neutron_utils.get_network(self.__neutron, self.network_settings.name,
-                                                 self.network_settings.get_project_id(self.__os_creds))
-            if net_inst:
-                self.__network = net_inst
+        self.__neutron = neutron_utils.neutron_client(self.__os_creds)
+
+        logger.info('Creating neutron network %s...' % self.network_settings.name)
+        net_inst = neutron_utils.get_network(self.__neutron, self.network_settings.name,
+                                             self.network_settings.get_project_id(self.__os_creds))
+        if net_inst:
+            self.__network = net_inst
+        else:
+            if not cleanup:
+                self.__network = neutron_utils.create_network(self.__neutron, self.__os_creds,
+                                                              self.network_settings)
+            else:
+                logger.info('Network does not exist and will not create as in cleanup mode')
+                return
+        logger.debug("Network '%s' created successfully" % self.__network['network']['id'])
+
+        logger.debug('Creating Subnets....')
+        for subnet_setting in self.network_settings.subnet_settings:
+            sub_inst = neutron_utils.get_subnet_by_name(self.__neutron, subnet_setting.name)
+            if sub_inst:
+                self.__subnets.append(sub_inst)
+                logger.debug("Subnet '%s' created successfully" % sub_inst['subnet']['id'])
             else:
                 if not cleanup:
-                    self.__network = neutron_utils.create_network(self.__neutron, self.__os_creds,
-                                                                  self.network_settings)
-                else:
-                    logger.info('Network does not exist and will not create as in cleanup mode')
-                    return
-            logger.debug("Network '%s' created successfully" % self.__network['network']['id'])
+                    self.__subnets.append(neutron_utils.create_subnet(self.__neutron, subnet_setting,
+                                                                      self.__os_creds, self.__network))
 
-            logger.debug('Creating Subnets....')
-            for subnet_setting in self.network_settings.subnet_settings:
-                sub_inst = neutron_utils.get_subnet_by_name(self.__neutron, subnet_setting.name)
-                if sub_inst:
-                    self.__subnets.append(sub_inst)
-                    logger.debug("Subnet '%s' created successfully" % sub_inst['subnet']['id'])
-                else:
-                    if not cleanup:
-                        self.__subnets.append(neutron_utils.create_subnet(self.__neutron, subnet_setting,
-                                                                          self.__os_creds, self.__network))
-
-            return self.__network
-        except Exception as e:
-            logger.error('Unexpected exception thrown while creating network - ' + str(e))
-            self.clean()
-            raise e
+        return self.__network
 
     def clean(self):
         """

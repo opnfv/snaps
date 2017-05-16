@@ -41,7 +41,7 @@ class OpenStackFlavor:
         self.__os_creds = os_creds
         self.flavor_settings = flavor_settings
         self.__flavor = None
-        self.__nova = nova_utils.nova_client(self.__os_creds)
+        self.__nova = None
 
     def create(self, cleanup=False):
         """
@@ -49,6 +49,7 @@ class OpenStackFlavor:
         :param cleanup: Denotes whether or not this is being called for cleanup or not
         :return: The OpenStack flavor object
         """
+        self.__nova = nova_utils.nova_client(self.__os_creds)
         self.__flavor = nova_utils.get_flavor_by_name(self.__nova, self.flavor_settings.name)
         if self.__flavor:
             logger.info('Found flavor with name - ' + self.flavor_settings.name)

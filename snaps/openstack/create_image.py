@@ -45,7 +45,7 @@ class OpenStackImage:
         self.__image = None
         self.__kernel_image = None
         self.__ramdisk_image = None
-        self.__glance = glance_utils.glance_client(os_creds)
+        self.__glance = None
 
     def create(self, cleanup=False):
         """
@@ -53,6 +53,7 @@ class OpenStackImage:
         :param cleanup: Denotes whether or not this is being called for cleanup or not
         :return: The OpenStack Image object
         """
+        self.__glance = glance_utils.glance_client(self.__os_creds)
         self.__image = glance_utils.get_image(self.__glance, self.image_settings.name)
         if self.__image:
             logger.info('Found image with name - ' + self.image_settings.name)

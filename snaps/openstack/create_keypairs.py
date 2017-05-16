@@ -35,6 +35,7 @@ class OpenStackKeypair:
         :param os_creds: The credentials to connect with OpenStack
         :param keypair_settings: The settings used to create a keypair
         """
+        self.__nova = None
         self.__os_creds = os_creds
         self.keypair_settings = keypair_settings
         self.__nova = nova_utils.nova_client(os_creds)
@@ -47,6 +48,8 @@ class OpenStackKeypair:
         Responsible for creating the keypair object.
         :param cleanup: Denotes whether or not this is being called for cleanup or not
         """
+        self.__nova = nova_utils.nova_client(self.__os_creds)
+
         logger.info('Creating keypair %s...' % self.keypair_settings.name)
 
         self.__keypair = nova_utils.get_keypair_by_name(self.__nova, self.keypair_settings.name)

@@ -38,7 +38,7 @@ class OpenStackUser:
         self.__os_creds = os_creds
         self.user_settings = user_settings
         self.__user = None
-        self.__keystone = keystone_utils.keystone_client(self.__os_creds)
+        self.__keystone = None
 
     def create(self, cleanup=False):
         """
@@ -46,6 +46,7 @@ class OpenStackUser:
         :param cleanup: Denotes whether or not this is being called for cleanup or not
         :return: The OpenStack user object
         """
+        self.__keystone = keystone_utils.keystone_client(self.__os_creds)
         self.__user = keystone_utils.get_user(self.__keystone, self.user_settings.name)
         if self.__user:
             logger.info('Found user with name - ' + self.user_settings.name)
