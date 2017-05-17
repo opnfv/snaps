@@ -338,7 +338,8 @@ def get_security_group_by_id(neutron, sec_grp_id):
 
     groups = neutron.list_security_groups(**{'sec_grp_id': sec_grp_id})
     for group in groups['security_groups']:
-        return {'security_group': group}
+        if group['id'] == sec_grp_id:
+            return {'security_group': group}
     return None
 
 
