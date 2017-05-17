@@ -476,7 +476,7 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.sec_grp_name = guid + 'name'
 
-        self.security_group = None
+        self.security_groups = list()
         self.security_group_rules = list()
         self.neutron = neutron_utils.neutron_client(self.os_creds)
         self.keystone = keystone_utils.keystone_client(self.os_creds)
@@ -488,27 +488,29 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         for rule in self.security_group_rules:
             neutron_utils.delete_security_group_rule(self.neutron, rule)
 
-        if self.security_group:
-            neutron_utils.delete_security_group(self.neutron, self.security_group)
+        for security_group in self.security_groups:
+            try:
+                neutron_utils.delete_security_group(self.neutron, security_group)
+            except:
+                pass
 
     def test_create_delete_simple_sec_grp(self):
         """
         Tests the neutron_utils.create_security_group() function
         """
         sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name)
-        self.security_group = neutron_utils.create_security_group(self.neutron, self.keystone, sec_grp_settings)
+        security_group = neutron_utils.create_security_group(self.neutron, self.keystone, sec_grp_settings)
 
-        self.assertTrue(sec_grp_settings.name, self.security_group['security_group']['name'])
+        self.assertTrue(sec_grp_settings.name, security_group['security_group']['name'])
 
         sec_grp_get = neutron_utils.get_security_group(self.neutron, sec_grp_settings.name)
         self.assertIsNotNone(sec_grp_get)
         self.assertTrue(validation_utils.objects_equivalent(
-            self.security_group['security_group'], sec_grp_get['security_group']))
+            security_group['security_group'], sec_grp_get['security_group']))
 
-        neutron_utils.delete_security_group(self.neutron, self.security_group)
+        neutron_utils.delete_security_group(self.neutron, security_group)
         sec_grp_get = neutron_utils.get_security_group(self.neutron, sec_grp_settings.name)
         self.assertIsNone(sec_grp_get)
-        self.security_group = None
 
     def test_create_sec_grp_no_name(self):
         """
@@ -517,22 +519,23 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         """
         with self.assertRaises(Exception):
             sec_grp_settings = SecurityGroupSettings()
-            self.security_group = neutron_utils.create_security_group(self.neutron, self.keystone, sec_grp_settings)
+            self.security_groups.append(
+                neutron_utils.create_security_group(self.neutron, self.keystone, sec_grp_settings))
 
     def test_create_sec_grp_no_rules(self):
         """
         Tests the neutron_utils.create_security_group() function
         """
         sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name, description='hello group')
-        self.security_group = neutron_utils.create_security_group(self.neutron, self.keystone, sec_grp_settings)
+        self.security_groups.append(neutron_utils.create_security_group(self.neutron, self.keystone, sec_grp_settings))
 
-        self.assertTrue(sec_grp_settings.name, self.security_group['security_group']['name'])
-        self.assertTrue(sec_grp_settings.description, self.security_group['security_group']['description'])
+        self.assertTrue(sec_grp_settings.name, self.security_groups[0]['security_group']['name'])
+        self.assertTrue(sec_grp_settings.description, self.security_groups[0]['security_group']['description'])
 
         sec_grp_get = neutron_utils.get_security_group(self.neutron, sec_grp_settings.name)
         self.assertIsNotNone(sec_grp_get)
         self.assertTrue(validation_utils.objects_equivalent(
-            self.security_group['security_group'], sec_grp_get['security_group']))
+            self.security_groups[0]['security_group'], sec_grp_get['security_group']))
 
     def test_create_sec_grp_one_rule(self):
         """
@@ -543,8 +546,8 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name, description='hello group',
                                                  rule_settings=[sec_grp_rule_settings])
 
-        self.security_group = neutron_utils.create_security_group(self.neutron, self.keystone, sec_grp_settings)
-        free_rules = neutron_utils.get_rules_by_security_group(self.neutron, self.security_group)
+        self.security_groups.append(neutron_utils.create_security_group(self.neutron, self.keystone, sec_grp_settings))
+        free_rules = neutron_utils.get_rules_by_security_group(self.neutron, self.security_groups[0])
         for free_rule in free_rules:
             self.security_group_rules.append(free_rule)
 
@@ -552,19 +555,39 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
             neutron_utils.create_security_group_rule(self.neutron, sec_grp_settings.rule_settings[0]))
 
         # Refresh object so it is populated with the newly added rule
-        self.security_group = neutron_utils.get_security_group(self.neutron, sec_grp_settings.name)
+        security_group = neutron_utils.get_security_group(self.neutron, sec_grp_settings.name)
 
-        rules = neutron_utils.get_rules_by_security_group(self.neutron, self.security_group)
+        rules = neutron_utils.get_rules_by_security_group(self.neutron, security_group)
 
         self.assertTrue(validation_utils.objects_equivalent(self.security_group_rules, rules))
 
-        self.assertTrue(sec_grp_settings.name, self.security_group['security_group']['name'])
-        self.assertTrue(sec_grp_settings.description, self.security_group['security_group']['description'])
+        self.assertTrue(sec_grp_settings.name, security_group['security_group']['name'])
+        self.assertTrue(sec_grp_settings.description, security_group['security_group']['description'])
 
         sec_grp_get = neutron_utils.get_security_group(self.neutron, sec_grp_settings.name)
         self.assertIsNotNone(sec_grp_get)
         self.assertTrue(validation_utils.objects_equivalent(
-            self.security_group['security_group'], sec_grp_get['security_group']))
+            security_group['security_group'], sec_grp_get['security_group']))
+
+    def test_get_sec_grp_by_id(self):
+        """
+        Tests the neutron_utils.create_security_group() function
+        """
+
+        self.security_groups.append(neutron_utils.create_security_group(
+            self.neutron, self.keystone,
+            SecurityGroupSettings(name=self.sec_grp_name + '-1', description='hello group')))
+        self.security_groups.append(neutron_utils.create_security_group(
+            self.neutron, self.keystone,
+            SecurityGroupSettings(name=self.sec_grp_name + '-2', description='hello group')))
+
+        sec_grp_1b = neutron_utils.get_security_group_by_id(
+            self.neutron, self.security_groups[0]['security_group']['id'])
+        sec_grp_2b = neutron_utils.get_security_group_by_id(
+            self.neutron, self.security_groups[1]['security_group']['id'])
+
+        self.assertEqual(self.security_groups[0]['security_group']['id'], sec_grp_1b['security_group']['id'])
+        self.assertEqual(self.security_groups[1]['security_group']['id'], sec_grp_2b['security_group']['id'])
 
 
 """
