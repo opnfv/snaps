@@ -24,6 +24,27 @@ logger = logging.getLogger('keystone_utils')
 V2_VERSION = 'v2.0'
 
 
+def get_session_auth(os_creds):
+    """
+    Return the session auth for ketstone session
+    :param os_creds: the OpenStack credentials (OSCreds) object
+    :return: the auth
+    """
+    if os_creds.identity_api_version == 3:
+        auth = v3.Password(auth_url=os_creds.auth_url,
+                           username=os_creds.username,
+                           password=os_creds.password,
+                           project_name=os_creds.project_name,
+                           user_domain_id=os_creds.user_domain_id,
+                           project_domain_id=os_creds.project_domain_id)
+    else:
+        auth = v2.Password(auth_url=os_creds.auth_url,
+                           username=os_creds.username,
+                           password=os_creds.password,
+                           tenant_name=os_creds.project_name)
+    return auth
+
+
 def keystone_session(os_creds):
     """
     Creates a keystone session used for authenticating OpenStack clients
@@ -32,13 +53,7 @@ def keystone_session(os_creds):
     """
     logger.debug('Retrieving Keystone Session')
 
-    if os_creds.identity_api_version == 3:
-        auth = v3.Password(auth_url=os_creds.auth_url, username=os_creds.username, password=os_creds.password,
-                           project_name=os_creds.project_name, user_domain_id=os_creds.user_domain_id,
-                           project_domain_id=os_creds.project_domain_id)
-    else:
-        auth = v2.Password(auth_url=os_creds.auth_url, username=os_creds.username, password=os_creds.password,
-                           tenant_name=os_creds.project_name)
+    auth = get_session_auth(os_creds)
 
     req_session = None
     if os_creds.proxy_settings:
@@ -54,6 +69,13 @@ def keystone_client(os_creds):
     :return: the client
     """
     return Client(version=os_creds.identity_api_version, session=keystone_session(os_creds))
+
+
+def get_endpoint(os_creds, service_type, endpoint_type='publicURL'):
+    auth = get_session_auth(os_creds)
+    return keystone_session(os_creds).get_endpoint(auth=auth,
+                                                   service_type=service_type,
+                                                   endpoint_type=endpoint_type)
 
 
 def get_project(keystone=None, os_creds=None, project_name=None):
