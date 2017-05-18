@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ab8dda7_959ab161",
+        "filename": "snaps/openstack/utils/keystone_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 5959
+      },
+      "writtenOn": "2017-05-18T07:09:30Z",
+      "side": 1,
+      "message": "This function and get_endpoint() are used by all service types. I would suggest to put both in a standalone module instead of leaving them in keystone_utils.",
+      "range": {
+        "startLine": 27,
+        "startChar": 4,
+        "endLine": 27,
+        "endChar": 20
+      },
+      "revId": "a8effa4dcb7ad22c46cb10fcbb3d3ff047116e88",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
