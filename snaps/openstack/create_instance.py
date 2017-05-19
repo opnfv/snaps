@@ -412,6 +412,7 @@ class OpenStackVmInstance:
         :param nic_name: Name of the interface
         :param port: The port information containing the expected IP values.
         :param floating_ip: The floating IP on which to apply the playbook.
+        :return: the return value from ansible
         """
         ip = port['port']['fixed_ips'][0]['ip_address']
         variables = {
@@ -421,12 +422,22 @@ class OpenStackVmInstance:
         }
 
         if self.image_settings.nic_config_pb_loc and self.keypair_settings:
-            ansible_utils.apply_playbook(self.image_settings.nic_config_pb_loc,
-                                         [floating_ip], self.get_image_user(), self.keypair_settings.private_filepath,
-                                         variables, self.__os_creds.proxy_settings)
+            return self.apply_ansible_playbook(self.image_settings.nic_config_pb_loc, variables)
         else:
             logger.warning('VM ' + self.instance_settings.name + ' cannot self configure NICs eth1++. ' +
                            'No playbook  or keypairs found.')
+
+    def apply_ansible_playbook(self, pb_file_loc, variables=None, fip_name=None):
+        """
+        Applies a playbook to a VM
+        :param pb_file_loc: the file location of the playbook to be applied
+        :param variables: a dict() of substitution values required by the playbook
+        :param fip_name: the name of the floating IP to use for applying the playbook (default - will take the first)
+        :return: the return value from ansible
+        """
+        return ansible_utils.apply_playbook(pb_file_loc, [self.get_floating_ip(fip_name=fip_name).ip],
+                                            self.get_image_user(), self.keypair_settings.private_filepath,
+                                            variables, self.__os_creds.proxy_settings)
 
     def get_image_user(self):
         """
