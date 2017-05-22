@@ -232,7 +232,7 @@ def ubuntu_image_settings(name, url=None, image_metadata=None, kernel_settings=N
         metadata = image_metadata
 
     return create_image_settings(
-        image_name=name, image_user=CENTOS_USER, image_format=DEFAULT_IMAGE_FORMAT, metadata=metadata, disk_url=url,
+        image_name=name, image_user=UBUNTU_USER, image_format=DEFAULT_IMAGE_FORMAT, metadata=metadata, disk_url=url,
         default_url=UBUNTU_DEFAULT_IMAGE_URL,
         kernel_settings=kernel_settings, ramdisk_settings=ramdisk_settings, public=public)
 

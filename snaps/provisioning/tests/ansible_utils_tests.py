@@ -171,8 +171,7 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         user = self.inst_creator.get_image_user()
         priv_key = self.inst_creator.keypair_settings.private_filepath
 
-        retval = ansible_utils.apply_playbook('provisioning/tests/playbooks/simple_playbook.yml', [ip], user, priv_key,
-                                              proxy_setting=self.os_creds.proxy_settings)
+        retval = self.inst_creator.apply_ansible_playbook('provisioning/tests/playbooks/simple_playbook.yml')
         self.assertEqual(0, retval)
 
         ssh = ansible_utils.ssh_client(ip, user, priv_key, self.os_creds.proxy_settings)
@@ -203,8 +202,9 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         user = self.inst_creator.get_image_user()
         priv_key = self.inst_creator.keypair_settings.private_filepath
 
-        ansible_utils.apply_playbook('provisioning/tests/playbooks/template_playbook.yml', [ip], user, priv_key,
-                                     variables={'name': 'Foo'}, proxy_setting=self.os_creds.proxy_settings)
+        retval = self.inst_creator.apply_ansible_playbook('provisioning/tests/playbooks/template_playbook.yml',
+                                                          variables={'name': 'Foo'})
+        self.assertEqual(0, retval)
 
         ssh = ansible_utils.ssh_client(ip, user, priv_key, self.os_creds.proxy_settings)
         self.assertIsNotNone(ssh)
