@@ -15,7 +15,7 @@
 __author__ = 'spisarski'
 
 try:
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except ImportError:
     from distutils.core import setup
 
@@ -26,6 +26,7 @@ config = {
     'download_url': 'Where to download it.',
     'author_email': 's.pisarski@cablelabs.com',
     'version': '1.0',
+    'packages': find_packages(),
     'install_requires': ['python-novaclient>=6.0.0,<8.0.0',
                          'python-neutronclient>=5.1.0',
                          'python-keystoneclient>=2.3.1',
