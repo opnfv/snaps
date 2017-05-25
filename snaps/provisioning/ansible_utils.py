@@ -19,10 +19,13 @@ from collections import namedtuple
 import os
 import paramiko
 
-from ansible.parsing.dataloader import DataLoader
-from ansible.vars import VariableManager
-from ansible.inventory import Inventory
-from ansible.executor.playbook_executor import PlaybookExecutor
+try:
+    from ansible.parsing.dataloader import DataLoader
+    from ansible.vars import VariableManager
+    from ansible.inventory import Inventory
+    from ansible.executor.playbook_executor import PlaybookExecutor
+except:
+    pass
 
 __author__ = 'spisarski'
 

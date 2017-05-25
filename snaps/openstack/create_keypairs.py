@@ -81,6 +81,13 @@ class OpenStackKeypair:
                 pass
             self.__keypair = None
 
+        if self.keypair_settings.public_filepath:
+            os.chmod(self.keypair_settings.public_filepath, 0o777)
+            os.remove(self.keypair_settings.public_filepath)
+        if self.keypair_settings.private_filepath:
+            os.chmod(self.keypair_settings.private_filepath, 0o777)
+            os.remove(self.keypair_settings.private_filepath)
+
     def get_keypair(self):
         """
         Returns the OpenStack keypair object

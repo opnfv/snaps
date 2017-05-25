@@ -21,13 +21,35 @@ CentOS 7
 
 ::
 
-    sudo yum install -7 git gcc python-pip python-devel openssl-devel
+    sudo yum -y update
+    sudo yum install -y epel-release
+    sudo yum install -y git gcc python-pip python-devel openssl-devel
+    sudo pip install --upgrade pip
 
-Ubuntu
-------
+Ubuntu 14.04
+------------
 ::
 
-      sudo apt-get install git python2.7-dev libssl-dev
+      sudo apt-get install git python2.7-dev libssl-dev python-pip
+      sudo apt-get install corkscrew (optional for SSH over an HTTP proxy)
+
+Ubuntu 16.04
+------------
+::
+
+      sudo apt install python git python2.7-dev libssl-dev python-pip
+      sudo apt install corkscrew (optional for SSH over an HTTP proxy)
+
+Windows Server 2012
+-------------------
+::
+
+      Install Python 2.7.x
+      Install Git
+      Install Microsoft Visual C++ Compiler for Python 2.7
+
+      Cannot SSH from behind a proxy in the 'cmd' shell as corkscrew is only available for Cygwin
+      Ansible functionality is not working on windows as an exception is being thrown while importing the packages
 
 Optional: Setup a Python virtual environment
 --------------------------------------------
@@ -43,6 +65,8 @@ The "pip" command below needs to be executed as root, if you are not using a vir
 
 ::
 
+   git clone https://gerrit.opnfv.org/gerrit/snaps
    sudo pip install -e <path to repo>/snaps/
+   (note: on CentOS 7 and Ubuntu 14.04 you may have to try the previous command several times)
 
 The install should now be complete and you can start using the SNAPS-OO libraries.

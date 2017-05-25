@@ -86,11 +86,13 @@ class NovaUtilsKeypairTests(OSComponentTestCase):
                 pass
 
         try:
+            os.chmod(self.priv_key_file_path, 0o777)
             os.remove(self.priv_key_file_path)
         except:
             pass
 
         try:
+            os.chmod(self.pub_key_file_path, 0o777)
             os.remove(self.pub_key_file_path)
         except:
             pass
@@ -126,7 +128,9 @@ class NovaUtilsKeypairTests(OSComponentTestCase):
         """
         nova_utils.save_keys_to_files(self.keys, self.pub_key_file_path, self.priv_key_file_path)
         self.keypair = nova_utils.upload_keypair_file(self.nova, self.keypair_name, self.pub_key_file_path)
-        pub_key = open(os.path.expanduser(self.pub_key_file_path)).read()
+        pub_key_file = open(os.path.expanduser(self.pub_key_file_path))
+        pub_key = pub_key_file.read()
+        pub_key_file.close()
         self.assertEqual(self.keypair.public_key, pub_key)
 
     def test_floating_ips(self):

@@ -55,11 +55,16 @@ def download(url, dest_path, name=None):
     dest = dest_path + '/' + name
     logger.debug('Downloading file from - ' + url)
     # Override proxy settings to use localhost to download file
-    with open(dest, 'wb') as f:
-        logger.debug('Saving file to - ' + dest)
-        response = __get_url_response(url)
-        f.write(response.read())
-    return f
+    f = None
+    try:
+        with open(dest, 'wb') as f:
+            logger.debug('Saving file to - ' + dest)
+            response = __get_url_response(url)
+            f.write(response.read())
+        return f
+    finally:
+        if f:
+            f.close()
 
 
 def get_content_length(url):

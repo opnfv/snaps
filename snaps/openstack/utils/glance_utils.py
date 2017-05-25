@@ -140,11 +140,18 @@ def __create_image_v2(glance, image_settings):
     :raise Exception if using a file and it cannot be found
     """
     cleanup_temp_file = False
+    image_file = None
     if image_settings.image_file:
         image_filename = image_settings.image_file
     elif image_settings.url:
-        image_file = file_utils.download(image_settings.url, '/tmp', str(uuid.uuid4()))
-        image_filename = image_file.name
+        file_name = str(uuid.uuid4())
+        try:
+            image_file = file_utils.download(image_settings.url, './tmp', file_name)
+            image_filename = image_file.name
+        except:
+            os.remove('./tmp/' + file_name)
+            raise
+
         cleanup_temp_file = True
     else:
         raise Exception('Filename or URL of image not configured')
@@ -171,6 +178,8 @@ def __create_image_v2(glance, image_settings):
             delete_image(glance, created_image)
         raise
     finally:
+        if image_file:
+            image_file.close()
         if cleanup_temp_file:
             os.remove(image_filename)
 
