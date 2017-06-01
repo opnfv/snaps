@@ -46,6 +46,15 @@ keystone_utils_tests.py - KeystoneUtilsTests
 | test_create_project_minimal      | 2 & 3         | Tests the creation of a project with minimal configuration|
 |                                  |               | settings via the utility functions                        |
 +----------------------------------+---------------+-----------------------------------------------------------+
+| test_get_endpoint_success        | 2 & 3         | Tests to ensure that proper credentials and proper service|
+|                                  |               | type can succeed                                          |
++----------------------------------+---------------+-----------------------------------------------------------+
+| test_get_endpoint_fail_without   | 2 & 3         | Tests to ensure that proper credentials and improper      |
+| _proper_service                  |               | service type cannot succeed                               |
++----------------------------------+---------------+-----------------------------------------------------------+
+| test_get_endpoint_fail_without   | 2 & 3         | Tests to ensure that improper credentials and proper      |
+| _proper_credentials              |               | service type cannot succeed                               |
++----------------------------------+---------------+-----------------------------------------------------------+
 
 create_user_tests.py - CreateUserSuccessTests
 ---------------------------------------------

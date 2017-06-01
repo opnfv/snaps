@@ -80,9 +80,8 @@ def get_endpoint(os_creds, service_type, endpoint_type='publicURL'):
     :return: the endpoint url
     """
     auth = get_session_auth(os_creds)
-    return keystone_session(os_creds).get_endpoint(auth=auth,
-                                                   service_type=service_type,
-                                                   endpoint_type=endpoint_type)
+    key_session = keystone_session(os_creds)
+    return key_session.get_endpoint(auth=auth, service_type=service_type, endpoint_type=endpoint_type)
 
 
 def get_project(keystone=None, os_creds=None, project_name=None):

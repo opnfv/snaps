@@ -46,32 +46,6 @@ class KeystoneSmokeTests(OSComponentTestCase):
             keystone = keystone_utils.keystone_client(OSCreds('user', 'pass', 'url', 'project'))
             keystone.users.list()
 
-    def test_get_endpoint_success(self):
-        """
-        Tests to ensure that proper credentials and proper service type can succeed.
-        """
-        endpoint = keystone_utils.get_endpoint(self.os_creds,
-                                               service_type="identity")
-        self.assertIsNotNone(endpoint)
-
-    def test_get_endpoint_fail_without_proper_service(self):
-        """
-        Tests to ensure that proper credentials and improper service type cannot succeed.
-        """
-        with self.assertRaises(Exception):
-            keystone_utils.get_endpoint(self.os_creds, service_type="glance")
-
-    def test_get_endpoint_fail_without_proper_credentials(self):
-        """
-        Tests to ensure that improper credentials and proper service type cannot succeed.
-        """
-        from snaps.openstack.os_credentials import OSCreds
-
-        with self.assertRaises(Exception):
-            keystone_utils.get_endpoint(
-                OSCreds('user', 'pass', 'url', 'project'),
-                service_type="image")
-
 
 class KeystoneUtilsTests(OSComponentTestCase):
     """
@@ -124,3 +98,29 @@ class KeystoneUtilsTests(OSComponentTestCase):
         project = keystone_utils.get_project(keystone=self.keystone, project_name=project_settings.name)
         self.assertIsNotNone(project)
         self.assertEqual(self.project_name, self.project.name)
+
+    def test_get_endpoint_success(self):
+        """
+        Tests to ensure that proper credentials and proper service type can succeed.
+        """
+        endpoint = keystone_utils.get_endpoint(self.os_creds,
+                                               service_type="identity")
+        self.assertIsNotNone(endpoint)
+
+    def test_get_endpoint_fail_without_proper_service(self):
+        """
+        Tests to ensure that proper credentials and improper service type cannot succeed.
+        """
+        with self.assertRaises(Exception):
+            keystone_utils.get_endpoint(self.os_creds, service_type="glance")
+
+    def test_get_endpoint_fail_without_proper_credentials(self):
+        """
+        Tests to ensure that improper credentials and proper service type cannot succeed.
+        """
+        from snaps.openstack.os_credentials import OSCreds
+
+        with self.assertRaises(Exception):
+            keystone_utils.get_endpoint(
+                OSCreds('user', 'pass', 'url', 'project'),
+                service_type="image")
