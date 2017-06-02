@@ -17,8 +17,12 @@ import logging
 import unittest
 
 from snaps.domain.test.image_tests import ImageDomainObjectTests
+from snaps.domain.test.stack_tests import StackDomainObjectTests
+from snaps.openstack.tests.create_stack_tests import StackSettingsUnitTests, CreateStackSuccessTests, \
+    CreateStackNegativeTests
 from snaps.openstack.utils.tests.glance_utils_tests import GlanceSmokeTests, GlanceUtilsTests
 from snaps.openstack.tests.create_flavor_tests import CreateFlavorTests
+from snaps.openstack.utils.tests.heat_utils_tests import HeatUtilsCreateStackTests, HeatSmokeTests
 from snaps.tests.file_utils_tests import FileUtilsTests
 from snaps.openstack.tests.create_security_group_tests import CreateSecurityGroupTests, \
     SecurityGroupRuleSettingsUnitTests, SecurityGroupSettingsUnitTests
@@ -65,6 +69,8 @@ def add_unit_tests(suite):
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(PortSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(FloatingIpSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(VmInstanceSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(StackDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(StackSettingsUnitTests))
 
 
 def add_openstack_client_tests(suite, os_creds, ext_net_name, use_keystone=True, log_level=logging.INFO):
@@ -89,6 +95,8 @@ def add_openstack_client_tests(suite, os_creds, ext_net_name, use_keystone=True,
     suite.addTest(OSComponentTestCase.parameterize(NeutronSmokeTests, os_creds=os_creds, ext_net_name=ext_net_name,
                                                    log_level=log_level))
     suite.addTest(OSComponentTestCase.parameterize(NovaSmokeTests, os_creds=os_creds, ext_net_name=ext_net_name,
+                                                   log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(HeatSmokeTests, os_creds=os_creds, ext_net_name=ext_net_name,
                                                    log_level=log_level))
 
 
@@ -134,6 +142,8 @@ def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True, im
         NovaUtilsFlavorTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
     suite.addTest(OSComponentTestCase.parameterize(
         CreateFlavorTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        HeatUtilsCreateStackTests, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level))
 
 
 def add_openstack_integration_tests(suite, os_creds, ext_net_name, use_keystone=True, flavor_metadata=None,
@@ -201,6 +211,12 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name, use_keystone=
         flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
         CreateInstanceFromThreePartImage, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateStackSuccessTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateStackNegativeTests, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata, log_level=log_level))
 
     if use_floating_ips:

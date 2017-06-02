@@ -123,3 +123,16 @@ def read_os_env_file(os_env_filename):
                     # Remove leading and trailing ' & " characters from value
                     out[tokens[0]] = tokens[1].lstrip('\'').lstrip('\"').rstrip('\'').rstrip('\"')
         return out
+
+
+def read_file(filename):
+    """
+    Returns the contents of a file as a string
+    :param filename: the name of the file
+    :return:
+    """
+    out = str()
+    for line in open(filename):
+        out += line
+
+    return out
