@@ -1,0 +1,42 @@
+heat_template_version: 2015-04-30
+
+description: Simple template to deploy a single compute instance
+
+parameters:
+  image_name:
+    type: string
+    label: Image ID
+    description: Image to be used for compute instance
+    default: heat_utils_tests
+  flavor_name:
+    type: string
+    label: Instance Type
+    description: Type of instance (flavor) to be used
+    default: m1.small
+
+resources:
+  private_net:
+    type: OS::Neutron::Net
+    properties:
+      name: test_net
+
+  private_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: private_net }
+      cidr: 10.0.0.0/24
+
+  server1_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_net }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet }
+
+  my_instance:
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image_name }
+      flavor: { get_param: flavor_name }
+      networks:
+        - port: { get_resource: server1_port }

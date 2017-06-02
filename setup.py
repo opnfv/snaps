@@ -31,6 +31,7 @@ config = {
                          'python-neutronclient>=5.1.0',
                          'python-keystoneclient>=2.3.1',
                          'python-glanceclient>=2.5.0',
+                         'python-heatclient',
                          'ansible>=2.1.0',
                          'wrapt',
                          'scp',
