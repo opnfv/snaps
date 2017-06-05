@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5aaae553_c8b8f92c",
+        "filename": "snaps/openstack/utils/heat_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-06-05T18:20:29Z",
+      "side": 1,
+      "message": "Unclear on the outputs objects and how transient they are. I would think this could be a member method in the OpenStackHeatStack class that simply makes a call to a new function in heat_utils names something like get_outputs(self.__heat_cli, self.__stack) where that would return the value heat_cli.stacks.get(stack.id).outputs. We can add this in as a later enhancement.",
+      "parentUuid": "5aaae553_6211e6ab",
+      "revId": "ede7e9f881a8ec0afef0aad8a994b6fc9fc827d8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5aaae553_2223ee06",
         "filename": "snaps/openstack/utils/heat_utils.py",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2017-06-02T21:58:57Z",
       "side": 1,
       "message": "for Yardstick we pass template as dict, because we generate template at runtime as dict.\n\n\nHeatTemplate:_init_template() creates template as dict\n\nhttps://git.opnfv.org/yardstick/tree/yardstick/orchestrator/heat.py#n157\n\nWe also check template version keys for some reason?\nhttps://git.opnfv.org/yardstick/tree/yardstick/common/template_format.py#n61",
+      "revId": "ede7e9f881a8ec0afef0aad8a994b6fc9fc827d8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5aaae553_a8a01df5",
+        "filename": "snaps/openstack/utils/heat_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-06-05T18:20:29Z",
+      "side": 1,
+      "message": "adding support for files and dict objects",
+      "parentUuid": "5aaae553_2223ee06",
       "revId": "ede7e9f881a8ec0afef0aad8a994b6fc9fc827d8",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
