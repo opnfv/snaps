@@ -28,6 +28,7 @@ logger = logging.getLogger('glance_utils')
 
 VERSION_1 = 1.0
 VERSION_2 = 2.0
+TEMP_IMAGE_DIR = './.tmp/'
 
 """
 Utilities for basic neutron API calls
@@ -146,10 +147,10 @@ def __create_image_v2(glance, image_settings):
     elif image_settings.url:
         file_name = str(uuid.uuid4())
         try:
-            image_file = file_utils.download(image_settings.url, './tmp', file_name)
+            image_file = file_utils.download(image_settings.url, TEMP_IMAGE_DIR, file_name)
             image_filename = image_file.name
         except:
-            os.remove('./tmp/' + file_name)
+            os.remove(TEMP_IMAGE_DIR + file_name)
             raise
 
         cleanup_temp_file = True
