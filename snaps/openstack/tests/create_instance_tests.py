@@ -27,7 +27,8 @@ from snaps.openstack.create_keypairs import OpenStackKeypair, KeypairSettings
 from snaps.openstack.create_network import OpenStackNetwork, PortSettings
 from snaps.openstack.create_router import OpenStackRouter
 from snaps.openstack.create_image import OpenStackImage, ImageSettings
-from snaps.openstack.create_security_group import SecurityGroupSettings, OpenStackSecurityGroup
+from snaps.openstack.create_security_group import SecurityGroupSettings, OpenStackSecurityGroup, \
+    SecurityGroupRuleSettings, Direction, Protocol
 from snaps.openstack.tests import openstack_tests, validation_utils
 from snaps.openstack.utils import nova_utils
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase, OSComponentTestCase
@@ -319,26 +320,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
 
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
-        found = False
-        timeout = 160
-        start_time = time.time()
-
-        logger.info("Looking for IP %s in the console log" % ip)
-        full_log = ''
-        while timeout > time.time() - start_time:
-            output = vm.get_console_output()
-            full_log = full_log + output
-            if re.search(ip, output):
-                logger.info('DHCP lease obtained logged in console')
-                found = True
-                break
-
-        if not found:
-            logger.error('Full console output -\n' + full_log)
-        else:
-            logger.debug('Full console output -\n' + full_log)
-
-        self.assertTrue(found)
+        self.assertTrue(check_dhcp_lease(vm, ip))
 
 
 class CreateInstanceSimpleTests(OSIntegrationTestCase):
@@ -471,6 +453,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.router_creator = None
         self.flavor_creator = None
         self.keypair_creator = None
+        self.sec_grp_creator = None
         self.inst_creators = list()
 
         self.pub_net_config = openstack_tests.get_pub_net_config(
@@ -502,6 +485,16 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
                     name=self.keypair_name, public_filepath=self.keypair_pub_filepath,
                     private_filepath=self.keypair_priv_filepath))
             self.keypair_creator.create()
+
+            sec_grp_name = guid + '-sec-grp'
+            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                                              protocol=Protocol.icmp)
+            rule2 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                                              protocol=Protocol.tcp, port_range_min=22, port_range_max=22)
+            self.sec_grp_creator = OpenStackSecurityGroup(
+                self.os_creds,
+                SecurityGroupSettings(name=sec_grp_name, rule_settings=[rule1, rule2]))
+            self.sec_grp_creator.create()
         except Exception as e:
             self.tearDown()
             raise e
@@ -533,6 +526,12 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
                 self.flavor_creator.clean()
             except Exception as e:
                 logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
+
+        if self.sec_grp_creator:
+            try:
+                self.sec_grp_creator.clean()
+            except Exception as e:
+                logger.error('Unexpected exception cleaning security group with message - ' + str(e))
 
         if self.router_creator:
             try:
@@ -601,6 +600,11 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.assertIsNotNone(vm_inst)
 
         self.assertTrue(inst_creator.vm_active(block=True))
+
+        ip = self.inst_creator.get_port_ip(self.port_settings.name)
+        self.assertTrue(check_dhcp_lease(vm_inst, ip))
+
+        inst_creator.add_security_group(self.sec_grp_creator.get_security_group())
         self.assertEqual(vm_inst, inst_creator.get_vm_inst())
 
         self.assertTrue(validate_ssh_client(inst_creator))
@@ -628,6 +632,11 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.assertIsNotNone(vm_inst)
 
         self.assertTrue(inst_creator.vm_active(block=True))
+
+        ip = self.inst_creator.get_port_ip(self.port_settings.name)
+        self.assertTrue(check_dhcp_lease(vm_inst, ip))
+
+        inst_creator.add_security_group(self.sec_grp_creator.get_security_group())
         self.assertEqual(vm_inst, inst_creator.get_vm_inst())
 
         self.assertTrue(validate_ssh_client(inst_creator))
@@ -1001,6 +1010,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
         self.router_creators = list()
         self.flavor_creator = None
         self.keypair_creator = None
+        self.sec_grp_creator = None
         self.inst_creator = None
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
@@ -1053,6 +1063,16 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
                     name=self.keypair_name, public_filepath=self.keypair_pub_filepath,
                     private_filepath=self.keypair_priv_filepath))
             self.keypair_creator.create()
+
+            sec_grp_name = self.guid + '-sec-grp'
+            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                                              protocol=Protocol.icmp)
+            rule2 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                                              protocol=Protocol.tcp, port_range_min=22, port_range_max=22)
+            self.sec_grp_creator = OpenStackSecurityGroup(
+                self.os_creds,
+                SecurityGroupSettings(name=sec_grp_name, rule_settings=[rule1, rule2]))
+            self.sec_grp_creator.create()
         except Exception as e:
             self.tearDown()
             raise Exception(str(e))
@@ -1097,6 +1117,12 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             except Exception as e:
                 logger.error('Unexpected exception cleaning network with message - ' + str(e))
 
+        if self.sec_grp_creator:
+            try:
+                self.sec_grp_creator.clean()
+            except Exception as e:
+                logger.error('Unexpected exception cleaning security group with message - ' + str(e))
+
         if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
@@ -1140,6 +1166,12 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
 
         # Effectively blocks until VM has been properly activated
         self.assertTrue(self.inst_creator.vm_active(block=True))
+
+        ip = self.inst_creator.get_port_ip(ports_settings[0].name)
+        self.assertTrue(check_dhcp_lease(vm_inst, ip))
+
+        # Add security group to VM
+        self.inst_creator.add_security_group(self.sec_grp_creator.get_security_group())
 
         # Effectively blocks until VM's ssh port has been opened
         self.assertTrue(self.inst_creator.vm_ssh_active(block=True))
@@ -1916,3 +1948,31 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.inst_creator.create()
 
         self.assertTrue(self.inst_creator.vm_active(block=True))
+
+
+def check_dhcp_lease(vm, ip, timeout=160):
+    """
+    Returns true if the expected DHCP lease has been acquired
+    :param vm:
+    :param ip:
+    :return:
+    """
+    found = False
+    start_time = time.time()
+
+    logger.info("Looking for IP %s in the console log" % ip)
+    full_log = ''
+    while timeout > time.time() - start_time:
+        output = vm.get_console_output()
+        full_log = full_log + output
+        if re.search(ip, output):
+            logger.info('DHCP lease obtained logged in console')
+            found = True
+            break
+
+    if not found:
+        logger.error('Full console output -\n' + full_log)
+    else:
+        logger.debug('Full console output -\n' + full_log)
+
+    return found
