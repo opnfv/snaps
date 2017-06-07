@@ -16,6 +16,8 @@
 import os
 import uuid
 from scp import SCPClient
+from snaps.openstack.create_security_group import SecurityGroupRuleSettings, Direction, Protocol, \
+    OpenStackSecurityGroup, SecurityGroupSettings
 
 from snaps.openstack import create_flavor
 from snaps.openstack import create_instance
@@ -23,7 +25,7 @@ from snaps.openstack import create_image
 from snaps.openstack import create_keypairs
 from snaps.openstack import create_network
 from snaps.openstack import create_router
-from snaps.openstack.tests import openstack_tests
+from snaps.openstack.tests import openstack_tests, create_instance_tests
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.provisioning import ansible_utils
 
@@ -58,6 +60,7 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         # Setup members to cleanup just in case they don't get created
         self.inst_creator = None
         self.keypair_creator = None
+        self.sec_grp_creator = None
         self.flavor_creator = None
         self.router_creator = None
         self.network_creator = None
@@ -95,6 +98,17 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
                     name=self.keypair_name, public_filepath=self.keypair_pub_filepath,
                     private_filepath=self.keypair_priv_filepath))
             self.keypair_creator.create()
+
+            # Create Security Group
+            sec_grp_name = guid + '-sec-grp'
+            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                                              protocol=Protocol.icmp)
+            rule2 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                                              protocol=Protocol.tcp, port_range_min=22, port_range_max=22)
+            self.sec_grp_creator = OpenStackSecurityGroup(
+                self.os_creds,
+                SecurityGroupSettings(name=sec_grp_name, rule_settings=[rule1, rule2]))
+            self.sec_grp_creator.create()
 
             # Create instance
             ports_settings = list()
@@ -155,10 +169,16 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         2. Set the following environment variable in your executing shell: ANSIBLE_HOST_KEY_CHECKING=False
         Should this not be performed, the creation of the host ssh key will cause your ansible calls to fail.
         """
-        self.inst_creator.create(block=True)
+        vm = self.inst_creator.create(block=True)
 
         # Block until VM's ssh port has been opened
         self.assertTrue(self.inst_creator.vm_ssh_active(block=True))
+
+        priv_ip = self.inst_creator.get_port_ip(self.port_1_name)
+        self.assertTrue(create_instance_tests.check_dhcp_lease(vm, priv_ip))
+
+        # Apply Security Group
+        self.inst_creator.add_security_group(self.sec_grp_creator.get_security_group())
 
         ssh_client = self.inst_creator.ssh_client()
         self.assertIsNotNone(ssh_client)
@@ -192,10 +212,16 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         2. Set the following environment variable in your executing shell: ANSIBLE_HOST_KEY_CHECKING=False
         Should this not be performed, the creation of the host ssh key will cause your ansible calls to fail.
         """
-        self.inst_creator.create(block=True)
+        vm = self.inst_creator.create(block=True)
 
         # Block until VM's ssh port has been opened
         self.assertTrue(self.inst_creator.vm_ssh_active(block=True))
+
+        priv_ip = self.inst_creator.get_port_ip(self.port_1_name)
+        self.assertTrue(create_instance_tests.check_dhcp_lease(vm, priv_ip))
+
+        # Apply Security Group
+        self.inst_creator.add_security_group(self.sec_grp_creator.get_security_group())
 
         # Need to use the first floating IP as subsequent ones are currently broken with Apex CO
         ip = self.inst_creator.get_floating_ip().ip

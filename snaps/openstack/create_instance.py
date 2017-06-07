@@ -486,7 +486,7 @@ class OpenStackVmInstance:
         if block:
             start = time.time()
         else:
-            start = time.time() - timeout
+            return self.__status(expected_status_code)
 
         while timeout > time.time() - start:
             status = self.__status(expected_status_code)
