@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5aaae553_ff4d6cc5",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 459
+      },
+      "writtenOn": "2017-06-07T07:59:35Z",
+      "side": 1,
+      "message": "I prefer brackets rather than backslash\nfrom snaps.openstack.create_security_group import (SecurityGroupSettings,\n    OpenStackSecurityGroup, SecurityGroupRuleSettings, Direction, Protocol)",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 50
+      },
+      "revId": "9a20a7224ab4b45d541c183fb208e221b1fc1b6c",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
