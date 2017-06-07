@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import os
+import pkg_resources
 import uuid
 from scp import SCPClient
 from snaps.openstack.create_security_group import SecurityGroupRuleSettings, Direction, Protocol, \
@@ -191,7 +192,8 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         user = self.inst_creator.get_image_user()
         priv_key = self.inst_creator.keypair_settings.private_filepath
 
-        retval = self.inst_creator.apply_ansible_playbook('provisioning/tests/playbooks/simple_playbook.yml')
+        relative_pb_path = pkg_resources.resource_filename('snaps.provisioning.tests.playbooks', 'simple_playbook.yml')
+        retval = self.inst_creator.apply_ansible_playbook(relative_pb_path)
         self.assertEqual(0, retval)
 
         ssh = ansible_utils.ssh_client(ip, user, priv_key, self.os_creds.proxy_settings)
@@ -228,8 +230,9 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         user = self.inst_creator.get_image_user()
         priv_key = self.inst_creator.keypair_settings.private_filepath
 
-        retval = self.inst_creator.apply_ansible_playbook('provisioning/tests/playbooks/template_playbook.yml',
-                                                          variables={'name': 'Foo'})
+        relative_pb_path = pkg_resources.resource_filename('snaps.provisioning.tests.playbooks',
+                                                           'template_playbook.yml')
+        retval = self.inst_creator.apply_ansible_playbook(relative_pb_path, variables={'name': 'Foo'})
         self.assertEqual(0, retval)
 
         ssh = ansible_utils.ssh_client(ip, user, priv_key, self.os_creds.proxy_settings)

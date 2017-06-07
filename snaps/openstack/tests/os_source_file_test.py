@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import pkg_resources
 import uuid
 import unittest
 
@@ -22,7 +23,8 @@ from snaps.openstack.create_user import UserSettings
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.utils import deploy_utils, keystone_utils
 
-dev_os_env_file = 'openstack/tests/conf/os_env.yaml'
+
+dev_os_env_file = pkg_resources.resource_filename('snaps.openstack.tests.conf', 'os_env.yaml')
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # To run these tests from an IDE, the CWD must be set to the snaps directory of this project

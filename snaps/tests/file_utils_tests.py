@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import pkg_resources
 import unittest
 import shutil
 import uuid
@@ -95,7 +96,8 @@ class FileUtilsTests(unittest.TestCase):
         Tests that the OS Environment file is correctly parsed
         :return:
         """
-        os_env_dict = file_utils.read_os_env_file('openstack/tests/conf/overcloudrc_test')
+        rc_file_path = pkg_resources.resource_filename('snaps.openstack.tests.conf', 'overcloudrc_test')
+        os_env_dict = file_utils.read_os_env_file(rc_file_path)
         self.assertEqual('test_pw', os_env_dict['OS_PASSWORD'])
         self.assertEqual('http://foo:5000/v2.0/', os_env_dict['OS_AUTH_URL'])
         self.assertEqual('admin', os_env_dict['OS_USERNAME'])

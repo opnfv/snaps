@@ -15,7 +15,6 @@
 import argparse
 import json
 import logging
-import os
 import unittest
 
 from snaps import test_suite_builder, file_utils
@@ -123,9 +122,6 @@ def main(arguments):
     else:
         logger.error('Environment file or external network not defined')
         exit(1)
-
-    # To ensure any files referenced via a relative path will begin from the diectory in which this file resides
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
     i = 0
     while i < int(arguments.num_runs):

@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import pkg_resources
 import time
 
 from heatclient.exc import HTTPBadRequest
@@ -145,12 +146,17 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.env_values = {'image_name': self.image_creator.image_settings.name,
                            'flavor_name': self.flavor_creator.flavor_settings.name}
 
+        self.heat_tmplt_path = pkg_resources.resource_filename('examples.heat', 'test_heat_template.yaml')
+
     def tearDown(self):
         """
         Cleans the stack and downloaded stack file
         """
         if self.stack_creator:
-            self.stack_creator.clean()
+            try:
+                self.stack_creator.clean()
+            except:
+                pass
 
         if self.image_creator:
             try:
@@ -173,7 +179,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         # Create Stack
         # Set the default stack settings, then set any custom parameters sent from the app
         stack_settings = StackSettings(name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
-                                       template_path='../examples/heat/test_heat_template.yaml',
+                                       template_path=self.heat_tmplt_path,
                                        env_values=self.env_values)
         self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds, stack_settings)
         created_stack = self.stack_creator.create()
@@ -193,7 +199,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         # Create Stack
         # Set the default stack settings, then set any custom parameters sent from the app
         template_dict = heat_utils.parse_heat_template_str(
-            file_utils.read_file('../examples/heat/test_heat_template.yaml'))
+            file_utils.read_file(self.heat_tmplt_path))
         stack_settings = StackSettings(name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
                                        template=template_dict,
                                        env_values=self.env_values)
@@ -214,7 +220,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         """
         # Create Stack
         template_dict = heat_utils.parse_heat_template_str(
-            file_utils.read_file('../examples/heat/test_heat_template.yaml'))
+            file_utils.read_file(self.heat_tmplt_path))
         stack_settings = StackSettings(name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
                                        template=template_dict,
                                        env_values=self.env_values)
@@ -253,7 +259,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         """
         # Create Stack
         template_dict = heat_utils.parse_heat_template_str(
-            file_utils.read_file('../examples/heat/test_heat_template.yaml'))
+            file_utils.read_file(self.heat_tmplt_path))
         stack_settings = StackSettings(name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
                                        template=template_dict,
                                        env_values=self.env_values)
@@ -283,6 +289,7 @@ class CreateStackNegativeTests(OSIntegrationTestCase):
 
         self.stack_name = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.stack_creator = None
+        self.heat_tmplt_path = pkg_resources.resource_filename('examples.heat', 'test_heat_template.yaml')
 
     def tearDown(self):
         if self.stack_creator:
@@ -293,7 +300,7 @@ class CreateStackNegativeTests(OSIntegrationTestCase):
         """
         Expect an StackCreationError when the stack file does not exist
         """
-        stack_settings = StackSettings(name=self.stack_name, template_path='../examples/heat/test_heat_template.yaml')
+        stack_settings = StackSettings(name=self.stack_name, template_path=self.heat_tmplt_path)
         self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds, stack_settings)
         with self.assertRaises(HTTPBadRequest):
             self.stack_creator.create()

@@ -14,7 +14,6 @@
 # limitations under the License.
 import argparse
 import logging
-import os
 import unittest
 
 from snaps import test_suite_builder
@@ -48,9 +47,6 @@ def __run_tests(source_filename, ext_net_name, proxy_settings, ssh_proxy_cmd, us
     """
     os_creds = openstack_tests.get_credentials(os_env_file=source_filename, proxy_settings_str=proxy_settings,
                                                ssh_proxy_cmd=ssh_proxy_cmd)
-    # To ensure any files referenced via a relative path will begin from the diectory in which this file resides
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
-
     image_creators = __create_images(os_creds)
 
     meta_list = list()
