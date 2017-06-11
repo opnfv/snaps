@@ -134,7 +134,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
 
         self.image_creator = OpenStackImage(
             self.os_creds, openstack_tests.cirros_image_settings(
-                name=self.__class__.__name__ + '-' + str(self.guid) + '-image'))
+                name=self.__class__.__name__ + '-' + str(self.guid) + '-image', image_metadata=self.image_metadata))
         self.image_creator.create()
 
         # Create Flavor
