@@ -56,9 +56,15 @@ def download(url, dest_path, name=None):
     logger.debug('Downloading file from - ' + url)
     # Override proxy settings to use localhost to download file
     f = None
+
+    if not os.path.isdir(dest_path):
+        try:
+            os.mkdir(dest_path)
+        except:
+            raise
     try:
         with open(dest, 'wb') as f:
-            logger.debug('Saving file to - ' + dest)
+            logger.debug('Saving file to - ' + os.path.abspath(f.name))
             response = __get_url_response(url)
             f.write(response.read())
         return f
