@@ -232,7 +232,7 @@ def delete_floating_ip(nova, floating_ip):
 
 def get_nova_availability_zones(nova):
     """
-    Returns the names of all nova compute servers
+    Returns the names of all nova active compute servers
     :param nova: the Nova client
     :return: a list of compute server names
     """
@@ -241,7 +241,8 @@ def get_nova_availability_zones(nova):
     for zone in zones:
         if zone.zoneName == 'nova':
             for key, host in zone.hosts.items():
-                out.append(zone.zoneName + ':' + key)
+                if host['nova-compute']['available']:
+                    out.append(zone.zoneName + ':' + key)
 
     return out
 
