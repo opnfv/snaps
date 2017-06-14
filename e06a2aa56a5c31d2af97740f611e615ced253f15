@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5aaae553_89651de3",
+        "filename": "requirements.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-06-14T03:19:52Z",
+      "side": 1,
+      "message": "python-novaclient should be either !\u003d8.0.0 or better \u003c8.0.0 as I have had issues with floating IPs when using that version",
+      "revId": "e06a2aa56a5c31d2af97740f611e615ced253f15",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
