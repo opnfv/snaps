@@ -87,7 +87,8 @@ class HeatUtilsCreateStackTests(OSComponentTestCase):
 
         env_values = {'image_name': self.image_creator.image_settings.name,
                       'flavor_name': self.flavor_creator.flavor_settings.name}
-        heat_tmplt_path = pkg_resources.resource_filename('examples.heat', 'test_heat_template.yaml')
+        heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'test_heat_template.yaml')
         self.stack_settings = StackSettings(name=stack_name, template_path=heat_tmplt_path, env_values=env_values)
         self.stack = None
         self.heat_client = heat_utils.heat_client(self.os_creds)

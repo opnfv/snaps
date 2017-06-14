@@ -146,7 +146,8 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.env_values = {'image_name': self.image_creator.image_settings.name,
                            'flavor_name': self.flavor_creator.flavor_settings.name}
 
-        self.heat_tmplt_path = pkg_resources.resource_filename('examples.heat', 'test_heat_template.yaml')
+        self.heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'test_heat_template.yaml')
 
     def tearDown(self):
         """
@@ -289,7 +290,8 @@ class CreateStackNegativeTests(OSIntegrationTestCase):
 
         self.stack_name = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.stack_creator = None
-        self.heat_tmplt_path = pkg_resources.resource_filename('examples.heat', 'test_heat_template.yaml')
+        self.heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'test_heat_template.yaml')
 
     def tearDown(self):
         if self.stack_creator:
