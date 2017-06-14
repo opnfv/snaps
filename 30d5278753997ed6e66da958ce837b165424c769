@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5aaae553_e9605137",
+        "filename": "requirements.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-06-14T09:52:46Z",
+      "side": 1,
+      "message": "Must be \u003c8.0.0 now. 9.0.0 just got installed and I am seeing the same problem",
+      "revId": "30d5278753997ed6e66da958ce837b165424c769",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
