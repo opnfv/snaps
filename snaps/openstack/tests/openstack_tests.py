@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import pkg_resources
 import re
 
 from snaps import file_utils
@@ -112,7 +113,7 @@ def get_credentials(os_env_file=None, proxy_settings_str=None, ssh_proxy_cmd=Non
 
 
 def create_image_settings(image_name, image_user, image_format, metadata, disk_url=None, default_url=None,
-                          kernel_settings=None, ramdisk_settings=None, public=False):
+                          kernel_settings=None, ramdisk_settings=None, public=False, nic_config_pb_loc=None):
     """
     Returns the image settings object
     :param image_name: the name of the image
@@ -124,6 +125,7 @@ def create_image_settings(image_name, image_user, image_format, metadata, disk_u
     :param kernel_settings: override to the kernel settings from the image_metadata
     :param ramdisk_settings: override to the ramdisk settings from the image_metadata
     :param public: True denotes image can be used by other projects where False indicates the converse (default: False)
+    :param nic_config_pb_loc: The location of the playbook used for configuring multiple NICs
     :return:
     """
 
@@ -161,7 +163,8 @@ def create_image_settings(image_name, image_user, image_format, metadata, disk_u
 
     return ImageSettings(name=image_name, image_user=image_user, img_format=image_format, image_file=disk_file,
                          url=disk_url, extra_properties=extra_properties, kernel_image_settings=kernel_image_settings,
-                         ramdisk_image_settings=ramdisk_image_settings, public=public)
+                         ramdisk_image_settings=ramdisk_image_settings, public=public,
+                         nic_config_pb_loc=nic_config_pb_loc)
 
 
 def cirros_image_settings(name=None, url=None, image_metadata=None, kernel_settings=None, ramdisk_settings=None,
@@ -208,10 +211,12 @@ def centos_image_settings(name, url=None, image_metadata=None, kernel_settings=N
     else:
         metadata = image_metadata
 
+    pb_path = pkg_resources.resource_filename('snaps.provisioning.ansible.centos-network-setup.playbooks',
+                                              'configure_host.yml')
     return create_image_settings(
         image_name=name, image_user=CENTOS_USER, image_format=DEFAULT_IMAGE_FORMAT, metadata=metadata, disk_url=url,
         default_url=CENTOS_DEFAULT_IMAGE_URL,
-        kernel_settings=kernel_settings, ramdisk_settings=ramdisk_settings, public=public)
+        kernel_settings=kernel_settings, ramdisk_settings=ramdisk_settings, public=public, nic_config_pb_loc=pb_path)
 
 
 def ubuntu_image_settings(name, url=None, image_metadata=None, kernel_settings=None, ramdisk_settings=None,
@@ -231,10 +236,12 @@ def ubuntu_image_settings(name, url=None, image_metadata=None, kernel_settings=N
     else:
         metadata = image_metadata
 
+    pb_path = pkg_resources.resource_filename('snaps.provisioning.ansible.ubuntu-network-setup.playbooks',
+                                              'configure_host.yml')
     return create_image_settings(
         image_name=name, image_user=UBUNTU_USER, image_format=DEFAULT_IMAGE_FORMAT, metadata=metadata, disk_url=url,
         default_url=UBUNTU_DEFAULT_IMAGE_URL,
-        kernel_settings=kernel_settings, ramdisk_settings=ramdisk_settings, public=public)
+        kernel_settings=kernel_settings, ramdisk_settings=ramdisk_settings, public=public, nic_config_pb_loc=pb_path)
 
 
 def get_priv_net_config(net_name, subnet_name, router_name=None, cidr='10.55.0.0/24', external_net=None):
