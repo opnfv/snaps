@@ -17,6 +17,8 @@ from keystoneclient.client import Client
 from keystoneauth1.identity import v3, v2
 from keystoneauth1 import session
 import logging
+import os
+from oslo_utils import strutils
 
 
 logger = logging.getLogger('keystone_utils')
@@ -59,7 +61,11 @@ def keystone_session(os_creds):
     if os_creds.proxy_settings:
         req_session = requests.Session()
         req_session.proxies = {'http': os_creds.proxy_settings.host + ':' + os_creds.proxy_settings.port}
-    return session.Session(auth=auth, session=req_session)
+    https_cacert = os.getenv('OS_CACERT', '')
+    https_insecure = strutils.bool_from_string(
+        os.environ.get("OS_INSECURE"))
+    return session.Session(auth=auth, session=req_session,
+                           verify=(https_cacert or not https_insecure))
 
 
 def keystone_client(os_creds):
