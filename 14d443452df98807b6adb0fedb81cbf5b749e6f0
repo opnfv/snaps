@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5aaae553_a3927255",
+        "filename": "snaps/openstack/utils/keystone_utils.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-06-20T13:27:29Z",
+      "side": 1,
+      "message": "Please add these settings to the OSCreds class. SNAPS shall not leverage any shell/environment variables.",
+      "revId": "14d443452df98807b6adb0fedb81cbf5b749e6f0",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
