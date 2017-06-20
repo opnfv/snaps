@@ -12,12 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import requests
+import logging
+import os
+
 from keystoneclient.client import Client
 from keystoneauth1.identity import v3, v2
 from keystoneauth1 import session
-import logging
-
+import requests
 
 logger = logging.getLogger('keystone_utils')
 
@@ -59,7 +60,10 @@ def keystone_session(os_creds):
     if os_creds.proxy_settings:
         req_session = requests.Session()
         req_session.proxies = {'http': os_creds.proxy_settings.host + ':' + os_creds.proxy_settings.port}
-    return session.Session(auth=auth, session=req_session)
+    https_cacert = os.getenv('OS_CACERT', '')
+    https_insecure = os.getenv("OS_INSECURE") in ['True', 'true'] or False
+    return session.Session(auth=auth, session=req_session,
+                           verify=(https_cacert or not https_insecure))
 
 
 def keystone_client(os_creds):
