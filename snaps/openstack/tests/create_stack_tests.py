@@ -12,14 +12,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pkg_resources
 import time
 
+import pkg_resources
 from heatclient.exc import HTTPBadRequest
 from snaps import file_utils
-
 from snaps.openstack.create_flavor import OpenStackFlavor, FlavorSettings
-
 from snaps.openstack.create_image import OpenStackImage
 
 try:
@@ -46,13 +44,14 @@ class StackSettingsUnitTests(unittest.TestCase):
     """
     Tests the construction of the StackSettings class
     """
+
     def test_no_params(self):
         with self.assertRaises(StackSettingsError):
             StackSettings()
 
     def test_empty_config(self):
         with self.assertRaises(StackSettingsError):
-            StackSettings(config=dict())
+            StackSettings(**dict())
 
     def test_name_only(self):
         with self.assertRaises(StackSettingsError):
@@ -60,23 +59,25 @@ class StackSettingsUnitTests(unittest.TestCase):
 
     def test_config_with_name_only(self):
         with self.assertRaises(StackSettingsError):
-            StackSettings(config={'name': 'foo'})
+            StackSettings(**{'name': 'foo'})
 
     def test_config_minimum_template(self):
-        settings = StackSettings(config={'name': 'stack', 'template': 'foo'})
+        settings = StackSettings(**{'name': 'stack', 'template': 'foo'})
         self.assertEqual('stack', settings.name)
         self.assertEqual('foo', settings.template)
         self.assertIsNone(settings.template_path)
         self.assertIsNone(settings.env_values)
-        self.assertEqual(create_stack.STACK_COMPLETE_TIMEOUT, settings.stack_create_timeout)
+        self.assertEqual(create_stack.STACK_COMPLETE_TIMEOUT,
+                         settings.stack_create_timeout)
 
     def test_config_minimum_template_path(self):
-        settings = StackSettings(config={'name': 'stack', 'template_path': 'foo'})
+        settings = StackSettings(**{'name': 'stack', 'template_path': 'foo'})
         self.assertEqual('stack', settings.name)
         self.assertIsNone(settings.template)
         self.assertEqual('foo', settings.template_path)
         self.assertIsNone(settings.env_values)
-        self.assertEqual(create_stack.STACK_COMPLETE_TIMEOUT, settings.stack_create_timeout)
+        self.assertEqual(create_stack.STACK_COMPLETE_TIMEOUT,
+                         settings.stack_create_timeout)
 
     def test_minimum_template(self):
         settings = StackSettings(name='stack', template='foo')
@@ -84,7 +85,8 @@ class StackSettingsUnitTests(unittest.TestCase):
         self.assertEqual('foo', settings.template)
         self.assertIsNone(settings.template_path)
         self.assertIsNone(settings.env_values)
-        self.assertEqual(create_stack.STACK_COMPLETE_TIMEOUT, settings.stack_create_timeout)
+        self.assertEqual(create_stack.STACK_COMPLETE_TIMEOUT,
+                         settings.stack_create_timeout)
 
     def test_minimum_template_path(self):
         settings = StackSettings(name='stack', template_path='foo')
@@ -92,11 +94,13 @@ class StackSettingsUnitTests(unittest.TestCase):
         self.assertEqual('foo', settings.template_path)
         self.assertIsNone(settings.template)
         self.assertIsNone(settings.env_values)
-        self.assertEqual(create_stack.STACK_COMPLETE_TIMEOUT, settings.stack_create_timeout)
+        self.assertEqual(create_stack.STACK_COMPLETE_TIMEOUT,
+                         settings.stack_create_timeout)
 
     def test_all(self):
         env_values = {'foo': 'bar'}
-        settings = StackSettings(name='stack', template='bar', template_path='foo', env_values=env_values,
+        settings = StackSettings(name='stack', template='bar',
+                                 template_path='foo', env_values=env_values,
                                  stack_create_timeout=999)
         self.assertEqual('stack', settings.name)
         self.assertEqual('bar', settings.template)
@@ -107,8 +111,8 @@ class StackSettingsUnitTests(unittest.TestCase):
     def test_config_all(self):
         env_values = {'foo': 'bar'}
         settings = StackSettings(
-            config={'name': 'stack', 'template': 'bar', 'template_path': 'foo',
-                    'env_values': env_values, 'stack_create_timeout': 999})
+            **{'name': 'stack', 'template': 'bar', 'template_path': 'foo',
+               'env_values': env_values, 'stack_create_timeout': 999})
         self.assertEqual('stack', settings.name)
         self.assertEqual('bar', settings.template)
         self.assertEqual('foo', settings.template_path)
@@ -123,8 +127,8 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
 
     def setUp(self):
         """
-        Instantiates the CreateStack object that is responsible for downloading and creating an OS stack file
-        within OpenStack
+        Instantiates the CreateStack object that is responsible for downloading
+        and creating an OS stack file within OpenStack
         """
         super(self.__class__, self).__start__()
 
@@ -134,17 +138,20 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
 
         self.image_creator = OpenStackImage(
             self.os_creds, openstack_tests.cirros_image_settings(
-                name=self.__class__.__name__ + '-' + str(self.guid) + '-image', image_metadata=self.image_metadata))
+                name=self.__class__.__name__ + '-' + str(self.guid) + '-image',
+                image_metadata=self.image_metadata))
         self.image_creator.create()
 
         # Create Flavor
         self.flavor_creator = OpenStackFlavor(
             self.admin_os_creds,
-            FlavorSettings(name=self.guid + '-flavor-name', ram=128, disk=10, vcpus=1))
+            FlavorSettings(name=self.guid + '-flavor-name', ram=128, disk=10,
+                           vcpus=1))
         self.flavor_creator.create()
 
-        self.env_values = {'image_name': self.image_creator.image_settings.name,
-                           'flavor_name': self.flavor_creator.flavor_settings.name}
+        self.env_values = {
+            'image_name': self.image_creator.image_settings.name,
+            'flavor_name': self.flavor_creator.flavor_settings.name}
 
         self.heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'test_heat_template.yaml')
@@ -178,15 +185,19 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack stack from Heat template file.
         """
         # Create Stack
-        # Set the default stack settings, then set any custom parameters sent from the app
-        stack_settings = StackSettings(name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
-                                       template_path=self.heat_tmplt_path,
-                                       env_values=self.env_values)
-        self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds, stack_settings)
+        # Set the default stack settings, then set any custom parameters sent
+        # from the app
+        stack_settings = StackSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template_path=self.heat_tmplt_path,
+            env_values=self.env_values)
+        self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds,
+                                                             stack_settings)
         created_stack = self.stack_creator.create()
         self.assertIsNotNone(created_stack)
 
-        retrieved_stack = heat_utils.get_stack_by_id(self.heat_cli, created_stack.id)
+        retrieved_stack = heat_utils.get_stack_by_id(self.heat_cli,
+                                                     created_stack.id)
         self.assertIsNotNone(retrieved_stack)
         self.assertEqual(created_stack.name, retrieved_stack.name)
         self.assertEqual(created_stack.id, retrieved_stack.id)
@@ -198,17 +209,21 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack stack from a heat dict() object.
         """
         # Create Stack
-        # Set the default stack settings, then set any custom parameters sent from the app
+        # Set the default stack settings, then set any custom parameters sent
+        # from the app
         template_dict = heat_utils.parse_heat_template_str(
             file_utils.read_file(self.heat_tmplt_path))
-        stack_settings = StackSettings(name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
-                                       template=template_dict,
-                                       env_values=self.env_values)
-        self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds, stack_settings)
+        stack_settings = StackSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template=template_dict,
+            env_values=self.env_values)
+        self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds,
+                                                             stack_settings)
         created_stack = self.stack_creator.create()
         self.assertIsNotNone(created_stack)
 
-        retrieved_stack = heat_utils.get_stack_by_id(self.heat_cli, created_stack.id)
+        retrieved_stack = heat_utils.get_stack_by_id(self.heat_cli,
+                                                     created_stack.id)
         self.assertIsNotNone(retrieved_stack)
         self.assertEqual(created_stack.name, retrieved_stack.name)
         self.assertEqual(created_stack.id, retrieved_stack.id)
@@ -217,25 +232,30 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
 
     def test_create_delete_stack(self):
         """
-        Tests the creation then deletion of an OpenStack stack to ensure clean() does not raise an Exception.
+        Tests the creation then deletion of an OpenStack stack to ensure
+        clean() does not raise an Exception.
         """
         # Create Stack
         template_dict = heat_utils.parse_heat_template_str(
             file_utils.read_file(self.heat_tmplt_path))
-        stack_settings = StackSettings(name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
-                                       template=template_dict,
-                                       env_values=self.env_values)
-        self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds, stack_settings)
+        stack_settings = StackSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template=template_dict,
+            env_values=self.env_values)
+        self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds,
+                                                             stack_settings)
         created_stack = self.stack_creator.create()
         self.assertIsNotNone(created_stack)
 
-        retrieved_stack = heat_utils.get_stack_by_id(self.heat_cli, created_stack.id)
+        retrieved_stack = heat_utils.get_stack_by_id(self.heat_cli,
+                                                     created_stack.id)
         self.assertIsNotNone(retrieved_stack)
         self.assertEqual(created_stack.name, retrieved_stack.name)
         self.assertEqual(created_stack.id, retrieved_stack.id)
         self.assertIsNotNone(self.stack_creator.get_outputs())
         self.assertEquals(0, len(self.stack_creator.get_outputs()))
-        self.assertEqual(create_stack.STATUS_CREATE_COMPLETE, self.stack_creator.get_status())
+        self.assertEqual(create_stack.STATUS_CREATE_COMPLETE,
+                         self.stack_creator.get_status())
 
         # Delete Stack manually
         heat_utils.delete_stack(self.heat_cli, created_stack)
@@ -243,14 +263,16 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         end_time = time.time() + 90
         deleted = False
         while time.time() < end_time:
-            status = heat_utils.get_stack_status(self.heat_cli, retrieved_stack.id)
+            status = heat_utils.get_stack_status(self.heat_cli,
+                                                 retrieved_stack.id)
             if status == create_stack.STATUS_DELETE_COMPLETE:
                 deleted = True
                 break
 
         self.assertTrue(deleted)
 
-        # Must not throw an exception when attempting to cleanup non-existent stack
+        # Must not throw an exception when attempting to cleanup non-existent
+        # stack
         self.stack_creator.clean()
         self.assertIsNone(self.stack_creator.get_stack())
 
@@ -261,13 +283,16 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         # Create Stack
         template_dict = heat_utils.parse_heat_template_str(
             file_utils.read_file(self.heat_tmplt_path))
-        stack_settings = StackSettings(name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
-                                       template=template_dict,
-                                       env_values=self.env_values)
-        self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds, stack_settings)
+        stack_settings = StackSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template=template_dict,
+            env_values=self.env_values)
+        self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds,
+                                                             stack_settings)
         created_stack1 = self.stack_creator.create()
 
-        retrieved_stack = heat_utils.get_stack_by_id(self.heat_cli, created_stack1.id)
+        retrieved_stack = heat_utils.get_stack_by_id(self.heat_cli,
+                                                     created_stack1.id)
         self.assertIsNotNone(retrieved_stack)
         self.assertEqual(created_stack1.name, retrieved_stack.name)
         self.assertEqual(created_stack1.id, retrieved_stack.id)
@@ -275,7 +300,8 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertEqual(0, len(self.stack_creator.get_outputs()))
 
         # Should be retrieving the instance data
-        stack_creator2 = create_stack.OpenStackHeatStack(self.os_creds, stack_settings)
+        stack_creator2 = create_stack.OpenStackHeatStack(self.os_creds,
+                                                         stack_settings)
         stack2 = stack_creator2.create()
         self.assertEqual(created_stack1.id, stack2.id)
 
@@ -302,8 +328,10 @@ class CreateStackNegativeTests(OSIntegrationTestCase):
         """
         Expect an StackCreationError when the stack file does not exist
         """
-        stack_settings = StackSettings(name=self.stack_name, template_path=self.heat_tmplt_path)
-        self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds, stack_settings)
+        stack_settings = StackSettings(name=self.stack_name,
+                                       template_path=self.heat_tmplt_path)
+        self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds,
+                                                             stack_settings)
         with self.assertRaises(HTTPBadRequest):
             self.stack_creator.create()
 
@@ -311,7 +339,9 @@ class CreateStackNegativeTests(OSIntegrationTestCase):
         """
         Expect an StackCreationError when the stack file does not exist
         """
-        stack_settings = StackSettings(name=self.stack_name, template_path='foo')
-        self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds, stack_settings)
+        stack_settings = StackSettings(name=self.stack_name,
+                                       template_path='foo')
+        self.stack_creator = create_stack.OpenStackHeatStack(self.os_creds,
+                                                             stack_settings)
         with self.assertRaises(IOError):
             self.stack_creator.create()
