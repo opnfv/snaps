@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+
 import os
-
 from novaclient.exceptions import NotFound
-
 from snaps.openstack.utils import nova_utils
 
 __author__ = 'spisarski'
@@ -39,6 +38,7 @@ class OpenStackKeypair:
         self.__os_creds = os_creds
         self.keypair_settings = keypair_settings
         self.__nova = nova_utils.nova_client(os_creds)
+        self.__delete_keys_on_clean = True
 
         # Attributes instantiated on create()
         self.__keypair = None
@@ -46,27 +46,35 @@ class OpenStackKeypair:
     def create(self, cleanup=False):
         """
         Responsible for creating the keypair object.
-        :param cleanup: Denotes whether or not this is being called for cleanup or not
+        :param cleanup: Denotes whether or not this is being called for cleanup
+                        or not
         """
         self.__nova = nova_utils.nova_client(self.__os_creds)
 
         logger.info('Creating keypair %s...' % self.keypair_settings.name)
 
-        self.__keypair = nova_utils.get_keypair_by_name(self.__nova, self.keypair_settings.name)
+        self.__keypair = nova_utils.get_keypair_by_name(
+            self.__nova, self.keypair_settings.name)
 
         if not self.__keypair and not cleanup:
-            if self.keypair_settings.public_filepath and os.path.isfile(self.keypair_settings.public_filepath):
+            if self.keypair_settings.public_filepath and os.path.isfile(
+                    self.keypair_settings.public_filepath):
                 logger.info("Uploading existing keypair")
-                self.__keypair = nova_utils.upload_keypair_file(self.__nova, self.keypair_settings.name,
-                                                                self.keypair_settings.public_filepath)
+                self.__keypair = nova_utils.upload_keypair_file(
+                    self.__nova, self.keypair_settings.name,
+                    self.keypair_settings.public_filepath)
+                self.__delete_keys_on_clean = False
             else:
                 logger.info("Creating new keypair")
                 # TODO - Make this value configurable
                 keys = nova_utils.create_keys(1024)
-                self.__keypair = nova_utils.upload_keypair(self.__nova, self.keypair_settings.name,
-                                                           nova_utils.public_key_openssh(keys))
-                nova_utils.save_keys_to_files(keys, self.keypair_settings.public_filepath,
-                                              self.keypair_settings.private_filepath)
+                self.__keypair = nova_utils.upload_keypair(
+                    self.__nova, self.keypair_settings.name,
+                    nova_utils.public_key_openssh(keys))
+                nova_utils.save_keys_to_files(
+                    keys, self.keypair_settings.public_filepath,
+                    self.keypair_settings.private_filepath)
+                self.__delete_keys_on_clean = True
 
         return self.__keypair
 
@@ -81,12 +89,13 @@ class OpenStackKeypair:
                 pass
             self.__keypair = None
 
-        if self.keypair_settings.public_filepath:
-            os.chmod(self.keypair_settings.public_filepath, 0o777)
-            os.remove(self.keypair_settings.public_filepath)
-        if self.keypair_settings.private_filepath:
-            os.chmod(self.keypair_settings.private_filepath, 0o777)
-            os.remove(self.keypair_settings.private_filepath)
+        if self.__delete_keys_on_clean:
+            if self.keypair_settings.public_filepath:
+                os.chmod(self.keypair_settings.public_filepath, 0o777)
+                os.remove(self.keypair_settings.public_filepath)
+            if self.keypair_settings.private_filepath:
+                os.chmod(self.keypair_settings.private_filepath, 0o777)
+                os.remove(self.keypair_settings.private_filepath)
 
     def get_keypair(self):
         """
@@ -101,25 +110,20 @@ class KeypairSettings:
     Class representing a keypair configuration
     """
 
-    def __init__(self, config=None, name=None, public_filepath=None, private_filepath=None):
+    def __init__(self, **kwargs):
         """
         Constructor - all parameters are optional
-        :param config: Should be a dict object containing the configuration settings using the attribute names below
-                       as each member's the key and overrides any of the other parameters.
         :param name: The keypair name.
-        :param public_filepath: The path to/from the filesystem where the public key file is or will be stored
-        :param private_filepath: The path where the generated private key file will be stored
+        :param public_filepath: The path to/from the filesystem where the
+                                public key file is or will be stored
+        :param private_filepath: The path where the generated private key file
+                                 will be stored
         :return:
         """
 
-        if config:
-            self.name = config.get('name')
-            self.public_filepath = config.get('public_filepath')
-            self.private_filepath = config.get('private_filepath')
-        else:
-            self.name = name
-            self.public_filepath = public_filepath
-            self.private_filepath = private_filepath
+        self.name = kwargs.get('name')
+        self.public_filepath = kwargs.get('public_filepath')
+        self.private_filepath = kwargs.get('private_filepath')
 
         if not self.name:
-            raise Exception('The attributes name, public_filepath, and private_filepath are required')
+            raise Exception('Name is a required attribute')
