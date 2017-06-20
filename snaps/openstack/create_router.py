@@ -15,7 +15,6 @@
 import logging
 
 from neutronclient.common.exceptions import NotFound
-
 from snaps.openstack.create_network import PortSettings
 from snaps.openstack.utils import neutron_utils, keystone_utils
 
@@ -33,8 +32,9 @@ class OpenStackRouter:
         """
         Constructor - all parameters are required
         :param os_creds: The credentials to connect with OpenStack
-        :param router_settings: The settings used to create a router object (must be an instance of the
-                                RouterSettings class)
+        :param router_settings: The settings used to create a router object
+                                (must be an instance of the RouterSettings
+                                class)
         """
         self.__os_creds = os_creds
 
@@ -49,7 +49,8 @@ class OpenStackRouter:
         self.__internal_subnets = list()
         self.__internal_router_interface = None
 
-        # Dict where the port object is the key and any newly created router interfaces are the value
+        # Dict where the port object is the key and any newly created router
+        # interfaces are the value
         self.__ports = list()
 
     def create(self, cleanup=False):
@@ -60,18 +61,22 @@ class OpenStackRouter:
         """
         self.__neutron = neutron_utils.neutron_client(self.__os_creds)
 
-        logger.debug('Creating Router with name - ' + self.router_settings.name)
+        logger.debug(
+            'Creating Router with name - ' + self.router_settings.name)
         existing = False
-        router_inst = neutron_utils.get_router_by_name(self.__neutron, self.router_settings.name)
+        router_inst = neutron_utils.get_router_by_name(
+            self.__neutron, self.router_settings.name)
         if router_inst:
             self.__router = router_inst
             existing = True
         else:
             if not cleanup:
-                self.__router = neutron_utils.create_router(self.__neutron, self.__os_creds, self.router_settings)
+                self.__router = neutron_utils.create_router(
+                    self.__neutron, self.__os_creds, self.router_settings)
 
         for internal_subnet_name in self.router_settings.internal_subnets:
-            internal_subnet = neutron_utils.get_subnet_by_name(self.__neutron, internal_subnet_name)
+            internal_subnet = neutron_utils.get_subnet_by_name(
+                self.__neutron, internal_subnet_name)
             if internal_subnet:
                 self.__internal_subnets.append(internal_subnet)
                 if internal_subnet and not cleanup and not existing:
@@ -79,22 +84,32 @@ class OpenStackRouter:
                     self.__internal_router_interface = neutron_utils.add_interface_router(
                         self.__neutron, self.__router, subnet=internal_subnet)
             else:
-                raise Exception('Subnet not found with name ' + internal_subnet_name)
+                raise Exception(
+                    'Subnet not found with name ' + internal_subnet_name)
 
         for port_setting in self.router_settings.port_settings:
-            port = neutron_utils.get_port_by_name(self.__neutron, port_setting.name)
-            logger.info('Retrieved port ' + port_setting.name + ' for router - ' + self.router_settings.name)
+            port = neutron_utils.get_port_by_name(self.__neutron,
+                                                  port_setting.name)
+            logger.info(
+                'Retrieved port %s for router - %s', port_setting.name,
+                self.router_settings.name)
             if port:
                 self.__ports.append(port)
 
             if not port and not cleanup and not existing:
-                port = neutron_utils.create_port(self.__neutron, self.__os_creds, port_setting)
+                port = neutron_utils.create_port(self.__neutron,
+                                                 self.__os_creds, port_setting)
                 if port:
-                    logger.info('Created port ' + port_setting.name + ' for router - ' + self.router_settings.name)
+                    logger.info(
+                        'Created port %s for router - %s', port_setting.name,
+                        self.router_settings.name)
                     self.__ports.append(port)
-                    neutron_utils.add_interface_router(self.__neutron, self.__router, port=port)
+                    neutron_utils.add_interface_router(self.__neutron,
+                                                       self.__router,
+                                                       port=port)
                 else:
-                    raise Exception('Error creating port with name - ' + port_setting.name)
+                    raise Exception(
+                        'Error creating port with name - ' + port_setting.name)
 
         return self.__router
 
@@ -103,19 +118,24 @@ class OpenStackRouter:
         Removes and deletes all items created in reverse order.
         """
         for port in self.__ports:
-            logger.info('Removing router interface from router ' + self.router_settings.name +
-                        ' and port ' + port['port']['name'])
+            logger.info(
+                'Removing router interface from router %s and port %s',
+                self.router_settings.name, port['port']['name'])
             try:
-                neutron_utils.remove_interface_router(self.__neutron, self.__router, port=port)
+                neutron_utils.remove_interface_router(self.__neutron,
+                                                      self.__router, port=port)
             except NotFound:
                 pass
         self.__ports = list()
 
         for internal_subnet in self.__internal_subnets:
-            logger.info('Removing router interface from router ' + self.router_settings.name +
-                        ' and subnet ' + internal_subnet['subnet']['name'])
+            logger.info(
+                'Removing router interface from router %s and subnet %s',
+                self.router_settings.name, internal_subnet['subnet']['name'])
             try:
-                neutron_utils.remove_interface_router(self.__neutron, self.__router, subnet=internal_subnet)
+                neutron_utils.remove_interface_router(self.__neutron,
+                                                      self.__router,
+                                                      subnet=internal_subnet)
             except NotFound:
                 pass
         self.__internal_subnets = list()
@@ -148,51 +168,43 @@ class RouterSettings:
     Class representing a router configuration
     """
 
-    def __init__(self, config=None, name=None, project_name=None, external_gateway=None,
-                 admin_state_up=True, external_fixed_ips=None, internal_subnets=list(),
-                 port_settings=list()):
+    def __init__(self, **kwargs):
         """
         Constructor - all parameters are optional
-        :param config: Should be a dict object containing the configuration settings using the attribute names below
-                       as each member's the key and overrides any of the other parameters.
         :param name: The router name.
-        :param project_name: The name of the project who owns the network. Only administrative users can specify a
-                             project ID other than their own. You cannot change this value through authorization
-                             policies.
+        :param project_name: The name of the project who owns the network. Only
+                             administrative users can specify a project ID
+                             other than their own. You cannot change this value
+                             through authorization policies.
         :param external_gateway: Name of the external network to which to route
-        :param admin_state_up: The administrative status of the router. True = up / False = down (default True)
-        :param external_fixed_ips: Dictionary containing the IP address parameters.
-        :param internal_subnets: List of subnet names to which to connect this router for Floating IP purposes
+        :param admin_state_up: The administrative status of the router.
+                               True = up / False = down (default True)
+        :param external_fixed_ips: Dictionary containing the IP address
+                                   parameters.
+        :param internal_subnets: List of subnet names to which to connect this
+                                 router for Floating IP purposes
         :param port_settings: List of PortSettings objects
         :return:
         """
-        if config:
-            self.name = config.get('name')
-            self.project_name = config.get('project_name')
-            self.external_gateway = config.get('external_gateway')
+        self.name = kwargs.get('name')
+        self.project_name = kwargs.get('project_name')
+        self.external_gateway = kwargs.get('external_gateway')
 
-            self.admin_state_up = config.get('admin_state_up')
-            self.enable_snat = config.get('enable_snat')
-            self.external_fixed_ips = config.get('external_fixed_ips')
-            if config.get('internal_subnets'):
-                self.internal_subnets = config['internal_subnets']
-            else:
-                self.internal_subnets = internal_subnets
-
-            self.port_settings = list()
-            if config.get('interfaces'):
-                interfaces = config['interfaces']
-                for interface in interfaces:
-                    if interface.get('port'):
-                        self.port_settings.append(PortSettings(config=interface['port']))
+        self.admin_state_up = kwargs.get('admin_state_up')
+        self.enable_snat = kwargs.get('enable_snat')
+        self.external_fixed_ips = kwargs.get('external_fixed_ips')
+        if kwargs.get('internal_subnets'):
+            self.internal_subnets = kwargs['internal_subnets']
         else:
-            self.name = name
-            self.project_name = project_name
-            self.external_gateway = external_gateway
-            self.admin_state_up = admin_state_up
-            self.external_fixed_ips = external_fixed_ips
-            self.internal_subnets = internal_subnets
-            self.port_settings = port_settings
+            self.internal_subnets = list()
+
+        self.port_settings = list()
+        if kwargs.get('interfaces'):
+            interfaces = kwargs['interfaces']
+            for interface in interfaces:
+                if interface.get('port'):
+                    self.port_settings.append(
+                        PortSettings(**interface['port']))
 
         if not self.name:
             raise Exception('Name is required')
@@ -200,10 +212,12 @@ class RouterSettings:
     def dict_for_neutron(self, neutron, os_creds):
         """
         Returns a dictionary object representing this object.
-        This is meant to be converted into JSON designed for use by the Neutron API
+        This is meant to be converted into JSON designed for use by the Neutron
+        API
 
         TODO - expand automated testing to exercise all parameters
-        :param neutron: The neutron client to retrieve external network information if necessary
+        :param neutron: The neutron client to retrieve external network
+                        information if necessary
         :param os_creds: The OpenStack credentials
         :return: the dictionary object
         """
@@ -223,16 +237,21 @@ class RouterSettings:
             if project_id:
                 out['project_id'] = project_id
             else:
-                raise Exception('Could not find project ID for project named - ' + self.project_name)
+                raise Exception(
+                    'Could not find project ID for project named - ' +
+                    self.project_name)
         if self.admin_state_up is not None:
             out['admin_state_up'] = self.admin_state_up
         if self.external_gateway:
-            ext_net = neutron_utils.get_network(neutron, self.external_gateway, project_id)
+            ext_net = neutron_utils.get_network(neutron, self.external_gateway,
+                                                project_id)
             if ext_net:
                 ext_gw['network_id'] = ext_net['network']['id']
                 out['external_gateway_info'] = ext_gw
             else:
-                raise Exception('Could not find the external network named - ' + self.external_gateway)
+                raise Exception(
+                    'Could not find the external network named - ' +
+                    self.external_gateway)
 
         # TODO: Enable SNAT option for Router
         # TODO: Add external_fixed_ips Tests
