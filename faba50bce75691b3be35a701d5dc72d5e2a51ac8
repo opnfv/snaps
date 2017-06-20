@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5aaae553_b89f0103",
+        "filename": "snaps/openstack/utils/keystone_utils.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 5437
+      },
+      "writtenOn": "2017-06-20T07:10:22Z",
+      "side": 1,
+      "message": "Can we import in this order?\n\n1.standard library imports\n2.related third party imports\n3.local application/library specific imports\n\nand put a blank line between each group of imports.\nMaybe it is a little more standard.\n\nFor example:\n\nimport logging\nimport os\n\nimport requests\nfrom keystoneclient.client import Client\nfrom keystoneauth1.identity import v3, v2\nfrom keystoneauth1 import session\nfrom oslo_utils import strutils",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 31
+      },
+      "revId": "faba50bce75691b3be35a701d5dc72d5e2a51ac8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
