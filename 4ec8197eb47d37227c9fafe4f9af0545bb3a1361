@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5aaae553_38e551a8",
+        "filename": "snaps/openstack/utils/keystone_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-06-20T06:53:31Z",
+      "side": 1,
+      "message": "oslo.utils has been installed as it is an dependency for python-novaclient",
+      "range": {
+        "startLine": 21,
+        "startChar": 5,
+        "endLine": 21,
+        "endChar": 15
+      },
+      "revId": "4ec8197eb47d37227c9fafe4f9af0545bb3a1361",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
