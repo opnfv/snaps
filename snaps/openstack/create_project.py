@@ -15,7 +15,6 @@
 import logging
 
 from keystoneclient.exceptions import NotFound
-
 from snaps.openstack.utils import keystone_utils
 
 __author__ = 'spisarski'
@@ -44,16 +43,18 @@ class OpenStackProject:
     def create(self, cleanup=False):
         """
         Creates the image in OpenStack if it does not already exist
-        :param cleanup: Denotes whether or not this is being called for cleanup or not
+        :param cleanup: Denotes whether or not this is being called for cleanup
         :return: The OpenStack Image object
         """
         self.__keystone = keystone_utils.keystone_client(self.__os_creds)
-        self.__project = keystone_utils.get_project(keystone=self.__keystone,
-                                                    project_name=self.project_settings.name)
+        self.__project = keystone_utils.get_project(
+            keystone=self.__keystone, project_name=self.project_settings.name)
         if self.__project:
-            logger.info('Found project with name - ' + self.project_settings.name)
+            logger.info(
+                'Found project with name - ' + self.project_settings.name)
         elif not cleanup:
-            self.__project = keystone_utils.create_project(self.__keystone, self.project_settings)
+            self.__project = keystone_utils.create_project(
+                self.__keystone, self.project_settings)
         else:
             logger.info('Did not create image due to cleanup mode')
 
@@ -92,44 +93,43 @@ class OpenStackProject:
         :return:
         """
         if not self.__role:
-            self.__role = keystone_utils.create_role(self.__keystone, self.project_settings.name + '-role')
+            self.__role = keystone_utils.create_role(
+                self.__keystone, self.project_settings.name + '-role')
 
-        keystone_utils.assoc_user_to_project(self.__keystone, self.__role, user, self.__project)
+        keystone_utils.assoc_user_to_project(self.__keystone, self.__role,
+                                             user, self.__project)
 
 
 class ProjectSettings:
     """
-    Class to hold the configuration settings required for creating OpenStack project objects
+    Class to hold the configuration settings required for creating OpenStack
+    project objects
     """
-    def __init__(self, config=None, name=None, domain='default', description=None, enabled=True):
+
+    def __init__(self, **kwargs):
 
         """
         Constructor
-        :param config: dict() object containing the configuration settings using the attribute names below as each
-                       member's the key and overrides any of the other parameters.
         :param name: the project's name (required)
-        :param domain: the project's domain name (default 'default'). Field is used for v3 clients
+        :param domain: the project's domain name (default 'default'). Field is
+                       used for v3 clients
         :param description: the description (optional)
-        :param enabled: denotes whether or not the user is enabled (default True)
+        :param enabled: denotes whether or not the user is enabled
+                        (default True)
         """
 
-        if config:
-            self.name = config.get('name')
-            if config.get('domain'):
-                self.domain = config['domain']
-            else:
-                self.domain = domain
-
-            self.description = config.get('description')
-            if config.get('enabled') is not None:
-                self.enabled = config['enabled']
-            else:
-                self.enabled = enabled
+        self.name = kwargs.get('name')
+        if kwargs.get('domain'):
+            self.domain = kwargs['domain']
         else:
-            self.name = name
-            self.domain = domain
-            self.description = description
-            self.enabled = enabled
+            self.domain = 'default'
+
+        self.description = kwargs.get('description')
+        if kwargs.get('enabled') is not None:
+            self.enabled = kwargs['enabled']
+        else:
+            self.enabled = True
 
         if not self.name:
-            raise Exception("The attribute name is required for ProjectSettings")
+            raise Exception(
+                "The attribute name is required for ProjectSettings")
