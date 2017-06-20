@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+
 from keystoneclient.exceptions import NotFound
 from snaps.openstack.os_credentials import OSCreds
-
 from snaps.openstack.utils import keystone_utils
 
 __author__ = 'spisarski'
@@ -43,15 +43,17 @@ class OpenStackUser:
     def create(self, cleanup=False):
         """
         Creates the user in OpenStack if it does not already exist
-        :param cleanup: Denotes whether or not this is being called for cleanup or not
+        :param cleanup: Denotes whether or not this is being called for cleanup
         :return: The OpenStack user object
         """
         self.__keystone = keystone_utils.keystone_client(self.__os_creds)
-        self.__user = keystone_utils.get_user(self.__keystone, self.user_settings.name)
+        self.__user = keystone_utils.get_user(self.__keystone,
+                                              self.user_settings.name)
         if self.__user:
             logger.info('Found user with name - ' + self.user_settings.name)
         elif not cleanup:
-            self.__user = keystone_utils.create_user(self.__keystone, self.user_settings)
+            self.__user = keystone_utils.create_user(self.__keystone,
+                                                     self.user_settings)
         else:
             logger.info('Did not create user due to cleanup mode')
 
@@ -79,60 +81,55 @@ class OpenStackUser:
     def get_os_creds(self, project_name=None):
         """
         Returns an OSCreds object based on this user account and a project
-        :param project_name: the name of the project to leverage in the credentials
+        :param project_name: the name of the project to leverage in the
+                             credentials
         :return:
         """
-        return OSCreds(username=self.user_settings.name,
-                       password=self.user_settings.password,
-                       auth_url=self.__os_creds.auth_url,
-                       project_name=project_name,
-                       identity_api_version=self.__os_creds.identity_api_version,
-                       user_domain_id=self.__os_creds.user_domain_id,
-                       project_domain_id=self.__os_creds.project_domain_id,
-                       proxy_settings=self.__os_creds.proxy_settings)
+        return OSCreds(
+            username=self.user_settings.name,
+            password=self.user_settings.password,
+            auth_url=self.__os_creds.auth_url,
+            project_name=project_name,
+            identity_api_version=self.__os_creds.identity_api_version,
+            user_domain_id=self.__os_creds.user_domain_id,
+            project_domain_id=self.__os_creds.project_domain_id,
+            proxy_settings=self.__os_creds.proxy_settings)
 
 
 class UserSettings:
-    def __init__(self, config=None, name=None, password=None, project_name=None, domain_name='default', email=None,
-                 enabled=True):
+    def __init__(self, **kwargs):
 
         """
         Constructor
-        :param config: dict() object containing the configuration settings using the attribute names below as each
-                       member's the key and overrides any of the other parameters.
         :param name: the user's name (required)
         :param password: the user's password (required)
         :param project_name: the user's primary project name (optional)
-        :param domain_name: the user's domain name (default='default'). For v3 APIs
+        :param domain_name: the user's domain name (default='default'). For v3
+                            APIs
         :param email: the user's email address (optional)
-        :param enabled: denotes whether or not the user is enabled (default True)
+        :param enabled: denotes whether or not the user is enabled
+                        (default True)
         """
 
-        if config:
-            self.name = config.get('name')
-            self.password = config.get('password')
-            self.project_name = config.get('project_name')
-            self.email = config.get('email')
+        self.name = kwargs.get('name')
+        self.password = kwargs.get('password')
+        self.project_name = kwargs.get('project_name')
+        self.email = kwargs.get('email')
 
-            if config.get('domain_name'):
-                self.domain_name = config['domain_name']
-            else:
-                self.domain_name = domain_name
-
-            if config.get('enabled') is not None:
-                self.enabled = config['enabled']
-            else:
-                self.enabled = enabled
+        if kwargs.get('domain_name'):
+            self.domain_name = kwargs['domain_name']
         else:
-            self.name = name
-            self.password = password
-            self.project_name = project_name
-            self.email = email
-            self.enabled = enabled
-            self.domain_name = domain_name
+            self.domain_name = 'default'
+
+        if kwargs.get('enabled') is not None:
+            self.enabled = kwargs['enabled']
+        else:
+            self.enabled = True
 
         if not self.name or not self.password:
-            raise Exception('The attributes name and password are required for UserSettings')
+            raise Exception(
+                'The attributes name and password are required for '
+                'UserSettings')
 
         if not isinstance(self.enabled, bool):
             raise Exception('The attribute enabled must be of type boolean')

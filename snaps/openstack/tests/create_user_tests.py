@@ -12,8 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import uuid
 import unittest
+import uuid
+
 from snaps.openstack.create_user import OpenStackUser, UserSettings
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import keystone_utils
@@ -32,7 +33,7 @@ class UserSettingsUnitTests(unittest.TestCase):
 
     def test_empty_config(self):
         with self.assertRaises(Exception):
-            UserSettings(config=dict())
+            UserSettings(**dict())
 
     def test_name_only(self):
         with self.assertRaises(Exception):
@@ -40,7 +41,7 @@ class UserSettingsUnitTests(unittest.TestCase):
 
     def test_config_with_name_only(self):
         with self.assertRaises(Exception):
-            UserSettings(config={'name': 'foo'})
+            UserSettings(**{'name': 'foo'})
 
     def test_name_pass_enabled_str(self):
         with self.assertRaises(Exception):
@@ -48,7 +49,8 @@ class UserSettingsUnitTests(unittest.TestCase):
 
     def test_config_with_name_pass_enabled_str(self):
         with self.assertRaises(Exception):
-            UserSettings(config={'name': 'foo', 'password': 'bar', 'enabled': 'true'})
+            UserSettings(
+                **{'name': 'foo', 'password': 'bar', 'enabled': 'true'})
 
     def test_name_pass_only(self):
         settings = UserSettings(name='foo', password='bar')
@@ -59,7 +61,7 @@ class UserSettingsUnitTests(unittest.TestCase):
         self.assertTrue(settings.enabled)
 
     def test_config_with_name_pass_only(self):
-        settings = UserSettings(config={'name': 'foo', 'password': 'bar'})
+        settings = UserSettings(**{'name': 'foo', 'password': 'bar'})
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.password)
         self.assertIsNone(settings.project_name)
@@ -67,7 +69,9 @@ class UserSettingsUnitTests(unittest.TestCase):
         self.assertTrue(settings.enabled)
 
     def test_all(self):
-        settings = UserSettings(name='foo', password='bar', project_name='proj-foo', email='foo@bar.com', enabled=False)
+        settings = UserSettings(name='foo', password='bar',
+                                project_name='proj-foo', email='foo@bar.com',
+                                enabled=False)
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.password)
         self.assertEqual('proj-foo', settings.project_name)
@@ -75,8 +79,10 @@ class UserSettingsUnitTests(unittest.TestCase):
         self.assertFalse(settings.enabled)
 
     def test_config_all(self):
-        settings = UserSettings(config={'name': 'foo', 'password': 'bar', 'project_name': 'proj-foo',
-                                        'email': 'foo@bar.com', 'enabled': False})
+        settings = UserSettings(**{'name': 'foo', 'password': 'bar',
+                                   'project_name': 'proj-foo',
+                                   'email': 'foo@bar.com',
+                                   'enabled': False})
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.password)
         self.assertEqual('proj-foo', settings.project_name)
@@ -91,12 +97,13 @@ class CreateUserSuccessTests(OSComponentTestCase):
 
     def setUp(self):
         """
-        Instantiates the CreateImage object that is responsible for downloading and creating an OS image file
-        within OpenStack
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file within OpenStack
         """
         guid = str(uuid.uuid4())[:-19]
         guid = self.__class__.__name__ + '-' + guid
-        self.user_settings = UserSettings(name=guid + '-name', password=guid + '-password')
+        self.user_settings = UserSettings(name=guid + '-name',
+                                          password=guid + '-password')
 
         self.keystone = keystone_utils.keystone_client(self.os_creds)
 
@@ -118,19 +125,22 @@ class CreateUserSuccessTests(OSComponentTestCase):
         created_user = self.user_creator.create()
         self.assertIsNotNone(created_user)
 
-        retrieved_user = keystone_utils.get_user(self.keystone, self.user_settings.name)
+        retrieved_user = keystone_utils.get_user(self.keystone,
+                                                 self.user_settings.name)
         self.assertIsNotNone(retrieved_user)
         self.assertEqual(created_user, retrieved_user)
 
     def test_create_user_2x(self):
         """
-        Tests the creation of an OpenStack user twice to ensure it only creates one.
+        Tests the creation of an OpenStack user twice to ensure it only creates
+        one.
         """
         self.user_creator = OpenStackUser(self.os_creds, self.user_settings)
         created_user = self.user_creator.create()
         self.assertIsNotNone(created_user)
 
-        retrieved_user = keystone_utils.get_user(self.keystone, self.user_settings.name)
+        retrieved_user = keystone_utils.get_user(self.keystone,
+                                                 self.user_settings.name)
         self.assertIsNotNone(retrieved_user)
         self.assertEqual(created_user, retrieved_user)
 
