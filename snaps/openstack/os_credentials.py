@@ -22,7 +22,7 @@ class OSCreds:
 
     def __init__(self, username, password, auth_url, project_name, identity_api_version=2, image_api_version=2,
                  network_api_version=2, compute_api_version=2, user_domain_id='default', project_domain_id='default',
-                 proxy_settings=None):
+                 proxy_settings=None, cacert=True):
         """
         Constructor
         :param username: The user (required)
@@ -36,6 +36,8 @@ class OSCreds:
         :param user_domain_id: Used for v3 APIs
         :param project_domain_id: Used for v3 APIs
         :param proxy_settings: instance of os_credentials.ProxySettings class
+        :param cacert: Default to be True for http, or the certification file is specified for https verification,
+                       or set to be False to disable server certificate verification without cert file
         """
         self.username = username
         self.password = password
@@ -48,6 +50,7 @@ class OSCreds:
         self.user_domain_id = user_domain_id
         self.project_domain_id = project_domain_id
         self.proxy_settings = proxy_settings
+        self.cacert = cacert
 
         if self.proxy_settings and not isinstance(self.proxy_settings, ProxySettings):
             raise Exception('proxy_settings must be an instance of the class ProxySettings')
@@ -72,7 +75,8 @@ class OSCreds:
                ', network_api_version=' + str(self.network_api_version) + \
                ', compute_api_version=' + str(self.compute_api_version) + \
                ', user_domain_id=' + str(self.user_domain_id) + \
-               ', proxy_settings=' + str(self.proxy_settings)
+               ', proxy_settings=' + str(self.proxy_settings) + \
+               ', cacert=' + str(self.cacert)
 
 
 class ProxySettings:

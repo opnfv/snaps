@@ -93,7 +93,8 @@ class OpenStackUser:
             identity_api_version=self.__os_creds.identity_api_version,
             user_domain_id=self.__os_creds.user_domain_id,
             project_domain_id=self.__os_creds.project_domain_id,
-            proxy_settings=self.__os_creds.proxy_settings)
+            proxy_settings=self.__os_creds.proxy_settings,
+            cacert=self.__os_creds.cacert)
 
 
 class UserSettings:
