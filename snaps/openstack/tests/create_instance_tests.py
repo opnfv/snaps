@@ -13,25 +13,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import os
 import re
+import shutil
 import time
 import unittest
 import uuid
 
-import shutil
+import os
+
 from snaps import file_utils
-from snaps.openstack.create_instance import VmInstanceSettings, OpenStackVmInstance, FloatingIpSettings
 from snaps.openstack.create_flavor import OpenStackFlavor, FlavorSettings
+from snaps.openstack.create_image import OpenStackImage, ImageSettings
+from snaps.openstack.create_instance import (
+    VmInstanceSettings, OpenStackVmInstance, FloatingIpSettings)
 from snaps.openstack.create_keypairs import OpenStackKeypair, KeypairSettings
 from snaps.openstack.create_network import OpenStackNetwork, PortSettings
 from snaps.openstack.create_router import OpenStackRouter
-from snaps.openstack.create_image import OpenStackImage, ImageSettings
-from snaps.openstack.create_security_group import SecurityGroupSettings, OpenStackSecurityGroup, \
-    SecurityGroupRuleSettings, Direction, Protocol
+from snaps.openstack.create_security_group import (
+    SecurityGroupSettings, OpenStackSecurityGroup, SecurityGroupRuleSettings,
+    Direction, Protocol)
 from snaps.openstack.tests import openstack_tests, validation_utils
+from snaps.openstack.tests.os_source_file_test import (
+    OSIntegrationTestCase, OSComponentTestCase)
 from snaps.openstack.utils import nova_utils
-from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase, OSComponentTestCase
 
 __author__ = 'spisarski'
 
@@ -71,7 +75,8 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
 
     def test_name_flavor_port_only(self):
         port_settings = PortSettings(name='foo-port', network_name='bar-net')
-        settings = VmInstanceSettings(name='foo', flavor='bar', port_settings=[port_settings])
+        settings = VmInstanceSettings(name='foo', flavor='bar',
+                                      port_settings=[port_settings])
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.flavor)
         self.assertEqual(1, len(settings.port_settings))
@@ -87,7 +92,8 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
 
     def test_config_with_name_flavor_port_only(self):
         port_settings = PortSettings(name='foo-port', network_name='bar-net')
-        settings = VmInstanceSettings(config={'name': 'foo', 'flavor': 'bar', 'ports': [port_settings]})
+        settings = VmInstanceSettings(
+            **{'name': 'foo', 'flavor': 'bar', 'ports': [port_settings]})
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.flavor)
         self.assertEqual(1, len(settings.port_settings))
@@ -103,12 +109,17 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
 
     def test_all(self):
         port_settings = PortSettings(name='foo-port', network_name='bar-net')
-        fip_settings = FloatingIpSettings(name='foo-fip', port_name='bar-port', router_name='foo-bar-router')
+        fip_settings = FloatingIpSettings(name='foo-fip', port_name='bar-port',
+                                          router_name='foo-bar-router')
 
-        settings = VmInstanceSettings(name='foo', flavor='bar', port_settings=[port_settings],
-                                      security_group_names=['sec_grp_1'], floating_ip_settings=[fip_settings],
-                                      sudo_user='joe', vm_boot_timeout=999, vm_delete_timeout=333,
-                                      ssh_connect_timeout=111, availability_zone='server name')
+        settings = VmInstanceSettings(name='foo', flavor='bar',
+                                      port_settings=[port_settings],
+                                      security_group_names=['sec_grp_1'],
+                                      floating_ip_settings=[fip_settings],
+                                      sudo_user='joe', vm_boot_timeout=999,
+                                      vm_delete_timeout=333,
+                                      ssh_connect_timeout=111,
+                                      availability_zone='server name')
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.flavor)
         self.assertEqual(1, len(settings.port_settings))
@@ -118,8 +129,10 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
         self.assertEqual('sec_grp_1', settings.security_group_names[0])
         self.assertEqual(1, len(settings.floating_ip_settings))
         self.assertEqual('foo-fip', settings.floating_ip_settings[0].name)
-        self.assertEqual('bar-port', settings.floating_ip_settings[0].port_name)
-        self.assertEqual('foo-bar-router', settings.floating_ip_settings[0].router_name)
+        self.assertEqual('bar-port',
+                         settings.floating_ip_settings[0].port_name)
+        self.assertEqual('foo-bar-router',
+                         settings.floating_ip_settings[0].router_name)
         self.assertEqual('joe', settings.sudo_user)
         self.assertEqual(999, settings.vm_boot_timeout)
         self.assertEqual(333, settings.vm_delete_timeout)
@@ -128,13 +141,15 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
 
     def test_config_all(self):
         port_settings = PortSettings(name='foo-port', network_name='bar-net')
-        fip_settings = FloatingIpSettings(name='foo-fip', port_name='bar-port', router_name='foo-bar-router')
+        fip_settings = FloatingIpSettings(name='foo-fip', port_name='bar-port',
+                                          router_name='foo-bar-router')
 
-        settings = VmInstanceSettings(config={'name': 'foo', 'flavor': 'bar', 'ports': [port_settings],
-                                              'security_group_names': ['sec_grp_1'],
-                                              'floating_ips': [fip_settings], 'sudo_user': 'joe',
-                                              'vm_boot_timeout': 999, 'vm_delete_timeout': 333,
-                                              'ssh_connect_timeout': 111, 'availability_zone': 'server name'})
+        settings = VmInstanceSettings(
+            **{'name': 'foo', 'flavor': 'bar', 'ports': [port_settings],
+               'security_group_names': ['sec_grp_1'],
+               'floating_ips': [fip_settings], 'sudo_user': 'joe',
+               'vm_boot_timeout': 999, 'vm_delete_timeout': 333,
+               'ssh_connect_timeout': 111, 'availability_zone': 'server name'})
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.flavor)
         self.assertEqual(1, len(settings.port_settings))
@@ -143,8 +158,10 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
         self.assertEqual(1, len(settings.security_group_names))
         self.assertEqual(1, len(settings.floating_ip_settings))
         self.assertEqual('foo-fip', settings.floating_ip_settings[0].name)
-        self.assertEqual('bar-port', settings.floating_ip_settings[0].port_name)
-        self.assertEqual('foo-bar-router', settings.floating_ip_settings[0].router_name)
+        self.assertEqual('bar-port',
+                         settings.floating_ip_settings[0].port_name)
+        self.assertEqual('foo-bar-router',
+                         settings.floating_ip_settings[0].router_name)
         self.assertEqual('joe', settings.sudo_user)
         self.assertEqual(999, settings.vm_boot_timeout)
         self.assertEqual(333, settings.vm_delete_timeout)
@@ -163,7 +180,7 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
 
     def test_empty_config(self):
         with self.assertRaises(Exception):
-            FloatingIpSettings(config=dict())
+            FloatingIpSettings(**dict())
 
     def test_name_only(self):
         with self.assertRaises(Exception):
@@ -171,7 +188,7 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
 
     def test_config_with_name_only(self):
         with self.assertRaises(Exception):
-            FloatingIpSettings(config={'name': 'foo'})
+            FloatingIpSettings(**{'name': 'foo'})
 
     def test_name_port_only(self):
         with self.assertRaises(Exception):
@@ -179,7 +196,7 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
 
     def test_config_with_name_port_only(self):
         with self.assertRaises(Exception):
-            FloatingIpSettings(config={'name': 'foo', 'port_name': 'bar'})
+            FloatingIpSettings(**{'name': 'foo', 'port_name': 'bar'})
 
     def test_name_router_only(self):
         with self.assertRaises(Exception):
@@ -187,10 +204,11 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
 
     def test_config_with_name_router_only(self):
         with self.assertRaises(Exception):
-            FloatingIpSettings(config={'name': 'foo', 'router_name': 'bar'})
+            FloatingIpSettings(**{'name': 'foo', 'router_name': 'bar'})
 
     def test_name_port_router_only(self):
-        settings = FloatingIpSettings(name='foo', port_name='foo-port', router_name='bar-router')
+        settings = FloatingIpSettings(name='foo', port_name='foo-port',
+                                      router_name='bar-router')
         self.assertEqual('foo', settings.name)
         self.assertEqual('foo-port', settings.port_name)
         self.assertEqual('bar-router', settings.router_name)
@@ -198,7 +216,9 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
         self.assertTrue(settings.provisioning)
 
     def test_config_with_name_port_router_only(self):
-        settings = FloatingIpSettings(config={'name': 'foo', 'port_name': 'foo-port', 'router_name': 'bar-router'})
+        settings = FloatingIpSettings(
+            **{'name': 'foo', 'port_name': 'foo-port',
+               'router_name': 'bar-router'})
         self.assertEqual('foo', settings.name)
         self.assertEqual('foo-port', settings.port_name)
         self.assertEqual('bar-router', settings.router_name)
@@ -206,8 +226,10 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
         self.assertTrue(settings.provisioning)
 
     def test_all(self):
-        settings = FloatingIpSettings(name='foo', port_name='foo-port', router_name='bar-router',
-                                      subnet_name='bar-subnet', provisioning=False)
+        settings = FloatingIpSettings(name='foo', port_name='foo-port',
+                                      router_name='bar-router',
+                                      subnet_name='bar-subnet',
+                                      provisioning=False)
         self.assertEqual('foo', settings.name)
         self.assertEqual('foo-port', settings.port_name)
         self.assertEqual('bar-router', settings.router_name)
@@ -215,8 +237,10 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
         self.assertFalse(settings.provisioning)
 
     def test_config_all(self):
-        settings = FloatingIpSettings(config={'name': 'foo', 'port_name': 'foo-port', 'router_name': 'bar-router',
-                                              'subnet_name': 'bar-subnet', 'provisioning': False})
+        settings = FloatingIpSettings(
+            **{'name': 'foo', 'port_name': 'foo-port',
+               'router_name': 'bar-router', 'subnet_name': 'bar-subnet',
+               'provisioning': False})
         self.assertEqual('foo', settings.name)
         self.assertEqual('foo-port', settings.port_name)
         self.assertEqual('bar-router', settings.router_name)
@@ -231,7 +255,8 @@ class SimpleHealthCheck(OSIntegrationTestCase):
 
     def setUp(self):
         """
-        Instantiates the CreateImage object that is responsible for downloading and creating an OS image file
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file
         within OpenStack
         """
         super(self.__class__, self).__start__()
@@ -249,25 +274,30 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         self.priv_net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-priv-net', subnet_name=guid + '-priv-subnet')
         self.port_settings = PortSettings(
-            name=self.port_1_name, network_name=self.priv_net_config.network_settings.name)
+            name=self.port_1_name,
+            network_name=self.priv_net_config.network_settings.name)
 
         # Create Image
-        # Set the default image settings, then set any custom parameters sent from the app
+        # Set the default image settings, then set any custom parameters sent
+        # from the app
         os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
 
         try:
-            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds,
+                                                os_image_settings)
             self.image_creator.create()
 
             # Create Network
-            self.network_creator = OpenStackNetwork(self.os_creds, self.priv_net_config.network_settings)
+            self.network_creator = OpenStackNetwork(
+                self.os_creds, self.priv_net_config.network_settings)
             self.network_creator.create()
 
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10, vcpus=1, metadata=self.flavor_metadata))
+                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10,
+                               vcpus=1, metadata=self.flavor_metadata))
             self.flavor_creator.create()
         except Exception as e:
             self.tearDown()
@@ -281,38 +311,49 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             try:
                 self.inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning VM instance with message'
+                    ' - %s', e)
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
 
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning flavor with message - %s',
+                    e)
 
         if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning image with message - %s',
+                    e)
 
         super(self.__class__, self).__clean__()
 
     def test_check_vm_ip_dhcp(self):
         """
-        Tests the creation of an OpenStack instance with a single port and ensures that it's assigned IP address is
-        the actual.
+        Tests the creation of an OpenStack instance with a single port and
+        ensures that it's assigned IP address is the actual.
         """
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         vm = self.inst_creator.create()
 
         ip = self.inst_creator.get_port_ip(self.port_settings.name)
@@ -327,9 +368,11 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
     """
     Simple instance creation tests without any other objects
     """
+
     def setUp(self):
         """
-        Instantiates the CreateImage object that is responsible for downloading and creating an OS image file
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file
         within OpenStack
         """
         super(self.__class__, self).__start__()
@@ -353,21 +396,25 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
 
         try:
             # Create Image
-            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds,
+                                                os_image_settings)
             self.image_creator.create()
 
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10, vcpus=2, metadata=self.flavor_metadata))
+                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10,
+                               vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
             # Create Network
-            self.network_creator = OpenStackNetwork(self.os_creds, net_config.network_settings)
+            self.network_creator = OpenStackNetwork(
+                self.os_creds, net_config.network_settings)
             self.network_creator.create()
 
-            self.port_settings = PortSettings(name=guid + '-port',
-                                              network_name=net_config.network_settings.name)
+            self.port_settings = PortSettings(
+                name=guid + '-port',
+                network_name=net_config.network_settings.name)
 
         except Exception as e:
             self.tearDown()
@@ -381,46 +428,59 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
             try:
                 self.inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning VM instance with message '
+                    '- %s', e)
 
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning flavor with message - %s',
+                    e)
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
 
         if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning image with message - %s', e)
 
         super(self.__class__, self).__clean__()
 
     def test_create_delete_instance(self):
         """
-        Tests the creation of an OpenStack instance with a single port with a static IP without a Floating IP.
+        Tests the creation of an OpenStack instance with a single port with a
+        static IP without a Floating IP.
         """
-        instance_settings = VmInstanceSettings(name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name,
-                                               port_settings=[self.port_settings])
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
 
         self.inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creator.image_settings)
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
 
         vm_inst = self.inst_creator.create()
-        self.assertEqual(1, len(nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
+        self.assertEqual(1, len(
+            nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
 
         # Delete instance
         nova_utils.delete_vm_instance(self.nova, vm_inst)
 
         self.assertTrue(self.inst_creator.vm_deleted(block=True))
-        self.assertEqual(0, len(nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
+        self.assertEqual(0, len(
+            nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
 
         # Exception should not be thrown
         self.inst_creator.clean()
@@ -433,8 +493,8 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
 
     def setUp(self):
         """
-        Instantiates the CreateImage object that is responsible for downloading and creating an OS image file
-        within OpenStack
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file within OpenStack
         """
         super(self.__class__, self).__start__()
 
@@ -463,37 +523,47 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             name=guid + '-image', image_metadata=self.image_metadata)
         try:
             # Create Image
-            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds,
+                                                os_image_settings)
             self.image_creator.create()
 
             # Create Network
-            self.network_creator = OpenStackNetwork(self.os_creds, self.pub_net_config.network_settings)
+            self.network_creator = OpenStackNetwork(
+                self.os_creds, self.pub_net_config.network_settings)
             self.network_creator.create()
 
             # Create Router
-            self.router_creator = OpenStackRouter(self.os_creds, self.pub_net_config.router_settings)
+            self.router_creator = OpenStackRouter(
+                self.os_creds, self.pub_net_config.router_settings)
             self.router_creator.create()
 
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10, vcpus=2, metadata=self.flavor_metadata))
+                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10,
+                               vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
             self.keypair_creator = OpenStackKeypair(
                 self.os_creds, KeypairSettings(
-                    name=self.keypair_name, public_filepath=self.keypair_pub_filepath,
+                    name=self.keypair_name,
+                    public_filepath=self.keypair_pub_filepath,
                     private_filepath=self.keypair_priv_filepath))
             self.keypair_creator.create()
 
             sec_grp_name = guid + '-sec-grp'
-            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name, direction=Direction.ingress,
+            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
+                                              direction=Direction.ingress,
                                               protocol=Protocol.icmp)
-            rule2 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name, direction=Direction.ingress,
-                                              protocol=Protocol.tcp, port_range_min=22, port_range_max=22)
+            rule2 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
+                                              direction=Direction.ingress,
+                                              protocol=Protocol.tcp,
+                                              port_range_min=22,
+                                              port_range_max=22)
             self.sec_grp_creator = OpenStackSecurityGroup(
                 self.os_creds,
-                SecurityGroupSettings(name=sec_grp_name, rule_settings=[rule1, rule2]))
+                SecurityGroupSettings(name=sec_grp_name,
+                                      rule_settings=[rule1, rule2]))
             self.sec_grp_creator.create()
         except Exception as e:
             self.tearDown()
@@ -507,13 +577,17 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             try:
                 inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning VM instance with message '
+                    '- %s', e)
 
         if self.keypair_creator:
             try:
                 self.keypair_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning keypair with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning keypair with message - %s',
+                    e)
 
         if os.path.isfile(self.keypair_pub_filepath):
             os.remove(self.keypair_pub_filepath)
@@ -525,52 +599,67 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning flavor with message - %s',
+                    e)
 
         if self.sec_grp_creator:
             try:
                 self.sec_grp_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning security group with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning security group with message'
+                    ' - %s', e)
 
         if self.router_creator:
             try:
                 self.router_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning router with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning router with message - %s',
+                    e)
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
 
         if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning image with message - %s', e)
 
         super(self.__class__, self).__clean__()
 
     def test_single_port_static(self):
         """
-        Tests the creation of an OpenStack instance with a single port with a static IP without a Floating IP.
+        Tests the creation of an OpenStack instance with a single port with a
+        static IP without a Floating IP.
         """
         ip_1 = '10.55.1.100'
-
+        sub_settings = self.pub_net_config.network_settings.subnet_settings
         port_settings = PortSettings(
-            name=self.port_1_name, network_name=self.pub_net_config.network_settings.name,
-            ip_addrs=[{'subnet_name': self.pub_net_config.network_settings.subnet_settings[0].name, 'ip': ip_1}])
+            name=self.port_1_name,
+            network_name=self.pub_net_config.network_settings.name,
+            ip_addrs=[
+                {'subnet_name': sub_settings[0].name, 'ip': ip_1}])
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings],
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings],
             floating_ip_settings=[FloatingIpSettings(
                 name=self.floating_ip_name, port_name=self.port_1_name,
                 router_name=self.pub_net_config.router_settings.name)])
 
         inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creator.image_settings,
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings,
             keypair_settings=self.keypair_creator.keypair_settings)
         self.inst_creators.append(inst_creator)
         vm_inst = inst_creator.create()
@@ -581,19 +670,24 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
 
     def test_ssh_client_fip_before_active(self):
         """
-        Tests the ability to access a VM via SSH and a floating IP when it has been assigned prior to being active.
+        Tests the ability to access a VM via SSH and a floating IP when it has
+        been assigned prior to being active.
         """
         port_settings = PortSettings(
-            name=self.port_1_name, network_name=self.pub_net_config.network_settings.name)
+            name=self.port_1_name,
+            network_name=self.pub_net_config.network_settings.name)
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings],
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings],
             floating_ip_settings=[FloatingIpSettings(
                 name=self.floating_ip_name, port_name=self.port_1_name,
                 router_name=self.pub_net_config.router_settings.name)])
 
         inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creator.image_settings,
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings,
             keypair_settings=self.keypair_creator.keypair_settings)
         self.inst_creators.append(inst_creator)
         vm_inst = inst_creator.create()
@@ -604,26 +698,32 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         ip = inst_creator.get_port_ip(port_settings.name)
         self.assertTrue(check_dhcp_lease(vm_inst, ip))
 
-        inst_creator.add_security_group(self.sec_grp_creator.get_security_group())
+        inst_creator.add_security_group(
+            self.sec_grp_creator.get_security_group())
         self.assertEqual(vm_inst, inst_creator.get_vm_inst())
 
         self.assertTrue(validate_ssh_client(inst_creator))
 
     def test_ssh_client_fip_after_active(self):
         """
-        Tests the ability to access a VM via SSH and a floating IP when it has been assigned prior to being active.
+        Tests the ability to access a VM via SSH and a floating IP when it has
+        been assigned prior to being active.
         """
         port_settings = PortSettings(
-            name=self.port_1_name, network_name=self.pub_net_config.network_settings.name)
+            name=self.port_1_name,
+            network_name=self.pub_net_config.network_settings.name)
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings],
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings],
             floating_ip_settings=[FloatingIpSettings(
                 name=self.floating_ip_name, port_name=self.port_1_name,
                 router_name=self.pub_net_config.router_settings.name)])
 
         inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creator.image_settings,
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings,
             keypair_settings=self.keypair_creator.keypair_settings)
         self.inst_creators.append(inst_creator)
 
@@ -636,7 +736,8 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         ip = inst_creator.get_port_ip(port_settings.name)
         self.assertTrue(check_dhcp_lease(vm_inst, ip))
 
-        inst_creator.add_security_group(self.sec_grp_creator.get_security_group())
+        inst_creator.add_security_group(
+            self.sec_grp_creator.get_security_group())
         self.assertEqual(vm_inst, inst_creator.get_vm_inst())
 
         self.assertTrue(validate_ssh_client(inst_creator))
@@ -644,13 +745,14 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
 
 class CreateInstancePortManipulationTests(OSIntegrationTestCase):
     """
-    Test for the CreateInstance class with a single NIC/Port where mac and IP values are manually set
+    Test for the CreateInstance class with a single NIC/Port where mac and IP
+    values are manually set
     """
 
     def setUp(self):
         """
-        Instantiates the CreateImage object that is responsible for downloading and creating an OS image file
-        within OpenStack
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file within OpenStack
         """
         super(self.__class__, self).__start__()
 
@@ -674,17 +776,20 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
 
         try:
             # Create Image
-            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds,
+                                                os_image_settings)
             self.image_creator.create()
 
             # Create Network
-            self.network_creator = OpenStackNetwork(self.os_creds, self.net_config.network_settings)
+            self.network_creator = OpenStackNetwork(
+                self.os_creds, self.net_config.network_settings)
             self.network_creator.create()
 
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10, vcpus=2, metadata=self.flavor_metadata))
+                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10,
+                               vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
         except Exception as e:
             self.tearDown()
@@ -698,147 +803,198 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             try:
                 self.inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning VM instance with message '
+                    '- %s', e)
 
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning flavor with message - %s',
+                    e)
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
 
         if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning image with message - %s', e)
 
         super(self.__class__, self).__clean__()
 
     def test_set_custom_valid_ip_one_subnet(self):
         """
-        Tests the creation of an OpenStack instance with a single port with a static IP on a network with one subnet.
+        Tests the creation of an OpenStack instance with a single port with a
+        static IP on a network with one subnet.
         """
         ip = '10.55.0.101'
+        sub_settings = self.net_config.network_settings.subnet_settings
         port_settings = PortSettings(
-            name=self.port_1_name, network_name=self.net_config.network_settings.name,
-            ip_addrs=[{'subnet_name': self.net_config.network_settings.subnet_settings[0].name, 'ip': ip}])
+            name=self.port_1_name,
+            network_name=self.net_config.network_settings.name,
+            ip_addrs=[{'subnet_name': sub_settings[0].name, 'ip': ip}])
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         self.inst_creator.create(block=True)
 
         self.assertEqual(ip, self.inst_creator.get_port_ip(
-            self.port_1_name, subnet_name=self.net_config.network_settings.subnet_settings[0].name))
+            self.port_1_name,
+            subnet_name=self.net_config.network_settings.subnet_settings[
+                0].name))
 
     def test_set_custom_invalid_ip_one_subnet(self):
         """
-        Tests the creation of an OpenStack instance with a single port with a static IP on a network with one subnet.
+        Tests the creation of an OpenStack instance with a single port with a
+        static IP on a network with one subnet.
         """
         ip = '10.66.0.101'
+        sub_settings = self.net_config.network_settings.subnet_settings
         port_settings = PortSettings(
-            name=self.port_1_name, network_name=self.net_config.network_settings.name,
-            ip_addrs=[{'subnet_name': self.net_config.network_settings.subnet_settings[0].name, 'ip': ip}])
+            name=self.port_1_name,
+            network_name=self.net_config.network_settings.name,
+            ip_addrs=[{'subnet_name': sub_settings[0].name, 'ip': ip}])
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
 
         with self.assertRaises(Exception):
             self.inst_creator.create()
 
     def test_set_custom_valid_mac(self):
         """
-        Tests the creation of an OpenStack instance with a single port where the MAC address is assigned.
+        Tests the creation of an OpenStack instance with a single port where
+        the MAC address is assigned.
         """
         mac_addr = '0a:1b:2c:3d:4e:5f'
         port_settings = PortSettings(
-            name=self.port_1_name, network_name=self.net_config.network_settings.name, mac_address=mac_addr)
+            name=self.port_1_name,
+            network_name=self.net_config.network_settings.name,
+            mac_address=mac_addr)
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         self.inst_creator.create(block=True)
 
-        self.assertEqual(mac_addr, self.inst_creator.get_port_mac(self.port_1_name))
+        self.assertEqual(mac_addr,
+                         self.inst_creator.get_port_mac(self.port_1_name))
 
     def test_set_custom_invalid_mac(self):
         """
-        Tests the creation of an OpenStack instance with a single port where an invalid MAC address value is being
+        Tests the creation of an OpenStack instance with a single port where an
+        invalid MAC address value is being
         assigned. This should raise an Exception
         """
         port_settings = PortSettings(
-            name=self.port_1_name, network_name=self.net_config.network_settings.name, mac_address='foo')
+            name=self.port_1_name,
+            network_name=self.net_config.network_settings.name,
+            mac_address='foo')
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings])
 
         self.inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creator.image_settings)
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
 
         with self.assertRaises(Exception):
             self.inst_creator.create()
 
     def test_set_custom_mac_and_ip(self):
         """
-        Tests the creation of an OpenStack instance with a single port where the IP and MAC address is assigned.
+        Tests the creation of an OpenStack instance with a single port where
+        the IP and MAC address is assigned.
         """
         ip = '10.55.0.101'
         mac_addr = '0a:1b:2c:3d:4e:5f'
+        sub_settings = self.net_config.network_settings.subnet_settings
         port_settings = PortSettings(
-            name=self.port_1_name, network_name=self.net_config.network_settings.name, mac_address=mac_addr,
-            ip_addrs=[{'subnet_name': self.net_config.network_settings.subnet_settings[0].name, 'ip': ip}])
+            name=self.port_1_name,
+            network_name=self.net_config.network_settings.name,
+            mac_address=mac_addr,
+            ip_addrs=[{'subnet_name': sub_settings[0].name, 'ip': ip}])
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         self.inst_creator.create(block=True)
 
         self.assertEqual(ip, self.inst_creator.get_port_ip(
-            self.port_1_name, subnet_name=self.net_config.network_settings.subnet_settings[0].name))
-        self.assertEqual(mac_addr, self.inst_creator.get_port_mac(self.port_1_name))
+            self.port_1_name,
+            subnet_name=self.net_config.network_settings.subnet_settings[
+                0].name))
+        self.assertEqual(mac_addr,
+                         self.inst_creator.get_port_mac(self.port_1_name))
 
     def test_set_allowed_address_pairs(self):
         """
-        Tests the creation of an OpenStack instance with a single port where max_allowed_address_pair is set.
+        Tests the creation of an OpenStack instance with a single port where
+        max_allowed_address_pair is set.
         """
         ip = '10.55.0.101'
         mac_addr = '0a:1b:2c:3d:4e:5f'
         pair = {'ip_address': ip, 'mac_address': mac_addr}
         port_settings = PortSettings(
-            name=self.port_1_name, network_name=self.net_config.network_settings.name, allowed_address_pairs=[pair])
+            name=self.port_1_name,
+            network_name=self.net_config.network_settings.name,
+            allowed_address_pairs=[pair])
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         self.inst_creator.create(block=True)
 
         port = self.inst_creator.get_port_by_name(port_settings.name)
         self.assertIsNotNone(port)
         self.assertIsNotNone(port['port'].get('allowed_address_pairs'))
         self.assertEqual(1, len(port['port']['allowed_address_pairs']))
-        validation_utils.objects_equivalent(pair, port['port']['allowed_address_pairs'][0])
+        validation_utils.objects_equivalent(pair, port['port'][
+            'allowed_address_pairs'][0])
 
     def test_set_allowed_address_pairs_bad_mac(self):
         """
-        Tests the creation of an OpenStack instance with a single port where max_allowed_address_pair is set with an
-        invalid MAC address.
+        Tests the creation of an OpenStack instance with a single port where
+        max_allowed_address_pair is set with an invalid MAC address.
         """
         ip = '10.55.0.101'
         mac_addr = 'foo'
@@ -846,20 +1002,25 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         pairs = set()
         pairs.add((ip, mac_addr))
         port_settings = PortSettings(
-            name=self.port_1_name, network_name=self.net_config.network_settings.name, allowed_address_pairs=[pair])
+            name=self.port_1_name,
+            network_name=self.net_config.network_settings.name,
+            allowed_address_pairs=[pair])
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         with self.assertRaises(Exception):
             self.inst_creator.create()
 
     def test_set_allowed_address_pairs_bad_ip(self):
         """
-        Tests the creation of an OpenStack instance with a single port where max_allowed_address_pair is set with an
-        invalid MAC address.
+        Tests the creation of an OpenStack instance with a single port where
+        max_allowed_address_pair is set with an invalid MAC address.
         """
         ip = 'foo'
         mac_addr = '0a:1b:2c:3d:4e:5f'
@@ -867,13 +1028,18 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         pairs = set()
         pairs.add((ip, mac_addr))
         port_settings = PortSettings(
-            name=self.port_1_name, network_name=self.net_config.network_settings.name, allowed_address_pairs=[pair])
+            name=self.port_1_name,
+            network_name=self.net_config.network_settings.name,
+            allowed_address_pairs=[pair])
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[port_settings])
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings])
 
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         with self.assertRaises(Exception):
             self.inst_creator.create()
 
@@ -885,8 +1051,8 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
 
     def setUp(self):
         """
-        Instantiates the CreateImage object that is responsible for downloading and creating an OS image file
-        within OpenStack
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file within OpenStack
         """
         super(self.__class__, self).__start__()
 
@@ -908,17 +1074,20 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
 
         try:
             # Create Network
-            self.network_creator = OpenStackNetwork(self.admin_os_creds, self.priv_net_config.network_settings)
+            self.network_creator = OpenStackNetwork(
+                self.admin_os_creds, self.priv_net_config.network_settings)
             self.network_creator.create()
 
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=512, disk=1, vcpus=1, metadata=self.flavor_metadata))
+                FlavorSettings(name=guid + '-flavor-name', ram=512, disk=1,
+                               vcpus=1, metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
             # Create Image
-            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds,
+                                                os_image_settings)
             self.image_creator.create()
 
         except Exception as e:
@@ -933,25 +1102,32 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
             try:
                 inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning VM instance with message '
+                    '- %s', e)
 
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning flavor with message - %s',
+                    e)
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
 
         if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning image with message - %s', e)
 
         super(self.__class__, self).__clean__()
 
@@ -968,18 +1144,23 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
         for zone in zones:
             inst_name = self.vm_inst_name + '-' + zone
             ctr += 1
-            port_settings = PortSettings(name=self.port_base_name + '-' + str(ctr),
-                                         network_name=self.priv_net_config.network_settings.name)
+            port_settings = PortSettings(
+                name=self.port_base_name + '-' + str(ctr),
+                network_name=self.priv_net_config.network_settings.name)
 
             instance_settings = VmInstanceSettings(
-                name=inst_name, flavor=self.flavor_creator.flavor_settings.name, availability_zone=zone,
+                name=inst_name,
+                flavor=self.flavor_creator.flavor_settings.name,
+                availability_zone=zone,
                 port_settings=[port_settings])
             inst_creator = OpenStackVmInstance(
-                self.admin_os_creds, instance_settings, self.image_creator.image_settings)
+                self.admin_os_creds, instance_settings,
+                self.image_creator.image_settings)
             self.inst_creators.append(inst_creator)
             inst_creator.create()
 
-        # Validate instances to ensure they've been deployed to the correct server
+        # Validate instances to ensure they've been deployed to the correct
+        # server
         index = 0
         for zone in zones:
             creator = self.inst_creators[index]
@@ -993,14 +1174,15 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
 
 class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
     """
-    Test for the CreateInstance class with two NIC/Ports, eth0 with floating IP and eth1 w/o
+    Test for the CreateInstance class with two NIC/Ports, eth0 with floating IP
+    and eth1 w/o.
     These tests require a Centos image
     """
 
     def setUp(self):
         """
-        Instantiates the CreateImage object that is responsible for downloading and creating an OS image file
-        within OpenStack
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file within OpenStack
         """
         super(self.__class__, self).__start__()
 
@@ -1022,29 +1204,39 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
         self.port_2_name = self.guid + '-port-2'
         self.floating_ip_name = self.guid + 'fip1'
         self.priv_net_config = openstack_tests.get_priv_net_config(
-            net_name=self.guid + '-priv-net', subnet_name=self.guid + '-priv-subnet',
-            router_name=self.guid + '-priv-router', external_net=self.ext_net_name)
+            net_name=self.guid + '-priv-net',
+            subnet_name=self.guid + '-priv-subnet',
+            router_name=self.guid + '-priv-router',
+            external_net=self.ext_net_name)
         self.pub_net_config = openstack_tests.get_pub_net_config(
-            net_name=self.guid + '-pub-net', subnet_name=self.guid + '-pub-subnet',
-            router_name=self.guid + '-pub-router', external_net=self.ext_net_name)
+            net_name=self.guid + '-pub-net',
+            subnet_name=self.guid + '-pub-subnet',
+            router_name=self.guid + '-pub-router',
+            external_net=self.ext_net_name)
 
         image_name = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        os_image_settings = openstack_tests.centos_image_settings(name=image_name, image_metadata=self.image_metadata)
+        os_image_settings = openstack_tests.centos_image_settings(
+            name=image_name, image_metadata=self.image_metadata)
 
         try:
             # Create Image
-            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds,
+                                                os_image_settings)
             self.image_creator.create()
 
             # First network is public
-            self.network_creators.append(OpenStackNetwork(self.os_creds, self.pub_net_config.network_settings))
+            self.network_creators.append(OpenStackNetwork(
+                self.os_creds, self.pub_net_config.network_settings))
             # Second network is private
-            self.network_creators.append(OpenStackNetwork(self.os_creds, self.priv_net_config.network_settings))
+            self.network_creators.append(OpenStackNetwork(
+                self.os_creds, self.priv_net_config.network_settings))
             for network_creator in self.network_creators:
                 network_creator.create()
 
-            self.router_creators.append(OpenStackRouter(self.os_creds, self.pub_net_config.router_settings))
-            self.router_creators.append(OpenStackRouter(self.os_creds, self.priv_net_config.router_settings))
+            self.router_creators.append(OpenStackRouter(
+                self.os_creds, self.pub_net_config.router_settings))
+            self.router_creators.append(OpenStackRouter(
+                self.os_creds, self.priv_net_config.router_settings))
 
             # Create Routers
             for router_creator in self.router_creators:
@@ -1053,25 +1245,32 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=self.guid + '-flavor-name', ram=512, disk=10, vcpus=2,
+                FlavorSettings(name=self.guid + '-flavor-name', ram=512,
+                               disk=10, vcpus=2,
                                metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
             # Create Keypair
             self.keypair_creator = OpenStackKeypair(
                 self.os_creds, KeypairSettings(
-                    name=self.keypair_name, public_filepath=self.keypair_pub_filepath,
+                    name=self.keypair_name,
+                    public_filepath=self.keypair_pub_filepath,
                     private_filepath=self.keypair_priv_filepath))
             self.keypair_creator.create()
 
             sec_grp_name = self.guid + '-sec-grp'
-            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name, direction=Direction.ingress,
+            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
+                                              direction=Direction.ingress,
                                               protocol=Protocol.icmp)
-            rule2 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name, direction=Direction.ingress,
-                                              protocol=Protocol.tcp, port_range_min=22, port_range_max=22)
+            rule2 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
+                                              direction=Direction.ingress,
+                                              protocol=Protocol.tcp,
+                                              port_range_min=22,
+                                              port_range_max=22)
             self.sec_grp_creator = OpenStackSecurityGroup(
                 self.os_creds,
-                SecurityGroupSettings(name=sec_grp_name, rule_settings=[rule1, rule2]))
+                SecurityGroupSettings(name=sec_grp_name,
+                                      rule_settings=[rule1, rule2]))
             self.sec_grp_creator.create()
         except Exception as e:
             self.tearDown()
@@ -1085,13 +1284,17 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             try:
                 self.inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning VM instance with message '
+                    '- %s', e)
 
         if self.keypair_creator:
             try:
                 self.keypair_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning keypair with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning keypair with message - %s',
+                    e)
 
         if os.path.isfile(self.keypair_pub_filepath):
             os.remove(self.keypair_pub_filepath)
@@ -1103,42 +1306,55 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning flavor with message - %s',
+                    e)
 
         for router_creator in self.router_creators:
             try:
                 router_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning router with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning router with message - %s',
+                    e)
 
         for network_creator in self.network_creators:
             try:
                 network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
 
         if self.sec_grp_creator:
             try:
                 self.sec_grp_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning security group with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning security group with message'
+                    ' - %s', e)
 
         if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning image with message - %s', e)
 
         super(self.__class__, self).__clean__()
 
     def test_dual_ports_dhcp(self):
         """
-        Tests the creation of an OpenStack instance with a dual ports/NICs with a DHCP assigned IP.
-        NOTE: This test and any others that call ansible will most likely fail unless you do one of
-        two things:
-        1. Have a ~/.ansible.cfg (or alternate means) to set host_key_checking = False
-        2. Set the following environment variable in your executing shell: ANSIBLE_HOST_KEY_CHECKING=False
-        Should this not be performed, the creation of the host ssh key will cause your ansible calls to fail.
+        Tests the creation of an OpenStack instance with a dual ports/NICs with
+        a DHCP assigned IP.
+        NOTE: This test and any others that call ansible will most likely fail
+        unless you do one of two things:
+        1. Have a ~/.ansible.cfg (or alternate means) to
+           set host_key_checking = False
+        2. Set the following environment variable in your executing shell:
+           ANSIBLE_HOST_KEY_CHECKING=False
+        Should this not be performed, the creation of the host ssh key will
+        cause your ansible calls to fail.
         """
         # Create ports/NICs for instance
         ports_settings = []
@@ -1151,13 +1367,16 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
 
         # Create instance
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=ports_settings,
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=ports_settings,
             floating_ip_settings=[FloatingIpSettings(
                 name=self.floating_ip_name, port_name=self.port_1_name,
                 router_name=self.pub_net_config.router_settings.name)])
 
         self.inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creator.image_settings,
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings,
             keypair_settings=self.keypair_creator.keypair_settings)
 
         vm_inst = self.inst_creator.create(block=True)
@@ -1171,28 +1390,32 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
         self.assertTrue(check_dhcp_lease(vm_inst, ip))
 
         # Add security group to VM
-        self.inst_creator.add_security_group(self.sec_grp_creator.get_security_group())
+        self.inst_creator.add_security_group(
+            self.sec_grp_creator.get_security_group())
 
         # Effectively blocks until VM's ssh port has been opened
         self.assertTrue(self.inst_creator.vm_ssh_active(block=True))
 
-        # TODO - Refactor config_nics() to return a status that can be validated here.
+        # TODO - Refactor config_nics() to return a status that can be
+        # validated here.
         self.inst_creator.config_nics()
 
         # TODO - *** ADD VALIDATION HERE ***
         # TODO - Add validation that both floating IPs work
         # TODO - Add tests where only one NIC has a floating IP
-        # TODO - Add tests where one attempts to place a floating IP on a network/router without an external gateway
+        # TODO - Add tests where one attempts to place a floating IP on a
+        # network/router without an external gateway
 
 
 class InstanceSecurityGroupTests(OSIntegrationTestCase):
     """
     Tests that include, add, and remove security groups from VM instances
     """
+
     def setUp(self):
         """
-        Instantiates the CreateImage object that is responsible for downloading and creating an OS image file
-        within OpenStack
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file within OpenStack
         """
         super(self.__class__, self).__start__()
 
@@ -1208,8 +1431,10 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.floating_ip_name = self.guid + 'fip1'
 
         net_config = openstack_tests.get_priv_net_config(
-            net_name=self.guid + '-pub-net', subnet_name=self.guid + '-pub-subnet',
-            router_name=self.guid + '-pub-router', external_net=self.ext_net_name)
+            net_name=self.guid + '-pub-net',
+            subnet_name=self.guid + '-pub-subnet',
+            router_name=self.guid + '-pub-router',
+            external_net=self.ext_net_name)
 
         # Initialize for tearDown()
         self.image_creator = None
@@ -1221,22 +1446,26 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
 
         try:
             # Create Image
-            self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
+            self.image_creator = OpenStackImage(self.os_creds,
+                                                os_image_settings)
             self.image_creator.create()
 
             # Create Network
-            self.network_creator = OpenStackNetwork(self.os_creds, net_config.network_settings)
+            self.network_creator = OpenStackNetwork(
+                self.os_creds, net_config.network_settings)
             self.network_creator.create()
 
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=self.guid + '-flavor-name', ram=128, disk=10, vcpus=2,
+                FlavorSettings(name=self.guid + '-flavor-name', ram=128,
+                               disk=10, vcpus=2,
                                metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
-            self.port_settings = PortSettings(name=self.guid + '-port',
-                                              network_name=net_config.network_settings.name)
+            self.port_settings = PortSettings(
+                name=self.guid + '-port',
+                network_name=net_config.network_settings.name)
         except Exception as e:
             self.tearDown()
             raise e
@@ -1249,31 +1478,40 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
             try:
                 self.inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning VM instance with message -'
+                    ' %s', e)
 
         for sec_grp_creator in self.sec_grp_creators:
             try:
                 sec_grp_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning security group with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning security group with message'
+                    ' - %s', e)
 
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning flavor with message - %s',
+                    e)
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
 
         if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning image with message - %s', e)
 
         super(self.__class__, self).__clean__()
 
@@ -1283,26 +1521,33 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         """
         # Create instance
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
         # Create security group object to add to instance
-        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name', description='hello group')
-        sec_grp_creator = OpenStackSecurityGroup(self.os_creds, sec_grp_settings)
+        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name',
+                                                 description='hello group')
+        sec_grp_creator = OpenStackSecurityGroup(self.os_creds,
+                                                 sec_grp_settings)
         sec_grp = sec_grp_creator.create()
         self.sec_grp_creators.append(sec_grp_creator)
 
         # Check that group has not been added
-        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(), sec_grp_settings.name))
+        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
+                                          sec_grp_settings.name))
 
         # Add security group to instance after activated
         self.inst_creator.add_security_group(sec_grp)
 
         # Validate that security group has been added
-        self.assertTrue(inst_has_sec_grp(self.inst_creator.get_vm_inst(), sec_grp_settings.name))
+        self.assertTrue(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
+                                         sec_grp_settings.name))
 
     def test_add_invalid_security_group(self):
         """
@@ -1310,44 +1555,57 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         """
         # Create instance
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
         # Create security group object to add to instance
-        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name', description='hello group')
-        sec_grp_creator = OpenStackSecurityGroup(self.os_creds, sec_grp_settings)
+        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name',
+                                                 description='hello group')
+        sec_grp_creator = OpenStackSecurityGroup(self.os_creds,
+                                                 sec_grp_settings)
         sec_grp = sec_grp_creator.create()
         sec_grp_creator.clean()
         self.sec_grp_creators.append(sec_grp_creator)
 
         # Check that group has not been added
-        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(), sec_grp_settings.name))
+        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
+                                          sec_grp_settings.name))
 
         # Add security group to instance after activated
         self.assertFalse(self.inst_creator.add_security_group(sec_grp))
 
         # Validate that security group has been added
-        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(), sec_grp_settings.name))
+        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
+                                          sec_grp_settings.name))
 
     def test_remove_security_group(self):
         """
-        Tests the removal of a security group created before and added to the instance.
+        Tests the removal of a security group created before and added to the
+        instance.
         """
         # Create security group object to add to instance
-        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name', description='hello group')
-        sec_grp_creator = OpenStackSecurityGroup(self.os_creds, sec_grp_settings)
+        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name',
+                                                 description='hello group')
+        sec_grp_creator = OpenStackSecurityGroup(self.os_creds,
+                                                 sec_grp_settings)
         sec_grp = sec_grp_creator.create()
         self.sec_grp_creators.append(sec_grp_creator)
 
         # Create instance
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name,
-            security_group_names=[sec_grp_settings.name], port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            security_group_names=[sec_grp_settings.name],
+            port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
@@ -1358,62 +1616,79 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.assertTrue(self.inst_creator.remove_security_group(sec_grp))
 
         # Validate that security group has been added
-        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(), sec_grp_settings.name))
+        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
+                                          sec_grp_settings.name))
 
     def test_remove_security_group_never_added(self):
         """
-        Tests the removal of a security group that was never added in the first place.
+        Tests the removal of a security group that was never added in the first
+        place.
         """
         # Create security group object to add to instance
-        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name', description='hello group')
-        sec_grp_creator = OpenStackSecurityGroup(self.os_creds, sec_grp_settings)
+        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name',
+                                                 description='hello group')
+        sec_grp_creator = OpenStackSecurityGroup(self.os_creds,
+                                                 sec_grp_settings)
         sec_grp = sec_grp_creator.create()
         self.sec_grp_creators.append(sec_grp_creator)
 
         # Create instance
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
         # Check that group has been added
-        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(), sec_grp_settings.name))
+        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
+                                          sec_grp_settings.name))
 
         # Add security group to instance after activated
         self.assertFalse(self.inst_creator.remove_security_group(sec_grp))
 
         # Validate that security group has been added
-        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(), sec_grp_settings.name))
+        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
+                                          sec_grp_settings.name))
 
     def test_add_same_security_group(self):
         """
-        Tests the addition of a security group created before add added to the instance.
+        Tests the addition of a security group created before add added to the
+        instance.
         """
         # Create security group object to add to instance
-        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name', description='hello group')
-        sec_grp_creator = OpenStackSecurityGroup(self.os_creds, sec_grp_settings)
+        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name',
+                                                 description='hello group')
+        sec_grp_creator = OpenStackSecurityGroup(self.os_creds,
+                                                 sec_grp_settings)
         sec_grp = sec_grp_creator.create()
         self.sec_grp_creators.append(sec_grp_creator)
 
         # Create instance
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name,
-            security_group_names=[sec_grp_settings.name], port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            security_group_names=[sec_grp_settings.name],
+            port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(vm_inst)
 
         # Check that group has been added
-        self.assertTrue(inst_has_sec_grp(self.inst_creator.get_vm_inst(), sec_grp_settings.name))
+        self.assertTrue(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
+                                         sec_grp_settings.name))
 
         # Add security group to instance after activated
         self.assertTrue(self.inst_creator.add_security_group(sec_grp))
 
         # Validate that security group has been added
-        self.assertTrue(inst_has_sec_grp(self.inst_creator.get_vm_inst(), sec_grp_settings.name))
+        self.assertTrue(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
+                                         sec_grp_settings.name))
 
 
 def inst_has_sec_grp(vm_inst, sec_grp_name):
@@ -1435,7 +1710,8 @@ def inst_has_sec_grp(vm_inst, sec_grp_name):
 def validate_ssh_client(instance_creator):
     """
     Returns True if instance_creator returns an SSH client that is valid
-    :param instance_creator: the object responsible for creating the VM instance
+    :param instance_creator: the object responsible for creating the VM
+                             instance
     :return: T/F
     """
     ssh_active = instance_creator.vm_ssh_active(block=True)
@@ -1464,8 +1740,8 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
 
     def setUp(self):
         """
-        Instantiates the CreateImage object that is responsible for downloading and creating an OS image file
-        within OpenStack
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file within OpenStack
         """
         super(self.__class__, self).__start__()
 
@@ -1491,16 +1767,22 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
                     and 'disk_file' in self.image_metadata['cirros']:
                 metadata = self.image_metadata['cirros']
             else:
-                metadata = {'disk_url': openstack_tests.CIRROS_DEFAULT_IMAGE_URL,
-                            'kernel_url': openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL,
-                            'ramdisk_url': openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL}
+                metadata = {
+                    'disk_url': openstack_tests.CIRROS_DEFAULT_IMAGE_URL,
+                    'kernel_url':
+                        openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL,
+                    'ramdisk_url':
+                        openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL}
 
             image_settings = openstack_tests.cirros_image_settings(
                 name=self.image_name,
                 image_metadata=metadata)
 
-            if not image_settings.ramdisk_image_settings or not image_settings.kernel_image_settings:
-                logger.warn('3 Part image will not be tested. Image metadata has overridden this functionality')
+            if not image_settings.ramdisk_image_settings or not \
+                    image_settings.kernel_image_settings:
+                logger.warn(
+                    '3 Part image will not be tested. Image metadata has '
+                    'overridden this functionality')
 
             self.image_creator = OpenStackImage(self.os_creds, image_settings)
             self.image_creator.create()
@@ -1508,15 +1790,18 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10, vcpus=2, metadata=self.flavor_metadata))
+                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10,
+                               vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
             # Create Network
-            self.network_creator = OpenStackNetwork(self.os_creds, net_config.network_settings)
+            self.network_creator = OpenStackNetwork(
+                self.os_creds, net_config.network_settings)
             self.network_creator.create()
 
-            self.port_settings = PortSettings(name=guid + '-port',
-                                              network_name=net_config.network_settings.name)
+            self.port_settings = PortSettings(
+                name=guid + '-port',
+                network_name=net_config.network_settings.name)
         except Exception as e:
             self.tearDown()
             raise e
@@ -1529,25 +1814,32 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
             try:
                 self.inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning VM instance with message -'
+                    ' %s', e)
 
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning flavor with message - %s',
+                    e)
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
 
         if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning image with message - %s', e)
 
         super(self.__class__, self).__clean__()
 
@@ -1555,12 +1847,16 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
         """
         Tests the creation of an OpenStack instance from a 3-part image.
         """
-        instance_settings = VmInstanceSettings(name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name,
-                                               port_settings=[self.port_settings])
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
 
-        # The last created image is the main image from which we create the instance
+        # The last created image is the main image from which we create the
+        # instance
         self.inst_creator = OpenStackVmInstance(
-            self.os_creds, instance_settings, self.image_creator.image_settings)
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
 
         vm_inst = self.inst_creator.create()
         self.assertIsNotNone(vm_inst)
@@ -1569,14 +1865,15 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
 
 class CreateInstanceMockOfflineTests(OSComponentTestCase):
     """
-    Tests the custom image_metadata that can be set by clients for handling images differently than the
-    default behavior of the existing tests primarily for offline testing
+    Tests the custom image_metadata that can be set by clients for handling
+    images differently than the default behavior of the existing tests
+    primarily for offline testing
     """
 
     def setUp(self):
         """
-        Instantiates the CreateImage object that is responsible for downloading and creating an OS image file
-        within OpenStack
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file within OpenStack
         """
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
@@ -1595,23 +1892,28 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.inst_creator = None
 
         self.priv_net_config = openstack_tests.get_priv_net_config(
-            net_name=self.guid + '-priv-net', subnet_name=self.guid + '-priv-subnet')
+            net_name=self.guid + '-priv-net',
+            subnet_name=self.guid + '-priv-subnet')
         self.port_settings = PortSettings(
-            name=self.port_1_name, network_name=self.priv_net_config.network_settings.name)
+            name=self.port_1_name,
+            network_name=self.priv_net_config.network_settings.name)
 
         try:
             # Download image file
-            self.image_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_IMAGE_URL, self.tmpDir)
+            self.image_file = file_utils.download(
+                openstack_tests.CIRROS_DEFAULT_IMAGE_URL, self.tmpDir)
 
             # Create Network
-            self.network_creator = OpenStackNetwork(self.os_creds, self.priv_net_config.network_settings)
+            self.network_creator = OpenStackNetwork(
+                self.os_creds, self.priv_net_config.network_settings)
             self.network_creator.create()
 
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.os_creds,
                 FlavorSettings(
-                    name=self.guid + '-flavor-name', ram=128, disk=10, vcpus=1))
+                    name=self.guid + '-flavor-name', ram=128, disk=10,
+                    vcpus=1))
             self.flavor_creator.create()
         except Exception as e:
             self.tearDown()
@@ -1625,43 +1927,54 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
             try:
                 self.inst_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning VM instance with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning VM instance with message - '
+                    '%s', e)
 
         if self.network_creator:
             try:
                 self.network_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning network with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
 
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning flavor with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning flavor with message - %s',
+                    e)
 
         if self.image_creator:
             try:
                 self.image_creator.clean()
             except Exception as e:
-                logger.error('Unexpected exception cleaning image with message - ' + str(e))
+                logger.error(
+                    'Unexpected exception cleaning image with message - %s', e)
 
         if os.path.exists(self.tmpDir) and os.path.isdir(self.tmpDir):
             shutil.rmtree(self.tmpDir)
 
     def test_inst_from_file_image_simple_flat(self):
         """
-        Creates a VM instance from a locally sourced file image using simply the 'disk_file' attribute vs.
-        using the 'config' option which completely overrides all image settings
+        Creates a VM instance from a locally sourced file image using simply
+        the 'disk_file' attribute vs. using the 'config' option which
+        completely overrides all image settings
         :return: 
         """
         metadata = {'disk_file': self.image_file.name}
 
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name, image_metadata=metadata)
+        os_image_settings = openstack_tests.cirros_image_settings(
+            name=self.image_name, image_metadata=metadata)
         self.assertEqual(self.image_file.name, os_image_settings.image_file)
-        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.image_user)
+        self.assertEqual(openstack_tests.CIRROS_USER,
+                         os_image_settings.image_user)
         self.assertIsNone(os_image_settings.url)
         self.assertFalse(os_image_settings.exists)
-        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.format)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT,
+                         os_image_settings.format)
 
         self.assertIsNone(os_image_settings.kernel_image_settings)
         self.assertIsNone(os_image_settings.ramdisk_image_settings)
@@ -1670,27 +1983,34 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.image_creator.create()
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         self.inst_creator.create()
 
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
     def test_inst_from_file_image_simple_nested(self):
         """
-        Creates a VM instance from a locally sourced file image using simply the 'disk_file' attribute under 'cirros'
-        vs. using the 'config' option which completely overrides all image settings
+        Creates a VM instance from a locally sourced file image using simply
+        the 'disk_file' attribute under 'cirros' vs. using the 'config' option
+        which completely overrides all image settings
         :return: 
         """
         metadata = {'cirros': {'disk_file': self.image_file.name}}
 
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name, image_metadata=metadata)
+        os_image_settings = openstack_tests.cirros_image_settings(
+            name=self.image_name, image_metadata=metadata)
         self.assertEqual(self.image_file.name, os_image_settings.image_file)
-        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.image_user)
+        self.assertEqual(openstack_tests.CIRROS_USER,
+                         os_image_settings.image_user)
         self.assertIsNone(os_image_settings.url)
         self.assertFalse(os_image_settings.exists)
-        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.format)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT,
+                         os_image_settings.format)
 
         self.assertIsNone(os_image_settings.kernel_image_settings)
         self.assertIsNone(os_image_settings.ramdisk_image_settings)
@@ -1699,57 +2019,78 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.image_creator.create()
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         self.inst_creator.create()
 
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
     def test_inst_from_existing(self):
         """
-        Creates a VM instance from a image creator that has been configured to use an existing image
+        Creates a VM instance from a image creator that has been configured to
+        use an existing image
         :return: 
         """
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
+        os_image_settings = openstack_tests.cirros_image_settings(
+            name=self.image_name)
         self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
         self.image_creator.create()
 
+        image_settings = self.image_creator.image_settings
         test_image_creator = OpenStackImage(
-            self.os_creds, ImageSettings(name=self.image_creator.image_settings.name,
-                                         image_user=self.image_creator.image_settings.image_user, exists=True))
+            self.os_creds,
+            ImageSettings(name=image_settings.name,
+                          image_user=image_settings.image_user,
+                          exists=True))
         test_image_creator.create()
-        self.assertEqual(self.image_creator.get_image().id, test_image_creator.get_image().id)
+        self.assertEqual(self.image_creator.get_image().id,
+                         test_image_creator.get_image().id)
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                test_image_creator.image_settings)
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            test_image_creator.image_settings)
         self.inst_creator.create()
 
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
     def test_inst_from_file_image_complex(self):
         """
-        Creates a VM instance from a locally sourced file image by overriding the default settings by using a dict()
-        that can be read in by ImageSettings
+        Creates a VM instance from a locally sourced file image by overriding
+        the default settings by using a dict() that can be read in by
+        ImageSettings
         :return: 
         """
 
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name)
+        os_image_settings = openstack_tests.cirros_image_settings(
+            name=self.image_name)
         self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
         self.image_creator.create()
 
-        metadata = {'cirros': {'config':
-                                   {'name': os_image_settings.name, 'image_user': os_image_settings.image_user,
-                                    'exists': True}}}
-        test_image_settings = openstack_tests.cirros_image_settings(image_metadata=metadata)
+        metadata = {
+            'cirros':
+                {'config':
+                     {'name': os_image_settings.name,
+                      'image_user': os_image_settings.image_user,
+                      'exists': True}}}
+        test_image_settings = openstack_tests.cirros_image_settings(
+            image_metadata=metadata)
         test_image = OpenStackImage(self.os_creds, test_image_settings)
         test_image.create()
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(self.os_creds,
+                                                instance_settings,
                                                 test_image_settings)
         self.inst_creator.create()
 
@@ -1757,102 +2098,136 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
 
     def test_inst_from_file_3part_image_complex(self):
         """
-        Creates a VM instance from a locally sourced file image by overriding the default settings by using a dict()
-        that can be read in by ImageSettings
+        Creates a VM instance from a locally sourced file image by overriding
+        the default settings by using a dict() that can be read in by
+        ImageSettings
         :return: 
         """
 
-        kernel_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL, self.tmpDir)
-        ramdisk_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL, self.tmpDir)
+        kernel_file = file_utils.download(
+            openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL, self.tmpDir)
+        ramdisk_file = file_utils.download(
+            openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL, self.tmpDir)
 
-        metadata = {'cirros':
-                        {'config':
-                             {'name': self.image_name,
-                              'image_user': openstack_tests.CIRROS_USER,
-                              'image_file': self.image_file.name,
-                              'format': openstack_tests.DEFAULT_IMAGE_FORMAT,
-                              'kernel_image_settings':
-                                  {'name': self.image_name + '-kernel',
-                                   'image_user': openstack_tests.CIRROS_USER,
-                                   'image_file': kernel_file.name,
-                                   'format': openstack_tests.DEFAULT_IMAGE_FORMAT},
-                              'ramdisk_image_settings':
-                                  {'name': self.image_name + '-ramdisk',
-                                   'image_user': openstack_tests.CIRROS_USER,
-                                   'image_file': ramdisk_file.name,
-                                   'format': openstack_tests.DEFAULT_IMAGE_FORMAT}}}}
+        metadata = {
+            'cirros':
+                {'config':
+                     {'name': self.image_name,
+                      'image_user': openstack_tests.CIRROS_USER,
+                      'image_file': self.image_file.name,
+                      'format': openstack_tests.DEFAULT_IMAGE_FORMAT,
+                      'kernel_image_settings':
+                          {'name': self.image_name + '-kernel',
+                           'image_user': openstack_tests.CIRROS_USER,
+                           'image_file': kernel_file.name,
+                           'format': openstack_tests.DEFAULT_IMAGE_FORMAT},
+                      'ramdisk_image_settings':
+                          {'name': self.image_name + '-ramdisk',
+                           'image_user': openstack_tests.CIRROS_USER,
+                           'image_file': ramdisk_file.name,
+                           'format': openstack_tests.DEFAULT_IMAGE_FORMAT}}}}
 
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name, image_metadata=metadata)
+        os_image_settings = openstack_tests.cirros_image_settings(
+            name=self.image_name, image_metadata=metadata)
         self.assertEqual(self.image_name, os_image_settings.name)
         self.assertEqual(self.image_file.name, os_image_settings.image_file)
-        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.image_user)
+        self.assertEqual(openstack_tests.CIRROS_USER,
+                         os_image_settings.image_user)
         self.assertIsNone(os_image_settings.url)
         self.assertFalse(os_image_settings.exists)
-        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.format)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT,
+                         os_image_settings.format)
 
         self.assertIsNotNone(os_image_settings.kernel_image_settings)
-        self.assertEqual(self.image_name + '-kernel', os_image_settings.kernel_image_settings.name)
-        self.assertEqual(kernel_file.name, os_image_settings.kernel_image_settings.image_file)
-        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.kernel_image_settings.image_user)
+        self.assertEqual(self.image_name + '-kernel',
+                         os_image_settings.kernel_image_settings.name)
+        self.assertEqual(kernel_file.name,
+                         os_image_settings.kernel_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER,
+                         os_image_settings.kernel_image_settings.image_user)
         self.assertIsNone(os_image_settings.kernel_image_settings.url)
         self.assertFalse(os_image_settings.kernel_image_settings.exists)
-        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.kernel_image_settings.format)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT,
+                         os_image_settings.kernel_image_settings.format)
 
         self.assertIsNotNone(os_image_settings.ramdisk_image_settings)
-        self.assertEqual(self.image_name + '-ramdisk', os_image_settings.ramdisk_image_settings.name)
-        self.assertEqual(ramdisk_file.name, os_image_settings.ramdisk_image_settings.image_file)
-        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.ramdisk_image_settings.image_user)
+        self.assertEqual(self.image_name + '-ramdisk',
+                         os_image_settings.ramdisk_image_settings.name)
+        self.assertEqual(ramdisk_file.name,
+                         os_image_settings.ramdisk_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER,
+                         os_image_settings.ramdisk_image_settings.image_user)
         self.assertIsNone(os_image_settings.ramdisk_image_settings.url)
         self.assertFalse(os_image_settings.ramdisk_image_settings.exists)
-        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.ramdisk_image_settings.format)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT,
+                         os_image_settings.ramdisk_image_settings.format)
 
         self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
         self.image_creator.create()
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings, self.image_creator.image_settings)
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         self.inst_creator.create()
 
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
     def test_inst_from_file_3part_image_simple_flat(self):
         """
-        Creates a VM instance from a 3-part image locally sourced from file images using simply the 'disk_file',
-        'kernel_file', and 'ramdisk_file' attributes vs. using the 'config' option which completely overrides all
+        Creates a VM instance from a 3-part image locally sourced from file
+        images using simply the 'disk_file', 'kernel_file', and 'ramdisk_file'
+        attributes vs. using the 'config' option which completely overrides all
         image settings
         :return: 
         """
-        kernel_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL, self.tmpDir)
-        ramdisk_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL, self.tmpDir)
+        kernel_file = file_utils.download(
+            openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL, self.tmpDir)
+        ramdisk_file = file_utils.download(
+            openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL, self.tmpDir)
 
-        metadata = {'disk_file': self.image_file.name, 'kernel_file': kernel_file.name,
+        metadata = {'disk_file': self.image_file.name,
+                    'kernel_file': kernel_file.name,
                     'ramdisk_file': ramdisk_file.name}
 
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name, image_metadata=metadata)
+        os_image_settings = openstack_tests.cirros_image_settings(
+            name=self.image_name, image_metadata=metadata)
 
         self.assertEqual(self.image_name, os_image_settings.name)
         self.assertEqual(self.image_file.name, os_image_settings.image_file)
-        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.image_user)
+        self.assertEqual(openstack_tests.CIRROS_USER,
+                         os_image_settings.image_user)
         self.assertIsNone(os_image_settings.url)
         self.assertFalse(os_image_settings.exists)
-        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.format)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT,
+                         os_image_settings.format)
 
         self.assertIsNotNone(os_image_settings.kernel_image_settings)
-        self.assertEqual(self.image_name + '-kernel', os_image_settings.kernel_image_settings.name)
-        self.assertEqual(kernel_file.name, os_image_settings.kernel_image_settings.image_file)
-        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.kernel_image_settings.image_user)
+        self.assertEqual(self.image_name + '-kernel',
+                         os_image_settings.kernel_image_settings.name)
+        self.assertEqual(kernel_file.name,
+                         os_image_settings.kernel_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER,
+                         os_image_settings.kernel_image_settings.image_user)
         self.assertIsNone(os_image_settings.kernel_image_settings.url)
         self.assertFalse(os_image_settings.kernel_image_settings.exists)
-        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.kernel_image_settings.format)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT,
+                         os_image_settings.kernel_image_settings.format)
 
         self.assertIsNotNone(os_image_settings.ramdisk_image_settings)
-        self.assertEqual(self.image_name + '-ramdisk', os_image_settings.ramdisk_image_settings.name)
-        self.assertEqual(ramdisk_file.name, os_image_settings.ramdisk_image_settings.image_file)
-        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.ramdisk_image_settings.image_user)
+        self.assertEqual(self.image_name + '-ramdisk',
+                         os_image_settings.ramdisk_image_settings.name)
+        self.assertEqual(ramdisk_file.name,
+                         os_image_settings.ramdisk_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER,
+                         os_image_settings.ramdisk_image_settings.image_user)
         self.assertIsNone(os_image_settings.ramdisk_image_settings.url)
         self.assertFalse(os_image_settings.ramdisk_image_settings.exists)
-        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.ramdisk_image_settings.format)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT,
+                         os_image_settings.ramdisk_image_settings.format)
 
         self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
         self.image_creator.create()
@@ -1861,50 +2236,68 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.assertIsNotNone(self.image_creator.get_ramdisk_image())
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         self.inst_creator.create()
 
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
     def test_inst_from_file_3part_image_simple_nested(self):
         """
-        Creates a VM instance from a 3-part image locally sourced from file images using simply the 'disk_file',
-        'kernel_file', and 'ramdisk_file' attributes under 'cirros' vs. using the 'config' option which completely
-        overrides all image settings
+        Creates a VM instance from a 3-part image locally sourced from file
+        images using simply the 'disk_file', 'kernel_file', and 'ramdisk_file'
+        attributes under 'cirros' vs. using the 'config' option which
+        completely overrides all image settings
         :return: 
         """
-        kernel_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL, self.tmpDir)
-        ramdisk_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL, self.tmpDir)
+        kernel_file = file_utils.download(
+            openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL, self.tmpDir)
+        ramdisk_file = file_utils.download(
+            openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL, self.tmpDir)
 
-        metadata = {'cirros': {'disk_file': self.image_file.name, 'kernel_file': kernel_file.name,
+        metadata = {'cirros': {'disk_file': self.image_file.name,
+                               'kernel_file': kernel_file.name,
                                'ramdisk_file': ramdisk_file.name}}
 
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name, image_metadata=metadata)
+        os_image_settings = openstack_tests.cirros_image_settings(
+            name=self.image_name, image_metadata=metadata)
 
         self.assertEqual(self.image_name, os_image_settings.name)
         self.assertEqual(self.image_file.name, os_image_settings.image_file)
-        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.image_user)
+        self.assertEqual(openstack_tests.CIRROS_USER,
+                         os_image_settings.image_user)
         self.assertIsNone(os_image_settings.url)
         self.assertFalse(os_image_settings.exists)
-        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.format)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT,
+                         os_image_settings.format)
 
         self.assertIsNotNone(os_image_settings.kernel_image_settings)
-        self.assertEqual(self.image_name + '-kernel', os_image_settings.kernel_image_settings.name)
-        self.assertEqual(kernel_file.name, os_image_settings.kernel_image_settings.image_file)
-        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.kernel_image_settings.image_user)
+        self.assertEqual(self.image_name + '-kernel',
+                         os_image_settings.kernel_image_settings.name)
+        self.assertEqual(kernel_file.name,
+                         os_image_settings.kernel_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER,
+                         os_image_settings.kernel_image_settings.image_user)
         self.assertIsNone(os_image_settings.kernel_image_settings.url)
         self.assertFalse(os_image_settings.kernel_image_settings.exists)
-        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.kernel_image_settings.format)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT,
+                         os_image_settings.kernel_image_settings.format)
 
         self.assertIsNotNone(os_image_settings.ramdisk_image_settings)
-        self.assertEqual(self.image_name + '-ramdisk', os_image_settings.ramdisk_image_settings.name)
-        self.assertEqual(ramdisk_file.name, os_image_settings.ramdisk_image_settings.image_file)
-        self.assertEqual(openstack_tests.CIRROS_USER, os_image_settings.ramdisk_image_settings.image_user)
+        self.assertEqual(self.image_name + '-ramdisk',
+                         os_image_settings.ramdisk_image_settings.name)
+        self.assertEqual(ramdisk_file.name,
+                         os_image_settings.ramdisk_image_settings.image_file)
+        self.assertEqual(openstack_tests.CIRROS_USER,
+                         os_image_settings.ramdisk_image_settings.image_user)
         self.assertIsNone(os_image_settings.ramdisk_image_settings.url)
         self.assertFalse(os_image_settings.ramdisk_image_settings.exists)
-        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT, os_image_settings.ramdisk_image_settings.format)
+        self.assertEqual(openstack_tests.DEFAULT_IMAGE_FORMAT,
+                         os_image_settings.ramdisk_image_settings.format)
 
         self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
         self.image_creator.create()
@@ -1913,9 +2306,12 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.assertIsNotNone(self.image_creator.get_ramdisk_image())
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                self.image_creator.image_settings)
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
         self.inst_creator.create()
 
         self.assertTrue(self.inst_creator.vm_active(block=True))
@@ -1925,26 +2321,37 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         Creates a VM instance from a 3-part image that is existing
         :return: 
         """
-        kernel_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL, self.tmpDir)
-        ramdisk_file = file_utils.download(openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL, self.tmpDir)
+        kernel_file = file_utils.download(
+            openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL, self.tmpDir)
+        ramdisk_file = file_utils.download(
+            openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL, self.tmpDir)
 
-        metadata = {'cirros': {'disk_file': self.image_file.name, 'kernel_file': kernel_file.name,
+        metadata = {'cirros': {'disk_file': self.image_file.name,
+                               'kernel_file': kernel_file.name,
                                'ramdisk_file': ramdisk_file.name}}
 
-        os_image_settings = openstack_tests.cirros_image_settings(name=self.image_name, image_metadata=metadata)
+        os_image_settings = openstack_tests.cirros_image_settings(
+            name=self.image_name, image_metadata=metadata)
         self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
         self.image_creator.create()
 
+        image_settings = self.image_creator.image_settings
         test_image_creator = OpenStackImage(
-            self.os_creds, ImageSettings(name=self.image_creator.image_settings.name,
-                                         image_user=self.image_creator.image_settings.image_user, exists=True))
+            self.os_creds,
+            ImageSettings(name=image_settings.name,
+                          image_user=image_settings.image_user,
+                          exists=True))
         test_image_creator.create()
-        self.assertEqual(self.image_creator.get_image().id, test_image_creator.get_image().id)
+        self.assertEqual(self.image_creator.get_image().id,
+                         test_image_creator.get_image().id)
 
         instance_settings = VmInstanceSettings(
-            name=self.vm_inst_name, flavor=self.flavor_creator.flavor_settings.name, port_settings=[self.port_settings])
-        self.inst_creator = OpenStackVmInstance(self.os_creds, instance_settings,
-                                                test_image_creator.image_settings)
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            test_image_creator.image_settings)
         self.inst_creator.create()
 
         self.assertTrue(self.inst_creator.vm_active(block=True))
@@ -1953,8 +2360,9 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
 def check_dhcp_lease(vm, ip, timeout=160):
     """
     Returns true if the expected DHCP lease has been acquired
-    :param vm:
-    :param ip:
+    :param vm: the OpenStack VM instance object
+    :param ip: the IP address to look for
+    :param timeout: how long to query for IP address
     :return:
     """
     found = False
