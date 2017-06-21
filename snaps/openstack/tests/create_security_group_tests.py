@@ -12,12 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import uuid
 import unittest
+import uuid
 
 from snaps.openstack import create_security_group
-from snaps.openstack.create_security_group import SecurityGroupSettings, SecurityGroupRuleSettings, Direction, \
-    Ethertype, Protocol
+from snaps.openstack.create_security_group import (SecurityGroupSettings,
+                                                   SecurityGroupRuleSettings,
+                                                   Direction, Ethertype,
+                                                   Protocol)
 from snaps.openstack.tests import validation_utils
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import neutron_utils
@@ -36,7 +38,7 @@ class SecurityGroupRuleSettingsUnitTests(unittest.TestCase):
 
     def test_empty_config(self):
         with self.assertRaises(Exception):
-            SecurityGroupRuleSettings(config=dict())
+            SecurityGroupRuleSettings(**dict())
 
     def test_name_only(self):
         with self.assertRaises(Exception):
@@ -44,22 +46,26 @@ class SecurityGroupRuleSettingsUnitTests(unittest.TestCase):
 
     def test_config_with_name_only(self):
         with self.assertRaises(Exception):
-            SecurityGroupRuleSettings(config={'sec_grp_name': 'foo'})
+            SecurityGroupRuleSettings(**{'sec_grp_name': 'foo'})
 
     def test_name_and_direction(self):
-        settings = SecurityGroupRuleSettings(sec_grp_name='foo', direction=Direction.ingress)
+        settings = SecurityGroupRuleSettings(sec_grp_name='foo',
+                                             direction=Direction.ingress)
         self.assertEqual('foo', settings.sec_grp_name)
         self.assertEqual(Direction.ingress, settings.direction)
 
     def test_config_name_and_direction(self):
-        settings = SecurityGroupRuleSettings(config={'sec_grp_name': 'foo', 'direction': 'ingress'})
+        settings = SecurityGroupRuleSettings(
+            **{'sec_grp_name': 'foo', 'direction': 'ingress'})
         self.assertEqual('foo', settings.sec_grp_name)
         self.assertEqual(Direction.ingress, settings.direction)
 
     def test_all(self):
         settings = SecurityGroupRuleSettings(
-            sec_grp_name='foo', description='fubar', direction=Direction.egress, remote_group_id='rgi',
-            protocol=Protocol.icmp, ethertype=Ethertype.IPv6, port_range_min=1, port_range_max=2,
+            sec_grp_name='foo', description='fubar',
+            direction=Direction.egress, remote_group_id='rgi',
+            protocol=Protocol.icmp, ethertype=Ethertype.IPv6, port_range_min=1,
+            port_range_max=2,
             remote_ip_prefix='prfx')
         self.assertEqual('foo', settings.sec_grp_name)
         self.assertEqual('fubar', settings.description)
@@ -73,15 +79,15 @@ class SecurityGroupRuleSettingsUnitTests(unittest.TestCase):
 
     def test_config_all(self):
         settings = SecurityGroupRuleSettings(
-            config={'sec_grp_name': 'foo',
-                    'description': 'fubar',
-                    'direction': 'egress',
-                    'remote_group_id': 'rgi',
-                    'protocol': 'tcp',
-                    'ethertype': 'IPv6',
-                    'port_range_min': 1,
-                    'port_range_max': 2,
-                    'remote_ip_prefix': 'prfx'})
+            **{'sec_grp_name': 'foo',
+               'description': 'fubar',
+               'direction': 'egress',
+               'remote_group_id': 'rgi',
+               'protocol': 'tcp',
+               'ethertype': 'IPv6',
+               'port_range_min': 1,
+               'port_range_max': 2,
+               'remote_ip_prefix': 'prfx'})
         self.assertEqual('foo', settings.sec_grp_name)
         self.assertEqual('fubar', settings.description)
         self.assertEqual(Direction.egress, settings.direction)
@@ -104,27 +110,31 @@ class SecurityGroupSettingsUnitTests(unittest.TestCase):
 
     def test_empty_config(self):
         with self.assertRaises(Exception):
-            SecurityGroupSettings(config=dict())
+            SecurityGroupSettings(**dict())
 
     def test_name_only(self):
         settings = SecurityGroupSettings(name='foo')
         self.assertEqual('foo', settings.name)
 
     def test_config_with_name_only(self):
-        settings = SecurityGroupSettings(config={'name': 'foo'})
+        settings = SecurityGroupSettings(**{'name': 'foo'})
         self.assertEqual('foo', settings.name)
 
     def test_invalid_rule(self):
-        rule_setting = SecurityGroupRuleSettings(sec_grp_name='bar', direction=Direction.ingress)
+        rule_setting = SecurityGroupRuleSettings(sec_grp_name='bar',
+                                                 direction=Direction.ingress)
         with self.assertRaises(Exception):
             SecurityGroupSettings(name='foo', rule_settings=[rule_setting])
 
     def test_all(self):
         rule_settings = list()
-        rule_settings.append(SecurityGroupRuleSettings(sec_grp_name='bar', direction=Direction.egress))
-        rule_settings.append(SecurityGroupRuleSettings(sec_grp_name='bar', direction=Direction.ingress))
+        rule_settings.append(SecurityGroupRuleSettings(
+            sec_grp_name='bar', direction=Direction.egress))
+        rule_settings.append(SecurityGroupRuleSettings(
+            sec_grp_name='bar', direction=Direction.ingress))
         settings = SecurityGroupSettings(
-            name='bar', description='fubar', project_name='foo', rule_settings=rule_settings)
+            name='bar', description='fubar', project_name='foo',
+            rule_settings=rule_settings)
 
         self.assertEqual('bar', settings.name)
         self.assertEqual('fubar', settings.description)
@@ -134,17 +144,19 @@ class SecurityGroupSettingsUnitTests(unittest.TestCase):
 
     def test_config_all(self):
         settings = SecurityGroupSettings(
-            config={'name': 'bar',
-                    'description': 'fubar',
-                    'project_name': 'foo',
-                    'rules': [{'sec_grp_name': 'bar', 'direction': 'ingress'}]})
+            **{'name': 'bar',
+               'description': 'fubar',
+               'project_name': 'foo',
+               'rules': [
+                   {'sec_grp_name': 'bar', 'direction': 'ingress'}]})
 
         self.assertEqual('bar', settings.name)
         self.assertEqual('fubar', settings.description)
         self.assertEqual('foo', settings.project_name)
         self.assertEqual(1, len(settings.rule_settings))
         self.assertEqual('bar', settings.rule_settings[0].sec_grp_name)
-        self.assertEqual(Direction.ingress, settings.rule_settings[0].direction)
+        self.assertEqual(Direction.ingress,
+                         settings.rule_settings[0].direction)
 
 
 class CreateSecurityGroupTests(OSIntegrationTestCase):
@@ -154,8 +166,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
     def setUp(self):
         """
-        Instantiates the CreateSecurityGroup object that is responsible for downloading and creating an OS image file
-        within OpenStack
+        Instantiates the CreateSecurityGroup object that is responsible for
+        downloading and creating an OS image file within OpenStack
         """
         super(self.__class__, self).__start__()
 
@@ -180,176 +192,232 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack Security Group without custom rules.
         """
         # Create Image
-        sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name, description='hello group')
-        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(self.os_creds, sec_grp_settings)
+        sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name,
+                                                 description='hello group')
+        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(
+            self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron, self.sec_grp_name)
+        sec_grp = neutron_utils.get_security_group(self.neutron,
+                                                   self.sec_grp_name)
         self.assertIsNotNone(sec_grp)
 
-        validation_utils.objects_equivalent(self.sec_grp_creator.get_security_group(), sec_grp)
-        rules = neutron_utils.get_rules_by_security_group(self.neutron, self.sec_grp_creator.get_security_group())
+        validation_utils.objects_equivalent(
+            self.sec_grp_creator.get_security_group(), sec_grp)
+        rules = neutron_utils.get_rules_by_security_group(
+            self.neutron, self.sec_grp_creator.get_security_group())
         self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
-        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(), rules)
+        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(),
+                                            rules)
 
     def test_create_delete_group(self):
         """
         Tests the creation of an OpenStack Security Group without custom rules.
         """
         # Create Image
-        sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name, description='hello group')
-        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(self.os_creds, sec_grp_settings)
+        sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name,
+                                                 description='hello group')
+        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(
+            self.os_creds, sec_grp_settings)
         created_sec_grp = self.sec_grp_creator.create()
         self.assertIsNotNone(created_sec_grp)
 
         neutron_utils.delete_security_group(self.neutron, created_sec_grp)
-        self.assertIsNone(neutron_utils.get_security_group(self.neutron, self.sec_grp_creator.sec_grp_settings.name))
+        self.assertIsNone(neutron_utils.get_security_group(
+            self.neutron, self.sec_grp_creator.sec_grp_settings.name))
 
         self.sec_grp_creator.clean()
 
     def test_create_group_with_one_simple_rule(self):
         """
-        Tests the creation of an OpenStack Security Group with one simple custom rule.
+        Tests the creation of an OpenStack Security Group with one simple
+        custom rule.
         """
         # Create Image
         sec_grp_rule_settings = list()
-        sec_grp_rule_settings.append(SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
-                                                               direction=Direction.ingress))
-        sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name, description='hello group',
-                                                 rule_settings=sec_grp_rule_settings)
-        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(self.os_creds, sec_grp_settings)
+        sec_grp_rule_settings.append(
+            SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
+                                      direction=Direction.ingress))
+        sec_grp_settings = SecurityGroupSettings(
+            name=self.sec_grp_name, description='hello group',
+            rule_settings=sec_grp_rule_settings)
+        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(
+            self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron, self.sec_grp_name)
-        validation_utils.objects_equivalent(self.sec_grp_creator.get_security_group(), sec_grp)
-        rules = neutron_utils.get_rules_by_security_group(self.neutron,
-                                                          self.sec_grp_creator.get_security_group())
+        sec_grp = neutron_utils.get_security_group(self.neutron,
+                                                   self.sec_grp_name)
+        validation_utils.objects_equivalent(
+            self.sec_grp_creator.get_security_group(), sec_grp)
+        rules = neutron_utils.get_rules_by_security_group(
+            self.neutron, self.sec_grp_creator.get_security_group())
         self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
-        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(), rules)
+        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(),
+                                            rules)
 
     def test_create_group_with_several_rules(self):
         """
-        Tests the creation of an OpenStack Security Group with one simple custom rule.
+        Tests the creation of an OpenStack Security Group with one simple
+        custom rule.
         """
         # Create Image
         sec_grp_rule_settings = list()
-        sec_grp_rule_settings.append(SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
-                                                               direction=Direction.ingress))
-        sec_grp_rule_settings.append(SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
-                                                               direction=Direction.egress,
-                                                               protocol=Protocol.udp,
-                                                               ethertype=Ethertype.IPv6))
-        sec_grp_rule_settings.append(SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
-                                                               direction=Direction.egress,
-                                                               protocol=Protocol.udp,
-                                                               ethertype=Ethertype.IPv4,
-                                                               port_range_min=10,
-                                                               port_range_max=20))
-        sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name, description='hello group',
-                                                 rule_settings=sec_grp_rule_settings)
-        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(self.os_creds, sec_grp_settings)
+        sec_grp_rule_settings.append(
+            SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
+                                      direction=Direction.ingress))
+        sec_grp_rule_settings.append(
+            SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
+                                      direction=Direction.egress,
+                                      protocol=Protocol.udp,
+                                      ethertype=Ethertype.IPv6))
+        sec_grp_rule_settings.append(
+            SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
+                                      direction=Direction.egress,
+                                      protocol=Protocol.udp,
+                                      ethertype=Ethertype.IPv4,
+                                      port_range_min=10,
+                                      port_range_max=20))
+        sec_grp_settings = SecurityGroupSettings(
+            name=self.sec_grp_name, description='hello group',
+            rule_settings=sec_grp_rule_settings)
+        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(
+            self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron, self.sec_grp_name)
-        validation_utils.objects_equivalent(self.sec_grp_creator.get_security_group(), sec_grp)
-        rules = neutron_utils.get_rules_by_security_group(self.neutron, self.sec_grp_creator.get_security_group())
+        sec_grp = neutron_utils.get_security_group(self.neutron,
+                                                   self.sec_grp_name)
+        validation_utils.objects_equivalent(
+            self.sec_grp_creator.get_security_group(), sec_grp)
+        rules = neutron_utils.get_rules_by_security_group(
+            self.neutron, self.sec_grp_creator.get_security_group())
         self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
-        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(), rules)
+        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(),
+                                            rules)
 
     def test_add_rule(self):
         """
-        Tests the creation of an OpenStack Security Group with one simple custom rule then adds one after creation.
+        Tests the creation of an OpenStack Security Group with one simple
+        custom rule then adds one after creation.
         """
         # Create Image
         sec_grp_rule_settings = list()
-        sec_grp_rule_settings.append(SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
-                                                               direction=Direction.ingress))
-        sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name, description='hello group',
-                                                 rule_settings=sec_grp_rule_settings)
-        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(self.os_creds, sec_grp_settings)
+        sec_grp_rule_settings.append(
+            SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
+                                      direction=Direction.ingress))
+        sec_grp_settings = SecurityGroupSettings(
+            name=self.sec_grp_name, description='hello group',
+            rule_settings=sec_grp_rule_settings)
+        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(
+            self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron, self.sec_grp_name)
-        validation_utils.objects_equivalent(self.sec_grp_creator.get_security_group(), sec_grp)
-        rules = neutron_utils.get_rules_by_security_group(self.neutron,
-                                                          self.sec_grp_creator.get_security_group())
+        sec_grp = neutron_utils.get_security_group(self.neutron,
+                                                   self.sec_grp_name)
+        validation_utils.objects_equivalent(
+            self.sec_grp_creator.get_security_group(), sec_grp)
+        rules = neutron_utils.get_rules_by_security_group(
+            self.neutron, self.sec_grp_creator.get_security_group())
         self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
-        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(), rules)
+        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(),
+                                            rules)
 
-        self.sec_grp_creator.add_rule(SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_creator.sec_grp_settings.name,
-                                                                direction=Direction.egress, protocol=Protocol.icmp))
-        rules2 = neutron_utils.get_rules_by_security_group(self.neutron, self.sec_grp_creator.get_security_group())
+        self.sec_grp_creator.add_rule(SecurityGroupRuleSettings(
+            sec_grp_name=self.sec_grp_creator.sec_grp_settings.name,
+            direction=Direction.egress, protocol=Protocol.icmp))
+        rules2 = neutron_utils.get_rules_by_security_group(
+            self.neutron, self.sec_grp_creator.get_security_group())
         self.assertEqual(len(rules) + 1, len(rules2))
 
     def test_remove_rule_by_id(self):
         """
-        Tests the creation of an OpenStack Security Group with two simple custom rules then removes one by the rule ID.
+        Tests the creation of an OpenStack Security Group with two simple
+        custom rules then removes one by the rule ID.
         """
         # Create Image
         sec_grp_rule_settings = list()
-        sec_grp_rule_settings.append(SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
-                                                               direction=Direction.ingress))
-        sec_grp_rule_settings.append(SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
-                                                               direction=Direction.egress,
-                                                               protocol=Protocol.udp,
-                                                               ethertype=Ethertype.IPv6))
-        sec_grp_rule_settings.append(SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
-                                                               direction=Direction.egress,
-                                                               protocol=Protocol.udp,
-                                                               ethertype=Ethertype.IPv4,
-                                                               port_range_min=10,
-                                                               port_range_max=20))
-        sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name, description='hello group',
-                                                 rule_settings=sec_grp_rule_settings)
-        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(self.os_creds, sec_grp_settings)
+        sec_grp_rule_settings.append(
+            SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
+                                      direction=Direction.ingress))
+        sec_grp_rule_settings.append(
+            SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
+                                      direction=Direction.egress,
+                                      protocol=Protocol.udp,
+                                      ethertype=Ethertype.IPv6))
+        sec_grp_rule_settings.append(
+            SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
+                                      direction=Direction.egress,
+                                      protocol=Protocol.udp,
+                                      ethertype=Ethertype.IPv4,
+                                      port_range_min=10,
+                                      port_range_max=20))
+        sec_grp_settings = SecurityGroupSettings(
+            name=self.sec_grp_name, description='hello group',
+            rule_settings=sec_grp_rule_settings)
+        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(
+            self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron, self.sec_grp_name)
-        validation_utils.objects_equivalent(self.sec_grp_creator.get_security_group(), sec_grp)
-        rules = neutron_utils.get_rules_by_security_group(self.neutron,
-                                                          self.sec_grp_creator.get_security_group())
+        sec_grp = neutron_utils.get_security_group(self.neutron,
+                                                   self.sec_grp_name)
+        validation_utils.objects_equivalent(
+            self.sec_grp_creator.get_security_group(), sec_grp)
+        rules = neutron_utils.get_rules_by_security_group(
+            self.neutron, self.sec_grp_creator.get_security_group())
         self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
-        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(), rules)
+        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(),
+                                            rules)
 
-        self.sec_grp_creator.remove_rule(rule_id=rules[0]['security_group_rule']['id'])
-        rules_after_del = neutron_utils.get_rules_by_security_group(self.neutron,
-                                                                    self.sec_grp_creator.get_security_group())
+        self.sec_grp_creator.remove_rule(
+            rule_id=rules[0]['security_group_rule']['id'])
+        rules_after_del = neutron_utils.get_rules_by_security_group(
+            self.neutron,
+            self.sec_grp_creator.get_security_group())
         self.assertEqual(len(rules) - 1, len(rules_after_del))
 
     def test_remove_rule_by_setting(self):
         """
-        Tests the creation of an OpenStack Security Group with two simple custom rules then removes one by the rule
-        setting object
+        Tests the creation of an OpenStack Security Group with two simple
+        custom rules then removes one by the rule setting object
         """
         # Create Image
         sec_grp_rule_settings = list()
-        sec_grp_rule_settings.append(SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
-                                                               direction=Direction.ingress))
-        sec_grp_rule_settings.append(SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
-                                                               direction=Direction.egress,
-                                                               protocol=Protocol.udp,
-                                                               ethertype=Ethertype.IPv6))
-        sec_grp_rule_settings.append(SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
-                                                               direction=Direction.egress,
-                                                               protocol=Protocol.udp,
-                                                               ethertype=Ethertype.IPv4,
-                                                               port_range_min=10,
-                                                               port_range_max=20))
-        sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name, description='hello group',
-                                                 rule_settings=sec_grp_rule_settings)
-        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(self.os_creds, sec_grp_settings)
+        sec_grp_rule_settings.append(
+            SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
+                                      direction=Direction.ingress))
+        sec_grp_rule_settings.append(
+            SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
+                                      direction=Direction.egress,
+                                      protocol=Protocol.udp,
+                                      ethertype=Ethertype.IPv6))
+        sec_grp_rule_settings.append(
+            SecurityGroupRuleSettings(sec_grp_name=self.sec_grp_name,
+                                      direction=Direction.egress,
+                                      protocol=Protocol.udp,
+                                      ethertype=Ethertype.IPv4,
+                                      port_range_min=10,
+                                      port_range_max=20))
+        sec_grp_settings = SecurityGroupSettings(
+            name=self.sec_grp_name, description='hello group',
+            rule_settings=sec_grp_rule_settings)
+        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(
+            self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron, self.sec_grp_name)
-        validation_utils.objects_equivalent(self.sec_grp_creator.get_security_group(), sec_grp)
-        rules = neutron_utils.get_rules_by_security_group(self.neutron,
-                                                          self.sec_grp_creator.get_security_group())
+        sec_grp = neutron_utils.get_security_group(self.neutron,
+                                                   self.sec_grp_name)
+        validation_utils.objects_equivalent(
+            self.sec_grp_creator.get_security_group(), sec_grp)
+        rules = neutron_utils.get_rules_by_security_group(
+            self.neutron, self.sec_grp_creator.get_security_group())
         self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
-        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(), rules)
+        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(),
+                                            rules)
 
         self.sec_grp_creator.remove_rule(rule_setting=sec_grp_rule_settings[0])
-        rules_after_del = neutron_utils.get_rules_by_security_group(self.neutron,
-                                                                    self.sec_grp_creator.get_security_group())
+        rules_after_del = neutron_utils.get_rules_by_security_group(
+            self.neutron,
+            self.sec_grp_creator.get_security_group())
         self.assertEqual(len(rules) - 1, len(rules_after_del))
 
-# TODO - Add more tests with different rules. Rule creation parameters can be somewhat complex
+# TODO - Add more tests with different rules. Rule creation parameters can be
+# somewhat complex
