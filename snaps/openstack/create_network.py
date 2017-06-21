@@ -413,6 +413,9 @@ class PortSettings:
                           For example, a virtual server.
         :return:
         """
+        if 'port' in kwargs:
+            kwargs = kwargs['port']
+
         self.network = None
 
         self.name = kwargs.get('name')
