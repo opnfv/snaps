@@ -17,7 +17,6 @@ import logging
 import time
 
 from heatclient.exc import HTTPNotFound
-
 from snaps.openstack.utils import heat_utils
 
 __author__ = 'spisarski'
@@ -49,23 +48,31 @@ class OpenStackHeatStack:
 
     def create(self, cleanup=False):
         """
-        Creates the heat stack in OpenStack if it does not already exist and returns the domain Stack object
-        :param cleanup: Denotes whether or not this is being called for cleanup or not
+        Creates the heat stack in OpenStack if it does not already exist and
+        returns the domain Stack object
+        :param cleanup: Denotes whether or not this is being called for cleanup
         :return: The OpenStack Stack object
         """
         self.__heat_cli = heat_utils.heat_client(self.__os_creds)
-        self.__stack = heat_utils.get_stack_by_name(self.__heat_cli, self.stack_settings.name)
+        self.__stack = heat_utils.get_stack_by_name(self.__heat_cli,
+                                                    self.stack_settings.name)
         if self.__stack:
             logger.info('Found stack with name - ' + self.stack_settings.name)
             return self.__stack
         elif not cleanup:
-            self.__stack = heat_utils.create_stack(self.__heat_cli, self.stack_settings)
-            logger.info('Created stack with name - ' + self.stack_settings.name)
+            self.__stack = heat_utils.create_stack(self.__heat_cli,
+                                                   self.stack_settings)
+            logger.info(
+                'Created stack with name - ' + self.stack_settings.name)
             if self.__stack and self.stack_complete(block=True):
-                logger.info('Stack is now active with name - ' + self.stack_settings.name)
+                logger.info(
+                    'Stack is now active with name - ' +
+                    self.stack_settings.name)
                 return self.__stack
             else:
-                raise StackCreationError('Stack was not created or activated in the alloted amount of time')
+                raise StackCreationError(
+                    'Stack was not created or activated in the alloted amount '
+                    'of time')
         else:
             logger.info('Did not create stack due to cleanup mode')
 
@@ -86,42 +93,53 @@ class OpenStackHeatStack:
 
     def get_stack(self):
         """
-        Returns the domain Stack object as it was populated when create() was called
+        Returns the domain Stack object as it was populated when create() was
+        called
         :return: the object
         """
         return self.__stack
 
     def get_outputs(self):
         """
-        Returns the list of outputs as contained on the OpenStack Heat Stack object
+        Returns the list of outputs as contained on the OpenStack Heat Stack
+        object
         :return:
         """
         return heat_utils.get_stack_outputs(self.__heat_cli, self.__stack.id)
 
     def get_status(self):
         """
-        Returns the list of outputs as contained on the OpenStack Heat Stack object
+        Returns the list of outputs as contained on the OpenStack Heat Stack
+        object
         :return:
         """
         return heat_utils.get_stack_status(self.__heat_cli, self.__stack.id)
 
-    def stack_complete(self, block=False, timeout=None, poll_interval=POLL_INTERVAL):
+    def stack_complete(self, block=False, timeout=None,
+                       poll_interval=POLL_INTERVAL):
         """
-        Returns true when the stack status returns the value of expected_status_code
-        :param block: When true, thread will block until active or timeout value in seconds has been exceeded (False)
+        Returns true when the stack status returns the value of
+        expected_status_code
+        :param block: When true, thread will block until active or timeout
+                      value in seconds has been exceeded (False)
         :param timeout: The timeout value
         :param poll_interval: The polling interval in seconds
         :return: T/F
         """
         if not timeout:
             timeout = self.stack_settings.stack_create_timeout
-        return self._stack_status_check(STATUS_CREATE_COMPLETE, block, timeout, poll_interval)
+        return self._stack_status_check(STATUS_CREATE_COMPLETE, block, timeout,
+                                        poll_interval)
 
-    def _stack_status_check(self, expected_status_code, block, timeout, poll_interval):
+    def _stack_status_check(self, expected_status_code, block, timeout,
+                            poll_interval):
         """
-        Returns true when the stack status returns the value of expected_status_code
-        :param expected_status_code: stack status evaluated with this string value
-        :param block: When true, thread will block until active or timeout value in seconds has been exceeded (False)
+        Returns true when the stack status returns the value of
+        expected_status_code
+        :param expected_status_code: stack status evaluated with this string
+                                     value
+        :param block: When true, thread will block until active or timeout
+                      value in seconds has been exceeded (False)
         :param timeout: The timeout value
         :param poll_interval: The polling interval in seconds
         :return: T/F
@@ -135,25 +153,31 @@ class OpenStackHeatStack:
         while timeout > time.time() - start:
             status = self._status(expected_status_code)
             if status:
-                logger.debug('Stack is active with name - ' + self.stack_settings.name)
+                logger.debug(
+                    'Stack is active with name - ' + self.stack_settings.name)
                 return True
 
-            logger.debug('Retry querying stack status in ' + str(poll_interval) + ' seconds')
+            logger.debug('Retry querying stack status in ' + str(
+                poll_interval) + ' seconds')
             time.sleep(poll_interval)
-            logger.debug('Stack status query timeout in ' + str(timeout - (time.time() - start)))
+            logger.debug('Stack status query timeout in ' + str(
+                timeout - (time.time() - start)))
 
-        logger.error('Timeout checking for stack status for ' + expected_status_code)
+        logger.error(
+            'Timeout checking for stack status for ' + expected_status_code)
         return False
 
     def _status(self, expected_status_code):
         """
         Returns True when active else False
-        :param expected_status_code: stack status evaluated with this string value
+        :param expected_status_code: stack status evaluated with this string
+        value
         :return: T/F
         """
         status = self.get_status()
         if not status:
-            logger.warning('Cannot stack status for stack with ID - ' + self.__stack.id)
+            logger.warning(
+                'Cannot stack status for stack with ID - ' + self.__stack.id)
             return False
 
         if status == 'ERROR':
@@ -163,33 +187,26 @@ class OpenStackHeatStack:
 
 
 class StackSettings:
-    def __init__(self, config=None, name=None, template=None, template_path=None, env_values=None,
-                 stack_create_timeout=STACK_COMPLETE_TIMEOUT):
+    def __init__(self, **kwargs):
         """
         Constructor
-        :param config: dict() object containing the configuration settings using the attribute names below as each
-                       member's the key and overrides any of the other parameters.
         :param name: the stack's name (required)
-        :param template: the heat template in dict() format (required if template_path attribute is None)
-        :param template_path: the location of the heat template file (required if template attribute is None)
-        :param env_values: k/v pairs of strings for substitution of template default values (optional)
+        :param template: the heat template in dict() format (required if
+                         template_path attribute is None)
+        :param template_path: the location of the heat template file (required
+                              if template attribute is None)
+        :param env_values: k/v pairs of strings for substitution of template
+                           default values (optional)
         """
 
-        if config:
-            self.name = config.get('name')
-            self.template = config.get('template')
-            self.template_path = config.get('template_path')
-            self.env_values = config.get('env_values')
-            if 'stack_create_timeout' in config:
-                self.stack_create_timeout = config['stack_create_timeout']
-            else:
-                self.stack_create_timeout = stack_create_timeout
+        self.name = kwargs.get('name')
+        self.template = kwargs.get('template')
+        self.template_path = kwargs.get('template_path')
+        self.env_values = kwargs.get('env_values')
+        if 'stack_create_timeout' in kwargs:
+            self.stack_create_timeout = kwargs['stack_create_timeout']
         else:
-            self.name = name
-            self.template = template
-            self.template_path = template_path
-            self.env_values = env_values
-            self.stack_create_timeout = stack_create_timeout
+            self.stack_create_timeout = STACK_COMPLETE_TIMEOUT
 
         if not self.name:
             raise StackSettingsError('name is required')
@@ -202,6 +219,7 @@ class StackSettingsError(Exception):
     """
     Exception to be thrown when an stack settings are incorrect
     """
+
     def __init__(self, message):
         Exception.__init__(self, message)
 
@@ -210,5 +228,6 @@ class StackCreationError(Exception):
     """
     Exception to be thrown when an stack cannot be created
     """
+
     def __init__(self, message):
         Exception.__init__(self, message)
