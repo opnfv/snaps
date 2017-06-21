@@ -12,13 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import uuid
 import unittest
+import uuid
 
-from snaps.openstack.create_network import OpenStackNetwork, NetworkSettings, SubnetSettings, PortSettings
 from snaps.openstack import create_router
+from snaps.openstack.create_network import (OpenStackNetwork, NetworkSettings,
+                                            SubnetSettings, PortSettings)
 from snaps.openstack.tests import openstack_tests
-from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase, OSComponentTestCase
+from snaps.openstack.tests.os_source_file_test import (OSIntegrationTestCase,
+                                                       OSComponentTestCase)
 from snaps.openstack.utils import neutron_utils
 from snaps.openstack.utils.tests import neutron_utils_tests
 
@@ -36,7 +38,7 @@ class NetworkSettingsUnitTests(unittest.TestCase):
 
     def test_empty_config(self):
         with self.assertRaises(Exception):
-            NetworkSettings(config=dict())
+            NetworkSettings(**dict())
 
     def test_name_only(self):
         settings = NetworkSettings(name='foo')
@@ -49,7 +51,7 @@ class NetworkSettingsUnitTests(unittest.TestCase):
         self.assertEqual(0, len(settings.subnet_settings))
 
     def test_config_with_name_only(self):
-        settings = NetworkSettings(config={'name': 'foo'})
+        settings = NetworkSettings(**{'name': 'foo'})
         self.assertEqual('foo', settings.name)
         self.assertTrue(settings.admin_state_up)
         self.assertIsNone(settings.shared)
@@ -60,8 +62,11 @@ class NetworkSettingsUnitTests(unittest.TestCase):
 
     def test_all(self):
         sub_settings = SubnetSettings(name='foo-subnet', cidr='10.0.0.0/24')
-        settings = NetworkSettings(name='foo', admin_state_up=False, shared=True, project_name='bar', external=True,
-                                   network_type='flat', physical_network='phy', subnet_settings=[sub_settings])
+        settings = NetworkSettings(name='foo', admin_state_up=False,
+                                   shared=True, project_name='bar',
+                                   external=True,
+                                   network_type='flat', physical_network='phy',
+                                   subnet_settings=[sub_settings])
         self.assertEqual('foo', settings.name)
         self.assertFalse(settings.admin_state_up)
         self.assertTrue(settings.shared)
@@ -73,11 +78,13 @@ class NetworkSettingsUnitTests(unittest.TestCase):
         self.assertEqual('foo-subnet', settings.subnet_settings[0].name)
 
     def test_config_all(self):
-        settings = NetworkSettings(config={'name': 'foo', 'admin_state_up': False, 'shared': True,
-                                           'project_name': 'bar', 'external': True, 'network_type': 'flat',
-                                           'physical_network': 'phy',
-                                           'subnets':
-                                               [{'subnet': {'name': 'foo-subnet', 'cidr': '10.0.0.0/24'}}]})
+        settings = NetworkSettings(
+            **{'name': 'foo', 'admin_state_up': False, 'shared': True,
+               'project_name': 'bar', 'external': True, 'network_type': 'flat',
+               'physical_network': 'phy',
+               'subnets':
+                   [{'subnet': {'name': 'foo-subnet',
+                                'cidr': '10.0.0.0/24'}}]})
         self.assertEqual('foo', settings.name)
         self.assertFalse(settings.admin_state_up)
         self.assertTrue(settings.shared)
@@ -100,7 +107,7 @@ class SubnetSettingsUnitTests(unittest.TestCase):
 
     def test_empty_config(self):
         with self.assertRaises(Exception):
-            SubnetSettings(config=dict())
+            SubnetSettings(**dict())
 
     def test_name_only(self):
         with self.assertRaises(Exception):
@@ -108,7 +115,7 @@ class SubnetSettingsUnitTests(unittest.TestCase):
 
     def test_config_with_name_only(self):
         with self.assertRaises(Exception):
-            SubnetSettings(config={'name': 'foo'})
+            SubnetSettings(**{'name': 'foo'})
 
     def test_name_cidr_only(self):
         settings = SubnetSettings(name='foo', cidr='10.0.0.0/24')
@@ -128,7 +135,7 @@ class SubnetSettingsUnitTests(unittest.TestCase):
         self.assertIsNone(settings.ipv6_address_mode)
 
     def test_config_with_name_cidr_only(self):
-        settings = SubnetSettings(config={'name': 'foo', 'cidr': '10.0.0.0/24'})
+        settings = SubnetSettings(**{'name': 'foo', 'cidr': '10.0.0.0/24'})
         self.assertEqual('foo', settings.name)
         self.assertEqual('10.0.0.0/24', settings.cidr)
         self.assertEqual(4, settings.ip_version)
@@ -147,10 +154,16 @@ class SubnetSettingsUnitTests(unittest.TestCase):
 
     def test_all(self):
         host_routes = {'destination': '0.0.0.0/0', 'nexthop': '123.456.78.9'}
-        settings = SubnetSettings(name='foo', cidr='10.0.0.0/24', ip_version=6, project_name='bar-project',
-                                  start='10.0.0.2', end='10.0.0.101', gateway_ip='10.0.0.1', enable_dhcp=False,
-                                  dns_nameservers=['8.8.8.8'], host_routes=[host_routes], destination='dest',
-                                  nexthop='hop', ipv6_ra_mode='dhcpv6-stateful', ipv6_address_mode='slaac')
+        settings = SubnetSettings(name='foo', cidr='10.0.0.0/24', ip_version=6,
+                                  project_name='bar-project',
+                                  start='10.0.0.2', end='10.0.0.101',
+                                  gateway_ip='10.0.0.1', enable_dhcp=False,
+                                  dns_nameservers=['8.8.8.8'],
+                                  host_routes=[host_routes],
+                                  destination='dest',
+                                  nexthop='hop',
+                                  ipv6_ra_mode='dhcpv6-stateful',
+                                  ipv6_address_mode='slaac')
         self.assertEqual('foo', settings.name)
         self.assertEqual('10.0.0.0/24', settings.cidr)
         self.assertEqual(6, settings.ip_version)
@@ -170,12 +183,15 @@ class SubnetSettingsUnitTests(unittest.TestCase):
 
     def test_config_all(self):
         host_routes = {'destination': '0.0.0.0/0', 'nexthop': '123.456.78.9'}
-        settings = SubnetSettings(config={'name': 'foo', 'cidr': '10.0.0.0/24', 'ip_version': 6,
-                                          'project_name': 'bar-project', 'start': '10.0.0.2', 'end': '10.0.0.101',
-                                          'gateway_ip': '10.0.0.1', 'enable_dhcp': False,
-                                          'dns_nameservers': ['8.8.8.8'], 'host_routes': [host_routes],
-                                          'destination': 'dest', 'nexthop': 'hop', 'ipv6_ra_mode': 'dhcpv6-stateful',
-                                          'ipv6_address_mode': 'slaac'})
+        settings = SubnetSettings(
+            **{'name': 'foo', 'cidr': '10.0.0.0/24', 'ip_version': 6,
+               'project_name': 'bar-project', 'start': '10.0.0.2',
+               'end': '10.0.0.101',
+               'gateway_ip': '10.0.0.1', 'enable_dhcp': False,
+               'dns_nameservers': ['8.8.8.8'], 'host_routes': [host_routes],
+               'destination': 'dest', 'nexthop': 'hop',
+               'ipv6_ra_mode': 'dhcpv6-stateful',
+               'ipv6_address_mode': 'slaac'})
         self.assertEqual('foo', settings.name)
         self.assertEqual('10.0.0.0/24', settings.cidr)
         self.assertEqual(6, settings.ip_version)
@@ -205,7 +221,7 @@ class PortSettingsUnitTests(unittest.TestCase):
 
     def test_empty_config(self):
         with self.assertRaises(Exception):
-            PortSettings(config=dict())
+            PortSettings(**dict())
 
     def test_name_only(self):
         with self.assertRaises(Exception):
@@ -213,7 +229,7 @@ class PortSettingsUnitTests(unittest.TestCase):
 
     def test_config_name_only(self):
         with self.assertRaises(Exception):
-            PortSettings(config={'name': 'foo'})
+            PortSettings(**{'name': 'foo'})
 
     def test_name_netname_only(self):
         settings = PortSettings(name='foo', network_name='bar')
@@ -232,7 +248,7 @@ class PortSettingsUnitTests(unittest.TestCase):
         self.assertIsNone(settings.device_id)
 
     def test_config_with_name_netname_only(self):
-        settings = PortSettings(config={'name': 'foo', 'network_name': 'bar'})
+        settings = PortSettings(**{'name': 'foo', 'network_name': 'bar'})
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.network_name)
         self.assertTrue(settings.admin_state_up)
@@ -252,10 +268,15 @@ class PortSettingsUnitTests(unittest.TestCase):
         fixed_ips = {'sub_id', '10.0.0.10'}
         allowed_address_pairs = {'10.0.0.101', '1234.5678'}
 
-        settings = PortSettings(name='foo', network_name='bar', admin_state_up=False, project_name='foo-project',
-                                mac_address='1234', ip_addrs=ip_addrs, fixed_ips=fixed_ips,
-                                security_groups=['foo_grp_id'], allowed_address_pairs=allowed_address_pairs,
-                                opt_value='opt value', opt_name='opt name', device_owner='owner',
+        settings = PortSettings(name='foo', network_name='bar',
+                                admin_state_up=False,
+                                project_name='foo-project',
+                                mac_address='1234', ip_addrs=ip_addrs,
+                                fixed_ips=fixed_ips,
+                                security_groups=['foo_grp_id'],
+                                allowed_address_pairs=allowed_address_pairs,
+                                opt_value='opt value', opt_name='opt name',
+                                device_owner='owner',
                                 device_id='device number')
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.network_name)
@@ -277,11 +298,15 @@ class PortSettingsUnitTests(unittest.TestCase):
         fixed_ips = {'sub_id', '10.0.0.10'}
         allowed_address_pairs = {'10.0.0.101', '1234.5678'}
 
-        settings = PortSettings(config={'name': 'foo', 'network_name': 'bar', 'admin_state_up': False,
-                                        'project_name': 'foo-project', 'mac_address': '1234', 'ip_addrs': ip_addrs,
-                                        'fixed_ips': fixed_ips, 'security_groups': ['foo_grp_id'],
-                                        'allowed_address_pairs': allowed_address_pairs, 'opt_value': 'opt value',
-                                        'opt_name': 'opt name', 'device_owner': 'owner', 'device_id': 'device number'})
+        settings = PortSettings(
+            **{'name': 'foo', 'network_name': 'bar', 'admin_state_up': False,
+               'project_name': 'foo-project', 'mac_address': '1234',
+               'ip_addrs': ip_addrs,
+               'fixed_ips': fixed_ips, 'security_groups': ['foo_grp_id'],
+               'allowed_address_pairs': allowed_address_pairs,
+               'opt_value': 'opt value',
+               'opt_name': 'opt name', 'device_owner': 'owner',
+               'device_id': 'device number'})
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.network_name)
         self.assertFalse(settings.admin_state_up)
@@ -332,13 +357,16 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
             if len(self.net_creator.get_subnets()) > 0:
                 # Validate subnet has been deleted
                 neutron_utils_tests.validate_subnet(
-                    self.neutron, self.net_creator.network_settings.subnet_settings[0].name,
-                    self.net_creator.network_settings.subnet_settings[0].cidr, False)
+                    self.neutron,
+                    self.net_creator.network_settings.subnet_settings[0].name,
+                    self.net_creator.network_settings.subnet_settings[0].cidr,
+                    False)
 
             if self.net_creator.get_network():
                 # Validate network has been deleted
-                neutron_utils_tests.validate_network(self.neutron, self.net_creator.network_settings.name,
-                                                     False)
+                neutron_utils_tests.validate_network(
+                    self.neutron, self.net_creator.network_settings.name,
+                    False)
             self.net_creator.clean()
 
         super(self.__class__, self).__clean__()
@@ -348,30 +376,37 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack network without a router.
         """
         # Create Nework
-        self.net_creator = OpenStackNetwork(self.os_creds, self.net_config.network_settings)
+        self.net_creator = OpenStackNetwork(self.os_creds,
+                                            self.net_config.network_settings)
         self.net_creator.create()
 
         # Validate network was created
-        neutron_utils_tests.validate_network(self.neutron, self.net_creator.network_settings.name, True)
+        neutron_utils_tests.validate_network(
+            self.neutron, self.net_creator.network_settings.name, True)
 
         # Validate subnets
         neutron_utils_tests.validate_subnet(
-            self.neutron, self.net_creator.network_settings.subnet_settings[0].name,
+            self.neutron,
+            self.net_creator.network_settings.subnet_settings[0].name,
             self.net_creator.network_settings.subnet_settings[0].cidr, True)
 
     def test_create_delete_network(self):
         """
-        Tests the creation of an OpenStack network, it's deletion, then cleanup.
+        Tests the creation of an OpenStack network, it's deletion, then cleanup
         """
         # Create Nework
-        self.net_creator = OpenStackNetwork(self.os_creds, self.net_config.network_settings)
+        self.net_creator = OpenStackNetwork(self.os_creds,
+                                            self.net_config.network_settings)
         self.net_creator.create()
 
         # Validate network was created
-        neutron_utils_tests.validate_network(self.neutron, self.net_creator.network_settings.name, True)
+        neutron_utils_tests.validate_network(
+            self.neutron, self.net_creator.network_settings.name, True)
 
-        neutron_utils.delete_network(self.neutron, self.net_creator.get_network())
-        self.assertIsNone(neutron_utils.get_network(self.neutron, self.net_creator.network_settings.name))
+        neutron_utils.delete_network(self.neutron,
+                                     self.net_creator.get_network())
+        self.assertIsNone(neutron_utils.get_network(
+            self.neutron, self.net_creator.network_settings.name))
 
         # This shall not throw an exception here
         self.net_creator.clean()
@@ -381,38 +416,46 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack network with a router.
         """
         # Create Network
-        self.net_creator = OpenStackNetwork(self.os_creds, self.net_config.network_settings)
+        self.net_creator = OpenStackNetwork(self.os_creds,
+                                            self.net_config.network_settings)
         self.net_creator.create()
 
         # Create Router
-        self.router_creator = create_router.OpenStackRouter(self.os_creds, self.net_config.router_settings)
+        self.router_creator = create_router.OpenStackRouter(
+            self.os_creds, self.net_config.router_settings)
         self.router_creator.create()
 
         # Validate network was created
-        neutron_utils_tests.validate_network(self.neutron, self.net_creator.network_settings.name, True)
+        neutron_utils_tests.validate_network(
+            self.neutron, self.net_creator.network_settings.name, True)
 
         # Validate subnets
         neutron_utils_tests.validate_subnet(
-            self.neutron, self.net_creator.network_settings.subnet_settings[0].name,
+            self.neutron,
+            self.net_creator.network_settings.subnet_settings[0].name,
             self.net_creator.network_settings.subnet_settings[0].cidr, True)
 
         # Validate routers
-        neutron_utils_tests.validate_router(self.neutron, self.router_creator.router_settings.name, True)
+        neutron_utils_tests.validate_router(
+            self.neutron, self.router_creator.router_settings.name, True)
 
-        neutron_utils_tests.validate_interface_router(self.router_creator.get_internal_router_interface(),
-                                                      self.router_creator.get_router(),
-                                                      self.net_creator.get_subnets()[0])
+        neutron_utils_tests.validate_interface_router(
+            self.router_creator.get_internal_router_interface(),
+            self.router_creator.get_router(),
+            self.net_creator.get_subnets()[0])
 
     def test_create_networks_same_name(self):
         """
-        Tests the creation of an OpenStack network and ensures that the OpenStackNetwork object will not create
-        a second.
+        Tests the creation of an OpenStack network and ensures that the
+        OpenStackNetwork object will not create a second.
         """
         # Create Nework
-        self.net_creator = OpenStackNetwork(self.os_creds, self.net_config.network_settings)
+        self.net_creator = OpenStackNetwork(self.os_creds,
+                                            self.net_config.network_settings)
         self.net_creator.create()
 
-        self.net_creator2 = OpenStackNetwork(self.os_creds, self.net_config.network_settings)
+        self.net_creator2 = OpenStackNetwork(self.os_creds,
+                                             self.net_config.network_settings)
         self.net_creator2.create()
 
         self.assertEqual(self.net_creator.get_network()['network']['id'],
@@ -421,7 +464,8 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
 
 class CreateNetworkTypeTests(OSComponentTestCase):
     """
-    Test for the CreateNework class defined in create_nework.py for testing creating networks of different types
+    Test for the CreateNework class defined in create_nework.py for testing
+    creating networks of different types
     """
 
     def setUp(self):
@@ -446,14 +490,18 @@ class CreateNetworkTypeTests(OSComponentTestCase):
             if len(self.net_creator.get_subnets()) > 0:
                 # Validate subnet has been deleted
                 neutron_utils_tests.validate_subnet(
-                    self.neutron, self.net_creator.network_settings.subnet_settings[0].name,
-                    self.net_creator.network_settings.subnet_settings[0].cidr, False)
+                    self.neutron,
+                    self.net_creator.network_settings.subnet_settings[0].name,
+                    self.net_creator.network_settings.subnet_settings[0].cidr,
+                    False)
 
             if self.net_creator.get_network():
                 # Validate network has been deleted
-                neutron_utils_tests.validate_network(self.neutron, self.net_creator.network_settings.name,
-                                                     False)
+                neutron_utils_tests.validate_network(
+                    self.neutron, self.net_creator.network_settings.name,
+                    False)
             self.net_creator.clean()
+
     # TODO - determine why this is not working on Newton
     #        - Unable to create the network. No tenant network is available for allocation.
     # def test_create_network_type_vlan(self):
@@ -481,18 +529,21 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         """
         # Create Network
         network_type = 'vxlan'
-        net_settings = NetworkSettings(name=self.net_config.network_settings.name,
-                                       subnet_settings=self.net_config.network_settings.subnet_settings,
-                                       network_type=network_type)
+        net_settings = NetworkSettings(
+            name=self.net_config.network_settings.name,
+            subnet_settings=self.net_config.network_settings.subnet_settings,
+            network_type=network_type)
 
         # When setting the network_type, creds must be admin
         self.net_creator = OpenStackNetwork(self.os_creds, net_settings)
         network = self.net_creator.create()
 
         # Validate network was created
-        neutron_utils_tests.validate_network(self.neutron, net_settings.name, True)
+        neutron_utils_tests.validate_network(self.neutron, net_settings.name,
+                                             True)
 
-        self.assertEqual(network_type, network['network']['provider:network_type'])
+        self.assertEqual(network_type,
+                         network['network']['provider:network_type'])
 
     # TODO - determine what value we need to place into physical_network
     #        - Do not know what vaule to place into the 'physical_network' setting.
@@ -521,13 +572,15 @@ class CreateNetworkTypeTests(OSComponentTestCase):
 
     def test_create_network_type_foo(self):
         """
-        Tests the creation of an OpenStack network of type foo which should raise an exception.
+        Tests the creation of an OpenStack network of type foo which should
+        raise an exception.
         """
         # Create Network
         network_type = 'foo'
-        net_settings = NetworkSettings(name=self.net_config.network_settings.name,
-                                       subnet_settings=self.net_config.network_settings.subnet_settings,
-                                       network_type=network_type)
+        net_settings = NetworkSettings(
+            name=self.net_config.network_settings.name,
+            subnet_settings=self.net_config.network_settings.subnet_settings,
+            network_type=network_type)
         self.net_creator = OpenStackNetwork(self.os_creds, net_settings)
         with self.assertRaises(Exception):
             self.net_creator.create()
