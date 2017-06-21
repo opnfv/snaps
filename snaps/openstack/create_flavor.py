@@ -46,18 +46,23 @@ class OpenStackFlavor:
     def create(self, cleanup=False):
         """
         Creates the image in OpenStack if it does not already exist
-        :param cleanup: Denotes whether or not this is being called for cleanup or not
+        :param cleanup: Denotes whether or not this is being called for cleanup
+                        or not
         :return: The OpenStack flavor object
         """
         self.__nova = nova_utils.nova_client(self.__os_creds)
-        self.__flavor = nova_utils.get_flavor_by_name(self.__nova, self.flavor_settings.name)
+        self.__flavor = nova_utils.get_flavor_by_name(
+            self.__nova, self.flavor_settings.name)
         if self.__flavor:
-            logger.info('Found flavor with name - ' + self.flavor_settings.name)
+            logger.info(
+                'Found flavor with name - ' + self.flavor_settings.name)
         elif not cleanup:
-            self.__flavor = nova_utils.create_flavor(self.__nova, self.flavor_settings)
+            self.__flavor = nova_utils.create_flavor(
+                self.__nova, self.flavor_settings)
             if self.flavor_settings.metadata:
                 self.__flavor.set_keys(self.flavor_settings.metadata)
-            self.__flavor = nova_utils.get_flavor_by_name(self.__nova, self.flavor_settings.name)
+            self.__flavor = nova_utils.get_flavor_by_name(
+                self.__nova, self.flavor_settings.name)
         else:
             logger.info('Did not create flavor due to cleanup mode')
 
@@ -89,12 +94,12 @@ class FlavorSettings:
     Configuration settings for OpenStack flavor creation
     """
 
-    def __init__(self, config=None, name=None, flavor_id='auto', ram=None, disk=None, vcpus=None, ephemeral=0, swap=0,
-                 rxtx_factor=1.0, is_public=True, metadata=None):
+    def __init__(self, **kwargs):
         """
         Constructor
-        :param config: dict() object containing the configuration settings using the attribute names below as each
-                       member's the key and overrides any of the other parameters.
+        :param config: dict() object containing the configuration settings
+                       using the attribute names below as each member's the
+                       key and overrides any of the other parameters.
         :param name: the flavor's name (required)
         :param flavor_id: the string ID (default 'auto')
         :param ram: the required RAM in MB (required)
@@ -102,62 +107,52 @@ class FlavorSettings:
         :param vcpus: the number of virtual CPUs (required)
         :param ephemeral: the size of the ephemeral disk in GB (default 0)
         :param swap: the size of the dedicated swap disk in GB (default 0)
-        :param rxtx_factor: the receive/transmit factor to be set on ports if backend supports
-                            QoS extension (default 1.0)
-        :param is_public: denotes whether or not the flavor is public (default True)
-        :param metadata: freeform dict() for special metadata (default hw:mem_page_size=any)
+        :param rxtx_factor: the receive/transmit factor to be set on ports if
+                            backend supports QoS extension (default 1.0)
+        :param is_public: denotes whether or not the flavor is public
+                          (default True)
+        :param metadata: freeform dict() for special metadata
         """
+        self.name = kwargs.get('name')
 
-        if config:
-            self.name = config.get('name')
-
-            if config.get('flavor_id'):
-                self.flavor_id = config['flavor_id']
-            else:
-                self.flavor_id = flavor_id
-
-            self.ram = config.get('ram')
-            self.disk = config.get('disk')
-            self.vcpus = config.get('vcpus')
-
-            if config.get('ephemeral'):
-                self.ephemeral = config['ephemeral']
-            else:
-                self.ephemeral = ephemeral
-
-            if config.get('swap'):
-                self.swap = config['swap']
-            else:
-                self.swap = swap
-
-            if config.get('rxtx_factor'):
-                self.rxtx_factor = config['rxtx_factor']
-            else:
-                self.rxtx_factor = rxtx_factor
-
-            if config.get('is_public') is not None:
-                self.is_public = config['is_public']
-            else:
-                self.is_public = is_public
-
-            if config.get('metadata'):
-                self.metadata = config['metadata']
-            else:
-                self.metadata = metadata
+        if kwargs.get('flavor_id'):
+            self.flavor_id = kwargs['flavor_id']
         else:
-            self.name = name
-            self.flavor_id = flavor_id
-            self.ram = ram
-            self.disk = disk
-            self.vcpus = vcpus
-            self.ephemeral = ephemeral
-            self.swap = swap
-            self.rxtx_factor = rxtx_factor
-            self.is_public = is_public
-            self.metadata = metadata
+            self.flavor_id = 'auto'
+
+        self.ram = kwargs.get('ram')
+        self.disk = kwargs.get('disk')
+        self.vcpus = kwargs.get('vcpus')
+
+        if kwargs.get('ephemeral'):
+            self.ephemeral = kwargs['ephemeral']
+        else:
+            self.ephemeral = 0
+
+        if kwargs.get('swap'):
+            self.swap = kwargs['swap']
+        else:
+            self.swap = 0
+
+        if kwargs.get('rxtx_factor'):
+            self.rxtx_factor = kwargs['rxtx_factor']
+        else:
+            self.rxtx_factor = 1.0
+
+        if kwargs.get('is_public') is not None:
+            self.is_public = kwargs['is_public']
+        else:
+            self.is_public = True
+
+        if kwargs.get('metadata'):
+            self.metadata = kwargs['metadata']
+        else:
+            self.metadata = None
 
         if not self.name or not self.ram or not self.disk or not self.vcpus:
-            raise Exception('The attributes name, ram, disk, and vcpus are required for FlavorSettings')
+            raise Exception(
+                'The attributes name, ram, disk, and vcpus are required for'
+                'FlavorSettings')
 
         if not isinstance(self.ram, int):
             raise Exception('The ram attribute must be a integer')
@@ -175,7 +170,8 @@ class FlavorSettings:
             raise Exception('The swap attribute must be an integer')
 
         if self.rxtx_factor and not isinstance(self.rxtx_factor, (int, float)):
-            raise Exception('The is_public attribute must be an integer or float')
+            raise Exception(
+                'The is_public attribute must be an integer or float')
 
         if self.is_public and not isinstance(self.is_public, bool):
             raise Exception('The is_public attribute must be a boolean')
