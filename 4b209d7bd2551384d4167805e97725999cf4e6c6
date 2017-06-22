@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5aaae553_ab7324b0",
+        "filename": "snaps/openstack/utils/tests/neutron_utils_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 819,
+      "author": {
+        "id": 459
+      },
+      "writtenOn": "2017-06-22T19:44:26Z",
+      "side": 1,
+      "message": "I wouldn",
+      "range": {
+        "startLine": 819,
+        "startChar": 8,
+        "endLine": 819,
+        "endChar": 37
+      },
+      "revId": "4b209d7bd2551384d4167805e97725999cf4e6c6",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
