@@ -150,7 +150,7 @@ def create_image_settings(image_name, image_user, image_format, metadata,
     logger.debug('Image metadata - ' + str(metadata))
 
     if metadata and 'config' in metadata:
-        return ImageSettings(config=metadata['config'])
+        return ImageSettings(**metadata['config'])
 
     disk_file = None
     if metadata:

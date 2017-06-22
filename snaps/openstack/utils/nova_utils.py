@@ -13,16 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.backends import default_backend
+import logging
 
 import os
-import logging
-from snaps.openstack.utils import keystone_utils
-
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from novaclient.client import Client
 from novaclient.exceptions import NotFound
+from snaps.domain.vm_inst import VmInst
+from snaps.openstack.utils import keystone_utils, glance_utils, neutron_utils
 
 __author__ = 'spisarski'
 
@@ -35,12 +35,69 @@ Utilities for basic OpenStack Nova API calls
 
 def nova_client(os_creds):
     """
-    Instantiates and returns a client for communications with OpenStack's Nova server
+    Instantiates and returns a client for communications with OpenStack's Nova
+    server
     :param os_creds: The connection credentials to the OpenStack API
     :return: the client object
     """
     logger.debug('Retrieving Nova Client')
-    return Client(os_creds.compute_api_version, session=keystone_utils.keystone_session(os_creds))
+    return Client(os_creds.compute_api_version,
+                  session=keystone_utils.keystone_session(os_creds))
+
+
+def create_server(nova, neutron, glance, instance_settings, image_settings,
+                  keypair_settings=None):
+    """
+    Creates a VM instance
+    :param nova: the nova client (required)
+    :param neutron: the neutron client for retrieving ports (required)
+    :param glance: the glance client (required)
+    :param instance_settings: the VM instance settings object (required)
+    :param image_settings: the VM's image settings object (required)
+    :param keypair_settings: the VM's keypair settings object (optional)
+    :return: a snaps.domain.VmInst object
+    """
+
+    ports = list()
+
+    for port_setting in instance_settings.port_settings:
+        ports.append(neutron_utils.get_port_by_name(
+            neutron, port_setting.name))
+    nics = []
+    for port in ports:
+        kv = dict()
+        kv['port-id'] = port['port']['id']
+        nics.append(kv)
+
+    logger.info('Creating VM with name - ' + instance_settings.name)
+    keypair_name = None
+    if keypair_settings:
+        keypair_name = keypair_settings.name
+
+    flavor = get_flavor_by_name(nova, instance_settings.flavor)
+    if not flavor:
+        raise Exception(
+            'Flavor not found with name - %s',
+            instance_settings.flavor)
+
+    image = glance_utils.get_image(glance, image_settings.name)
+    if image:
+        args = {'name': instance_settings.name,
+                'flavor': flavor,
+                'image': image,
+                'nics': nics,
+                'key_name': keypair_name,
+                'security_groups':
+                    instance_settings.security_group_names,
+                'userdata': instance_settings.userdata,
+                'availability_zone':
+                    instance_settings.availability_zone}
+        server = nova.servers.create(**args)
+        return VmInst(name=server.name, inst_id=server.id)
+    else:
+        raise Exception(
+            'Cannot create instance, image cannot be located with name %s',
+            image_settings.name)
 
 
 def get_servers_by_name(nova, name):
@@ -50,7 +107,21 @@ def get_servers_by_name(nova, name):
     :param name: the server name
     :return: the list of servers
     """
-    return nova.servers.list(search_opts={'name': name})
+    out = list()
+    servers = nova.servers.list(search_opts={'name': name})
+    for server in servers:
+        out.append(VmInst(name=server.name, inst_id=server.id))
+    return out
+
+
+def get_latest_server_os_object(nova, server):
+    """
+    Returns a server with a given id
+    :param nova: the Nova client
+    :param server: the domain VmInst object
+    :return: the list of servers or None if not found
+    """
+    return nova.servers.get(server.id)
 
 
 def get_latest_server_object(nova, server):
@@ -60,7 +131,8 @@ def get_latest_server_object(nova, server):
     :param server: the old server object
     :return: the list of servers or None if not found
     """
-    return nova.servers.get(server)
+    server = get_latest_server_os_object(nova, server)
+    return VmInst(name=server.name, inst_id=server.id)
 
 
 def create_keys(key_size=2048):
@@ -69,7 +141,8 @@ def create_keys(key_size=2048):
     :param key_size: the number of bytes for the key size
     :return: the cryptography keys
     """
-    return rsa.generate_private_key(backend=default_backend(), public_exponent=65537,
+    return rsa.generate_private_key(backend=default_backend(),
+                                    public_exponent=65537,
                                     key_size=key_size)
 
 
@@ -79,7 +152,8 @@ def public_key_openssh(keys):
     :param keys: the keys generated by create_keys() from cryptography
     :return: the OpenSSH public key
     """
-    return keys.public_key().public_bytes(serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH)
+    return keys.public_key().public_bytes(serialization.Encoding.OpenSSH,
+                                          serialization.PublicFormat.OpenSSH)
 
 
 def save_keys_to_files(keys=None, pub_file_path=None, priv_file_path=None):
@@ -97,7 +171,8 @@ def save_keys_to_files(keys=None, pub_file_path=None, priv_file_path=None):
                 os.mkdir(pub_dir)
             public_handle = open(pub_file_path, 'wb')
             public_bytes = keys.public_key().public_bytes(
-                serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH)
+                serialization.Encoding.OpenSSH,
+                serialization.PublicFormat.OpenSSH)
             public_handle.write(public_bytes)
             public_handle.close()
             os.chmod(pub_file_path, 0o400)
@@ -107,9 +182,11 @@ def save_keys_to_files(keys=None, pub_file_path=None, priv_file_path=None):
             if not os.path.isdir(priv_dir):
                 os.mkdir(priv_dir)
             private_handle = open(priv_file_path, 'wb')
-            private_handle.write(keys.private_bytes(encoding=serialization.Encoding.PEM,
-                                                    format=serialization.PrivateFormat.TraditionalOpenSSL,
-                                                    encryption_algorithm=serialization.NoEncryption()))
+            private_handle.write(
+                keys.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption()))
             private_handle.close()
             os.chmod(priv_file_path, 0o400)
             logger.info("Saved private key to - " + priv_file_path)
@@ -179,57 +256,6 @@ def delete_keypair(nova, key):
     nova.keypairs.delete(key)
 
 
-def get_floating_ip_pools(nova):
-    """
-    Returns all of the available floating IP pools
-    :param nova: the Nova client
-    :return: a list of pools
-    """
-    return nova.floating_ip_pools.list()
-
-
-def get_floating_ips(nova):
-    """
-    Returns all of the floating IPs
-    :param nova: the Nova client
-    :return: a list of floating IPs
-    """
-    return nova.floating_ips.list()
-
-
-def create_floating_ip(nova, ext_net_name):
-    """
-    Returns the floating IP object that was created with this call
-    :param nova: the Nova client
-    :param ext_net_name: the name of the external network on which to apply the floating IP address
-    :return: the floating IP object
-    """
-    logger.info('Creating floating ip to external network - ' + ext_net_name)
-    return nova.floating_ips.create(ext_net_name)
-
-
-def get_floating_ip(nova, floating_ip):
-    """
-    Returns a floating IP object that should be identical to the floating_ip parameter
-    :param nova: the Nova client
-    :param floating_ip: the floating IP object to lookup
-    :return: hopefully the same floating IP object input
-    """
-    logger.debug('Attempting to retrieve existing floating ip with IP - ' + floating_ip.ip)
-    return nova.floating_ips.get(floating_ip)
-
-
-def delete_floating_ip(nova, floating_ip):
-    """
-    Responsible for deleting a floating IP
-    :param nova: the Nova client
-    :param floating_ip: the floating IP object to delete
-    :return:
-    """
-    logger.debug('Attempting to delete existing floating ip with IP - ' + floating_ip.ip)
-    return nova.floating_ips.delete(floating_ip)
-
-
 def get_nova_availability_zones(nova):
     """
     Returns the names of all nova active compute servers
@@ -251,9 +277,9 @@ def delete_vm_instance(nova, vm_inst):
     """
     Deletes a VM instance
     :param nova: the nova client
-    :param vm_inst: the OpenStack instance object to delete
+    :param vm_inst: the snaps.domain.VmInst object
     """
-    nova.servers.delete(vm_inst)
+    nova.servers.delete(vm_inst.id)
 
 
 def get_flavor_by_name(nova, name):
@@ -276,10 +302,15 @@ def create_flavor(nova, flavor_settings):
     :param flavor_settings: the flavor settings
     :return: the Flavor
     """
-    return nova.flavors.create(name=flavor_settings.name, flavorid=flavor_settings.flavor_id, ram=flavor_settings.ram,
-                               vcpus=flavor_settings.vcpus, disk=flavor_settings.disk,
-                               ephemeral=flavor_settings.ephemeral, swap=flavor_settings.swap,
-                               rxtx_factor=flavor_settings.rxtx_factor, is_public=flavor_settings.is_public)
+    return nova.flavors.create(name=flavor_settings.name,
+                               flavorid=flavor_settings.flavor_id,
+                               ram=flavor_settings.ram,
+                               vcpus=flavor_settings.vcpus,
+                               disk=flavor_settings.disk,
+                               ephemeral=flavor_settings.ephemeral,
+                               swap=flavor_settings.swap,
+                               rxtx_factor=flavor_settings.rxtx_factor,
+                               is_public=flavor_settings.is_public)
 
 
 def delete_flavor(nova, flavor):
@@ -308,4 +339,17 @@ def remove_security_group(nova, vm, security_group):
     :param vm: the OpenStack server object (VM) to alter
     :param security_group: the OpenStack security group object to add
     """
-    nova.servers.remove_security_group(str(vm.id), security_group['security_group']['name'])
+    nova.servers.remove_security_group(
+        str(vm.id), security_group['security_group']['name'])
+
+
+def add_floating_ip_to_server(nova, vm, floating_ip, ip_addr):
+    """
+    Adds a floating IP to a server instance
+    :param nova: the nova client
+    :param vm: VmInst domain object
+    :param floating_ip: FloatingIp domain object
+    :param ip_addr: the IP to which to bind the floating IP to
+    """
+    vm = get_latest_server_os_object(nova, vm)
+    vm.add_floating_ip(floating_ip.ip, ip_addr)

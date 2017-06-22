@@ -261,6 +261,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         """
         super(self.__class__, self).__start__()
 
+        self.nova = nova_utils.nova_client(self.os_creds)
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.vm_inst_name = guid + '-inst'
         self.port_1_name = guid + 'port-1'
@@ -361,7 +362,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
 
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
-        self.assertTrue(check_dhcp_lease(vm, ip))
+        self.assertTrue(check_dhcp_lease(self.nova, vm, ip))
 
 
 class CreateInstanceSimpleTests(OSIntegrationTestCase):
@@ -498,6 +499,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         """
         super(self.__class__, self).__start__()
 
+        self.nova = nova_utils.nova_client(self.os_creds)
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.keypair_priv_filepath = 'tmp/' + guid
         self.keypair_pub_filepath = self.keypair_priv_filepath + '.pub'
@@ -696,7 +698,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.assertTrue(inst_creator.vm_active(block=True))
 
         ip = inst_creator.get_port_ip(port_settings.name)
-        self.assertTrue(check_dhcp_lease(vm_inst, ip))
+        self.assertTrue(check_dhcp_lease(self.nova, vm_inst, ip))
 
         inst_creator.add_security_group(
             self.sec_grp_creator.get_security_group())
@@ -734,7 +736,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.assertTrue(inst_creator.vm_active(block=True))
 
         ip = inst_creator.get_port_ip(port_settings.name)
-        self.assertTrue(check_dhcp_lease(vm_inst, ip))
+        self.assertTrue(check_dhcp_lease(self.nova, vm_inst, ip))
 
         inst_creator.add_security_group(
             self.sec_grp_creator.get_security_group())
@@ -1165,7 +1167,7 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
         for zone in zones:
             creator = self.inst_creators[index]
             self.assertTrue(creator.vm_active(block=True))
-            vm = creator.get_vm_inst()
+            vm = creator.get_os_vm_server_obj()
             deployed_zone = vm._info['OS-EXT-AZ:availability_zone']
             deployed_host = vm._info['OS-EXT-SRV-ATTR:host']
             self.assertEqual(zone, deployed_zone + ':' + deployed_host)
@@ -1185,6 +1187,8 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
         and creating an OS image file within OpenStack
         """
         super(self.__class__, self).__start__()
+
+        self.nova = nova_utils.nova_client(self.os_creds)
 
         # Initialize for tearDown()
         self.image_creator = None
@@ -1387,7 +1391,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
         ip = self.inst_creator.get_port_ip(ports_settings[0].name)
-        self.assertTrue(check_dhcp_lease(vm_inst, ip))
+        self.assertTrue(check_dhcp_lease(self.nova, vm_inst, ip))
 
         # Add security group to VM
         self.inst_creator.add_security_group(
@@ -1539,15 +1543,15 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.sec_grp_creators.append(sec_grp_creator)
 
         # Check that group has not been added
-        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
-                                          sec_grp_settings.name))
+        self.assertFalse(inst_has_sec_grp(
+            self.nova, self.inst_creator.get_vm_inst(), sec_grp_settings.name))
 
         # Add security group to instance after activated
         self.inst_creator.add_security_group(sec_grp)
 
         # Validate that security group has been added
-        self.assertTrue(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
-                                         sec_grp_settings.name))
+        self.assertTrue(inst_has_sec_grp(
+            self.nova, self.inst_creator.get_vm_inst(), sec_grp_settings.name))
 
     def test_add_invalid_security_group(self):
         """
@@ -1574,15 +1578,15 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.sec_grp_creators.append(sec_grp_creator)
 
         # Check that group has not been added
-        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
-                                          sec_grp_settings.name))
+        self.assertFalse(inst_has_sec_grp(
+            self.nova, self.inst_creator.get_vm_inst(), sec_grp_settings.name))
 
         # Add security group to instance after activated
         self.assertFalse(self.inst_creator.add_security_group(sec_grp))
 
         # Validate that security group has been added
-        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
-                                          sec_grp_settings.name))
+        self.assertFalse(inst_has_sec_grp(
+            self.nova, self.inst_creator.get_vm_inst(), sec_grp_settings.name))
 
     def test_remove_security_group(self):
         """
@@ -1610,14 +1614,15 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.assertIsNotNone(vm_inst)
 
         # Check that group has been added
-        self.assertTrue(inst_has_sec_grp(vm_inst, sec_grp_settings.name))
+        self.assertTrue(inst_has_sec_grp(
+            self.nova, vm_inst, sec_grp_settings.name))
 
         # Add security group to instance after activated
         self.assertTrue(self.inst_creator.remove_security_group(sec_grp))
 
         # Validate that security group has been added
-        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
-                                          sec_grp_settings.name))
+        self.assertFalse(inst_has_sec_grp(
+            self.nova, self.inst_creator.get_vm_inst(), sec_grp_settings.name))
 
     def test_remove_security_group_never_added(self):
         """
@@ -1644,15 +1649,15 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.assertIsNotNone(vm_inst)
 
         # Check that group has been added
-        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
-                                          sec_grp_settings.name))
+        self.assertFalse(inst_has_sec_grp(
+            self.nova, self.inst_creator.get_vm_inst(), sec_grp_settings.name))
 
         # Add security group to instance after activated
         self.assertFalse(self.inst_creator.remove_security_group(sec_grp))
 
         # Validate that security group has been added
-        self.assertFalse(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
-                                          sec_grp_settings.name))
+        self.assertFalse(inst_has_sec_grp(
+            self.nova, self.inst_creator.get_vm_inst(), sec_grp_settings.name))
 
     def test_add_same_security_group(self):
         """
@@ -1680,27 +1685,31 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.assertIsNotNone(vm_inst)
 
         # Check that group has been added
-        self.assertTrue(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
-                                         sec_grp_settings.name))
+        self.assertTrue(inst_has_sec_grp(
+            self.nova, self.inst_creator.get_vm_inst(), sec_grp_settings.name))
 
         # Add security group to instance after activated
         self.assertTrue(self.inst_creator.add_security_group(sec_grp))
 
         # Validate that security group has been added
-        self.assertTrue(inst_has_sec_grp(self.inst_creator.get_vm_inst(),
-                                         sec_grp_settings.name))
+        self.assertTrue(inst_has_sec_grp(
+            self.nova, self.inst_creator.get_vm_inst(), sec_grp_settings.name))
 
 
-def inst_has_sec_grp(vm_inst, sec_grp_name):
+def inst_has_sec_grp(nova, vm_inst, sec_grp_name):
     """
     Returns true if instance has a security group of a given name
+    :param nova: the nova client
+    :param vm_inst: the VmInst domain object
+    :param sec_grp_name: the name of the security group to validate
     :return:
     """
-    if not hasattr(vm_inst, 'security_groups'):
+    vm = nova_utils.get_latest_server_os_object(nova, vm_inst)
+    if not hasattr(vm, 'security_groups'):
         return False
 
     found = False
-    for sec_grp_dict in vm_inst.security_groups:
+    for sec_grp_dict in vm.security_groups:
         if sec_grp_name in sec_grp_dict['name']:
             found = True
             break
@@ -2357,10 +2366,11 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
 
-def check_dhcp_lease(vm, ip, timeout=160):
+def check_dhcp_lease(nova_client, vm_domain, ip, timeout=160):
     """
     Returns true if the expected DHCP lease has been acquired
-    :param vm: the OpenStack VM instance object
+    :param nova_client: the nova client
+    :param vm_domain: the SNAPS VM instance domain object
     :param ip: the IP address to look for
     :param timeout: how long to query for IP address
     :return:
@@ -2371,6 +2381,7 @@ def check_dhcp_lease(vm, ip, timeout=160):
     logger.info("Looking for IP %s in the console log" % ip)
     full_log = ''
     while timeout > time.time() - start_time:
+        vm = nova_utils.get_latest_server_os_object(nova_client, vm_domain)
         output = vm.get_console_output()
         full_log = full_log + output
         if re.search(ip, output):

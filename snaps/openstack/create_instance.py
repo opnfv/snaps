@@ -102,7 +102,7 @@ class OpenStackVmInstance:
                 logger.info(
                     'Found existing machine with name - %s',
                     self.instance_settings.name)
-                fips = self.__nova.floating_ips.list()
+                fips = neutron_utils.get_floating_ips(self.__nova)
                 for fip in fips:
                     if fip.instance_id == server.id:
                         self.__floating_ips.append(fip)
@@ -116,45 +116,12 @@ class OpenStackVmInstance:
                       active, error, or timeout waiting. Floating IPs will be
                       assigned after active when block=True
         """
-        nics = []
-        for key, port in self.__ports:
-            kv = dict()
-            kv['port-id'] = port['port']['id']
-            nics.append(kv)
-
-        logger.info('Creating VM with name - ' + self.instance_settings.name)
-        keypair_name = None
-        if self.keypair_settings:
-            keypair_name = self.keypair_settings.name
-
-        flavor = nova_utils.get_flavor_by_name(self.__nova,
-                                               self.instance_settings.flavor)
-        if not flavor:
-            raise Exception(
-                'Flavor not found with name - %s',
-                self.instance_settings.flavor)
-
-        image = glance_utils.get_image(
-            glance_utils.glance_client(self.__os_creds),
-            self.image_settings.name)
-        if image:
-            self.__vm = self.__nova.servers.create(
-                name=self.instance_settings.name,
-                flavor=flavor,
-                image=image,
-                nics=nics,
-                key_name=keypair_name,
-                security_groups=self.instance_settings.security_group_names,
-                userdata=self.instance_settings.userdata,
-                availability_zone=self.instance_settings.availability_zone)
-
-        else:
-            raise Exception(
-                'Cannot create instance, image cannot be located with name %s',
-                self.image_settings.name)
-
-        logger.info(
-            'Created instance with name - %s', self.instance_settings.name)
+        glance = glance_utils.glance_client(self.__os_creds)
+        self.__vm = nova_utils.create_server(
+            self.__nova, self.__neutron, glance, self.instance_settings,
+            self.image_settings, self.keypair_settings)
+        logger.info('Created instance with name - %s',
+                    self.instance_settings.name)
 
         if block:
             if not self.vm_active(block=True):
@@ -162,9 +129,7 @@ class OpenStackVmInstance:
                     'Fatal error, VM did not become ACTIVE within the alloted '
                     'time')
 
-        # TODO - the call above should add security groups. The return object
-        # shows they exist but the association had never been made by
-        # OpenStack. This call is here to ensure they have been added
+        # Create server should do this but found it needed to occur here
         for sec_grp_name in self.instance_settings.security_group_names:
             if self.vm_active(block=True):
                 nova_utils.add_security_group(self.__nova, self.__vm,
@@ -202,8 +167,8 @@ class OpenStackVmInstance:
             if ext_gateway:
                 subnet = neutron_utils.get_subnet_by_name(
                     self.__neutron, floating_ip_setting.subnet_name)
-                floating_ip = nova_utils.create_floating_ip(self.__nova,
-                                                            ext_gateway)
+                floating_ip = neutron_utils.create_floating_ip(
+                    self.__neutron, ext_gateway)
                 self.__floating_ips.append(floating_ip)
                 self.__floating_ip_dict[floating_ip_setting.name] = floating_ip
 
@@ -241,7 +206,7 @@ class OpenStackVmInstance:
         for floating_ip in self.__floating_ips:
             try:
                 logger.info('Deleting Floating IP - ' + floating_ip.ip)
-                nova_utils.delete_floating_ip(self.__nova, floating_ip)
+                neutron_utils.delete_floating_ip(self.__neutron, floating_ip)
             except Exception as e:
                 logger.error('Error deleting Floating IP - ' + str(e))
         self.__floating_ips = list()
@@ -345,7 +310,8 @@ class OpenStackVmInstance:
             while count > 0:
                 logger.debug('Attempting to add floating IP to instance')
                 try:
-                    self.__vm.add_floating_ip(floating_ip, ip)
+                    nova_utils.add_floating_ip_to_server(
+                        self.__nova, self.__vm, floating_ip, ip)
                     logger.info(
                         'Added floating IP %s to port IP %s on instance %s',
                         floating_ip.ip, ip, self.instance_settings.name)
@@ -376,7 +342,14 @@ class OpenStackVmInstance:
         Returns the latest version of this server object from OpenStack
         :return: Server object
         """
-        return nova_utils.get_latest_server_object(self.__nova, self.__vm)
+        return self.__vm
+
+    def get_os_vm_server_obj(self):
+        """
+        Returns the OpenStack server object
+        :return: the server object
+        """
+        return nova_utils.get_latest_server_os_object(self.__nova, self.__vm)
 
     def get_port_ip(self, port_name, subnet_name=None):
         """
@@ -466,21 +439,21 @@ class OpenStackVmInstance:
                 elif len(self.__floating_ips) > 0:
                     return self.__floating_ips[0]
 
-    def __config_nic(self, nic_name, port, floating_ip):
+    def __config_nic(self, nic_name, port, ip):
         """
         Although ports/NICs can contain multiple IPs, this code currently only
         supports the first.
 
         :param nic_name: Name of the interface
         :param port: The port information containing the expected IP values.
-        :param floating_ip: The floating IP on which to apply the playbook.
+        :param ip: The IP on which to apply the playbook.
         :return: the return value from ansible
         """
-        ip = port['port']['fixed_ips'][0]['ip_address']
+        port_ip = port['port']['fixed_ips'][0]['ip_address']
         variables = {
-            'floating_ip': floating_ip,
+            'floating_ip': ip,
             'nic_name': nic_name,
-            'nic_ip': ip
+            'nic_ip': port_ip
         }
 
         if self.image_settings.nic_config_pb_loc and self.keypair_settings:
@@ -594,7 +567,8 @@ class OpenStackVmInstance:
         if not self.__vm:
             return False
 
-        instance = self.__nova.servers.get(self.__vm.id)
+        instance = nova_utils.get_latest_server_os_object(
+            self.__nova, self.__vm)
         if not instance:
             logger.warning('Cannot find instance with id - ' + self.__vm.id)
             return False
@@ -770,7 +744,7 @@ class VmInstanceSettings:
 
         if kwargs.get('security_group_names'):
             if isinstance(kwargs['security_group_names'], list):
-                self.security_group_names =  kwargs['security_group_names']
+                self.security_group_names = kwargs['security_group_names']
             elif isinstance(kwargs['security_group_names'], set):
                 self.security_group_names = kwargs['security_group_names']
             elif isinstance(kwargs['security_group_names'], str):
