@@ -16,6 +16,7 @@ import logging
 
 from neutronclient.common.exceptions import NotFound
 from neutronclient.neutron.client import Client
+from snaps.domain.vm_inst import FloatingIp
 from snaps.openstack.utils import keystone_utils
 
 __author__ = 'spisarski'
@@ -29,11 +30,13 @@ Utilities for basic neutron API calls
 
 def neutron_client(os_creds):
     """
-    Instantiates and returns a client for communications with OpenStack's Neutron server
+    Instantiates and returns a client for communications with OpenStack's
+    Neutron server
     :param os_creds: the credentials for connecting to the OpenStack remote API
     :return: the client object
     """
-    return Client(api_version=os_creds.network_api_version, session=keystone_utils.keystone_session(os_creds))
+    return Client(api_version=os_creds.network_api_version,
+                  session=keystone_utils.keystone_session(os_creds))
 
 
 def create_network(neutron, os_creds, network_settings):
@@ -41,8 +44,9 @@ def create_network(neutron, os_creds, network_settings):
     Creates a network for OpenStack
     :param neutron: the client
     :param os_creds: the OpenStack credentials
-    :param network_settings: A dictionary containing the network configuration and is responsible for creating the
-                            network request JSON body
+    :param network_settings: A dictionary containing the network configuration
+                             and is responsible for creating the network
+                            request JSON body
     :return: the network object
     """
     if neutron and network_settings:
@@ -67,7 +71,8 @@ def delete_network(neutron, network):
 
 def get_network(neutron, network_name, project_id=None):
     """
-    Returns an object (dictionary) of the first network found with a given name and project_id (if included)
+    Returns an object (dictionary) of the first network found with a given name
+    and project_id (if included)
     :param neutron: the client
     :param network_name: the name of the network to retrieve
     :param project_id: the id of the network's project
@@ -110,13 +115,15 @@ def create_subnet(neutron, subnet_settings, os_creds, network=None):
     Creates a network subnet for OpenStack
     :param neutron: the client
     :param network: the network object
-    :param subnet_settings: A dictionary containing the subnet configuration and is responsible for creating the subnet
-                            request JSON body
+    :param subnet_settings: A dictionary containing the subnet configuration
+                            and is responsible for creating the subnet request
+                            JSON body
     :param os_creds: the OpenStack credentials
     :return: the subnet object
     """
     if neutron and network and subnet_settings:
-        json_body = {'subnets': [subnet_settings.dict_for_neutron(os_creds, network=network)]}
+        json_body = {'subnets': [subnet_settings.dict_for_neutron(
+            os_creds, network=network)]}
         logger.info('Creating subnet with name ' + subnet_settings.name)
         subnets = neutron.create_subnet(body=json_body)
         return {'subnet': subnets['subnets'][0]}
@@ -156,8 +163,9 @@ def create_router(neutron, os_creds, router_settings):
     Creates a router for OpenStack
     :param neutron: the client
     :param os_creds: the OpenStack credentials
-    :param router_settings: A dictionary containing the router configuration and is responsible for creating the subnet
-                            request JSON body
+    :param router_settings: A dictionary containing the router configuration
+                            and is responsible for creating the subnet request
+                            JSON body
     :return: the router object
     """
     if neutron:
@@ -198,7 +206,8 @@ def get_router_by_name(neutron, router_name):
 
 def add_interface_router(neutron, router, subnet=None, port=None):
     """
-    Adds an interface router for OpenStack for either a subnet or port. Exception will be raised if requesting for both.
+    Adds an interface router for OpenStack for either a subnet or port.
+    Exception will be raised if requesting for both.
     :param neutron: the client
     :param router: the router object
     :param subnet: the subnet object
@@ -206,13 +215,18 @@ def add_interface_router(neutron, router, subnet=None, port=None):
     :return: the interface router object
     """
     if subnet and port:
-        raise Exception('Cannot add interface to the router. Both subnet and port were sent in. Either or please.')
+        raise Exception('Cannot add interface to the router. Both subnet and '
+                        'port were sent in. Either or please.')
 
     if neutron and router and (router or subnet):
-        logger.info('Adding interface to router with name ' + router['router']['name'])
-        return neutron.add_interface_router(router=router['router']['id'], body=__create_port_json_body(subnet, port))
+        logger.info('Adding interface to router with name ' +
+                    router['router']['name'])
+        return neutron.add_interface_router(
+            router=router['router']['id'],
+            body=__create_port_json_body(subnet, port))
     else:
-        raise Exception("Unable to create interface router as neutron client, router or subnet were not created")
+        raise Exception('Unable to create interface router as neutron client,'
+                        ' router or subnet were not created')
 
 
 def remove_interface_router(neutron, router, subnet=None, port=None):
@@ -225,10 +239,14 @@ def remove_interface_router(neutron, router, subnet=None, port=None):
     """
     if router:
         try:
-            logger.info('Removing router interface from router named ' + router['router']['name'])
-            neutron.remove_interface_router(router=router['router']['id'], body=__create_port_json_body(subnet, port))
+            logger.info('Removing router interface from router named ' +
+                        router['router']['name'])
+            neutron.remove_interface_router(
+                router=router['router']['id'],
+                body=__create_port_json_body(subnet, port))
         except NotFound as e:
-            logger.warning('Could not remove router interface. NotFound - ' + str(e))
+            logger.warning('Could not remove router interface. NotFound - %s',
+                           e)
             pass
     else:
         logger.warning('Could not remove router interface, No router object')
@@ -236,8 +254,9 @@ def remove_interface_router(neutron, router, subnet=None, port=None):
 
 def __create_port_json_body(subnet=None, port=None):
     """
-    Returns the dictionary required for creating and deleting router interfaces. Will only work on a subnet or port
-    object. Will throw and exception if parameters contain both or neither
+    Returns the dictionary required for creating and deleting router
+    interfaces. Will only work on a subnet or port object. Will throw and
+    exception if parameters contain both or neither
     :param subnet: the subnet object
     :param port: the port object
     :return: the dict
@@ -262,7 +281,8 @@ def create_port(neutron, os_creds, port_settings):
     :return: the port object
     """
     json_body = port_settings.dict_for_neutron(neutron, os_creds)
-    logger.info('Creating port for network with name - ' + port_settings.network_name)
+    logger.info('Creating port for network with name - %s',
+                port_settings.network_name)
     return neutron.create_port(body=json_body)
 
 
@@ -299,8 +319,10 @@ def create_security_group(neutron, keystone, sec_grp_settings):
     :param sec_grp_settings: the security group settings
     :return: the security group object
     """
-    logger.info('Creating security group with name - ' + sec_grp_settings.name)
-    return neutron.create_security_group(sec_grp_settings.dict_for_neutron(keystone))
+    logger.info('Creating security group with name - %s',
+                sec_grp_settings.name)
+    return neutron.create_security_group(
+        sec_grp_settings.dict_for_neutron(keystone))
 
 
 def delete_security_group(neutron, sec_grp):
@@ -309,7 +331,8 @@ def delete_security_group(neutron, sec_grp):
     :param neutron: the client
     :param sec_grp: the security group object to delete
     """
-    logger.info('Deleting security group with name - ' + sec_grp['security_group']['name'])
+    logger.info('Deleting security group with name - %s',
+                sec_grp['security_group']['name'])
     return neutron.delete_security_group(sec_grp['security_group']['id'])
 
 
@@ -350,8 +373,10 @@ def create_security_group_rule(neutron, sec_grp_rule_settings):
     :param sec_grp_rule_settings: the security group rule settings
     :return: the security group object
     """
-    logger.info('Creating security group to security group - ' + sec_grp_rule_settings.sec_grp_name)
-    return neutron.create_security_group_rule(sec_grp_rule_settings.dict_for_neutron(neutron))
+    logger.info('Creating security group to security group - %s',
+                sec_grp_rule_settings.sec_grp_name)
+    return neutron.create_security_group_rule(
+        sec_grp_rule_settings.dict_for_neutron(neutron))
 
 
 def delete_security_group_rule(neutron, sec_grp_rule):
@@ -360,8 +385,10 @@ def delete_security_group_rule(neutron, sec_grp_rule):
     :param neutron: the client
     :param sec_grp_rule: the security group rule object to delete
     """
-    logger.info('Deleting security group rule with ID - ' + sec_grp_rule['security_group_rule']['id'])
-    neutron.delete_security_group_rule(sec_grp_rule['security_group_rule']['id'])
+    logger.info('Deleting security group rule with ID - %s',
+                sec_grp_rule['security_group_rule']['id'])
+    neutron.delete_security_group_rule(
+        sec_grp_rule['security_group_rule']['id'])
 
 
 def get_rules_by_security_group(neutron, sec_grp):
@@ -370,10 +397,11 @@ def get_rules_by_security_group(neutron, sec_grp):
     :param neutron: the client
     :param sec_grp: the security group object
     """
-    logger.info('Retrieving security group rules associate with the security group - ' +
-                sec_grp['security_group']['name'])
+    logger.info('Retrieving security group rules associate with the '
+                'security group - %s', sec_grp['security_group']['name'])
     out = list()
-    rules = neutron.list_security_group_rules(**{'security_group_id': sec_grp['security_group']['id']})
+    rules = neutron.list_security_group_rules(
+        **{'security_group_id': sec_grp['security_group']['id']})
     for rule in rules['security_group_rules']:
         if rule['security_group_id'] == sec_grp['security_group']['id']:
             out.append({'security_group_rule': rule})
@@ -387,7 +415,8 @@ def get_rule_by_id(neutron, sec_grp, rule_id):
     :param sec_grp: the security group object
     :param rule_id: the rule's ID
     """
-    rules = neutron.list_security_group_rules(**{'security_group_id': sec_grp['security_group']['id']})
+    rules = neutron.list_security_group_rules(
+        **{'security_group_id': sec_grp['security_group']['id']})
     for rule in rules['security_group_rules']:
         if rule['id'] == rule_id:
             return {'security_group_rule': rule}
@@ -396,11 +425,95 @@ def get_rule_by_id(neutron, sec_grp, rule_id):
 
 def get_external_networks(neutron):
     """
-    Returns a list of external OpenStack network object/dict for all external networks
+    Returns a list of external OpenStack network object/dict for all external
+    networks
     :param neutron: the client
     :return: a list of external networks (empty list if none configured)
     """
     out = list()
-    for network in neutron.list_networks(**{'router:external': True})['networks']:
+    for network in neutron.list_networks(
+            **{'router:external': True})['networks']:
         out.append({'network': network})
     return out
+
+
+def get_floating_ips(neutron):
+    """
+    Returns all of the floating IPs
+    :param neutron: the Neutron client
+    :return: a list of SNAPS FloatingIp objects
+    """
+    out = list()
+    fips = neutron.list_floatingips()
+    for fip in fips['floatingips']:
+        out.append(FloatingIp(inst_id=fip['id'],
+                              ip=fip['floating_ip_address']))
+
+    return out
+
+
+def create_floating_ip(neutron, ext_net_name):
+    """
+    Returns the floating IP object that was created with this call
+    :param neutron: the Neutron client
+    :param ext_net_name: the name of the external network on which to apply the
+                         floating IP address
+    :return: the SNAPS FloatingIp object
+    """
+    logger.info('Creating floating ip to external network - ' + ext_net_name)
+    ext_net = get_network(neutron, ext_net_name)
+    if ext_net:
+        fip = neutron.create_floatingip(
+            body={'floatingip':
+                  {'floating_network_id': ext_net['network']['id']}})
+
+        return FloatingIp(inst_id=fip['floatingip']['id'],
+                          ip=fip['floatingip']['floating_ip_address'])
+    else:
+        raise Exception('Cannot create floating IP, '
+                        'external network not found')
+
+
+def get_floating_ip(neutron, floating_ip):
+    """
+    Returns a floating IP object that should be identical to the floating_ip
+    parameter
+    :param neutron: the Neutron client
+    :param floating_ip: the SNAPS FloatingIp object
+    :return: hopefully the same floating IP object input
+    """
+    logger.debug('Attempting to retrieve existing floating ip with IP - %s',
+                 floating_ip.ip)
+    os_fip = get_os_floating_ip(neutron, floating_ip)
+    if os_fip:
+        return FloatingIp(
+            inst_id=os_fip['id'], ip=os_fip['floating_ip_address'])
+
+
+def get_os_floating_ip(neutron, floating_ip):
+    """
+    Returns an OpenStack floating IP object
+    parameter
+    :param neutron: the Neutron client
+    :param floating_ip: the SNAPS FloatingIp object
+    :return: hopefully the same floating IP object input
+    """
+    logger.debug('Attempting to retrieve existing floating ip with IP - %s',
+                 floating_ip.ip)
+    fips = neutron.list_floatingips(ip=floating_ip.id)
+
+    for fip in fips['floatingips']:
+        if fip['id'] == floating_ip.id:
+            return fip
+
+
+def delete_floating_ip(neutron, floating_ip):
+    """
+    Responsible for deleting a floating IP
+    :param neutron: the Neutron client
+    :param floating_ip: the SNAPS FloatingIp object
+    :return:
+    """
+    logger.debug('Attempting to delete existing floating ip with IP - %s',
+                 floating_ip.ip)
+    return neutron.delete_floatingip(floating_ip.id)
