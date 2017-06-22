@@ -590,6 +590,39 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         self.assertEqual(self.security_groups[1]['security_group']['id'], sec_grp_2b['security_group']['id'])
 
 
+
+class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
+    """
+    Test for creating security groups via neutron_utils.py
+    """
+    def setUp(self):
+        guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.floating_ip = None
+
+    def tearDown(self):
+        """
+        Cleans the remote OpenStack objects
+        """
+        if self.floating_ip:
+            neutron_utils.delete_floating_ip(self.neutron, self.floating_ip)
+
+    def test_floating_ips(self):
+        """
+        Tests the creation of a floating IP
+        :return:
+        """
+        ips = neutron_utils.get_floating_ips(self.neutron)
+        self.assertIsNotNone(ips)
+
+        self.floating_ip = neutron_utils.create_floating_ip(self.neutron,
+                                                            self.ext_net_name)
+        returned = neutron_utils.get_floating_ip(self.neutron,
+                                                 self.floating_ip)
+        self.assertEqual(self.floating_ip, returned)
+
+
+
 """
 Validation routines
 """
