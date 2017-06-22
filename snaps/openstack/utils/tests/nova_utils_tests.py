@@ -73,7 +73,6 @@ class NovaUtilsKeypairTests(OSComponentTestCase):
         self.public_key = nova_utils.public_key_openssh(self.keys)
         self.keypair_name = guid
         self.keypair = None
-        self.floating_ip = None
 
     def tearDown(self):
         """
@@ -96,9 +95,6 @@ class NovaUtilsKeypairTests(OSComponentTestCase):
             os.remove(self.pub_key_file_path)
         except:
             pass
-
-        if self.floating_ip:
-            nova_utils.delete_floating_ip(self.nova, self.floating_ip)
 
     def test_create_keypair(self):
         """
@@ -132,18 +128,6 @@ class NovaUtilsKeypairTests(OSComponentTestCase):
         pub_key = pub_key_file.read()
         pub_key_file.close()
         self.assertEqual(self.keypair.public_key, pub_key)
-
-    def test_floating_ips(self):
-        """
-        Tests the creation of a floating IP
-        :return:
-        """
-        ips = nova_utils.get_floating_ips(self.nova)
-        self.assertIsNotNone(ips)
-
-        self.floating_ip = nova_utils.create_floating_ip(self.nova, self.ext_net_name)
-        returned = nova_utils.get_floating_ip(self.nova, self.floating_ip)
-        self.assertEqual(self.floating_ip, returned)
 
 
 class NovaUtilsFlavorTests(OSComponentTestCase):

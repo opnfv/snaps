@@ -404,3 +404,54 @@ def get_external_networks(neutron):
     for network in neutron.list_networks(**{'router:external': True})['networks']:
         out.append({'network': network})
     return out
+
+
+def get_floating_ips(neutron):
+    """
+    Returns all of the floating IPs
+    :param neutron: the Neutron client
+    :return: a list of floating IPs
+    """
+    return neutron.list_floatingips()
+
+
+def create_floating_ip(neutron, ext_net_name):
+    """
+    Returns the floating IP object that was created with this call
+    :param neutron: the Neutron client
+    :param ext_net_name: the name of the external network on which to apply the floating IP address
+    :return: the floating IP object
+    """
+    logger.info('Creating floating ip to external network - ' + ext_net_name)
+    external_net_id = None
+    for net in get_external_networks(neutron):
+        if net.get('network').get('name') == ext_net_name:
+            external_net_id = net.get('network').get('id')
+            break
+    return neutron.create_floatingip({'floatingip': {'floating_network_id': external_net_id}})
+
+def get_floating_ip(neutron, floating_ip):
+    """
+    Returns a floating IP object that should be identical to the floating_ip parameter
+    :param neutron: the Neutron client
+    :param floating_ip: the floating IP object to lookup
+    :return: hopefully the same floating IP object input
+    """
+    logger.debug('Attempting to retrieve existing floating ip with IP - ' + floating_ip.ip)
+    list = neutron.list_floatingips()
+    for floating_ip_object in list['floatingips']:
+        if floating_ip_object.get('floating_ip_address') == floating_ip:
+            return floating_ip_object
+    return None
+
+
+def delete_floating_ip(neutron, floating_ip):
+    """
+    Responsible for deleting a floating IP
+    :param neutron: the Neutron client
+    :param floating_ip: the floating IP object to delete
+    :return:
+    """
+    logger.debug('Attempting to delete existing floating ip with IP - ' + floating_ip.ip)
+    floating_ip_id = get_floating_ip(neutron, floating_ip).get('id')
+    return neutron.delete_floatingip(floating_ip_id)
