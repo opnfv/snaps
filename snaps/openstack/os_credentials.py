@@ -22,7 +22,7 @@ class OSCreds:
 
     def __init__(self, username, password, auth_url, project_name, identity_api_version=2, image_api_version=2,
                  network_api_version=2, compute_api_version=2, user_domain_id='default', project_domain_id='default',
-                 proxy_settings=None, cacert=True):
+                 interface="admin", proxy_settings=None, cacert=True):
         """
         Constructor
         :param username: The user (required)
@@ -35,6 +35,7 @@ class OSCreds:
         :param compute_api_version: The OpenStack's API version to use for Nova clients
         :param user_domain_id: Used for v3 APIs
         :param project_domain_id: Used for v3 APIs
+        :param interface: Used to specify the endpoint type for keystone as public, admin, internal
         :param proxy_settings: instance of os_credentials.ProxySettings class
         :param cacert: Default to be True for http, or the certification file is specified for https verification,
                        or set to be False to disable server certificate verification without cert file
@@ -49,6 +50,7 @@ class OSCreds:
         self.compute_api_version = compute_api_version
         self.user_domain_id = user_domain_id
         self.project_domain_id = project_domain_id
+        self.interface = interface
         self.proxy_settings = proxy_settings
         self.cacert = cacert
 
@@ -75,6 +77,7 @@ class OSCreds:
                ', network_api_version=' + str(self.network_api_version) + \
                ', compute_api_version=' + str(self.compute_api_version) + \
                ', user_domain_id=' + str(self.user_domain_id) + \
+               ', interface=' + str(self.interface) + \
                ', proxy_settings=' + str(self.proxy_settings) + \
                ', cacert=' + str(self.cacert)
 

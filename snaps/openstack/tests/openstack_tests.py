@@ -92,6 +92,10 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
         else:
             https_cacert = True
 
+        interface = 'admin'
+        if config.get('OS_INTERFACE'):
+            interface = config.get('OS_INTERFACE')
+
         os_creds = OSCreds(username=config['OS_USERNAME'],
                            password=config['OS_PASSWORD'],
                            auth_url=config['OS_AUTH_URL'],
@@ -99,6 +103,7 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
                            identity_api_version=version,
                            user_domain_id=user_domain_id,
                            project_domain_id=proj_domain_id,
+                           interface=interface,
                            proxy_settings=proxy_settings,
                            cacert=https_cacert)
     else:
