@@ -16,6 +16,24 @@
       "revId": "9211ff2f307640c0e2791b4958272f5d3807360f",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1aa4ed85_d7daece8",
+        "filename": "snaps/openstack/create_user.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-06-26T14:15:43Z",
+      "side": 1,
+      "message": "thanks for the tip! I\u0027ll try and remember this pattern and leverage and change this code the next time I\u0027m in there.",
+      "parentUuid": "1aa4ed85_8c330bf6",
+      "revId": "9211ff2f307640c0e2791b4958272f5d3807360f",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
