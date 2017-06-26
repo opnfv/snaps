@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aa4ed85_8c330bf6",
+        "filename": "snaps/openstack/create_user.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 3405
+      },
+      "writtenOn": "2017-06-26T04:02:34Z",
+      "side": 1,
+      "message": "This 4 lines could have been replaced by only one instruction if the default value is passed in get().\nGreat work to switch to kwargs anyway!",
+      "revId": "9211ff2f307640c0e2791b4958272f5d3807360f",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
