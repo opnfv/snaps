@@ -212,7 +212,7 @@ def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True,
         log_level=log_level))
     suite.addTest(OSComponentTestCase.parameterize(
         NovaUtilsInstanceTests, os_creds=os_creds, ext_net_name=ext_net_name,
-        log_level=log_level))
+        log_level=log_level, image_metadata=image_metadata))
     suite.addTest(OSComponentTestCase.parameterize(
         CreateFlavorTests, os_creds=os_creds, ext_net_name=ext_net_name,
         log_level=log_level))
