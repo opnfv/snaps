@@ -83,7 +83,8 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
         proxy_settings = None
         if proxy_settings_str:
             tokens = re.split(':', proxy_settings_str)
-            proxy_settings = ProxySettings(tokens[0], tokens[1], ssh_proxy_cmd)
+            proxy_settings = ProxySettings(host=tokens[0], port=tokens[1],
+                                           ssh_proxy_cmd=ssh_proxy_cmd)
 
         if config.get('OS_CACERT'):
             https_cacert = config.get('OS_CACERT')
@@ -121,8 +122,9 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
         proxy_str = config.get('http_proxy')
         if proxy_str:
             tokens = re.split(':', proxy_str)
-            proxy_settings = ProxySettings(tokens[0], tokens[1],
-                                           config.get('ssh_proxy_cmd'))
+            proxy_settings = ProxySettings(
+                host=tokens[0], port=tokens[1],
+                ssh_proxy_cmd=config.get('ssh_proxy_cmd'))
 
         os_creds = OSCreds(username=config['username'],
                            password=config['password'],

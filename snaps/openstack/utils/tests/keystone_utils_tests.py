@@ -43,7 +43,9 @@ class KeystoneSmokeTests(OSComponentTestCase):
         from snaps.openstack.os_credentials import OSCreds
 
         with self.assertRaises(Exception):
-            keystone = keystone_utils.keystone_client(OSCreds('user', 'pass', 'url', 'project'))
+            keystone = keystone_utils.keystone_client(OSCreds(
+                username='user', password='pass', auth_url='url',
+                project_name='project'))
             keystone.users.list()
 
 
@@ -54,8 +56,8 @@ class KeystoneUtilsTests(OSComponentTestCase):
 
     def setUp(self):
         """
-        Instantiates the CreateImage object that is responsible for downloading and creating an OS image file
-        within OpenStack
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file within OpenStack
         """
         guid = uuid.uuid4()
         self.username = self.__class__.__name__ + '-' + str(guid)
@@ -92,16 +94,19 @@ class KeystoneUtilsTests(OSComponentTestCase):
         Tests the keyston_utils.create_project() funtion
         """
         project_settings = ProjectSettings(name=self.project_name)
-        self.project = keystone_utils.create_project(self.keystone, project_settings)
+        self.project = keystone_utils.create_project(self.keystone,
+                                                     project_settings)
         self.assertEqual(self.project_name, self.project.name)
 
-        project = keystone_utils.get_project(keystone=self.keystone, project_name=project_settings.name)
+        project = keystone_utils.get_project(
+            keystone=self.keystone, project_name=project_settings.name)
         self.assertIsNotNone(project)
         self.assertEqual(self.project_name, self.project.name)
 
     def test_get_endpoint_success(self):
         """
-        Tests to ensure that proper credentials and proper service type can succeed.
+        Tests to ensure that proper credentials and proper service type can
+        succeed.
         """
         endpoint = keystone_utils.get_endpoint(self.os_creds,
                                                service_type="identity")
@@ -109,18 +114,21 @@ class KeystoneUtilsTests(OSComponentTestCase):
 
     def test_get_endpoint_fail_without_proper_service(self):
         """
-        Tests to ensure that proper credentials and improper service type cannot succeed.
+        Tests to ensure that proper credentials and improper service type
+        cannot succeed.
         """
         with self.assertRaises(Exception):
             keystone_utils.get_endpoint(self.os_creds, service_type="glance")
 
     def test_get_endpoint_fail_without_proper_credentials(self):
         """
-        Tests to ensure that improper credentials and proper service type cannot succeed.
+        Tests to ensure that improper credentials and proper service type
+        cannot succeed.
         """
         from snaps.openstack.os_credentials import OSCreds
 
         with self.assertRaises(Exception):
             keystone_utils.get_endpoint(
-                OSCreds('user', 'pass', 'url', 'project'),
+                OSCreds(username='user', password='pass', auth_url='url',
+                        project_name='project'),
                 service_type="image")
