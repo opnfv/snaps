@@ -619,11 +619,15 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         """
         Tests the creation of a 3-part OpenStack image from files.
         """
+        file_only = False
+
         # Set properties
         properties = {}
         if self.glance_test_meta:
             if 'extra_properties' in self.glance_test_meta:
                 properties = self.glance_test_meta['extra_properties']
+            if 'disk_file' in self.glance_test_meta:
+                file_only = True
 
         # Create the kernel image
         kernel_file_name = None
@@ -635,9 +639,13 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         else:
             kernel_url = openstack_tests.CIRROS_DEFAULT_KERNEL_IMAGE_URL
 
-        if not kernel_file_name:
+        if not kernel_file_name and not file_only:
             kernel_file_name = file_utils.download(kernel_url,
                                                    self.tmp_dir).name
+        else:
+            logger.warn('Will not download the kernel image.'
+                        ' Cannot execute test')
+            return
 
         kernel_file_image_settings = openstack_tests.file_image_test_settings(
             name=self.image_name + '_kernel', file_path=kernel_file_name)
@@ -657,9 +665,13 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         elif 'ramdisk_url' in self.glance_test_meta:
             ramdisk_url = self.glance_test_meta['ramdisk_url']
 
-        if not ramdisk_file_name:
+        if not ramdisk_file_name and not file_only:
             ramdisk_file_name = file_utils.download(ramdisk_url,
                                                     self.tmp_dir).name
+        else:
+            logger.warn('Will not download the ramdisk image.'
+                        ' Cannot execute test')
+            return
 
         ramdisk_file_image_settings = openstack_tests.file_image_test_settings(
             name=self.image_name + '_ramdisk', file_path=ramdisk_file_name)
@@ -678,8 +690,12 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         elif 'disk_url' in self.glance_test_meta:
             disk_url = self.glance_test_meta['disk_url']
 
-        if not disk_file_name:
+        if not disk_file_name and not file_only:
             disk_file_name = file_utils.download(disk_url, self.tmp_dir).name
+        else:
+            logger.warn('Will not download the disk file image.'
+                        ' Cannot execute test')
+            return
 
         file_image_settings = openstack_tests.file_image_test_settings(
             name=self.image_name, file_path=disk_file_name)
