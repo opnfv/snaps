@@ -51,13 +51,12 @@ def __get_os_credentials(os_conn_config):
     if http_proxy:
         tokens = re.split(':', http_proxy)
         ssh_proxy_cmd = os_conn_config.get('ssh_proxy_cmd')
-        proxy_settings = ProxySettings(tokens[0], tokens[1], ssh_proxy_cmd)
+        proxy_settings = ProxySettings(host=tokens[0], port=tokens[1],
+                                       ssh_proxy_cmd=ssh_proxy_cmd)
 
-    return OSCreds(username=os_conn_config.get('username'),
-                   password=os_conn_config.get('password'),
-                   auth_url=os_conn_config.get('auth_url'),
-                   project_name=os_conn_config.get('project_name'),
-                   proxy_settings=proxy_settings)
+    os_conn_config['proxy_settings'] = proxy_settings
+
+    return OSCreds(**os_conn_config)
 
 
 def __parse_ports_config(config):
@@ -568,7 +567,7 @@ def __get_flavor_variable_value(var_config_values, flavor_dict):
                     return flavor_creator.get_flavor().id
 
     logger.info("Returning none")
-    return None
+    # return None
 
 
 def main(arguments):
