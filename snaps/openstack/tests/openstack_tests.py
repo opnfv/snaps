@@ -49,7 +49,7 @@ DEFAULT_IMAGE_FORMAT = 'qcow2'
 
 
 def get_credentials(os_env_file=None, proxy_settings_str=None,
-                    ssh_proxy_cmd=None, dev_os_env_file=None):
+                    ssh_proxy_cmd=None, dev_os_env_file=None, overrides=None):
     """
     Returns the OpenStack credentials object. It first attempts to retrieve
     them from a standard OpenStack source file. If that file is None, it will
@@ -59,79 +59,65 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
     :param ssh_proxy_cmd: the SSH proxy command for your environment (optional)
     :param dev_os_env_file: the YAML file to retrieve both the OS credentials
                             and proxy settings
+    :param overrides: dict() containing values to override the credentials
+                      found and passed in.
     :return: the SNAPS credentials object
     """
+
     if os_env_file:
         logger.debug('Reading RC file - ' + os_env_file)
-        config = file_utils.read_os_env_file(os_env_file)
-        proj_name = config.get('OS_PROJECT_NAME')
-        if not proj_name:
-            proj_name = config.get('OS_TENANT_NAME')
 
-        proj_domain_id = 'default'
-        user_domain_id = 'default'
+        creds_kwargs = file_utils.read_os_env_file(os_env_file)
 
-        if config.get('OS_PROJECT_DOMAIN_ID'):
-            proj_domain_id = config['OS_PROJECT_DOMAIN_ID']
-        if config.get('OS_USER_DOMAIN_ID'):
-            user_domain_id = config['OS_USER_DOMAIN_ID']
-        if config.get('OS_IDENTITY_API_VERSION'):
-            version = int(config['OS_IDENTITY_API_VERSION'])
+        creds_kwargs['username'] = creds_kwargs.get('OS_USERNAME')
+        creds_kwargs['password'] = creds_kwargs.get('OS_PASSWORD')
+        creds_kwargs['auth_url'] = creds_kwargs.get('OS_AUTH_URL')
+        creds_kwargs['project_name'] = creds_kwargs.get(
+            'OS_PROJECT_NAME', creds_kwargs.get('OS_TENANT_NAME'))
+        creds_kwargs['identity_api_version'] = int(creds_kwargs.get(
+            'OS_IDENTITY_API_VERSION', 2))
+        creds_kwargs['user_domain_id'] = creds_kwargs.get(
+            'OS_USER_DOMAIN_ID', 'default')
+        creds_kwargs['project_domain_id'] = creds_kwargs.get(
+            'OS_PROJECT_DOMAIN_ID', 'default')
+        creds_kwargs['interface'] = creds_kwargs.get('OS_INTERFACE', 'admin')
+
+        if creds_kwargs.get('OS_CACERT'):
+            https_cacert = creds_kwargs.get('OS_CACERT')
+        elif creds_kwargs.get('OS_INSECURE'):
+            https_cacert = False
         else:
-            version = 2
+            https_cacert = True
+        creds_kwargs['cacert'] = https_cacert
+
 
         proxy_settings = None
         if proxy_settings_str:
             tokens = re.split(':', proxy_settings_str)
-            proxy_settings = ProxySettings(tokens[0], tokens[1], ssh_proxy_cmd)
+            proxy_settings = ProxySettings(host=tokens[0], port=tokens[1],
+                                           ssh_proxy_cmd=ssh_proxy_cmd)
 
-        if config.get('OS_CACERT'):
-            https_cacert = config.get('OS_CACERT')
-        elif config.get('OS_INSECURE'):
-            https_cacert = False
-        else:
-            https_cacert = True
-
-        interface = 'admin'
-        if config.get('OS_INTERFACE'):
-            interface = config.get('OS_INTERFACE')
-
-        os_creds = OSCreds(username=config['OS_USERNAME'],
-                           password=config['OS_PASSWORD'],
-                           auth_url=config['OS_AUTH_URL'],
-                           project_name=proj_name,
-                           identity_api_version=version,
-                           user_domain_id=user_domain_id,
-                           project_domain_id=proj_domain_id,
-                           interface=interface,
-                           proxy_settings=proxy_settings,
-                           cacert=https_cacert)
+        creds_kwargs['proxy_settings'] = proxy_settings
     else:
         logger.info('Reading development os_env file - ' + dev_os_env_file)
-        config = file_utils.read_yaml(dev_os_env_file)
-        identity_api_version = config.get('identity_api_version')
-        if not identity_api_version:
-            identity_api_version = 2
 
-        image_api_version = config.get('image_api_version')
-        if not image_api_version:
-            image_api_version = glance_utils.VERSION_2
+        creds_kwargs = file_utils.read_yaml(dev_os_env_file)
 
-        proxy_settings = None
-        proxy_str = config.get('http_proxy')
+        if 'auth_url' not in creds_kwargs:
+            creds_kwargs['auth_url'] = creds_kwargs.get('os_auth_url')
+
+        proxy_str = creds_kwargs.get('http_proxy')
         if proxy_str:
             tokens = re.split(':', proxy_str)
-            proxy_settings = ProxySettings(tokens[0], tokens[1],
-                                           config.get('ssh_proxy_cmd'))
+            proxy_settings = ProxySettings(
+                host=tokens[0], port=tokens[1],
+                ssh_proxy_cmd=creds_kwargs.get('ssh_proxy_cmd'))
+            creds_kwargs['proxy_settings'] = proxy_settings
 
-        os_creds = OSCreds(username=config['username'],
-                           password=config['password'],
-                           auth_url=config['os_auth_url'],
-                           project_name=config['project_name'],
-                           identity_api_version=identity_api_version,
-                           image_api_version=image_api_version,
-                           proxy_settings=proxy_settings)
+    if overrides and isinstance(overrides, dict):
+        creds_kwargs.update(overrides)
 
+    os_creds = OSCreds(**creds_kwargs)
     logger.info('OS Credentials = ' + str(os_creds))
     return os_creds
 

@@ -20,51 +20,63 @@ class OSCreds:
     Represents the credentials required to connect with OpenStack servers
     """
 
-    def __init__(self, username, password, auth_url, project_name, identity_api_version=2, image_api_version=2,
-                 network_api_version=2, compute_api_version=2, user_domain_id='default', project_domain_id='default',
-                 interface="admin", proxy_settings=None, cacert=True):
+    def __init__(self, **kwargs):
         """
         Constructor
         :param username: The user (required)
         :param password: The user's password (required)
         :param auth_url: The OpenStack cloud's authorization URL (required)
         :param project_name: The project/tenant name
-        :param identity_api_version: The OpenStack's API version to use for Keystone clients
-        :param image_api_version: The OpenStack's API version to use for Glance clients
-        :param network_api_version: The OpenStack's API version to use for Neutron clients
-        :param compute_api_version: The OpenStack's API version to use for Nova clients
+        :param identity_api_version: The OpenStack's API version to use for
+                                     Keystone clients
+        :param image_api_version: The OpenStack's API version to use for Glance
+                                  clients
+        :param network_api_version: The OpenStack's API version to use for
+                                    Neutron clients
+        :param compute_api_version: The OpenStack's API version to use for Nova
+                                    clients
         :param user_domain_id: Used for v3 APIs
         :param project_domain_id: Used for v3 APIs
-        :param interface: Used to specify the endpoint type for keystone as public, admin, internal
+        :param interface: Used to specify the endpoint type for keystone as
+                          public, admin, internal
         :param proxy_settings: instance of os_credentials.ProxySettings class
-        :param cacert: Default to be True for http, or the certification file is specified for https verification,
-                       or set to be False to disable server certificate verification without cert file
+        :param cacert: Default to be True for http, or the certification file
+                       is specified for https verification, or set to be False
+                       to disable server certificate verification without cert
+                       file
         """
-        self.username = username
-        self.password = password
-        self.auth_url = auth_url
-        self.project_name = project_name
-        self.identity_api_version = identity_api_version
-        self.image_api_version = image_api_version
-        self.network_api_version = network_api_version
-        self.compute_api_version = compute_api_version
-        self.user_domain_id = user_domain_id
-        self.project_domain_id = project_domain_id
-        self.interface = interface
-        self.proxy_settings = proxy_settings
-        self.cacert = cacert
+        self.username = kwargs.get('username')
+        self.password = kwargs.get('password')
+        self.auth_url = kwargs.get('auth_url')
+        self.project_name = kwargs.get('project_name')
+        self.identity_api_version = kwargs.get('identity_api_version', 2)
+        self.image_api_version = kwargs.get('image_api_version', 2)
+        self.network_api_version = kwargs.get('network_api_version', 2)
+        self.compute_api_version = kwargs.get('compute_api_version', 2)
+        self.user_domain_id = kwargs.get('user_domain_id', 'default')
+        self.project_domain_id = kwargs.get('project_domain_id', 'default')
+        self.interface = kwargs.get('interface', 'admin')
+        self.cacert = kwargs.get('cacert', True)
 
-        if self.proxy_settings and not isinstance(self.proxy_settings, ProxySettings):
-            raise Exception('proxy_settings must be an instance of the class ProxySettings')
+        if isinstance(kwargs.get('proxy_settings'), ProxySettings):
+            self.proxy_settings = kwargs.get('proxy_settings')
+        elif isinstance(kwargs.get('proxy_settings'), dict):
+            self.proxy_settings = ProxySettings(**kwargs.get('proxy_settings'))
+        else:
+            self.proxy_settings = None
 
-        if self.auth_url:
-            auth_url_tokens = self.auth_url.split('/')
-            last_token = auth_url_tokens[len(auth_url_tokens) - 1]
-            if len(last_token) == 0:
-                last_token = auth_url_tokens[len(auth_url_tokens) - 2]
+        if not self.username or not self.password or not self.auth_url \
+                or not self.project_name:
+            raise OSCredsError('username, password, auth_url, and project_name'
+                               ' are required')
 
-            if not last_token.startswith('v'):
-                raise Exception('auth_url last toke must start with \'v\'')
+        auth_url_tokens = self.auth_url.split('/')
+        last_token = auth_url_tokens[len(auth_url_tokens) - 1]
+        if len(last_token) == 0:
+            last_token = auth_url_tokens[len(auth_url_tokens) - 2]
+
+        if not last_token.startswith('v'):
+            raise OSCredsError('auth_url last toke must start with \'v\'')
 
     def __str__(self):
         """Converts object to a string"""
@@ -84,27 +96,44 @@ class OSCreds:
 
 class ProxySettings:
     """
-    Represents the information required for sending traffic (HTTP & SSH) through a proxy
+    Represents the information required for sending traffic (HTTP & SSH)
+    through a proxy
     """
 
-    def __init__(self, host, port, ssh_proxy_cmd=None):
+    def __init__(self, **kwargs):
         """
         Constructor
         :param host: the HTTP proxy host
         :param port: the HTTP proxy port
         :param ssh_proxy_cmd: the SSH proxy command string (optional)
         """
-        # TODO - Add necessary fields here when adding support for secure proxies
+        self.host = kwargs.get('host')
+        self.port = kwargs.get('port')
+        self.ssh_proxy_cmd = kwargs.get('ssh_proxy_cmd')
 
-        self.host = host
-        self.port = port
-        self.ssh_proxy_cmd = ssh_proxy_cmd
-
-        if not self.host and not self.port:
-            raise Exception('host & port are required')
+        if not self.host or not self.port:
+            raise ProxySettingsError('host & port are required')
 
     def __str__(self):
         """Converts object to a string"""
         return 'ProxySettings - host=' + str(self.host) + \
                ', port=' + str(self.port) + \
                ', ssh_proxy_cmd=' + str(self.ssh_proxy_cmd)
+
+
+class ProxySettingsError(Exception):
+    """
+    Exception to be thrown when an OSCred are invalid
+    """
+
+    def __init__(self, message):
+        Exception.__init__(self, message)
+
+
+class OSCredsError(Exception):
+    """
+    Exception to be thrown when an OSCred are invalid
+    """
+
+    def __init__(self, message):
+        Exception.__init__(self, message)
