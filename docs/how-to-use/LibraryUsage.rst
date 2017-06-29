@@ -204,7 +204,7 @@ Create Keypair
 
 .. code:: python
 
-    from snaps.openstack.create_keypair import KeypairSettings, OpenStackKeypair
+    from snaps.openstack.create_keypairs import KeypairSettings, OpenStackKeypair
     keypair_settings = KeypairSettings(name='kepair-name', private_filepath='/tmp/priv-kp')
     keypair_creator = OpenStackKeypair(os_creds, keypair_settings)
     keypair_creator.create()
