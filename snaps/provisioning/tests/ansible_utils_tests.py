@@ -156,28 +156,58 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         Cleans the created objects
         """
         if self.inst_creator:
-            self.inst_creator.clean()
+            try:
+                self.inst_creator.clean()
+            except:
+                pass
+
+        if self.sec_grp_creator:
+            try:
+                self.sec_grp_creator.clean()
+            except:
+                pass
 
         if self.keypair_creator:
-            self.keypair_creator.clean()
+            try:
+                self.keypair_creator.clean()
+            except:
+                pass
 
         if self.flavor_creator:
-            self.flavor_creator.clean()
+            try:
+                self.flavor_creator.clean()
+            except:
+                pass
 
         if os.path.isfile(self.keypair_pub_filepath):
-            os.remove(self.keypair_pub_filepath)
+            try:
+                os.remove(self.keypair_pub_filepath)
+            except:
+                pass
 
         if os.path.isfile(self.keypair_priv_filepath):
-            os.remove(self.keypair_priv_filepath)
+            try:
+                os.remove(self.keypair_priv_filepath)
+            except:
+                pass
 
         if self.router_creator:
-            self.router_creator.clean()
+            try:
+                self.router_creator.clean()
+            except:
+                pass
 
         if self.network_creator:
-            self.network_creator.clean()
+            try:
+                self.network_creator.clean()
+            except:
+                pass
 
         if self.image_creator and not self.image_creator.image_settings.exists:
-            self.image_creator.clean()
+            try:
+                self.image_creator.clean()
+            except:
+                pass
 
         if os.path.isfile(self.test_file_local_path):
             os.remove(self.test_file_local_path)
