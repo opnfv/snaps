@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aa4ed85_058609ba",
+        "filename": "snaps/openstack/os_credentials.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 334
+      },
+      "writtenOn": "2017-06-29T14:51:01Z",
+      "side": 1,
+      "message": "I mentioned this in the JIRA but why is this not public by default?",
+      "range": {
+        "startLine": 25,
+        "startChar": 17,
+        "endLine": 25,
+        "endChar": 34
+      },
+      "revId": "00f3d66bc9af0292b6ab2433eb2a6e1de8467300",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
