@@ -20,6 +20,8 @@ from snaps.domain.test.image_tests import ImageDomainObjectTests
 from snaps.domain.test.stack_tests import StackDomainObjectTests
 from snaps.domain.test.vm_inst_tests import (VmInstDomainObjectTests,
                                              FloatingIpDomainObjectTests)
+from snaps.openstack.tests.conf.os_credentials_tests import (
+    ProxySettingsUnitTests, OSCredsUnitTests)
 from snaps.openstack.tests.create_flavor_tests import CreateFlavorTests
 from snaps.openstack.tests.create_image_tests import (
     CreateImageSuccessTests, CreateImageNegativeTests, ImageSettingsUnitTests,
@@ -80,33 +82,37 @@ def add_unit_tests(suite):
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         SecurityGroupRuleSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        ProxySettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        OSCredsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         SecurityGroupSettingsUnitTests))
-    suite.addTest(
-        unittest.TestLoader().loadTestsFromTestCase(ImageSettingsUnitTests))
-    suite.addTest(
-        unittest.TestLoader().loadTestsFromTestCase(ImageDomainObjectTests))
-    suite.addTest(
-        unittest.TestLoader().loadTestsFromTestCase(KeypairSettingsUnitTests))
-    suite.addTest(
-        unittest.TestLoader().loadTestsFromTestCase(UserSettingsUnitTests))
-    suite.addTest(
-        unittest.TestLoader().loadTestsFromTestCase(ProjectSettingsUnitTests))
-    suite.addTest(
-        unittest.TestLoader().loadTestsFromTestCase(NetworkSettingsUnitTests))
-    suite.addTest(
-        unittest.TestLoader().loadTestsFromTestCase(SubnetSettingsUnitTests))
-    suite.addTest(
-        unittest.TestLoader().loadTestsFromTestCase(PortSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        ImageSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        ImageDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        KeypairSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        UserSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        ProjectSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        NetworkSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        SubnetSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        PortSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         FloatingIpSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         VmInstanceSettingsUnitTests))
-    suite.addTest(
-        unittest.TestLoader().loadTestsFromTestCase(StackDomainObjectTests))
-    suite.addTest(
-        unittest.TestLoader().loadTestsFromTestCase(StackSettingsUnitTests))
-    suite.addTest(
-        unittest.TestLoader().loadTestsFromTestCase(VmInstDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        StackDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        StackSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        VmInstDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         FloatingIpDomainObjectTests))
 
