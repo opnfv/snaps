@@ -81,7 +81,8 @@ class KeystoneUtilsTests(OSComponentTestCase):
         """
         Tests the keystone_utils.create_user() function
         """
-        user_settings = UserSettings(name=self.username, password='test123')
+        user_settings = UserSettings(name=self.username,
+                                     password=str(uuid.uuid4()))
         self.user = keystone_utils.create_user(self.keystone, user_settings)
         self.assertEqual(self.username, self.user.name)
 
