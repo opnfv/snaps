@@ -75,6 +75,10 @@ class OpenStackKeypair:
                     keys, self.keypair_settings.public_filepath,
                     self.keypair_settings.private_filepath)
                 self.__delete_keys_on_clean = True
+        elif self.__keypair and not os.path.isfile(
+                self.keypair_settings.private_filepath):
+            logger.warn("The public key already exist in OpenStack \
+                        but the private key file is not found ..")
 
         return self.__keypair
 
