@@ -502,26 +502,24 @@ class CreateNetworkTypeTests(OSComponentTestCase):
                     False)
             self.net_creator.clean()
 
-    # TODO - determine why this is not working on Newton
-    #        - Unable to create the network. No tenant network is available for allocation.
-    # def test_create_network_type_vlan(self):
-    #     """
-    #     Tests the creation of an OpenStack network of type vlan.
-    #     """
-    #     # Create Network
-    #     network_type = 'vlan'
-    #     net_settings = NetworkSettings(name=self.net_config.network_settings.name,
-    #                                    subnet_settings=self.net_config.network_settings.subnet_settings,
-    #                                    network_type=network_type)
-    #
-    #     # When setting the network_type, creds must be admin
-    #     self.net_creator = OpenStackNetwork(self.os_creds, net_settings)
-    #     network = self.net_creator.create()
-    #
-    #     # Validate network was created
-    #     neutron_utils_tests.validate_network(self.neutron, net_settings.name, True)
-    #
-    #     self.assertEquals(network_type, network['network']['provider:network_type'])
+    def test_create_network_type_vlan(self):
+        """
+        Tests the creation of an OpenStack network of type vlan.
+        """
+        # Create Network
+        network_type = 'vlan'
+        net_settings = NetworkSettings(name=self.net_config.network_settings.name,
+                                       subnet_settings=self.net_config.network_settings.subnet_settings,
+                                       network_type=network_type)
+
+        # When setting the network_type, creds must be admin
+        self.net_creator = OpenStackNetwork(self.os_creds, net_settings)
+        network = self.net_creator.create()
+
+        # Validate network was created
+        neutron_utils_tests.validate_network(self.neutron, net_settings.name, True)
+
+        self.assertEquals(network_type, network['network']['provider:network_type'])
 
     def test_create_network_type_vxlan(self):
         """
@@ -545,30 +543,25 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         self.assertEqual(network_type,
                          network['network']['provider:network_type'])
 
-    # TODO - determine what value we need to place into physical_network
-    #        - Do not know what vaule to place into the 'physical_network' setting.
-    # def test_create_network_type_flat(self):
-    #     """
-    #     Tests the creation of an OpenStack network of type flat.
-    #     """
-    #     # Create Network
-    #     network_type = 'flat'
-    #
-    #     # Unable to find documentation on how to find a value that will work here.
-    #     # https://visibilityspots.org/vlan-flat-neutron-provider.html
-    #     # https://community.rackspace.com/products/f/45/t/4225
-    #     # It appears that this may be due to how OPNFV is configuring OpenStack.
-    #     physical_network = '???'
-    #     net_settings = NetworkSettings(name=self.net_config.network_settings.name,
-    #                                    subnet_settings=self.net_config.network_settings.subnet_settings,
-    #                                    network_type=network_type, physical_network=physical_network)
-    #     self.net_creator = OpenStackNetwork(self.os_creds, net_settings)
-    #     network = self.net_creator.create()
-    #
-    #     # Validate network was created
-    #     neutron_utils_tests.validate_network(self.neutron, net_settings.name, True)
-    #
-    #     self.assertEquals(network_type, network['network']['provider:network_type'])
+    def test_create_network_type_flat(self):
+        """
+        Tests the creation of an OpenStack network of type flat.
+        """
+        # Create Network
+        network_type = 'flat'
+
+        # TODO - this value must be variable to work on all OpenStack pods
+        physical_network = 'datacentre'
+        net_settings = NetworkSettings(name=self.net_config.network_settings.name,
+                                       subnet_settings=self.net_config.network_settings.subnet_settings,
+                                       network_type=network_type, physical_network=physical_network)
+        self.net_creator = OpenStackNetwork(self.os_creds, net_settings)
+        network = self.net_creator.create()
+
+        # Validate network was created
+        neutron_utils_tests.validate_network(self.neutron, net_settings.name, True)
+
+        self.assertEquals(network_type, network['network']['provider:network_type'])
 
     def test_create_network_type_foo(self):
         """
