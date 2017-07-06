@@ -79,18 +79,18 @@ def keystone_client(os_creds):
         session=keystone_session(os_creds), interface=os_creds.interface)
 
 
-def get_endpoint(os_creds, service_type, endpoint_type='publicURL'):
+def get_endpoint(os_creds, service_type, interface='public'):
     """
     Returns the endpoint of specific service
     :param os_creds: the OpenStack credentials (OSCreds) object
     :param service_type: the type of specific service
-    :param endpoint_type: the type of endpoint
+    :param interface: the type of interface
     :return: the endpoint url
     """
     auth = get_session_auth(os_creds)
     key_session = keystone_session(os_creds)
     return key_session.get_endpoint(
-        auth=auth, service_type=service_type, endpoint_type=endpoint_type)
+        auth=auth, service_type=service_type, interface=interface)
 
 
 def get_project(keystone=None, os_creds=None, project_name=None):
