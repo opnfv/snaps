@@ -93,7 +93,8 @@ def create_server(nova, neutron, glance, instance_settings, image_settings,
                 'availability_zone':
                     instance_settings.availability_zone}
         server = nova.servers.create(**args)
-        return VmInst(name=server.name, inst_id=server.id)
+        return VmInst(name=server.name, inst_id=server.id,
+                      networks=server.networks)
     else:
         raise Exception(
             'Cannot create instance, image cannot be located with name %s',
@@ -110,7 +111,8 @@ def get_servers_by_name(nova, name):
     out = list()
     servers = nova.servers.list(search_opts={'name': name})
     for server in servers:
-        out.append(VmInst(name=server.name, inst_id=server.id))
+        out.append(VmInst(name=server.name, inst_id=server.id,
+                          networks=server.networks))
     return out
 
 
@@ -132,7 +134,8 @@ def get_latest_server_object(nova, server):
     :return: the list of servers or None if not found
     """
     server = get_latest_server_os_object(nova, server)
-    return VmInst(name=server.name, inst_id=server.id)
+    return VmInst(name=server.name, inst_id=server.id,
+                  networks=server.networks)
 
 
 def create_keys(key_size=2048):
@@ -166,30 +169,35 @@ def save_keys_to_files(keys=None, pub_file_path=None, priv_file_path=None):
     """
     if keys:
         if pub_file_path:
-            pub_dir = os.path.dirname(pub_file_path)
+            # To support '~'
+            pub_expand_file = os.path.expanduser(pub_file_path)
+            pub_dir = os.path.dirname(pub_expand_file)
+
             if not os.path.isdir(pub_dir):
                 os.mkdir(pub_dir)
-            public_handle = open(pub_file_path, 'wb')
+            public_handle = open(pub_expand_file, 'wb')
             public_bytes = keys.public_key().public_bytes(
                 serialization.Encoding.OpenSSH,
                 serialization.PublicFormat.OpenSSH)
             public_handle.write(public_bytes)
             public_handle.close()
-            os.chmod(pub_file_path, 0o400)
-            logger.info("Saved public key to - " + pub_file_path)
+            os.chmod(pub_expand_file, 0o400)
+            logger.info("Saved public key to - " + pub_expand_file)
         if priv_file_path:
-            priv_dir = os.path.dirname(priv_file_path)
+            # To support '~'
+            priv_expand_file = os.path.expanduser(priv_file_path)
+            priv_dir = os.path.dirname(priv_expand_file)
             if not os.path.isdir(priv_dir):
                 os.mkdir(priv_dir)
-            private_handle = open(priv_file_path, 'wb')
+            private_handle = open(priv_expand_file, 'wb')
             private_handle.write(
                 keys.private_bytes(
                     encoding=serialization.Encoding.PEM,
                     format=serialization.PrivateFormat.TraditionalOpenSSL,
                     encryption_algorithm=serialization.NoEncryption()))
             private_handle.close()
-            os.chmod(priv_file_path, 0o400)
-            logger.info("Saved private key to - " + priv_file_path)
+            os.chmod(priv_expand_file, 0o400)
+            logger.info("Saved private key to - " + priv_expand_file)
 
 
 def upload_keypair_file(nova, name, file_path):

@@ -19,14 +19,17 @@ class VmInst:
     SNAPS domain object for Images. Should contain attributes that
     are shared amongst cloud providers
     """
-    def __init__(self, name, inst_id):
+    def __init__(self, name, inst_id, networks):
         """
         Constructor
         :param name: the image's name
         :param inst_id: the instance's id
+        :param networks: dict of networks where the key is the subnet name and
+                         value is a list of associated IPs
         """
         self.name = name
         self.id = inst_id
+        self.networks = networks
 
 
 class FloatingIp:

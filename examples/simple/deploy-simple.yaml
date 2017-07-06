@@ -44,15 +44,15 @@ openstack:
           - simple-subnet
   keypairs:
     - keypair:
-        name: simple
-        public_filepath: /tmp/simple.pub
-        private_filepath: /tmp/simple
+        name: simple-kp
+        public_filepath: /tmp/simple-kp.pub
+        private_filepath: /tmp/simple-kp
   instances:
     - instance:
         name: simple-1
         flavor: m1.small
         imageName: Ubuntu14
-        keypair_name: simple
+        keypair_name: simple-kp
         userdata: "#cloud-config\npassword: cable123\nchpasswd: { expire: False }\nsshr_pwauth: True"
         ports:
           - port:

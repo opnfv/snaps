@@ -102,12 +102,13 @@ class OpenStackVmInstance:
                 logger.info(
                     'Found existing machine with name - %s',
                     self.instance_settings.name)
-                fips = neutron_utils.get_floating_ips(self.__nova)
+                fips = neutron_utils.get_floating_ips(self.__neutron)
                 for fip in fips:
-                    if fip.instance_id == server.id:
-                        self.__floating_ips.append(fip)
-                        # TODO - Determine a means to associate to the FIP
-                        # configuration and add to FIP map
+                    for subnet_name, ips in server.networks.items():
+                        if fip.ip in ips:
+                            self.__floating_ips.append(fip)
+                            # TODO - Determine a means to associate to the FIP
+                            # configuration and add to FIP map
 
     def __create_vm(self, block=False):
         """

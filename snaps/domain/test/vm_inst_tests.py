@@ -23,14 +23,16 @@ class VmInstDomainObjectTests(unittest.TestCase):
     """
 
     def test_construction_positional(self):
-        vm_inst = VmInst('name', 'id')
+        vm_inst = VmInst('name', 'id', dict())
         self.assertEqual('name', vm_inst.name)
         self.assertEqual('id', vm_inst.id)
+        self.assertEqual(dict(), vm_inst.networks)
 
     def test_construction_named(self):
-        vm_inst = VmInst(inst_id='id', name='name')
+        vm_inst = VmInst(networks=dict(), inst_id='id', name='name')
         self.assertEqual('name', vm_inst.name)
         self.assertEqual('id', vm_inst.id)
+        self.assertEqual(dict(), vm_inst.networks)
 
 
 class FloatingIpDomainObjectTests(unittest.TestCase):
