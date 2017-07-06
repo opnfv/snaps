@@ -21,6 +21,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from novaclient.client import Client
 from novaclient.exceptions import NotFound
+
+from snaps.domain.keypair import Keypair
 from snaps.domain.vm_inst import VmInst
 from snaps.openstack.utils import keystone_utils, glance_utils, neutron_utils
 
@@ -222,7 +224,8 @@ def upload_keypair(nova, name, key):
     :return: the keypair object
     """
     logger.info('Creating keypair with name - ' + name)
-    return nova.keypairs.create(name=name, public_key=key.decode('utf-8'))
+    os_kp = nova.keypairs.create(name=name, public_key=key.decode('utf-8'))
+    return Keypair(name=os_kp.name, id=os_kp.id, public_key=os_kp.public_key)
 
 
 def keypair_exists(nova, keypair_obj):
@@ -233,7 +236,8 @@ def keypair_exists(nova, keypair_obj):
     :return: the keypair object or None if not found
     """
     try:
-        return nova.keypairs.get(keypair_obj)
+        os_kp = nova.keypairs.get(keypair_obj)
+        return Keypair(name=os_kp.name, id=os_kp.id, public_key=os_kp.public_key)
     except:
         return None
 
@@ -249,7 +253,8 @@ def get_keypair_by_name(nova, name):
 
     for keypair in keypairs:
         if keypair.name == name:
-            return keypair
+            return Keypair(name=keypair.name, id=keypair.id,
+                           public_key=keypair.public_key)
 
     return None
 
@@ -258,10 +263,10 @@ def delete_keypair(nova, key):
     """
     Deletes a keypair object from OpenStack
     :param nova: the Nova client
-    :param key: the keypair object to delete
+    :param key: the SNAPS-OO keypair domain object to delete
     """
     logger.debug('Deleting keypair - ' + key.name)
-    nova.keypairs.delete(key)
+    nova.keypairs.delete(key.id)
 
 
 def get_nova_availability_zones(nova):
