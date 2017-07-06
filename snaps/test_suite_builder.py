@@ -18,6 +18,7 @@ import unittest
 
 from snaps.domain.test.flavor_tests import FlavorDomainObjectTests
 from snaps.domain.test.image_tests import ImageDomainObjectTests
+from snaps.domain.test.keypair_tests import KeypairDomainObjectTests
 from snaps.domain.test.stack_tests import StackDomainObjectTests
 from snaps.domain.test.vm_inst_tests import (VmInstDomainObjectTests,
                                              FloatingIpDomainObjectTests)
@@ -99,6 +100,8 @@ def add_unit_tests(suite):
         FlavorDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         KeypairSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        KeypairDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         UserSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
