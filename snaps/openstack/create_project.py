@@ -89,7 +89,7 @@ class OpenStackProject:
     def assoc_user(self, user):
         """
         The user object to associate with the project
-        :param user: the OpenStack user object to associate with project
+        :param user: the OpenStack User domain object to associate with project
         :return:
         """
         if not self.__role:

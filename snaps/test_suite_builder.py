@@ -18,6 +18,7 @@ import unittest
 
 from snaps.domain.test.image_tests import ImageDomainObjectTests
 from snaps.domain.test.stack_tests import StackDomainObjectTests
+from snaps.domain.test.user_tests import UserDomainObjectTests
 from snaps.domain.test.vm_inst_tests import (VmInstDomainObjectTests,
                                              FloatingIpDomainObjectTests)
 from snaps.openstack.tests.conf.os_credentials_tests import (
@@ -95,6 +96,8 @@ def add_unit_tests(suite):
         KeypairSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         UserSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        UserDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         ProjectSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
