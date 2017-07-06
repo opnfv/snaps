@@ -133,3 +133,21 @@ class KeystoneUtilsTests(OSComponentTestCase):
                 OSCreds(username='user', password='pass', auth_url='url',
                         project_name='project'),
                 service_type="image")
+
+    def test_get_endpoint_with_different_interface(self):
+        """
+        Tests to ensure that different endpoint urls are obtained with
+        'public', 'internal' and 'admin' interface
+        """
+        endpoint_public = keystone_utils.get_endpoint(self.os_creds,
+                                                      service_type="image",
+                                                      interface='public')
+        endpoint_internal = keystone_utils.get_endpoint(self.os_creds,
+                                                        service_type="image",
+                                                        interface='internal')
+        endpoint_admin = keystone_utils.get_endpoint(self.os_creds,
+                                                     service_type="image",
+                                                     interface='admin')
+        self.assertNotEqual(endpoint_public, endpoint_internal)
+        self.assertNotEqual(endpoint_public, endpoint_admin)
+        self.assertNotEqual(endpoint_admin, endpoint_internal)
