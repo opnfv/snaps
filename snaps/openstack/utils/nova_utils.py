@@ -21,6 +21,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from novaclient.client import Client
 from novaclient.exceptions import NotFound
+
+from snaps.domain.flavor import Flavor
 from snaps.domain.vm_inst import VmInst
 from snaps.openstack.utils import keystone_utils, glance_utils, neutron_utils
 
@@ -290,12 +292,45 @@ def delete_vm_instance(nova, vm_inst):
     nova.servers.delete(vm_inst.id)
 
 
-def get_flavor_by_name(nova, name):
+def get_os_flavor(nova, flavor):
     """
-    Returns a flavor by name
+    Returns to OpenStack flavor object by name
     :param nova: the Nova client
-    :param name: the flavor name to return
-    :return: the OpenStack flavor object or None if not exists
+    :param flavor: the SNAPS flavor domain object
+    :return: the OpenStack Flavor object
+    """
+    try:
+        return nova.flavors.get(flavor.id)
+    except NotFound:
+        return None
+
+
+def get_flavor(nova, flavor):
+    """
+    Returns to OpenStack flavor object by name
+    :param nova: the Nova client
+    :param flavor: the SNAPS flavor domain object
+    :return: the SNAPS Flavor domain object
+    """
+    os_flavor = get_os_flavor(nova, flavor)
+    if os_flavor:
+        return Flavor(
+            name=os_flavor.name, id=os_flavor.id, ram=os_flavor.ram,
+            disk=os_flavor.disk, vcpus=os_flavor.vcpus,
+            ephemeral=os_flavor.ephemeral, swap=os_flavor.swap,
+            rxtx_factor=os_flavor.rxtx_factor, is_public=os_flavor.is_public)
+    try:
+        return nova.flavors.get(flavor.id)
+    except NotFound:
+        return None
+
+
+def get_os_flavor_by_name(nova, name):
+    """
+    Returns to OpenStack flavor object by name
+    :param nova: the Nova client
+    :param name: the name of the flavor to query
+    :return: OpenStack flavor object
     """
     try:
         return nova.flavors.find(name=name)
@@ -303,31 +338,61 @@ def get_flavor_by_name(nova, name):
         return None
 
 
+def get_flavor_by_name(nova, name):
+    """
+    Returns a flavor by name
+    :param nova: the Nova client
+    :param name: the flavor name to return
+    :return: the SNAPS flavor domain object or None if not exists
+    """
+    os_flavor = get_os_flavor_by_name(nova, name)
+    if os_flavor:
+        return Flavor(
+            name=os_flavor.name, id=os_flavor.id, ram=os_flavor.ram,
+            disk=os_flavor.disk, vcpus=os_flavor.vcpus,
+            ephemeral=os_flavor.ephemeral, swap=os_flavor.swap,
+            rxtx_factor=os_flavor.rxtx_factor, is_public=os_flavor.is_public)
+
+
 def create_flavor(nova, flavor_settings):
     """
     Creates and returns and OpenStack flavor object
     :param nova: the Nova client
     :param flavor_settings: the flavor settings
-    :return: the Flavor
+    :return: the SNAPS flavor domain object
     """
-    return nova.flavors.create(name=flavor_settings.name,
-                               flavorid=flavor_settings.flavor_id,
-                               ram=flavor_settings.ram,
-                               vcpus=flavor_settings.vcpus,
-                               disk=flavor_settings.disk,
-                               ephemeral=flavor_settings.ephemeral,
-                               swap=flavor_settings.swap,
-                               rxtx_factor=flavor_settings.rxtx_factor,
-                               is_public=flavor_settings.is_public)
+    os_flavor = nova.flavors.create(
+        name=flavor_settings.name, flavorid=flavor_settings.flavor_id,
+        ram=flavor_settings.ram, vcpus=flavor_settings.vcpus,
+        disk=flavor_settings.disk, ephemeral=flavor_settings.ephemeral,
+        swap=flavor_settings.swap, rxtx_factor=flavor_settings.rxtx_factor,
+        is_public=flavor_settings.is_public)
+    return Flavor(
+        name=os_flavor.name, id=os_flavor.id, ram=os_flavor.ram,
+        disk=os_flavor.disk, vcpus=os_flavor.vcpus,
+        ephemeral=os_flavor.ephemeral, swap=os_flavor.swap,
+        rxtx_factor=os_flavor.rxtx_factor, is_public=os_flavor.is_public)
 
 
 def delete_flavor(nova, flavor):
     """
     Deletes a flavor
     :param nova: the Nova client
-    :param flavor: the OpenStack flavor object
+    :param flavor: the SNAPS flavor domain object
     """
-    nova.flavors.delete(flavor)
+    nova.flavors.delete(flavor.id)
+
+
+def set_flavor_keys(nova, flavor, metadata):
+    """
+    Sets metadata on the flavor
+    :param nova: the Nova client
+    :param flavor: the SNAPS flavor domain object
+    :param metadata: the metadata to set
+    """
+    os_flavor = get_os_flavor(nova, flavor)
+    if os_flavor:
+        os_flavor.set_keys(metadata)
 
 
 def add_security_group(nova, vm, security_group_name):

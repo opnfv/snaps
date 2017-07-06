@@ -16,13 +16,15 @@
 import logging
 import unittest
 
+from snaps.domain.test.flavor_tests import FlavorDomainObjectTests
 from snaps.domain.test.image_tests import ImageDomainObjectTests
 from snaps.domain.test.stack_tests import StackDomainObjectTests
 from snaps.domain.test.vm_inst_tests import (VmInstDomainObjectTests,
                                              FloatingIpDomainObjectTests)
 from snaps.openstack.tests.conf.os_credentials_tests import (
     ProxySettingsUnitTests, OSCredsUnitTests)
-from snaps.openstack.tests.create_flavor_tests import CreateFlavorTests
+from snaps.openstack.tests.create_flavor_tests import (
+    CreateFlavorTests, FlavorSettingsUnitTests)
 from snaps.openstack.tests.create_image_tests import (
     CreateImageSuccessTests, CreateImageNegativeTests, ImageSettingsUnitTests,
     CreateMultiPartImageTests)
@@ -91,6 +93,10 @@ def add_unit_tests(suite):
         ImageSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         ImageDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        FlavorSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        FlavorDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         KeypairSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
