@@ -19,6 +19,8 @@ from keystoneauth1.identity import v3, v2
 from keystoneauth1 import session
 import requests
 
+from snaps.domain.user import User
+
 logger = logging.getLogger('keystone_utils')
 
 V2_VERSION = 'v2.0'
@@ -58,7 +60,10 @@ def keystone_session(os_creds):
     req_session = None
     if os_creds.proxy_settings:
         req_session = requests.Session()
-        req_session.proxies = {'http': os_creds.proxy_settings.host + ':' + os_creds.proxy_settings.port}
+        req_session.proxies = {
+            'http':
+                os_creds.proxy_settings.host + ':' +
+                os_creds.proxy_settings.port}
     return session.Session(auth=auth, session=req_session,
                            verify=os_creds.cacert)
 
@@ -69,8 +74,9 @@ def keystone_client(os_creds):
     :param os_creds: the OpenStack credentials (OSCreds) object
     :return: the client
     """
-    return Client(version=os_creds.identity_api_version, session=keystone_session(os_creds),
-                  interface=os_creds.interface)
+    return Client(
+        version=os_creds.identity_api_version,
+        session=keystone_session(os_creds), interface=os_creds.interface)
 
 
 def get_endpoint(os_creds, service_type, endpoint_type='publicURL'):
@@ -83,14 +89,16 @@ def get_endpoint(os_creds, service_type, endpoint_type='publicURL'):
     """
     auth = get_session_auth(os_creds)
     key_session = keystone_session(os_creds)
-    return key_session.get_endpoint(auth=auth, service_type=service_type, endpoint_type=endpoint_type)
+    return key_session.get_endpoint(
+        auth=auth, service_type=service_type, endpoint_type=endpoint_type)
 
 
 def get_project(keystone=None, os_creds=None, project_name=None):
     """
     Returns the first project object or None if not found
     :param keystone: the Keystone client
-    :param os_creds: the OpenStack credentials used to obtain the Keystone client if the keystone parameter is None
+    :param os_creds: the OpenStack credentials used to obtain the Keystone
+                     client if the keystone parameter is None
     :param project_name: the name to query
     :return: the ID or None
     """
@@ -101,7 +109,8 @@ def get_project(keystone=None, os_creds=None, project_name=None):
         if os_creds:
             keystone = keystone_client(os_creds)
         else:
-            raise Exception('Cannot lookup project without the proper credentials')
+            raise Exception('Cannot lookup project without the proper '
+                            'credentials')
 
     if keystone.version == V2_VERSION:
         projects = keystone.tenants.list()
@@ -123,11 +132,14 @@ def create_project(keystone, project_settings):
     :return:
     """
     if keystone.version == V2_VERSION:
-        return keystone.tenants.create(project_settings.name, project_settings.description, project_settings.enabled)
+        return keystone.tenants.create(
+            project_settings.name, project_settings.description,
+            project_settings.enabled)
 
-    return keystone.projects.create(project_settings.name, project_settings.domain,
-                                    description=project_settings.description,
-                                    enabled=project_settings.enabled)
+    return keystone.projects.create(
+        project_settings.name, project_settings.domain,
+        description=project_settings.description,
+        enabled=project_settings.enabled)
 
 
 def delete_project(keystone, project):
@@ -142,13 +154,23 @@ def delete_project(keystone, project):
         keystone.projects.delete(project)
 
 
+def get_os_user(keystone, user):
+    """
+    Returns the OpenStack user object
+    :param keystone: the Keystone client object
+    :param user: the SNAPS-OO User domain object
+    :return:
+    """
+    return keystone.users.get(user.id)
+
+
 def get_user(keystone, username, project_name=None):
     """
     Returns a user for a given name and optionally project
     :param keystone: the keystone client
     :param username: the username to lookup
     :param project_name: the associated project (optional)
-    :return:
+    :return: a SNAPS-OO User domain object or None
     """
     project = get_project(keystone=keystone, project_name=project_name)
 
@@ -159,7 +181,7 @@ def get_user(keystone, username, project_name=None):
 
     for user in users:
         if user.name == username:
-            return user
+            return User(name=user.name, user_id=user.id)
 
     return None
 
@@ -169,34 +191,39 @@ def create_user(keystone, user_settings):
     Creates a user
     :param keystone: the Keystone client
     :param user_settings: the user configuration
-    :return:
+    :return: a SNAPS-OO User domain object
     """
     project = None
     if user_settings.project_name:
-        project = get_project(keystone=keystone, project_name=user_settings.project_name)
+        project = get_project(keystone=keystone,
+                              project_name=user_settings.project_name)
 
     if keystone.version == V2_VERSION:
         project_id = None
         if project:
             project_id = project.id
-        return keystone.users.create(name=user_settings.name, password=user_settings.password,
-                                     email=user_settings.email, tenant_id=project_id, enabled=user_settings.enabled)
+        os_user = keystone.users.create(
+            name=user_settings.name, password=user_settings.password,
+            email=user_settings.email, tenant_id=project_id,
+            enabled=user_settings.enabled)
     else:
         # TODO - need to support groups
-        return keystone.users.create(name=user_settings.name, password=user_settings.password,
-                                     email=user_settings.email, project=project,
-                                     # email=user_settings.email, project=project, group='default',
-                                     domain=user_settings.domain_name,
-                                     enabled=user_settings.enabled)
+        os_user = keystone.users.create(
+            name=user_settings.name, password=user_settings.password,
+            email=user_settings.email, project=project,
+            domain=user_settings.domain_name, enabled=user_settings.enabled)
+
+    if os_user:
+        return User(name=os_user.name, user_id=os_user.id)
 
 
 def delete_user(keystone, user):
     """
     Deletes a user
     :param keystone: the Keystone client
-    :param user: the OpenStack user object
+    :param user: the SNAPS-OO User domain object
     """
-    keystone.users.delete(user)
+    keystone.users.delete(user.id)
 
 
 def create_role(keystone, name):
@@ -224,7 +251,7 @@ def assoc_user_to_project(keystone, role, user, project):
     Adds a user to a project
     :param keystone: the Keystone client
     :param role: the role used to join a project/user
-    :param user: the user to add to the project
+    :param user: the user to add to the project (SNAPS-OO User Domain object
     :param project: the project to which to add a user
     :return:
     """
