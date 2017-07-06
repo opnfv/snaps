@@ -1,0 +1,7 @@
+Verified+1: jenkins-ci <jenkins-opnfv-ci@opnfv.org>
+Code-Review+2: Steven Pisarski <s.pisarski@cablelabs.com>
+Submitted-by: Steven Pisarski <s.pisarski@cablelabs.com>
+Submitted-at: Thu, 06 Jul 2017 21:04:51 +0000
+Reviewed-on: https://gerrit.opnfv.org/gerrit/37037
+Project: snaps
+Branch: refs/heads/master
