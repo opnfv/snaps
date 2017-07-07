@@ -57,6 +57,15 @@ class OpenStackUser:
         else:
             logger.info('Did not create user due to cleanup mode')
 
+        for role_name in self.user_settings.roles:
+            os_role = keystone_utils.get_os_role_by_name(
+                self.__keystone, role_name)
+            if os_role:
+                keystone_utils.assoc_role_to_user(
+                    keystone=self.__keystone, user=self.__user, role=os_role,
+                    project_name=self.__os_creds.project_name,
+                    domain_name=self.__os_creds.project_domain_id)
+
         return self.__user
 
     def clean(self):
@@ -111,27 +120,29 @@ class UserSettings:
         :param email: the user's email address (optional)
         :param enabled: denotes whether or not the user is enabled
                         (default True)
+        :param roles: list of role names to add to the user
         """
 
         self.name = kwargs.get('name')
         self.password = kwargs.get('password')
         self.project_name = kwargs.get('project_name')
         self.email = kwargs.get('email')
-
-        if kwargs.get('domain_name'):
-            self.domain_name = kwargs['domain_name']
-        else:
-            self.domain_name = 'default'
-
-        if kwargs.get('enabled') is not None:
-            self.enabled = kwargs['enabled']
-        else:
-            self.enabled = True
+        self.domain_name = kwargs.get('domain_name', 'default')
+        self.enabled = kwargs.get('enabled', True)
+        self.roles = kwargs.get('roles', list())
 
         if not self.name or not self.password:
-            raise Exception(
+            raise UserSettingsException(
                 'The attributes name and password are required for '
                 'UserSettings')
 
         if not isinstance(self.enabled, bool):
-            raise Exception('The attribute enabled must be of type boolean')
+            raise UserSettingsException('The attribute enabled must be of type'
+                                        ' boolean')
+
+
+class UserSettingsException(Exception):
+    """
+    Raised when there is a problem with the values set in the UserSettings
+    class
+    """

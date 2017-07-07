@@ -162,3 +162,28 @@ class CreateUserSuccessTests(OSComponentTestCase):
         # Delete user
         self.user_creator.clean()
         self.assertIsNone(self.user_creator.get_user())
+
+    def test_create_admin_user(self):
+        """
+        Tests the creation of an OpenStack user.
+        """
+        self.user_settings.roles = ['admin']
+        self.user_creator = OpenStackUser(self.os_creds, self.user_settings)
+        created_user = self.user_creator.create()
+        self.assertIsNotNone(created_user)
+
+        retrieved_user = keystone_utils.get_user(self.keystone,
+                                                 self.user_settings.name)
+        self.assertIsNotNone(retrieved_user)
+        self.assertEqual(created_user, retrieved_user)
+
+        role = keystone_utils.get_os_role_by_name(self.keystone, 'admin')
+        self.assertIsNotNone(role)
+
+        os_proj = keystone_utils.get_project(
+            keystone=self.keystone, project_name=self.os_creds.project_name)
+        user_roles = keystone_utils.get_os_roles_by_user(
+            self.keystone, retrieved_user, os_proj)
+        self.assertIsNotNone(user_roles)
+        self.assertEqual(1, len(user_roles))
+        self.assertEqual(role.id, user_roles[0].id)
