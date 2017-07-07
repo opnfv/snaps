@@ -226,6 +226,45 @@ def delete_user(keystone, user):
     keystone.users.delete(user.id)
 
 
+def get_os_role_by_name(keystone, name):
+    """
+    Returns an OpenStack role object of a given name or None if not exists
+    :param keystone: the keystone client
+    :param name: the role name
+    :return: the OpenStack role object
+    """
+    roles = keystone.roles.list()
+    for role in roles:
+        if role.name == name:
+            return role
+
+
+def get_os_roles_by_user(keystone, user, project):
+    """
+    Returns a list of OpenStack role object associated with a user
+    :param keystone: the keystone client
+    :param user: the OpenStack user object
+    :param project: the OpenStack project object (only required for v2)
+    :return: a list of OpenStack role objects
+    """
+    if keystone.version == V2_VERSION:
+        os_user = get_os_user(keystone, user)
+        roles = keystone.roles.roles_for_user(os_user, project)
+        return roles
+    else:
+        return keystone.roles.list(user=user, project=project)
+
+
+def get_os_role_by_id(keystone, role_id):
+    """
+    Returns an OpenStack role object of a given name or None if not exists
+    :param keystone: the keystone client
+    :param role_id: the role ID
+    :return: the OpenStack role object
+    """
+    return keystone.roles.get(role_id)
+
+
 def create_role(keystone, name):
     """
     Creates an OpenStack role
