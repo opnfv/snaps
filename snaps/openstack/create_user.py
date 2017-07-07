@@ -49,13 +49,9 @@ class OpenStackUser:
         self.__keystone = keystone_utils.keystone_client(self.__os_creds)
         self.__user = keystone_utils.get_user(self.__keystone,
                                               self.user_settings.name)
-        if self.__user:
-            logger.info('Found user with name - ' + self.user_settings.name)
-        elif not cleanup:
+        if not self.__user and not cleanup:
             self.__user = keystone_utils.create_user(self.__keystone,
                                                      self.user_settings)
-        else:
-            logger.info('Did not create user due to cleanup mode')
 
         return self.__user
 
@@ -111,27 +107,30 @@ class UserSettings:
         :param email: the user's email address (optional)
         :param enabled: denotes whether or not the user is enabled
                         (default True)
+        :param roles: dict where key is the role name and value is a list of
+                      project names
         """
 
         self.name = kwargs.get('name')
         self.password = kwargs.get('password')
         self.project_name = kwargs.get('project_name')
         self.email = kwargs.get('email')
-
-        if kwargs.get('domain_name'):
-            self.domain_name = kwargs['domain_name']
-        else:
-            self.domain_name = 'default'
-
-        if kwargs.get('enabled') is not None:
-            self.enabled = kwargs['enabled']
-        else:
-            self.enabled = True
+        self.domain_name = kwargs.get('domain_name', 'default')
+        self.enabled = kwargs.get('enabled', True)
+        self.roles = kwargs.get('roles', dict())
 
         if not self.name or not self.password:
-            raise Exception(
+            raise UserSettingsException(
                 'The attributes name and password are required for '
                 'UserSettings')
 
         if not isinstance(self.enabled, bool):
-            raise Exception('The attribute enabled must be of type boolean')
+            raise UserSettingsException('The attribute enabled must be of type'
+                                        ' boolean')
+
+
+class UserSettingsException(Exception):
+    """
+    Raised when there is a problem with the values set in the UserSettings
+    class
+    """

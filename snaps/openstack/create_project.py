@@ -96,8 +96,8 @@ class OpenStackProject:
             self.__role = keystone_utils.create_role(
                 self.__keystone, self.project_settings.name + '-role')
 
-        keystone_utils.assoc_user_to_project(self.__keystone, self.__role,
-                                             user, self.__project)
+        keystone_utils.grant_user_role_to_project(self.__keystone, self.__role,
+                                                  user, self.__project)
 
 
 class ProjectSettings:

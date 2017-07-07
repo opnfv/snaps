@@ -194,9 +194,10 @@ class CreateProjectUserTests(OSComponentTestCase):
         created_project = self.project_creator.create()
         self.assertIsNotNone(created_project)
 
-        user_creator = OpenStackUser(self.os_creds,
-                                     UserSettings(name=self.guid + '-user',
-                                                  password=self.guid))
+        user_creator = OpenStackUser(
+            self.os_creds, UserSettings(
+                name=self.guid + '-user',
+                password=self.guid, roles={'admin': 'admin'}))
         self.project_creator.assoc_user(user_creator.create())
         self.user_creators.append(user_creator)
 
@@ -228,15 +229,17 @@ class CreateProjectUserTests(OSComponentTestCase):
         created_project = self.project_creator.create()
         self.assertIsNotNone(created_project)
 
-        user_creator_1 = OpenStackUser(self.os_creds,
-                                       UserSettings(name=self.guid + '-user1',
-                                                    password=self.guid))
+        user_creator_1 = OpenStackUser(
+            self.os_creds, UserSettings(
+                name=self.guid + '-user1', password=self.guid,
+                roles={'admin': 'admin'}))
         self.project_creator.assoc_user(user_creator_1.create())
         self.user_creators.append(user_creator_1)
 
-        user_creator_2 = OpenStackUser(self.os_creds,
-                                       UserSettings(name=self.guid + '-user2',
-                                                    password=self.guid))
+        user_creator_2 = OpenStackUser(
+            self.os_creds, UserSettings(
+                name=self.guid + '-user2', password=self.guid,
+                roles={'admin': 'admin'}))
         self.project_creator.assoc_user(user_creator_2.create())
         self.user_creators.append(user_creator_2)
 
