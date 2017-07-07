@@ -59,12 +59,13 @@ class KeystoneUtilsTests(OSComponentTestCase):
         Instantiates the CreateImage object that is responsible for downloading
         and creating an OS image file within OpenStack
         """
-        guid = uuid.uuid4()
-        self.username = self.__class__.__name__ + '-' + str(guid)
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.username = self.guid + '-username'
         self.user = None
 
-        self.project_name = self.__class__.__name__ + '-' + str(guid)
+        self.project_name = self.guid + '-projName'
         self.project = None
+        self.role = None
         self.keystone = keystone_utils.keystone_client(self.os_creds)
 
     def tearDown(self):
@@ -76,6 +77,9 @@ class KeystoneUtilsTests(OSComponentTestCase):
 
         if self.user:
             keystone_utils.delete_user(self.keystone, self.user)
+
+        if self.role:
+            keystone_utils.delete_role(self.keystone, self.role)
 
     def test_create_user_minimal(self):
         """
@@ -151,3 +155,31 @@ class KeystoneUtilsTests(OSComponentTestCase):
         self.assertNotEqual(endpoint_public, endpoint_internal)
         self.assertNotEqual(endpoint_public, endpoint_admin)
         self.assertEqual(endpoint_admin, endpoint_internal)
+
+    def test_grant_user_role_to_project(self):
+        """
+        Tests the keystone_utils function grant_user_role_to_project()
+        :return:
+        """
+        user_settings = UserSettings(name=self.username,
+                                     password=str(uuid.uuid4()))
+        self.user = keystone_utils.create_user(self.keystone, user_settings)
+        self.assertEqual(self.username, self.user.name)
+
+        project_settings = ProjectSettings(name=self.project_name)
+        self.project = keystone_utils.create_project(self.keystone,
+                                                     project_settings)
+        self.assertEqual(self.project_name, self.project.name)
+
+        role_name = self.guid + '-role'
+        self.role = keystone_utils.create_role(self.keystone, role_name)
+        self.assertEqual(role_name, self.role.name)
+
+        keystone_utils.grant_user_role_to_project(
+            self.keystone, self.role, self.user, self.project)
+
+        user_roles = keystone_utils.get_os_roles_by_user(
+            self.keystone, self.user, self.project)
+        self.assertIsNotNone(user_roles)
+        self.assertEqual(1, len(user_roles))
+        self.assertEqual(self.role.id, user_roles[0].id)
