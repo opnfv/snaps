@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "1aa4ed85_c809d496",
+        "filename": "snaps/openstack/create_user.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-07-09T05:13:46Z",
+      "side": 1,
+      "message": "Here it should be: \n\nproject_name\u003dself.user_settings.project_name,\ndomain_name\u003dself.user_settings.domain_name",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 66
+      },
+      "revId": "aa53011931ded111d5d7c961d99fd64af46129f8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1aa4ed85_6d123264",
         "filename": "snaps/openstack/tests/os_source_file_test.py",
         "patchSetId": 1
@@ -13,6 +36,52 @@
       "writtenOn": "2017-07-07T21:36:39Z",
       "side": 1,
       "message": "This is the only real change.",
+      "revId": "aa53011931ded111d5d7c961d99fd64af46129f8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1aa4ed85_68fea06d",
+        "filename": "snaps/openstack/utils/keystone_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-07-09T05:13:46Z",
+      "side": 1,
+      "message": "1) I have no idea the effect of domain_name, cause if domain_name exists, it does not work via \"keystone.roles.grant(role\u003drole, user\u003dos_user, domain\u003ddomain_name)\".",
+      "range": {
+        "startLine": 320,
+        "startChar": 0,
+        "endLine": 321,
+        "endChar": 77
+      },
+      "revId": "aa53011931ded111d5d7c961d99fd64af46129f8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1aa4ed85_8803dc72",
+        "filename": "snaps/openstack/utils/keystone_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-07-09T05:13:46Z",
+      "side": 1,
+      "message": "I have tested with project_name and it works if the right project_name is here.\n\nproject \u003d get_project(keystone\u003dkeystone, project_name\u003dproject_name)\nkeystone.roles.grant(role\u003drole.id, user\u003dos_user.id, project\u003dproject.id)",
+      "range": {
+        "startLine": 322,
+        "startChar": 8,
+        "endLine": 324,
+        "endChar": 74
+      },
       "revId": "aa53011931ded111d5d7c961d99fd64af46129f8",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
