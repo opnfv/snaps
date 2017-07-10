@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aa4ed85_279f7661",
+        "filename": "snaps/openstack/create_user.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-07-10T15:47:15Z",
+      "side": 1,
+      "message": "I think here the param project_name should be self.user_settings.project_name, rather than \"admin\".\nBut I am not sure, just have tested locally and it works in that way.",
+      "range": {
+        "startLine": 62,
+        "startChar": 51,
+        "endLine": 62,
+        "endChar": 63
+      },
+      "revId": "7636047874c2c1bce08ef59b15eb05a2e48c4bd1",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
