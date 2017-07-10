@@ -25,6 +25,7 @@ logger = logging.getLogger('create_stack')
 
 STACK_COMPLETE_TIMEOUT = 1200
 POLL_INTERVAL = 3
+STATUS_CREATE_FAILED = 'CREATE_FAILED'
 STATUS_CREATE_COMPLETE = 'CREATE_COMPLETE'
 STATUS_DELETE_COMPLETE = 'DELETE_COMPLETE'
 
@@ -180,7 +181,7 @@ class OpenStackHeatStack:
                 'Cannot stack status for stack with ID - ' + self.__stack.id)
             return False
 
-        if status == 'ERROR':
+        if status == STATUS_CREATE_FAILED:
             raise StackCreationError('Stack had an error during deployment')
         logger.debug('Stack status is - ' + status)
         return status == expected_status_code
