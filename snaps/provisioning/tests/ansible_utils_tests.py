@@ -27,7 +27,8 @@ from snaps.openstack import create_router
 from snaps.openstack.create_security_group import (
     SecurityGroupRuleSettings,  Direction, Protocol, OpenStackSecurityGroup,
     SecurityGroupSettings)
-from snaps.openstack.tests import openstack_tests, create_instance_tests
+from snaps.openstack.tests import openstack_tests
+from snaps.openstack.tests.create_instance_tests import check_dhcp_lease
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import nova_utils
 from snaps.provisioning import ansible_utils
@@ -226,12 +227,11 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         """
         vm = self.inst_creator.create(block=True)
 
+        priv_ip = self.inst_creator.get_port_ip(self.port_1_name)
+        self.assertTrue(check_dhcp_lease(self.nova, vm, priv_ip))
+
         # Block until VM's ssh port has been opened
         self.assertTrue(self.inst_creator.vm_ssh_active(block=True))
-
-        priv_ip = self.inst_creator.get_port_ip(self.port_1_name)
-        self.assertTrue(create_instance_tests.check_dhcp_lease(
-            self.nova, vm, priv_ip))
 
         # Apply Security Group
         self.inst_creator.add_security_group(
@@ -279,12 +279,11 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         """
         vm = self.inst_creator.create(block=True)
 
+        priv_ip = self.inst_creator.get_port_ip(self.port_1_name)
+        self.assertTrue(check_dhcp_lease(self.nova, vm, priv_ip))
+
         # Block until VM's ssh port has been opened
         self.assertTrue(self.inst_creator.vm_ssh_active(block=True))
-
-        priv_ip = self.inst_creator.get_port_ip(self.port_1_name)
-        self.assertTrue(create_instance_tests.check_dhcp_lease(
-            self.nova, vm, priv_ip))
 
         # Apply Security Group
         self.inst_creator.add_security_group(
