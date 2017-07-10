@@ -22,6 +22,30 @@
       "revId": "7636047874c2c1bce08ef59b15eb05a2e48c4bd1",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1aa4ed85_c79ea256",
+        "filename": "snaps/openstack/create_user.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-07-10T18:36:34Z",
+      "side": 1,
+      "message": "You can associate a user to multiple projects/roles and project_name is optional and only is used for setting the default project. My latest patch does not change this but I did notice some duplicate calls and the utility used for projects could be reused here.",
+      "parentUuid": "1aa4ed85_279f7661",
+      "range": {
+        "startLine": 62,
+        "startChar": 51,
+        "endLine": 62,
+        "endChar": 63
+      },
+      "revId": "7636047874c2c1bce08ef59b15eb05a2e48c4bd1",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
