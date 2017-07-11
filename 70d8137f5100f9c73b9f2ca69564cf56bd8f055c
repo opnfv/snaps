@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aa4ed85_aaca4b9f",
+        "filename": "snaps/openstack/tests/create_user_tests.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-07-11T03:13:26Z",
+      "side": 1,
+      "message": "When I run api_check, this test  test_create_admin_user failed complaining that:\nAssertionError: 1!\u003d 0",
+      "range": {
+        "startLine": 188,
+        "startChar": 8,
+        "endLine": 188,
+        "endChar": 44
+      },
+      "revId": "70d8137f5100f9c73b9f2ca69564cf56bd8f055c",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
