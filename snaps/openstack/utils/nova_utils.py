@@ -238,7 +238,8 @@ def keypair_exists(nova, keypair_obj):
     """
     try:
         os_kp = nova.keypairs.get(keypair_obj)
-        return Keypair(name=os_kp.name, id=os_kp.id, public_key=os_kp.public_key)
+        return Keypair(name=os_kp.name, id=os_kp.id,
+                       public_key=os_kp.public_key)
     except:
         return None
 
@@ -414,10 +415,9 @@ def remove_security_group(nova, vm, security_group):
     Removes a security group from an existing VM
     :param nova: the nova client
     :param vm: the OpenStack server object (VM) to alter
-    :param security_group: the OpenStack security group object to add
+    :param security_group: the SNAPS SecurityGroup domain object to add
     """
-    nova.servers.remove_security_group(
-        str(vm.id), security_group['security_group']['name'])
+    nova.servers.remove_security_group(str(vm.id), security_group.name)
 
 
 def add_floating_ip_to_server(nova, vm, floating_ip, ip_addr):

@@ -660,7 +660,7 @@ class OpenStackVmInstance:
     def add_security_group(self, security_group):
         """
         Adds a security group to this VM. Call will block until VM is active.
-        :param security_group: the OpenStack security group object
+        :param security_group: the SNAPS SecurityGroup domain object
         :return True if successful else False
         """
         self.vm_active(block=True)
@@ -671,8 +671,7 @@ class OpenStackVmInstance:
 
         try:
             nova_utils.add_security_group(self.__nova, self.get_vm_inst(),
-                                          security_group['security_group'][
-                                              'name'])
+                                          security_group.name)
             return True
         except NotFound as e:
             logger.warning('Security group not added - ' + str(e))

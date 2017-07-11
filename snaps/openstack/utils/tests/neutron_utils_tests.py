@@ -669,14 +669,13 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
                                                              self.keystone,
                                                              sec_grp_settings)
 
-        self.assertTrue(sec_grp_settings.name,
-                        security_group['security_group']['name'])
+        self.assertTrue(sec_grp_settings.name, security_group.name)
 
         sec_grp_get = neutron_utils.get_security_group(self.neutron,
                                                        sec_grp_settings.name)
         self.assertIsNotNone(sec_grp_get)
         self.assertTrue(validation_utils.objects_equivalent(
-            security_group['security_group'], sec_grp_get['security_group']))
+            security_group, sec_grp_get))
 
         neutron_utils.delete_security_group(self.neutron, security_group)
         sec_grp_get = neutron_utils.get_security_group(self.neutron,
@@ -707,18 +706,13 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
             neutron_utils.create_security_group(self.neutron, self.keystone,
                                                 sec_grp_settings))
 
-        self.assertTrue(sec_grp_settings.name,
-                        self.security_groups[0]['security_group']['name'])
-        self.assertTrue(sec_grp_settings.description,
-                        self.security_groups[0]['security_group'][
-                            'description'])
+        self.assertTrue(sec_grp_settings.name, self.security_groups[0].name)
+        self.assertEqual(sec_grp_settings.name, self.security_groups[0].name)
 
         sec_grp_get = neutron_utils.get_security_group(self.neutron,
                                                        sec_grp_settings.name)
         self.assertIsNotNone(sec_grp_get)
-        self.assertTrue(validation_utils.objects_equivalent(
-            self.security_groups[0]['security_group'],
-            sec_grp_get['security_group']))
+        self.assertEqual(self.security_groups[0], sec_grp_get)
 
     def test_create_sec_grp_one_rule(self):
         """
@@ -751,19 +745,15 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
                                                           security_group)
 
         self.assertTrue(
-            validation_utils.objects_equivalent(self.security_group_rules,
-                                                rules))
+            validation_utils.objects_equivalent(
+                 self.security_group_rules, rules))
 
-        self.assertTrue(sec_grp_settings.name,
-                        security_group['security_group']['name'])
-        self.assertTrue(sec_grp_settings.description,
-                        security_group['security_group']['description'])
+        self.assertTrue(sec_grp_settings.name, security_group.name)
 
         sec_grp_get = neutron_utils.get_security_group(self.neutron,
                                                        sec_grp_settings.name)
         self.assertIsNotNone(sec_grp_get)
-        self.assertTrue(validation_utils.objects_equivalent(
-            security_group['security_group'], sec_grp_get['security_group']))
+        self.assertEqual(security_group, sec_grp_get)
 
     def test_get_sec_grp_by_id(self):
         """
@@ -780,14 +770,12 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
                                   description='hello group')))
 
         sec_grp_1b = neutron_utils.get_security_group_by_id(
-            self.neutron, self.security_groups[0]['security_group']['id'])
+            self.neutron, self.security_groups[0].id)
         sec_grp_2b = neutron_utils.get_security_group_by_id(
-            self.neutron, self.security_groups[1]['security_group']['id'])
+            self.neutron, self.security_groups[1].id)
 
-        self.assertEqual(self.security_groups[0]['security_group']['id'],
-                         sec_grp_1b['security_group']['id'])
-        self.assertEqual(self.security_groups[1]['security_group']['id'],
-                         sec_grp_2b['security_group']['id'])
+        self.assertEqual(self.security_groups[0].id, sec_grp_1b.id)
+        self.assertEqual(self.security_groups[1].id, sec_grp_2b.id)
 
 
 class NeutronUtilsFloatingIpTests(OSComponentTestCase):
