@@ -209,14 +209,8 @@ class CreateProjectUserTests(OSComponentTestCase):
         self.assertIsNotNone(sec_grp)
         self.sec_grp_creators.append(sec_grp_creator)
 
-        if 'tenant_id' in sec_grp['security_group']:
-            self.assertEqual(self.project_creator.get_project().id,
-                             sec_grp['security_group']['tenant_id'])
-        elif 'project_id' in sec_grp['security_group']:
-            self.assertEqual(self.project_creator.get_project().id,
-                             sec_grp['security_group']['project_id'])
-        else:
-            self.fail('Cannot locate the project or tenant ID')
+        self.assertEqual(self.project_creator.get_project().id,
+                         sec_grp.project_id)
 
     def test_create_project_sec_grp_two_users(self):
         """
@@ -254,11 +248,5 @@ class CreateProjectUserTests(OSComponentTestCase):
             self.assertIsNotNone(sec_grp)
             self.sec_grp_creators.append(sec_grp_creator)
 
-            if 'tenant_id' in sec_grp['security_group']:
-                self.assertEqual(self.project_creator.get_project().id,
-                                 sec_grp['security_group']['tenant_id'])
-            elif 'project_id' in sec_grp['security_group']:
-                self.assertEqual(self.project_creator.get_project().id,
-                                 sec_grp['security_group']['project_id'])
-            else:
-                self.fail('Cannot locate the project or tenant ID')
+            self.assertEqual(self.project_creator.get_project().id,
+                             sec_grp.project_id)

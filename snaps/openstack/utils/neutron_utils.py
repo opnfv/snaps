@@ -16,6 +16,8 @@ import logging
 
 from neutronclient.common.exceptions import NotFound
 from neutronclient.neutron.client import Client
+
+from snaps.domain.network import SecurityGroup, SecurityGroupRule
 from snaps.domain.vm_inst import FloatingIp
 from snaps.openstack.utils import keystone_utils
 
@@ -321,19 +323,23 @@ def create_security_group(neutron, keystone, sec_grp_settings):
     """
     logger.info('Creating security group with name - %s',
                 sec_grp_settings.name)
-    return neutron.create_security_group(
+    os_group = neutron.create_security_group(
         sec_grp_settings.dict_for_neutron(keystone))
+    return SecurityGroup(
+        id=os_group['security_group']['id'],
+        name=os_group['security_group']['name'],
+        project_id=os_group['security_group'].get(
+            'project_id', os_group['security_group'].get('tenant_id')))
 
 
 def delete_security_group(neutron, sec_grp):
     """
     Deletes a security group object from OpenStack
     :param neutron: the client
-    :param sec_grp: the security group object to delete
+    :param sec_grp: the SNAPS SecurityGroup object to delete
     """
-    logger.info('Deleting security group with name - %s',
-                sec_grp['security_group']['name'])
-    return neutron.delete_security_group(sec_grp['security_group']['id'])
+    logger.info('Deleting security group with name - %s', sec_grp.name)
+    neutron.delete_security_group(sec_grp.id)
 
 
 def get_security_group(neutron, name):
@@ -347,7 +353,9 @@ def get_security_group(neutron, name):
     groups = neutron.list_security_groups(**{'name': name})
     for group in groups['security_groups']:
         if group['name'] == name:
-            return {'security_group': group}
+            return SecurityGroup(
+                id=group['id'], name=group['name'],
+                project_id=group.get('project_id', group.get('tenant_id')))
     return None
 
 
@@ -362,7 +370,9 @@ def get_security_group_by_id(neutron, sec_grp_id):
     groups = neutron.list_security_groups(**{'id': sec_grp_id})
     for group in groups['security_groups']:
         if group['id'] == sec_grp_id:
-            return {'security_group': group}
+            return SecurityGroup(
+                id=group['id'], name=group['name'],
+                project_id=group.get('project_id', group.get('tenant_id')))
     return None
 
 
@@ -375,36 +385,36 @@ def create_security_group_rule(neutron, sec_grp_rule_settings):
     """
     logger.info('Creating security group to security group - %s',
                 sec_grp_rule_settings.sec_grp_name)
-    return neutron.create_security_group_rule(
+    os_rule = neutron.create_security_group_rule(
         sec_grp_rule_settings.dict_for_neutron(neutron))
+    return SecurityGroupRule(**os_rule['security_group_rule'])
 
 
 def delete_security_group_rule(neutron, sec_grp_rule):
     """
     Deletes a security group object from OpenStack
     :param neutron: the client
-    :param sec_grp_rule: the security group rule object to delete
+    :param sec_grp_rule: the SNAPS SecurityGroupRule object to delete
     """
     logger.info('Deleting security group rule with ID - %s',
-                sec_grp_rule['security_group_rule']['id'])
-    neutron.delete_security_group_rule(
-        sec_grp_rule['security_group_rule']['id'])
+                sec_grp_rule.id)
+    neutron.delete_security_group_rule(sec_grp_rule.id)
 
 
 def get_rules_by_security_group(neutron, sec_grp):
     """
     Retrieves all of the rules for a given security group
     :param neutron: the client
-    :param sec_grp: the security group object
+    :param sec_grp: the SNAPS SecurityGroup object
     """
     logger.info('Retrieving security group rules associate with the '
-                'security group - %s', sec_grp['security_group']['name'])
+                'security group - %s', sec_grp.name)
     out = list()
     rules = neutron.list_security_group_rules(
-        **{'security_group_id': sec_grp['security_group']['id']})
+        **{'security_group_id': sec_grp.id})
     for rule in rules['security_group_rules']:
-        if rule['security_group_id'] == sec_grp['security_group']['id']:
-            out.append({'security_group_rule': rule})
+        if rule['security_group_id'] == sec_grp.id:
+            out.append(SecurityGroupRule(**rule))
     return out
 
 
@@ -412,14 +422,14 @@ def get_rule_by_id(neutron, sec_grp, rule_id):
     """
     Deletes a security group object from OpenStack
     :param neutron: the client
-    :param sec_grp: the security group object
+    :param sec_grp: the SNAPS SecurityGroup domain object
     :param rule_id: the rule's ID
     """
     rules = neutron.list_security_group_rules(
-        **{'security_group_id': sec_grp['security_group']['id']})
+        **{'security_group_id': sec_grp.id})
     for rule in rules['security_group_rules']:
         if rule['id'] == rule_id:
-            return {'security_group_rule': rule}
+            return SecurityGroupRule(**rule)
     return None
 
 
