@@ -230,12 +230,12 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         priv_ip = self.inst_creator.get_port_ip(self.port_1_name)
         self.assertTrue(check_dhcp_lease(self.nova, vm, priv_ip))
 
-        # Block until VM's ssh port has been opened
-        self.assertTrue(self.inst_creator.vm_ssh_active(block=True))
-
         # Apply Security Group
         self.inst_creator.add_security_group(
             self.sec_grp_creator.get_security_group())
+
+        # Block until VM's ssh port has been opened
+        self.assertTrue(self.inst_creator.vm_ssh_active(block=True))
 
         ssh_client = self.inst_creator.ssh_client()
         self.assertIsNotNone(ssh_client)
@@ -281,6 +281,10 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
 
         priv_ip = self.inst_creator.get_port_ip(self.port_1_name)
         self.assertTrue(check_dhcp_lease(self.nova, vm, priv_ip))
+
+        # Apply Security Group
+        self.inst_creator.add_security_group(
+            self.sec_grp_creator.get_security_group())
 
         # Block until VM's ssh port has been opened
         self.assertTrue(self.inst_creator.vm_ssh_active(block=True))
