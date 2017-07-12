@@ -14,6 +14,29 @@
 # limitations under the License.
 
 
+class Port:
+    """
+    SNAPS domain object for ports. Should contain attributes that
+    are shared amongst cloud providers
+    """
+    def __init__(self, **kwargs):
+        """
+        Constructor
+        :param name: the security group's name
+        :param id: the security group's id
+        :param ips: a list of IP addresses
+        """
+        self.name = kwargs.get('name')
+        self.id = kwargs.get('id')
+        self.ips = kwargs.get('ips')
+        self.mac_address = kwargs.get('mac_address')
+        self.allowed_address_pairs = kwargs.get('allowed_address_pairs')
+
+    def __eq__(self, other):
+        return (self.name == other.name and self.id == other.id and
+                self.ips == other.ips, self.mac_address == other.mac_address)
+
+
 class SecurityGroup:
     """
     SNAPS domain object for SecurityGroups. Should contain attributes that

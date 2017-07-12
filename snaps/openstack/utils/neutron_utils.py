@@ -17,7 +17,7 @@ import logging
 from neutronclient.common.exceptions import NotFound
 from neutronclient.neutron.client import Client
 
-from snaps.domain.network import SecurityGroup, SecurityGroupRule
+from snaps.domain.network import Port, SecurityGroup, SecurityGroupRule
 from snaps.domain.vm_inst import FloatingIp
 from snaps.openstack.utils import keystone_utils
 
@@ -280,23 +280,27 @@ def create_port(neutron, os_creds, port_settings):
     :param neutron: the client
     :param os_creds: the OpenStack credentials
     :param port_settings: the settings object for port configuration
-    :return: the port object
+    :return: the SNAPS-OO Port domain object
     """
     json_body = port_settings.dict_for_neutron(neutron, os_creds)
     logger.info('Creating port for network with name - %s',
                 port_settings.network_name)
-    return neutron.create_port(body=json_body)
+    os_port = neutron.create_port(body=json_body)['port']
+    return Port(name=os_port['name'], id=os_port['id'],
+                ips=os_port['fixed_ips'],
+                mac_address=os_port['mac_address'],
+                allowed_address_pairs=os_port['allowed_address_pairs'])
 
 
 def delete_port(neutron, port):
     """
     Removes an OpenStack port
     :param neutron: the client
-    :param port: the port object
+    :param port: the SNAPS-OO Port domain object
     :return:
     """
-    logger.info('Deleting port with name ' + port['port']['name'])
-    neutron.delete_port(port['port']['id'])
+    logger.info('Deleting port with name ' + port.name)
+    neutron.delete_port(port.id)
 
 
 def get_port_by_name(neutron, port_name):
@@ -309,7 +313,8 @@ def get_port_by_name(neutron, port_name):
     ports = neutron.list_ports(**{'name': port_name})
     for port in ports['ports']:
         if port['name'] == port_name:
-            return {'port': port}
+            return Port(name=port['name'], id=port['id'],
+                        ips=port['fixed_ips'], mac_address=port['mac_address'])
     return None
 
 

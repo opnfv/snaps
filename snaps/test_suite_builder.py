@@ -20,7 +20,8 @@ from snaps.domain.test.flavor_tests import FlavorDomainObjectTests
 from snaps.domain.test.image_tests import ImageDomainObjectTests
 from snaps.domain.test.keypair_tests import KeypairDomainObjectTests
 from snaps.domain.test.network_tests import (
-    SecurityGroupDomainObjectTests,  SecurityGroupRuleDomainObjectTests)
+    SecurityGroupDomainObjectTests, SecurityGroupRuleDomainObjectTests,
+    PortDomainObjectTests)
 from snaps.domain.test.project_tests import ProjectDomainObjectTests
 from snaps.domain.test.stack_tests import StackDomainObjectTests
 from snaps.domain.test.user_tests import UserDomainObjectTests
@@ -124,6 +125,8 @@ def add_unit_tests(suite):
         SubnetSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         PortSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        PortDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         FloatingIpSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

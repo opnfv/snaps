@@ -14,7 +14,28 @@
 # limitations under the License.
 
 import unittest
-from snaps.domain.network import SecurityGroup, SecurityGroupRule
+from snaps.domain.network import Port, SecurityGroup, SecurityGroupRule
+
+
+class PortDomainObjectTests(unittest.TestCase):
+    """
+    Tests the construction of the snaps.domain.network.Port class
+    """
+
+    def test_construction_kwargs(self):
+        ips = ['10', '11']
+        port = Port(
+            **{'name': 'name', 'id': 'id', 'ips': ips})
+        self.assertEqual('name', port.name)
+        self.assertEqual('id', port.id)
+        self.assertEqual(ips, port.ips)
+
+    def test_construction_named(self):
+        ips = ['10', '11']
+        port = Port(ips=ips, id='id', name='name')
+        self.assertEqual('name', port.name)
+        self.assertEqual('id', port.id)
+        self.assertEqual(ips, port.ips)
 
 
 class SecurityGroupDomainObjectTests(unittest.TestCase):
@@ -52,8 +73,8 @@ class SecurityGroupRuleDomainObjectTests(unittest.TestCase):
 
     def test_construction_kwargs(self):
         sec_grp_rule = SecurityGroupRule(
-            **{'id': 'id', 'security_group_id': 'grp_id', 'description': 'desc',
-               'direction': 'dir', 'ethertype': 'eType',
+            **{'id': 'id', 'security_group_id': 'grp_id',
+               'description': 'desc', 'direction': 'dir', 'ethertype': 'eType',
                'port_range_min': '10.0.0.100', 'port_range_max': '10.0.0.200',
                'protocol': 'proto', 'remote_group_id': 'group_id',
                'remote_ip_prefix': 'ip_prefix'})

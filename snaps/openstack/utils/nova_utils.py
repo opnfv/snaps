@@ -69,7 +69,7 @@ def create_server(nova, neutron, glance, instance_settings, image_settings,
     nics = []
     for port in ports:
         kv = dict()
-        kv['port-id'] = port['port']['id']
+        kv['port-id'] = port.id
         nics.append(kv)
 
     logger.info('Creating VM with name - ' + instance_settings.name)
