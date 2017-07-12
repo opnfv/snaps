@@ -368,7 +368,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
                                             rules)
 
         self.sec_grp_creator.remove_rule(
-            rule_id=rules[0]['security_group_rule']['id'])
+            rule_id=rules[0].id)
         rules_after_del = neutron_utils.get_rules_by_security_group(
             self.neutron,
             self.sec_grp_creator.get_security_group())

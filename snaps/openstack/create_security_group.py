@@ -110,23 +110,19 @@ class OpenStackSecurityGroup:
                     SecurityGroupRuleSettings object
         :return: the newly instantiated SecurityGroupRuleSettings object
         """
-        rule_dict = rule['security_group_rule']
-        sec_grp_name = None
-        if rule_dict['security_group_id']:
-            sec_grp = neutron_utils.get_security_group_by_id(
-                self.__neutron, rule_dict['security_group_id'])
-            if sec_grp:
-                sec_grp_name = sec_grp['security_group']['name']
+        sec_grp = neutron_utils.get_security_group_by_id(
+            self.__neutron, rule.security_group_id)
 
         setting = SecurityGroupRuleSettings(
-            description=rule_dict['description'],
-            direction=rule_dict['direction'], ethertype=rule_dict['ethertype'],
-            port_range_min=rule_dict['port_range_min'],
-            port_range_max=rule_dict['port_range_max'],
-            protocol=rule_dict['protocol'],
-            remote_group_id=rule_dict['remote_group_id'],
-            remote_ip_prefix=rule_dict['remote_ip_prefix'],
-            sec_grp_name=sec_grp_name)
+            description=rule.description,
+            direction=rule.direction,
+            ethertype=rule.ethertype,
+            port_range_min=rule.port_range_min,
+            port_range_max=rule.port_range_max,
+            protocol=rule.protocol,
+            remote_group_id=rule.remote_group_id,
+            remote_ip_prefix=rule.remote_ip_prefix,
+            sec_grp_name=sec_grp.name)
         return setting
 
     def clean(self):
@@ -401,7 +397,7 @@ class SecurityGroupRuleSettings:
             sec_grp = neutron_utils.get_security_group(
                 neutron, self.sec_grp_name)
             if sec_grp:
-                out['security_group_id'] = sec_grp['security_group']['id']
+                out['security_group_id'] = sec_grp.id
             else:
                 raise Exception(
                     'Cannot locate security group with name - ' +
@@ -419,55 +415,54 @@ class SecurityGroupRuleSettings:
         :param rule: the rule to evaluate
         :return: T/F
         """
-        rule_dict = rule['security_group_rule']
-
         if self.description is not None:
-            if rule_dict['description'] is not None and rule_dict[
-                'description'] != '':
+            if (rule.description is not None and
+                    rule.description != ''):
                 return False
-        elif self.description != rule_dict['description']:
-            if rule_dict['description'] != '':
+        elif self.description != rule.description:
+            if rule.description != '':
                 return False
 
-        if self.direction.name != rule_dict['direction']:
+        if self.direction.name != rule.direction:
             return False
 
-        if self.ethertype and rule_dict.get('ethertype'):
-            if self.ethertype.name != rule_dict['ethertype']:
+        if self.ethertype and rule.ethertype:
+            if self.ethertype.name != rule.ethertype:
                 return False
 
-        if self.port_range_min and rule_dict.get('port_range_min'):
-            if self.port_range_min != rule_dict['port_range_min']:
+        if self.port_range_min and rule.port_range_min:
+            if self.port_range_min != rule.port_range_min:
                 return False
 
-        if self.port_range_max and rule_dict.get('port_range_max'):
-            if self.port_range_max != rule_dict['port_range_max']:
+        if self.port_range_max and rule.port_range_max:
+            if self.port_range_max != rule.port_range_max:
                 return False
 
-        if self.protocol and rule_dict.get('protocol'):
-            if self.protocol.name != rule_dict['protocol']:
+        if self.protocol and rule.protocol:
+            if self.protocol.name != rule.protocol:
                 return False
 
-        if self.remote_group_id and rule_dict.get('remote_group_id'):
-            if self.remote_group_id != rule_dict['remote_group_id']:
+        if self.remote_group_id and rule.remote_group_id:
+            if self.remote_group_id != rule.remote_group_id:
                 return False
 
-        if self.remote_ip_prefix and rule_dict.get('remote_ip_prefix'):
-            if self.remote_ip_prefix != rule_dict['remote_ip_prefix']:
+        if self.remote_ip_prefix and rule.remote_ip_prefix:
+            if self.remote_ip_prefix != rule.remote_ip_prefix:
                 return False
 
         return True
 
     def __eq__(self, other):
-        return self.description == other.description and \
-               self.direction == other.direction and \
-               self.port_range_min == other.port_range_min and \
-               self.port_range_max == other.port_range_max and \
-               self.ethertype == other.ethertype and \
-               self.protocol == other.protocol and \
-               self.sec_grp_name == other.sec_grp_name and \
-               self.remote_group_id == other.remote_group_id and \
-               self.remote_ip_prefix == other.remote_ip_prefix
+        return (
+            self.description == other.description and
+            self.direction == other.direction and
+            self.port_range_min == other.port_range_min and
+            self.port_range_max == other.port_range_max and
+            self.ethertype == other.ethertype and
+            self.protocol == other.protocol and
+            self.sec_grp_name == other.sec_grp_name and
+            self.remote_group_id == other.remote_group_id and
+            self.remote_ip_prefix == other.remote_ip_prefix)
 
     def __hash__(self):
         return hash((self.sec_grp_name, self.description, self.direction,

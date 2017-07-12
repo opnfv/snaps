@@ -19,10 +19,12 @@ import unittest
 from snaps.domain.test.flavor_tests import FlavorDomainObjectTests
 from snaps.domain.test.image_tests import ImageDomainObjectTests
 from snaps.domain.test.keypair_tests import KeypairDomainObjectTests
+from snaps.domain.test.network_tests import (
+    SecurityGroupDomainObjectTests,  SecurityGroupRuleDomainObjectTests)
 from snaps.domain.test.stack_tests import StackDomainObjectTests
 from snaps.domain.test.user_tests import UserDomainObjectTests
-from snaps.domain.test.vm_inst_tests import (VmInstDomainObjectTests,
-                                             FloatingIpDomainObjectTests)
+from snaps.domain.test.vm_inst_tests import (
+    VmInstDomainObjectTests, FloatingIpDomainObjectTests)
 from snaps.openstack.tests.conf.os_credentials_tests import (
     ProxySettingsUnitTests, OSCredsUnitTests)
 from snaps.openstack.tests.create_flavor_tests import (
@@ -91,6 +93,10 @@ def add_unit_tests(suite):
         OSCredsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         SecurityGroupSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        SecurityGroupDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        SecurityGroupRuleDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         ImageSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
