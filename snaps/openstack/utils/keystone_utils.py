@@ -19,6 +19,7 @@ from keystoneauth1.identity import v3, v2
 from keystoneauth1 import session
 import requests
 
+from snaps.domain.project import Project
 from snaps.domain.user import User
 
 logger = logging.getLogger('keystone_utils')
@@ -119,7 +120,7 @@ def get_project(keystone=None, os_creds=None, project_name=None):
 
     for project in projects:
         if project.name == project_name:
-            return project
+            return Project(name=project.name, project_id=project.id)
 
     return None
 
@@ -129,7 +130,7 @@ def create_project(keystone, project_settings):
     Creates a project
     :param keystone: the Keystone client
     :param project_settings: the project configuration
-    :return:
+    :return: SNAPS-OO Project domain object
     """
     if keystone.version == V2_VERSION:
         return keystone.tenants.create(
@@ -146,12 +147,12 @@ def delete_project(keystone, project):
     """
     Deletes a project
     :param keystone: the Keystone clien
-    :param project: the OpenStack project object
+    :param project: the SNAPS-OO Project domain object
     """
     if keystone.version == V2_VERSION:
-        keystone.tenants.delete(project)
+        keystone.tenants.delete(project.id)
     else:
-        keystone.projects.delete(project)
+        keystone.projects.delete(project.id)
 
 
 def get_os_user(keystone, user):
