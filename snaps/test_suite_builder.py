@@ -21,6 +21,7 @@ from snaps.domain.test.image_tests import ImageDomainObjectTests
 from snaps.domain.test.keypair_tests import KeypairDomainObjectTests
 from snaps.domain.test.network_tests import (
     SecurityGroupDomainObjectTests,  SecurityGroupRuleDomainObjectTests)
+from snaps.domain.test.project_tests import ProjectDomainObjectTests
 from snaps.domain.test.stack_tests import StackDomainObjectTests
 from snaps.domain.test.user_tests import UserDomainObjectTests
 from snaps.domain.test.vm_inst_tests import (
@@ -115,6 +116,8 @@ def add_unit_tests(suite):
         UserDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         ProjectSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        ProjectDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         NetworkSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
