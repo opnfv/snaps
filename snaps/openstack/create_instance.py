@@ -298,13 +298,13 @@ class OpenStackVmInstance:
         if subnet:
             # Take IP of subnet if there is one configured on which to place
             # the floating IP
-            for fixed_ip in port['port']['fixed_ips']:
+            for fixed_ip in port.fixed_ips:
                 if fixed_ip['subnet_id'] == subnet['subnet']['id']:
                     ip = fixed_ip['ip_address']
                     break
         else:
             # Simply take the first
-            ip = port['port']['fixed_ips'][0]['ip_address']
+            ip = port.ips[0]['ip_address']
 
         if ip:
             count = timeout / poll_interval
@@ -363,7 +363,6 @@ class OpenStackVmInstance:
         """
         port = self.get_port_by_name(port_name)
         if port:
-            port_dict = port['port']
             if subnet_name:
                 subnet = neutron_utils.get_subnet_by_name(self.__neutron,
                                                           subnet_name)
@@ -372,13 +371,12 @@ class OpenStackVmInstance:
                                    'not be located with name - %s',
                                    subnet_name)
                     return None
-                for fixed_ip in port_dict['fixed_ips']:
+                for fixed_ip in port.ips:
                     if fixed_ip['subnet_id'] == subnet['subnet']['id']:
                         return fixed_ip['ip_address']
             else:
-                fixed_ips = port_dict['fixed_ips']
-                if fixed_ips and len(fixed_ips) > 0:
-                    return fixed_ips[0]['ip_address']
+                if port.ips and len(port.ips) > 0:
+                    return port.ips[0]['ip_address']
         return None
 
     def get_port_mac(self, port_name):
@@ -392,8 +390,7 @@ class OpenStackVmInstance:
         """
         port = self.get_port_by_name(port_name)
         if port:
-            port_dict = port['port']
-            return port_dict['mac_address']
+            return port.mac_address
         return None
 
     def get_port_by_name(self, port_name):
@@ -450,7 +447,7 @@ class OpenStackVmInstance:
         :param ip: The IP on which to apply the playbook.
         :return: the return value from ansible
         """
-        port_ip = port['port']['fixed_ips'][0]['ip_address']
+        port_ip = port.ips[0]['ip_address']
         variables = {
             'floating_ip': ip,
             'nic_name': nic_name,

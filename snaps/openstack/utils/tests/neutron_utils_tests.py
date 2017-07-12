@@ -901,6 +901,6 @@ def validate_port(neutron, port_obj, this_port_name):
     ports = neutron.list_ports()
     for port, port_insts in ports.items():
         for inst in port_insts:
-            if inst['id'] == port_obj['port']['id']:
+            if inst['id'] == port_obj.id:
                 return inst['name'] == this_port_name
     return False

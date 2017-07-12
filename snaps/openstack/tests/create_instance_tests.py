@@ -988,10 +988,10 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
 
         port = self.inst_creator.get_port_by_name(port_settings.name)
         self.assertIsNotNone(port)
-        self.assertIsNotNone(port['port'].get('allowed_address_pairs'))
-        self.assertEqual(1, len(port['port']['allowed_address_pairs']))
-        validation_utils.objects_equivalent(pair, port['port'][
-            'allowed_address_pairs'][0])
+        self.assertIsNotNone(port.allowed_address_pairs)
+        self.assertEqual(1, len(port.allowed_address_pairs))
+        validation_utils.objects_equivalent(pair,
+                                            port.allowed_address_pairs[0])
 
     def test_set_allowed_address_pairs_bad_mac(self):
         """
