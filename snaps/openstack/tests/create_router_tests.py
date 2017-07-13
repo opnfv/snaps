@@ -12,12 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import unittest
 import uuid
 
 from snaps.openstack import create_network
 from snaps.openstack import create_router
-from snaps.openstack.create_network import NetworkSettings
+from snaps.openstack.create_network import (
+    NetworkSettings, PortSettings)
 from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_router import RouterSettings
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
@@ -29,6 +30,91 @@ cidr1 = '10.200.201.0/24'
 cidr2 = '10.200.202.0/24'
 static_gateway_ip1 = '10.200.201.1'
 static_gateway_ip2 = '10.200.202.1'
+
+
+class RouterSettingsUnitTests(unittest.TestCase):
+    """
+    Class for testing the RouterSettings class
+    """
+
+    def test_no_params(self):
+        with self.assertRaises(Exception):
+            RouterSettings()
+
+    def test_empty_config(self):
+        with self.assertRaises(Exception):
+            RouterSettings(**dict())
+
+    def test_name_only(self):
+        settings = RouterSettings(name='foo')
+        self.assertEqual('foo', settings.name)
+        self.assertIsNone(settings.project_name)
+        self.assertIsNone(settings.external_gateway)
+        self.assertIsNone(settings.admin_state_up)
+        self.assertIsNone(settings.enable_snat)
+        self.assertIsNone(settings.external_fixed_ips)
+        self.assertIsNotNone(settings.internal_subnets)
+        self.assertTrue(isinstance(settings.internal_subnets, list))
+        self.assertEqual(0, len(settings.internal_subnets))
+        self.assertIsNotNone(settings.port_settings)
+        self.assertTrue(isinstance(settings.port_settings, list))
+        self.assertEqual(0, len(settings.port_settings))
+
+    def test_config_with_name_only(self):
+        settings = RouterSettings(**{'name': 'foo'})
+        self.assertEqual('foo', settings.name)
+        self.assertIsNone(settings.project_name)
+        self.assertIsNone(settings.external_gateway)
+        self.assertIsNone(settings.admin_state_up)
+        self.assertIsNone(settings.enable_snat)
+        self.assertIsNone(settings.external_fixed_ips)
+        self.assertIsNotNone(settings.internal_subnets)
+        self.assertTrue(isinstance(settings.internal_subnets, list))
+        self.assertEqual(0, len(settings.internal_subnets))
+        self.assertIsNotNone(settings.port_settings)
+        self.assertTrue(isinstance(settings.port_settings, list))
+        self.assertEqual(0, len(settings.port_settings))
+
+    def test_all(self):
+        port_settings = PortSettings(name='foo', network_name='bar')
+        settings = RouterSettings(
+            name='foo', project_name='bar', external_gateway='foo_gateway',
+            admin_state_up=True, enable_snat=False, external_fixed_ips=['ip1'],
+            internal_subnets=['10.0.0.1/24'], interfaces=[port_settings])
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.project_name)
+        self.assertEqual('foo_gateway', settings.external_gateway)
+        self.assertTrue(settings.admin_state_up)
+        self.assertFalse(settings.enable_snat)
+        self.assertEqual(['ip1'], settings.external_fixed_ips)
+        self.assertIsNotNone(settings.internal_subnets)
+        self.assertTrue(isinstance(settings.internal_subnets, list))
+        self.assertEqual(1, len(settings.internal_subnets))
+        self.assertEqual(['10.0.0.1/24'], settings.internal_subnets)
+        self.assertEqual([port_settings], settings.port_settings)
+
+    def test_config_all(self):
+        settings = RouterSettings(
+            **{'name': 'foo', 'project_name': 'bar',
+               'external_gateway': 'foo_gateway', 'admin_state_up': True,
+               'enable_snat': False, 'external_fixed_ips': ['ip1'],
+               'internal_subnets': ['10.0.0.1/24'],
+               'interfaces':
+                   [{'port': {'name': 'foo-port',
+                              'network_name': 'bar-net'}}]})
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.project_name)
+        self.assertEqual('foo_gateway', settings.external_gateway)
+        self.assertTrue(settings.admin_state_up)
+        self.assertFalse(settings.enable_snat)
+        self.assertEqual(['ip1'], settings.external_fixed_ips)
+        self.assertIsNotNone(settings.internal_subnets)
+        self.assertTrue(isinstance(settings.internal_subnets, list))
+        self.assertEqual(1, len(settings.internal_subnets))
+        self.assertEqual(['10.0.0.1/24'], settings.internal_subnets)
+        self.assertEqual([PortSettings(**{'name': 'foo-port',
+                                          'network_name': 'bar-net'})],
+                         settings.port_settings)
 
 
 class CreateRouterSuccessTests(OSIntegrationTestCase):
@@ -277,7 +363,7 @@ def verify_router_attributes(router_operational, router_creator,
     Helper function to validate the attributes of router created with the one
     operational
     :param router_operational: Operational Router object returned from neutron
-                               utils
+                               utils of type snaps.domain.Router
     :param router_creator: router_creator object returned from creating a
                            router in the router test functions
     :param admin_state: True if router is expected to be Up, else False
@@ -291,21 +377,20 @@ def verify_router_attributes(router_operational, router_creator,
         return False
     elif not router_creator:
         return False
-    elif not (router_operational['router'][
-                  'name'] == router_creator.router_settings.name):
+    elif not (router_operational.name == router_creator.router_settings.name):
         return False
-    elif not (router_operational['router']['id'] == router['router']['id']):
+    elif not (router_operational.id == router.id):
         return False
-    elif not (router_operational['router']['status'] == router['router']['status']):
+    elif not (router_operational.status == router.status):
         return False
-    elif not (router_operational['router']['tenant_id'] == router['router']['tenant_id']):
+    elif not (router_operational.tenant_id == router.tenant_id):
         return False
-    elif not (admin_state == router_operational['router']['admin_state_up']):
+    elif not (admin_state == router_operational.admin_state_up):
         return False
     elif (ext_gateway is None) and \
-            (router_operational['router']['external_gateway_info'] is not None):
+            (router_operational.external_gateway_info is not None):
         return False
     elif ext_gateway is not None:
-        if router_operational['router']['external_gateway_info'] is None:
+        if router_operational.external_gateway_info is None:
             return False
     return True

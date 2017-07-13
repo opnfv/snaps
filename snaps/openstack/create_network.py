@@ -524,3 +524,18 @@ class PortSettings:
         if self.device_id:
             out['device_id'] = self.device_id
         return {'port': out}
+
+    def __eq__(self, other):
+        return (self.name == other.name and
+                self.network_name == other.network_name and
+                self.admin_state_up == other.admin_state_up and
+                self.project_name == other.project_name and
+                self.mac_address == other.mac_address and
+                self.ip_addrs == other.ip_addrs and
+                self.fixed_ips == other.fixed_ips and
+                self.security_groups == other.security_groups and
+                self.allowed_address_pairs == other.allowed_address_pairs and
+                self.opt_value == other.opt_value and
+                self.opt_name == other.opt_name and
+                self.device_owner == other.device_owner and
+                self.device_id == other.device_id)

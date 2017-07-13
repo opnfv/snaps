@@ -288,7 +288,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
 
         if self.router:
             neutron_utils.delete_router(self.neutron, self.router)
-            validate_router(self.neutron, self.router.get('name'), False)
+            validate_router(self.neutron, self.router.name, False)
 
         if self.port:
             neutron_utils.delete_port(self.neutron, self.port)
@@ -877,13 +877,13 @@ def validate_interface_router(interface_router, router, subnet):
     """
     Returns true if the router ID & subnet ID have been properly included into
     the interface router object
-    :param interface_router: the object to validate
+    :param interface_router: the SNAPS-OO InterfaceRouter domain object
     :param router: to validate against the interface_router
     :param subnet: to validate against the interface_router
     :return: True if both IDs match else False
     """
-    subnet_id = interface_router.get('subnet_id')
-    router_id = interface_router.get('port_id')
+    subnet_id = interface_router.subnet_id
+    router_id = interface_router.port_id
 
     return subnet.get('id') == subnet_id and router.get('id') == router_id
 

@@ -21,7 +21,8 @@ from snaps.domain.test.image_tests import ImageDomainObjectTests
 from snaps.domain.test.keypair_tests import KeypairDomainObjectTests
 from snaps.domain.test.network_tests import (
     SecurityGroupDomainObjectTests, SecurityGroupRuleDomainObjectTests,
-    PortDomainObjectTests)
+    PortDomainObjectTests, RouterDomainObjectTests,
+    InterfaceRouterDomainObjectTests)
 from snaps.domain.test.project_tests import ProjectDomainObjectTests
 from snaps.domain.test.role_tests import RoleDomainObjectTests
 from snaps.domain.test.stack_tests import StackDomainObjectTests
@@ -51,7 +52,8 @@ from snaps.openstack.tests.create_project_tests import (
     CreateProjectSuccessTests, ProjectSettingsUnitTests,
     CreateProjectUserTests)
 from snaps.openstack.tests.create_router_tests import (
-    CreateRouterSuccessTests, CreateRouterNegativeTests)
+    CreateRouterSuccessTests, CreateRouterNegativeTests,
+    RouterSettingsUnitTests)
 from snaps.openstack.tests.create_security_group_tests import (
     CreateSecurityGroupTests, SecurityGroupRuleSettingsUnitTests,
     SecurityGroupSettingsUnitTests)
@@ -130,6 +132,12 @@ def add_unit_tests(suite):
         PortSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         PortDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        RouterSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        RouterDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        InterfaceRouterDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         FloatingIpSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
