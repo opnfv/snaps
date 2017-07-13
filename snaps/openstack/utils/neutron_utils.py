@@ -17,7 +17,8 @@ import logging
 from neutronclient.common.exceptions import NotFound
 from neutronclient.neutron.client import Client
 
-from snaps.domain.network import Port, SecurityGroup, SecurityGroupRule
+from snaps.domain.network import (
+    Port, SecurityGroup, SecurityGroupRule, Router, InterfaceRouter)
 from snaps.domain.vm_inst import FloatingIp
 from snaps.openstack.utils import keystone_utils
 
@@ -168,12 +169,13 @@ def create_router(neutron, os_creds, router_settings):
     :param router_settings: A dictionary containing the router configuration
                             and is responsible for creating the subnet request
                             JSON body
-    :return: the router object
+    :return: a SNAPS-OO Router domain object
     """
     if neutron:
         json_body = router_settings.dict_for_neutron(neutron, os_creds)
         logger.info('Creating router with name - ' + router_settings.name)
-        return neutron.create_router(json_body)
+        os_router = neutron.create_router(json_body)
+        return Router(**os_router['router'])
     else:
         logger.error("Failed to create router.")
         raise Exception
@@ -183,12 +185,11 @@ def delete_router(neutron, router):
     """
     Deletes a router for OpenStack
     :param neutron: the client
-    :param router: the router object
+    :param router: a SNAPS-OO Router domain object
     """
     if neutron and router:
-        logger.info('Deleting router with name - ' + router['router']['name'])
-        neutron.delete_router(router=router['router']['id'])
-        return True
+        logger.info('Deleting router with name - ' + router.name)
+        neutron.delete_router(router=router.id)
 
 
 def get_router_by_name(neutron, router_name):
@@ -196,13 +197,13 @@ def get_router_by_name(neutron, router_name):
     Returns the first router object (dictionary) found with a given name
     :param neutron: the client
     :param router_name: the name of the network to retrieve
-    :return:
+    :return: a SNAPS-OO Router domain object
     """
     routers = neutron.list_routers(**{'name': router_name})
     for router, routerInst in routers.items():
         for inst in routerInst:
             if inst.get('name') == router_name:
-                return {'router': inst}
+                return Router(**inst)
     return None
 
 
@@ -221,11 +222,10 @@ def add_interface_router(neutron, router, subnet=None, port=None):
                         'port were sent in. Either or please.')
 
     if neutron and router and (router or subnet):
-        logger.info('Adding interface to router with name ' +
-                    router['router']['name'])
-        return neutron.add_interface_router(
-            router=router['router']['id'],
-            body=__create_port_json_body(subnet, port))
+        logger.info('Adding interface to router with name ' + router.name)
+        os_intf_router = neutron.add_interface_router(
+            router=router.id, body=__create_port_json_body(subnet, port))
+        return InterfaceRouter(**os_intf_router)
     else:
         raise Exception('Unable to create interface router as neutron client,'
                         ' router or subnet were not created')
@@ -235,16 +235,16 @@ def remove_interface_router(neutron, router, subnet=None, port=None):
     """
     Removes an interface router for OpenStack
     :param neutron: the client
-    :param router: the router object
+    :param router: the SNAPS-OO Router domain object
     :param subnet: the subnet object (either subnet or port, not both)
     :param port: the port object
     """
     if router:
         try:
             logger.info('Removing router interface from router named ' +
-                        router['router']['name'])
+                        router.name)
             neutron.remove_interface_router(
-                router=router['router']['id'],
+                router=router.id,
                 body=__create_port_json_body(subnet, port))
         except NotFound as e:
             logger.warning('Could not remove router interface. NotFound - %s',
@@ -271,7 +271,7 @@ def __create_port_json_body(subnet=None, port=None):
     if subnet:
         return {"subnet_id": subnet['subnet']['id']}
     else:
-        return {"port_id": port['port']['id']}
+        return {"port_id": port.id}
 
 
 def create_port(neutron, os_creds, port_settings):

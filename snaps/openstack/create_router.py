@@ -120,7 +120,7 @@ class OpenStackRouter:
         for port in self.__ports:
             logger.info(
                 'Removing router interface from router %s and port %s',
-                self.router_settings.name, port['port']['name'])
+                self.router_settings.name, port.name)
             try:
                 neutron_utils.remove_interface_router(self.__neutron,
                                                       self.__router, port=port)
@@ -199,10 +199,12 @@ class RouterSettings:
             self.internal_subnets = list()
 
         self.port_settings = list()
-        if kwargs.get('interfaces'):
-            interfaces = kwargs['interfaces']
+        if kwargs.get('interfaces', kwargs.get('port_settings')):
+            interfaces = kwargs.get('interfaces', kwargs.get('port_settings'))
             for interface in interfaces:
-                if interface.get('port'):
+                if isinstance(interface, PortSettings):
+                    self.port_settings.append(interface)
+                else:
                     self.port_settings.append(
                         PortSettings(**interface['port']))
 

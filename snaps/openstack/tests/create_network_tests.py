@@ -508,18 +508,21 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         """
         # Create Network
         network_type = 'vlan'
-        net_settings = NetworkSettings(name=self.net_config.network_settings.name,
-                                       subnet_settings=self.net_config.network_settings.subnet_settings,
-                                       network_type=network_type)
+        net_settings = NetworkSettings(
+            name=self.net_config.network_settings.name,
+            subnet_settings=self.net_config.network_settings.subnet_settings,
+            network_type=network_type)
 
         # When setting the network_type, creds must be admin
         self.net_creator = OpenStackNetwork(self.os_creds, net_settings)
         network = self.net_creator.create()
 
         # Validate network was created
-        neutron_utils_tests.validate_network(self.neutron, net_settings.name, True)
+        neutron_utils_tests.validate_network(
+            self.neutron, net_settings.name, True)
 
-        self.assertEquals(network_type, network['network']['provider:network_type'])
+        self.assertEquals(
+            network_type, network['network']['provider:network_type'])
 
     def test_create_network_type_vxlan(self):
         """
@@ -552,16 +555,19 @@ class CreateNetworkTypeTests(OSComponentTestCase):
 
         # TODO - this value must be variable to work on all OpenStack pods
         physical_network = 'datacentre'
-        net_settings = NetworkSettings(name=self.net_config.network_settings.name,
-                                       subnet_settings=self.net_config.network_settings.subnet_settings,
-                                       network_type=network_type, physical_network=physical_network)
+        net_settings = NetworkSettings(
+            name=self.net_config.network_settings.name,
+            subnet_settings=self.net_config.network_settings.subnet_settings,
+            network_type=network_type, physical_network=physical_network)
         self.net_creator = OpenStackNetwork(self.os_creds, net_settings)
         network = self.net_creator.create()
 
         # Validate network was created
-        neutron_utils_tests.validate_network(self.neutron, net_settings.name, True)
+        neutron_utils_tests.validate_network(
+            self.neutron, net_settings.name, True)
 
-        self.assertEquals(network_type, network['network']['provider:network_type'])
+        self.assertEquals(network_type,
+                          network['network']['provider:network_type'])
 
     def test_create_network_type_foo(self):
         """

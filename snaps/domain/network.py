@@ -37,6 +37,50 @@ class Port:
                 self.ips == other.ips, self.mac_address == other.mac_address)
 
 
+class Router:
+    """
+    SNAPS domain object for routers. Should contain attributes that are shared
+    amongst cloud providers
+    """
+    def __init__(self, **kwargs):
+        """
+        Constructor
+        :param name: the router's name
+        :param id: the router's id
+        """
+        self.name = kwargs.get('name')
+        self.id = kwargs.get('id')
+        self.status = kwargs.get('status')
+        self.tenant_id = kwargs.get('tenant_id')
+        self.admin_state_up = kwargs.get('admin_state_up')
+        self.external_gateway_info = kwargs.get('external_gateway_info')
+
+    def __eq__(self, other):
+        return (self.name == other.name and self.id == other.id and
+                self.status == other.status and
+                self.tenant_id == other.tenant_id and
+                self.admin_state_up == other.admin_state_up and
+                self.external_gateway_info == other.external_gateway_info)
+
+
+class InterfaceRouter:
+    """
+    SNAPS domain object for interface routers. Should contain attributes that
+    are shared amongst cloud providers
+    """
+    def __init__(self, **kwargs):
+        """
+        Constructor
+        """
+        self.id = kwargs.get('id')
+        self.subnet_id = kwargs.get('subnet_id')
+        self.port_id = kwargs.get('port_id')
+
+    def __eq__(self, other):
+        return (self.id == other.id and self.subnet_id == other.subnet_id and
+                self.port_id == other.port_id)
+
+
 class SecurityGroup:
     """
     SNAPS domain object for SecurityGroups. Should contain attributes that

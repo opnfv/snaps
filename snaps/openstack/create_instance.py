@@ -190,10 +190,10 @@ class OpenStackVmInstance:
         :return: the external network name or None
         """
         router = neutron_utils.get_router_by_name(self.__neutron, router_name)
-        if router and router['router'].get('external_gateway_info'):
+        if router and router.external_gateway_info:
             network = neutron_utils.get_network_by_id(
                 self.__neutron,
-                router['router']['external_gateway_info']['network_id'])
+                router.external_gateway_info['network_id'])
             if network:
                 return network['network']['name']
         return None
