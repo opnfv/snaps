@@ -178,7 +178,7 @@ class KeystoneUtilsTests(OSComponentTestCase):
         keystone_utils.grant_user_role_to_project(
             self.keystone, self.role, self.user, self.project)
 
-        user_roles = keystone_utils.get_os_roles_by_user(
+        user_roles = keystone_utils._get_os_roles_by_user(
             self.keystone, self.user, self.project)
         self.assertIsNotNone(user_roles)
         self.assertEqual(1, len(user_roles))

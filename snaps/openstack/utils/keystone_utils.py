@@ -20,6 +20,7 @@ from keystoneauth1 import session
 import requests
 
 from snaps.domain.project import Project
+from snaps.domain.role import Role
 from snaps.domain.user import User
 
 logger = logging.getLogger('keystone_utils')
@@ -155,7 +156,7 @@ def delete_project(keystone, project):
         keystone.projects.delete(project.id)
 
 
-def get_os_user(keystone, user):
+def __get_os_user(keystone, user):
     """
     Returns the OpenStack user object
     :param keystone: the Keystone client object
@@ -214,12 +215,12 @@ def create_user(keystone, user_settings):
             domain=user_settings.domain_name, enabled=user_settings.enabled)
 
     for role_name, role_project in user_settings.roles.items():
-        os_role = get_os_role_by_name(keystone, role_name)
+        os_role = _get_os_role_by_name(keystone, role_name)
         os_project = get_project(keystone=keystone, project_name=role_project)
 
         if os_role and os_project:
-            existing_roles = get_os_roles_by_user(keystone, os_user,
-                                                  os_project)
+            existing_roles = _get_os_roles_by_user(keystone, os_user,
+                                                   os_project)
             found = False
             for role in existing_roles:
                 if role.id == os_role.id:
@@ -243,43 +244,48 @@ def delete_user(keystone, user):
     keystone.users.delete(user.id)
 
 
-def get_os_role_by_name(keystone, name):
+def _get_os_role_by_name(keystone, name):
     """
     Returns an OpenStack role object of a given name or None if not exists
     :param keystone: the keystone client
     :param name: the role name
-    :return: the OpenStack role object
+    :return: the SNAPS-OO Role domain object
     """
     roles = keystone.roles.list()
     for role in roles:
         if role.name == name:
-            return role
+            return Role(name=role.name, role_id=role.id)
 
 
-def get_os_roles_by_user(keystone, user, project):
+def _get_os_roles_by_user(keystone, user, project):
     """
     Returns a list of OpenStack role object associated with a user
     :param keystone: the keystone client
     :param user: the OpenStack user object
     :param project: the OpenStack project object (only required for v2)
-    :return: a list of OpenStack role objects
+    :return: a list of SNAPS-OO Role domain objects
     """
     if keystone.version == V2_VERSION:
-        os_user = get_os_user(keystone, user)
+        os_user = __get_os_user(keystone, user)
         roles = keystone.roles.roles_for_user(os_user, project)
-        return roles
     else:
-        return keystone.roles.list(user=user, project=project)
+        roles = keystone.roles.list(user=user, project=project)
+
+    out = list()
+    for role in roles:
+        out.append(Role(name=role.name, role_id=role.id))
+    return out
 
 
-def get_os_role_by_id(keystone, role_id):
+def __get_os_role_by_id(keystone, role_id):
     """
     Returns an OpenStack role object of a given name or None if not exists
     :param keystone: the keystone client
     :param role_id: the role ID
-    :return: the OpenStack role object
+    :return: a SNAPS-OO Role domain object
     """
-    return keystone.roles.get(role_id)
+    role = keystone.roles.get(role_id)
+    return Role(name=role.name, role_id=role.id)
 
 
 def create_role(keystone, name):
@@ -287,31 +293,34 @@ def create_role(keystone, name):
     Creates an OpenStack role
     :param keystone: the keystone client
     :param name: the role name
-    :return:
+    :return: a SNAPS-OO Role domain object
     """
-    return keystone.roles.create(name)
+    role = keystone.roles.create(name)
+    return Role(name=role.name, role_id=role.id)
 
 
 def delete_role(keystone, role):
     """
     Deletes an OpenStack role
     :param keystone: the keystone client
-    :param role: the role to delete
+    :param role: the SNAPS-OO Role domain object to delete
     :return:
     """
-    keystone.roles.delete(role)
+    keystone.roles.delete(role.id)
 
 
 def grant_user_role_to_project(keystone, role, user, project):
     """
     Grants user and role to a project
     :param keystone: the Keystone client
-    :param role: the role used to join a project/user
+    :param role: the SNAPS-OO Role domain object used to join a project/user
     :param user: the user to add to the project (SNAPS-OO User Domain object
     :param project: the project to which to add a user
     :return:
     """
+
+    os_role = __get_os_role_by_id(keystone, role.id)
     if keystone.version == V2_VERSION:
-        keystone.roles.add_user_role(user, role, tenant=project)
+        keystone.roles.add_user_role(user, os_role, tenant=project)
     else:
-        keystone.roles.grant(role, user=user, project=project)
+        keystone.roles.grant(os_role, user=user, project=project)
