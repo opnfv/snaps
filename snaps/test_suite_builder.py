@@ -22,7 +22,7 @@ from snaps.domain.test.keypair_tests import KeypairDomainObjectTests
 from snaps.domain.test.network_tests import (
     SecurityGroupDomainObjectTests, SecurityGroupRuleDomainObjectTests,
     PortDomainObjectTests, RouterDomainObjectTests,
-    InterfaceRouterDomainObjectTests)
+    InterfaceRouterDomainObjectTests, NetworkObjectTests, SubnetObjectTests)
 from snaps.domain.test.project_tests import ProjectDomainObjectTests
 from snaps.domain.test.role_tests import RoleDomainObjectTests
 from snaps.domain.test.stack_tests import StackDomainObjectTests
@@ -127,7 +127,11 @@ def add_unit_tests(suite):
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         NetworkSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        NetworkObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         SubnetSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        SubnetObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         PortSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

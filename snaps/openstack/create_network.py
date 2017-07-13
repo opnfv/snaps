@@ -67,25 +67,22 @@ class OpenStackNetwork:
                     ' mode')
                 return
         logger.debug(
-            "Network '%s' created successfully" % self.__network['network'][
-                'id'])
+            "Network '%s' created successfully" % self.__network.id)
 
         logger.debug('Creating Subnets....')
         for subnet_setting in self.network_settings.subnet_settings:
-            sub_inst = neutron_utils.get_subnet_by_name(self.__neutron,
-                                                        subnet_setting.name)
+            sub_inst = neutron_utils.get_subnet_by_name(
+                self.__neutron, subnet_setting.name)
             if sub_inst:
                 self.__subnets.append(sub_inst)
                 logger.debug(
-                    "Subnet '%s' created successfully" % sub_inst['subnet'][
-                        'id'])
+                    "Subnet '%s' created successfully" % sub_inst.id)
             else:
                 if not cleanup:
                     self.__subnets.append(
-                        neutron_utils.create_subnet(self.__neutron,
-                                                    subnet_setting,
-                                                    self.__os_creds,
-                                                    self.__network))
+                        neutron_utils.create_subnet(
+                            self.__neutron, subnet_setting, self.__os_creds,
+                            self.__network))
 
         return self.__network
 
@@ -96,7 +93,7 @@ class OpenStackNetwork:
         for subnet in self.__subnets:
             try:
                 logger.info(
-                    'Deleting subnet with name ' + subnet['subnet']['name'])
+                    'Deleting subnet with name ' + subnet.name)
                 neutron_utils.delete_subnet(self.__neutron, subnet)
             except NotFound as e:
                 logger.warning(
@@ -335,7 +332,7 @@ class SubnetSettings:
         }
 
         if network:
-            out['network_id'] = network['network']['id']
+            out['network_id'] = network.id
         if self.name:
             out['name'] = self.name
         if self.project_name:
@@ -457,8 +454,7 @@ class PortSettings:
                                                               'subnet_name'])
                 if subnet:
                     self.fixed_ips.append({'ip_address': ip_addr_dict['ip'],
-                                           'subnet_id': subnet['subnet'][
-                                               'id']})
+                                           'subnet_id': subnet.id})
                 else:
                     raise Exception(
                         'Invalid port configuration, subnet does not exist '
@@ -494,7 +490,7 @@ class PortSettings:
             raise Exception(
                 'Cannot locate network with name - ' + self.network_name)
 
-        out['network_id'] = self.network['network']['id']
+        out['network_id'] = self.network.id
 
         if self.admin_state_up is not None:
             out['admin_state_up'] = self.admin_state_up

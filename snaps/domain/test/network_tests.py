@@ -15,7 +15,46 @@
 
 import unittest
 from snaps.domain.network import (
-    Port, SecurityGroup, SecurityGroupRule,  Router, InterfaceRouter)
+    Port, SecurityGroup, SecurityGroupRule, Router, InterfaceRouter, Network,
+    Subnet)
+
+
+class NetworkObjectTests(unittest.TestCase):
+    """
+    Tests the construction of the snaps.domain.network.Network class
+    """
+
+    def test_construction_kwargs(self):
+        network = Network(
+            **{'name': 'name', 'id': 'id', 'provider:network_type': 'flat'})
+        self.assertEqual('name', network.name)
+        self.assertEqual('id', network.id)
+        self.assertEqual('flat', network.type)
+
+    def test_construction_named(self):
+        network = Network(id='id', name='name')
+        self.assertEqual('name', network.name)
+        self.assertEqual('id', network.id)
+        self.assertIsNone(network.type)
+
+
+class SubnetObjectTests(unittest.TestCase):
+    """
+    Tests the construction of the snaps.domain.network.Subnet class
+    """
+
+    def test_construction_kwargs(self):
+        subnet = Subnet(
+            **{'name': 'name', 'id': 'id', 'cidr': '10.0.0.0/24'})
+        self.assertEqual('name', subnet.name)
+        self.assertEqual('id', subnet.id)
+        self.assertEqual('10.0.0.0/24', subnet.cidr)
+
+    def test_construction_named(self):
+        subnet = Subnet(cidr='10.0.0.0/24', id='id', name='name')
+        self.assertEqual('name', subnet.name)
+        self.assertEqual('id', subnet.id)
+        self.assertEqual('10.0.0.0/24', subnet.cidr)
 
 
 class PortDomainObjectTests(unittest.TestCase):
@@ -45,27 +84,27 @@ class RouterDomainObjectTests(unittest.TestCase):
     """
 
     def test_construction_kwargs(self):
-        sec_grp = Router(
+        router = Router(
             **{'name': 'name', 'id': 'id', 'status': 'hello',
                'tenant_id': '1234', 'admin_state_up': 'yes',
                'external_gateway_info': 'no'})
-        self.assertEqual('name', sec_grp.name)
-        self.assertEqual('id', sec_grp.id)
-        self.assertEqual('hello', sec_grp.status)
-        self.assertEqual('1234', sec_grp.tenant_id)
-        self.assertEqual('yes', sec_grp.admin_state_up)
-        self.assertEqual('no', sec_grp.external_gateway_info)
+        self.assertEqual('name', router.name)
+        self.assertEqual('id', router.id)
+        self.assertEqual('hello', router.status)
+        self.assertEqual('1234', router.tenant_id)
+        self.assertEqual('yes', router.admin_state_up)
+        self.assertEqual('no', router.external_gateway_info)
 
     def test_construction_named(self):
-        sec_grp = Router(
+        router = Router(
             external_gateway_info='no', admin_state_up='yes', tenant_id='1234',
             status='hello', id='id', name='name')
-        self.assertEqual('name', sec_grp.name)
-        self.assertEqual('id', sec_grp.id)
-        self.assertEqual('hello', sec_grp.status)
-        self.assertEqual('1234', sec_grp.tenant_id)
-        self.assertEqual('yes', sec_grp.admin_state_up)
-        self.assertEqual('no', sec_grp.external_gateway_info)
+        self.assertEqual('name', router.name)
+        self.assertEqual('id', router.id)
+        self.assertEqual('hello', router.status)
+        self.assertEqual('1234', router.tenant_id)
+        self.assertEqual('yes', router.admin_state_up)
+        self.assertEqual('no', router.external_gateway_info)
 
 
 class InterfaceRouterDomainObjectTests(unittest.TestCase):
@@ -74,17 +113,17 @@ class InterfaceRouterDomainObjectTests(unittest.TestCase):
     """
 
     def test_construction_kwargs(self):
-        sec_grp = InterfaceRouter(
+        intf_router = InterfaceRouter(
             **{'id': 'id', 'subnet_id': 'foo', 'port_id': 'bar'})
-        self.assertEqual('id', sec_grp.id)
-        self.assertEqual('foo', sec_grp.subnet_id)
-        self.assertEqual('bar', sec_grp.port_id)
+        self.assertEqual('id', intf_router.id)
+        self.assertEqual('foo', intf_router.subnet_id)
+        self.assertEqual('bar', intf_router.port_id)
 
     def test_construction_named(self):
-        sec_grp = InterfaceRouter(port_id='bar', subnet_id='foo', id='id')
-        self.assertEqual('id', sec_grp.id)
-        self.assertEqual('foo', sec_grp.subnet_id)
-        self.assertEqual('bar', sec_grp.port_id)
+        intf_router = InterfaceRouter(port_id='bar', subnet_id='foo', id='id')
+        self.assertEqual('id', intf_router.id)
+        self.assertEqual('foo', intf_router.subnet_id)
+        self.assertEqual('bar', intf_router.port_id)
 
 
 class SecurityGroupDomainObjectTests(unittest.TestCase):

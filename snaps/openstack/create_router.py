@@ -131,7 +131,7 @@ class OpenStackRouter:
         for internal_subnet in self.__internal_subnets:
             logger.info(
                 'Removing router interface from router %s and subnet %s',
-                self.router_settings.name, internal_subnet['subnet']['name'])
+                self.router_settings.name, internal_subnet.name)
             try:
                 neutron_utils.remove_interface_router(self.__neutron,
                                                       self.__router,
@@ -248,7 +248,7 @@ class RouterSettings:
             ext_net = neutron_utils.get_network(neutron, self.external_gateway,
                                                 project_id)
             if ext_net:
-                ext_gw['network_id'] = ext_net['network']['id']
+                ext_gw['network_id'] = ext_net.id
                 out['external_gateway_info'] = ext_gw
             else:
                 raise Exception(

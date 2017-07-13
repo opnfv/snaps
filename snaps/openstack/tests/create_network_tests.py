@@ -458,8 +458,8 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
                                              self.net_config.network_settings)
         self.net_creator2.create()
 
-        self.assertEqual(self.net_creator.get_network()['network']['id'],
-                         self.net_creator2.get_network()['network']['id'])
+        self.assertEqual(self.net_creator.get_network().id,
+                         self.net_creator2.get_network().id)
 
 
 class CreateNetworkTypeTests(OSComponentTestCase):
@@ -521,8 +521,7 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         neutron_utils_tests.validate_network(
             self.neutron, net_settings.name, True)
 
-        self.assertEquals(
-            network_type, network['network']['provider:network_type'])
+        self.assertEquals(network_type, network.type)
 
     def test_create_network_type_vxlan(self):
         """
@@ -543,8 +542,7 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         neutron_utils_tests.validate_network(self.neutron, net_settings.name,
                                              True)
 
-        self.assertEqual(network_type,
-                         network['network']['provider:network_type'])
+        self.assertEqual(network_type, network.type)
 
     def test_create_network_type_flat(self):
         """
@@ -566,8 +564,7 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         neutron_utils_tests.validate_network(
             self.neutron, net_settings.name, True)
 
-        self.assertEquals(network_type,
-                          network['network']['provider:network_type'])
+        self.assertEquals(network_type, network.type)
 
     def test_create_network_type_foo(self):
         """

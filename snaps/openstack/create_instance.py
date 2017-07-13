@@ -195,7 +195,7 @@ class OpenStackVmInstance:
                 self.__neutron,
                 router.external_gateway_info['network_id'])
             if network:
-                return network['network']['name']
+                return network.name
         return None
 
     def clean(self):
@@ -263,27 +263,16 @@ class OpenStackVmInstance:
         ports = list()
 
         for port_setting in port_settings:
-            # First check to see if network already has this port
-            # TODO/FIXME - this could potentially cause problems if another
-            # port with the same name exists
-            # VM has the same network/port name pair
-            found = False
-
-            # TODO/FIXME - should we not be iterating on ports for the specific
-            # network in question as unique port names
-            # seem to only be important by network
-            existing_ports = self.__neutron.list_ports()['ports']
-            for existing_port in existing_ports:
-                if existing_port['name'] == port_setting.name:
-                    ports.append((port_setting.name, {'port': existing_port}))
-                    found = True
-                    break
-
-            if not found and not cleanup:
-                ports.append((port_setting.name,
-                              neutron_utils.create_port(self.__neutron,
-                                                        self.__os_creds,
-                                                        port_setting)))
+            port = neutron_utils.get_port_by_name(self.__neutron,
+                                                  port_setting.name)
+            if port:
+                ports.append((port_setting.name, {'port': port}))
+            elif not cleanup:
+                # Exception will be raised when port with same name already
+                # exists
+                ports.append(
+                    (port_setting.name, neutron_utils.create_port(
+                        self.__neutron, self.__os_creds, port_setting)))
 
         return ports
 
@@ -372,7 +361,7 @@ class OpenStackVmInstance:
                                    subnet_name)
                     return None
                 for fixed_ip in port.ips:
-                    if fixed_ip['subnet_id'] == subnet['subnet']['id']:
+                    if fixed_ip['subnet_id'] == subnet.id:
                         return fixed_ip['ip_address']
             else:
                 if port.ips and len(port.ips) > 0:

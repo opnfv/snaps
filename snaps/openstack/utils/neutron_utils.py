@@ -18,7 +18,8 @@ from neutronclient.common.exceptions import NotFound
 from neutronclient.neutron.client import Client
 
 from snaps.domain.network import (
-    Port, SecurityGroup, SecurityGroupRule, Router, InterfaceRouter)
+    Port, SecurityGroup, SecurityGroupRule, Router, InterfaceRouter, Subnet,
+    Network)
 from snaps.domain.vm_inst import FloatingIp
 from snaps.openstack.utils import keystone_utils
 
@@ -50,12 +51,13 @@ def create_network(neutron, os_creds, network_settings):
     :param network_settings: A dictionary containing the network configuration
                              and is responsible for creating the network
                             request JSON body
-    :return: the network object
+    :return: a SNAPS-OO Network domain object
     """
     if neutron and network_settings:
         logger.info('Creating network with name ' + network_settings.name)
         json_body = network_settings.dict_for_neutron(os_creds)
-        return neutron.create_network(body=json_body)
+        os_network = neutron.create_network(body=json_body)
+        return Network(**os_network['network'])
     else:
         logger.error("Failed to create network")
         raise Exception
@@ -65,11 +67,11 @@ def delete_network(neutron, network):
     """
     Deletes a network for OpenStack
     :param neutron: the client
-    :param network: the network object
+    :param network: a SNAPS-OO Network domain object
     """
     if neutron and network:
-        logger.info('Deleting network with name ' + network['network']['name'])
-        neutron.delete_network(network['network']['id'])
+        logger.info('Deleting network with name ' + network.name)
+        neutron.delete_network(network.id)
 
 
 def get_network(neutron, network_name, project_id=None):
@@ -79,7 +81,7 @@ def get_network(neutron, network_name, project_id=None):
     :param neutron: the client
     :param network_name: the name of the network to retrieve
     :param project_id: the id of the network's project
-    :return:
+    :return: a SNAPS-OO Network domain object
     """
     net_filter = dict()
     if network_name:
@@ -94,7 +96,7 @@ def get_network(neutron, network_name, project_id=None):
                 if project_id and inst.get('project_id') == project_id:
                     return {'network': inst}
                 else:
-                    return {'network': inst}
+                    return Network(**inst)
     return None
 
 
@@ -103,13 +105,13 @@ def get_network_by_id(neutron, network_id):
     Returns the network object (dictionary) with the given ID
     :param neutron: the client
     :param network_id: the id of the network to retrieve
-    :return:
+    :return: a SNAPS-OO Network domain object
     """
     networks = neutron.list_networks(**{'id': network_id})
     for network, netInsts in networks.items():
         for inst in netInsts:
             if inst.get('id') == network_id:
-                return {'network': inst}
+                return Network(**inst)
     return None
 
 
@@ -122,14 +124,14 @@ def create_subnet(neutron, subnet_settings, os_creds, network=None):
                             and is responsible for creating the subnet request
                             JSON body
     :param os_creds: the OpenStack credentials
-    :return: the subnet object
+    :return: a SNAPS-OO Subnet domain object
     """
     if neutron and network and subnet_settings:
         json_body = {'subnets': [subnet_settings.dict_for_neutron(
             os_creds, network=network)]}
         logger.info('Creating subnet with name ' + subnet_settings.name)
         subnets = neutron.create_subnet(body=json_body)
-        return {'subnet': subnets['subnets'][0]}
+        return Subnet(**subnets['subnets'][0])
     else:
         logger.error("Failed to create subnet.")
         raise Exception
@@ -139,11 +141,11 @@ def delete_subnet(neutron, subnet):
     """
     Deletes a network subnet for OpenStack
     :param neutron: the client
-    :param subnet: the subnet object
+    :param subnet: a SNAPS-OO Subnet domain object
     """
     if neutron and subnet:
-        logger.info('Deleting subnet with name ' + subnet['subnet']['name'])
-        neutron.delete_subnet(subnet['subnet']['id'])
+        logger.info('Deleting subnet with name ' + subnet.name)
+        neutron.delete_subnet(subnet.id)
 
 
 def get_subnet_by_name(neutron, subnet_name):
@@ -151,13 +153,13 @@ def get_subnet_by_name(neutron, subnet_name):
     Returns the first subnet object (dictionary) found with a given name
     :param neutron: the client
     :param subnet_name: the name of the network to retrieve
-    :return:
+    :return: a SNAPS-OO Subnet domain object
     """
     subnets = neutron.list_subnets(**{'name': subnet_name})
     for subnet, subnetInst in subnets.items():
         for inst in subnetInst:
-            if inst.get('name') == subnet_name:
-                return {'subnet': inst}
+            if inst['name'] == subnet_name:
+                return Subnet(**inst)
     return None
 
 
@@ -269,7 +271,7 @@ def __create_port_json_body(subnet=None, port=None):
         raise Exception('Cannot create JSON body without subnet or port')
 
     if subnet:
-        return {"subnet_id": subnet['subnet']['id']}
+        return {"subnet_id": subnet.id}
     else:
         return {"port_id": port.id}
 
@@ -480,7 +482,7 @@ def create_floating_ip(neutron, ext_net_name):
     if ext_net:
         fip = neutron.create_floatingip(
             body={'floatingip':
-                  {'floating_network_id': ext_net['network']['id']}})
+                  {'floating_network_id': ext_net.id}})
 
         return FloatingIp(inst_id=fip['floatingip']['id'],
                           ip=fip['floatingip']['floating_ip_address'])
@@ -499,13 +501,13 @@ def get_floating_ip(neutron, floating_ip):
     """
     logger.debug('Attempting to retrieve existing floating ip with IP - %s',
                  floating_ip.ip)
-    os_fip = get_os_floating_ip(neutron, floating_ip)
+    os_fip = __get_os_floating_ip(neutron, floating_ip)
     if os_fip:
         return FloatingIp(
             inst_id=os_fip['id'], ip=os_fip['floating_ip_address'])
 
 
-def get_os_floating_ip(neutron, floating_ip):
+def __get_os_floating_ip(neutron, floating_ip):
     """
     Returns an OpenStack floating IP object
     parameter

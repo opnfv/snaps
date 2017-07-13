@@ -14,6 +14,42 @@
 # limitations under the License.
 
 
+class Network:
+    """
+    SNAPS domain object for interface routers. Should contain attributes that
+    are shared amongst cloud providers
+    """
+    def __init__(self, **kwargs):
+        """
+        Constructor
+        """
+        self.name = kwargs.get('name')
+        self.id = kwargs.get('id')
+        self.type = kwargs.get('provider:network_type')
+
+    def __eq__(self, other):
+        return (self.name == other.name and self.id == other.id and
+                self.type == other.type)
+
+
+class Subnet:
+    """
+    SNAPS domain object for interface routers. Should contain attributes that
+    are shared amongst cloud providers
+    """
+    def __init__(self, **kwargs):
+        """
+        Constructor
+        """
+        self.name = kwargs.get('name')
+        self.id = kwargs.get('id')
+        self.cidr = kwargs.get('cidr')
+
+    def __eq__(self, other):
+        return (self.name == other.name and self.id == other.id and
+                self.cidr == other.cidr)
+
+
 class Port:
     """
     SNAPS domain object for ports. Should contain attributes that
