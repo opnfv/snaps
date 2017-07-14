@@ -334,12 +334,12 @@ class OpenStackVmInstance:
         """
         return self.__vm
 
-    def get_os_vm_server_obj(self):
+    def get_console_output(self):
         """
-        Returns the OpenStack server object
-        :return: the server object
+        Returns the vm console object for parsing logs
+        :return: the console output object
         """
-        return nova_utils.get_latest_server_os_object(self.__nova, self.__vm)
+        return nova_utils.get_server_console_output(self.__nova, self.__vm)
 
     def get_port_ip(self, port_name, subnet_name=None):
         """
@@ -393,6 +393,13 @@ class OpenStackVmInstance:
                 return port
         logger.warning('Cannot find port with name - ' + port_name)
         return None
+
+    def get_vm_info(self):
+        """
+        Returns a dictionary of a VMs info as returned by OpenStack
+        :return: a dict()
+        """
+        return nova_utils.get_server_info(self.__nova, self.__vm)
 
     def config_nics(self):
         """
@@ -554,18 +561,17 @@ class OpenStackVmInstance:
         if not self.__vm:
             return False
 
-        instance = nova_utils.get_latest_server_os_object(
-            self.__nova, self.__vm)
-        if not instance:
+        status = nova_utils.get_server_status(self.__nova, self.__vm)
+        if not status:
             logger.warning('Cannot find instance with id - ' + self.__vm.id)
             return False
 
-        if instance.status == 'ERROR':
+        if status == 'ERROR':
             raise Exception('Instance had an error during deployment')
         logger.debug(
             'Instance status [%s] is - %s', self.instance_settings.name,
-            instance.status)
-        return instance.status == expected_status_code
+            status)
+        return status == expected_status_code
 
     def vm_ssh_active(self, block=False, poll_interval=POLL_INTERVAL):
         """

@@ -73,7 +73,7 @@ class NeutronSmokeTests(OSComponentTestCase):
         ext_networks = neutron_utils.get_external_networks(neutron)
         found = False
         for network in ext_networks:
-            if network['network']['name'] == self.ext_net_name:
+            if network.name == self.ext_net_name:
                 found = True
                 break
         self.assertTrue(found)

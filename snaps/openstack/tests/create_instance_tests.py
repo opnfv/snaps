@@ -355,14 +355,14 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         self.inst_creator = OpenStackVmInstance(
             self.os_creds, instance_settings,
             self.image_creator.image_settings)
-        vm = self.inst_creator.create()
+        self.inst_creator.create()
 
         ip = self.inst_creator.get_port_ip(self.port_settings.name)
         self.assertIsNotNone(ip)
 
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
-        self.assertTrue(check_dhcp_lease(self.nova, vm, ip))
+        self.assertTrue(check_dhcp_lease(self.inst_creator, ip))
 
 
 class CreateInstanceSimpleTests(OSIntegrationTestCase):
@@ -698,7 +698,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.assertTrue(inst_creator.vm_active(block=True))
 
         ip = inst_creator.get_port_ip(port_settings.name)
-        self.assertTrue(check_dhcp_lease(self.nova, vm_inst, ip))
+        self.assertTrue(check_dhcp_lease(inst_creator, ip))
 
         inst_creator.add_security_group(
             self.sec_grp_creator.get_security_group())
@@ -736,7 +736,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.assertTrue(inst_creator.vm_active(block=True))
 
         ip = inst_creator.get_port_ip(port_settings.name)
-        self.assertTrue(check_dhcp_lease(self.nova, vm_inst, ip))
+        self.assertTrue(check_dhcp_lease(inst_creator, ip))
 
         inst_creator.add_security_group(
             self.sec_grp_creator.get_security_group())
@@ -1167,9 +1167,9 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
         for zone in zones:
             creator = self.inst_creators[index]
             self.assertTrue(creator.vm_active(block=True))
-            vm = creator.get_os_vm_server_obj()
-            deployed_zone = vm._info['OS-EXT-AZ:availability_zone']
-            deployed_host = vm._info['OS-EXT-SRV-ATTR:host']
+            info = creator.get_vm_info()
+            deployed_zone = info['OS-EXT-AZ:availability_zone']
+            deployed_host = info['OS-EXT-SRV-ATTR:host']
             self.assertEqual(zone, deployed_zone + ':' + deployed_host)
             index += 1
 
@@ -1391,7 +1391,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
         ip = self.inst_creator.get_port_ip(ports_settings[0].name)
-        self.assertTrue(check_dhcp_lease(self.nova, vm_inst, ip))
+        self.assertTrue(check_dhcp_lease(self.inst_creator, ip))
 
         # Add security group to VM
         self.inst_creator.add_security_group(
@@ -1702,18 +1702,13 @@ def inst_has_sec_grp(nova, vm_inst, sec_grp_name):
     :param nova: the nova client
     :param vm_inst: the VmInst domain object
     :param sec_grp_name: the name of the security group to validate
-    :return:
+    :return: T/F
     """
-    vm = nova_utils.get_latest_server_os_object(nova, vm_inst)
-    if not hasattr(vm, 'security_groups'):
-        return False
-
-    found = False
-    for sec_grp_dict in vm.security_groups:
-        if sec_grp_name in sec_grp_dict['name']:
-            found = True
-            break
-    return found
+    sec_grp_names = nova_utils.get_server_security_group_names(nova, vm_inst)
+    for name in sec_grp_names:
+        if sec_grp_name == name:
+            return True
+    return False
 
 
 def validate_ssh_client(instance_creator):
@@ -2366,11 +2361,10 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
 
-def check_dhcp_lease(nova_client, vm_domain, ip, timeout=160):
+def check_dhcp_lease(inst_creator, ip, timeout=160):
     """
     Returns true if the expected DHCP lease has been acquired
-    :param nova_client: the nova client
-    :param vm_domain: the SNAPS VM instance domain object
+    :param inst_creator: the SNAPS OpenStackVmInstance object
     :param ip: the IP address to look for
     :param timeout: how long to query for IP address
     :return:
@@ -2381,8 +2375,7 @@ def check_dhcp_lease(nova_client, vm_domain, ip, timeout=160):
     logger.info("Looking for IP %s in the console log" % ip)
     full_log = ''
     while timeout > time.time() - start_time:
-        vm = nova_utils.get_latest_server_os_object(nova_client, vm_domain)
-        output = vm.get_console_output()
+        output = inst_creator.get_console_output()
         full_log = full_log + output
         if re.search(ip, output):
             logger.info('DHCP lease obtained logged in console')
