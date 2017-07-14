@@ -225,10 +225,10 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         Should this not be performed, the creation of the host ssh key will
         cause your ansible calls to fail.
         """
-        vm = self.inst_creator.create(block=True)
+        self.inst_creator.create(block=True)
 
         priv_ip = self.inst_creator.get_port_ip(self.port_1_name)
-        self.assertTrue(check_dhcp_lease(self.nova, vm, priv_ip))
+        self.assertTrue(check_dhcp_lease(self.inst_creator, priv_ip))
 
         # Apply Security Group
         self.inst_creator.add_security_group(
@@ -277,10 +277,10 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         Should this not be performed, the creation of the host ssh key will
         cause your ansible calls to fail.
         """
-        vm = self.inst_creator.create(block=True)
+        self.inst_creator.create(block=True)
 
         priv_ip = self.inst_creator.get_port_ip(self.port_1_name)
-        self.assertTrue(check_dhcp_lease(self.nova, vm, priv_ip))
+        self.assertTrue(check_dhcp_lease(self.inst_creator, priv_ip))
 
         # Apply Security Group
         self.inst_creator.add_security_group(

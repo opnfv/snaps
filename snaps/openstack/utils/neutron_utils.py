@@ -93,10 +93,7 @@ def get_network(neutron, network_name, project_id=None):
     for network, netInsts in networks.items():
         for inst in netInsts:
             if inst.get('name') == network_name:
-                if project_id and inst.get('project_id') == project_id:
-                    return {'network': inst}
-                else:
-                    return Network(**inst)
+                return Network(**inst)
     return None
 
 
@@ -299,7 +296,6 @@ def delete_port(neutron, port):
     Removes an OpenStack port
     :param neutron: the client
     :param port: the SNAPS-OO Port domain object
-    :return:
     """
     logger.info('Deleting port with name ' + port.name)
     neutron.delete_port(port.id)
@@ -310,7 +306,7 @@ def get_port_by_name(neutron, port_name):
     Returns the first port object (dictionary) found with a given name
     :param neutron: the client
     :param port_name: the name of the port to retrieve
-    :return:
+    :return: a SNAPS-OO Port domain object
     """
     ports = neutron.list_ports(**{'name': port_name})
     for port in ports['ports']:
@@ -326,7 +322,7 @@ def create_security_group(neutron, keystone, sec_grp_settings):
     :param neutron: the Neutron client
     :param keystone: the Keystone client
     :param sec_grp_settings: the security group settings
-    :return: the security group object
+    :return: a SNAPS-OO SecurityGroup domain object
     """
     logger.info('Creating security group with name - %s',
                 sec_grp_settings.name)
@@ -354,6 +350,7 @@ def get_security_group(neutron, name):
     Returns the first security group object of the given name else None
     :param neutron: the client
     :param name: the name of security group object to retrieve
+    :return: a SNAPS-OO SecurityGroup domain object or None if not found
     """
     logger.info('Retrieving security group with name - ' + name)
 
@@ -371,6 +368,7 @@ def get_security_group_by_id(neutron, sec_grp_id):
     Returns the first security group object of the given name else None
     :param neutron: the client
     :param sec_grp_id: the id of the security group to retrieve
+    :return: a SNAPS-OO SecurityGroup domain object or None if not found
     """
     logger.info('Retrieving security group with ID - ' + sec_grp_id)
 
@@ -388,7 +386,7 @@ def create_security_group_rule(neutron, sec_grp_rule_settings):
     Creates a security group object in OpenStack
     :param neutron: the client
     :param sec_grp_rule_settings: the security group rule settings
-    :return: the security group object
+    :return: a SNAPS-OO SecurityGroupRule domain object
     """
     logger.info('Creating security group to security group - %s',
                 sec_grp_rule_settings.sec_grp_name)
@@ -412,7 +410,7 @@ def get_rules_by_security_group(neutron, sec_grp):
     """
     Retrieves all of the rules for a given security group
     :param neutron: the client
-    :param sec_grp: the SNAPS SecurityGroup object
+    :param sec_grp: a list of SNAPS SecurityGroupRule domain objects
     """
     logger.info('Retrieving security group rules associate with the '
                 'security group - %s', sec_grp.name)
@@ -431,6 +429,7 @@ def get_rule_by_id(neutron, sec_grp, rule_id):
     :param neutron: the client
     :param sec_grp: the SNAPS SecurityGroup domain object
     :param rule_id: the rule's ID
+    :param sec_grp: a SNAPS SecurityGroupRule domain object
     """
     rules = neutron.list_security_group_rules(
         **{'security_group_id': sec_grp.id})
@@ -445,12 +444,12 @@ def get_external_networks(neutron):
     Returns a list of external OpenStack network object/dict for all external
     networks
     :param neutron: the client
-    :return: a list of external networks (empty list if none configured)
+    :return: a list of external networks of Type SNAPS-OO domain class Network
     """
     out = list()
     for network in neutron.list_networks(
             **{'router:external': True})['networks']:
-        out.append({'network': network})
+        out.append(Network(**network))
     return out
 
 

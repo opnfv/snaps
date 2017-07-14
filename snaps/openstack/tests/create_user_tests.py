@@ -177,12 +177,12 @@ class CreateUserSuccessTests(OSComponentTestCase):
         self.assertIsNotNone(retrieved_user)
         self.assertEqual(created_user, retrieved_user)
 
-        role = keystone_utils._get_os_role_by_name(self.keystone, 'admin')
+        role = keystone_utils.get_role_by_name(self.keystone, 'admin')
         self.assertIsNotNone(role)
 
         os_proj = keystone_utils.get_project(
             keystone=self.keystone, project_name=self.os_creds.project_name)
-        user_roles = keystone_utils._get_os_roles_by_user(
+        user_roles = keystone_utils.get_roles_by_user(
             self.keystone, retrieved_user, os_proj)
         self.assertIsNotNone(user_roles)
         self.assertEqual(1, len(user_roles))
