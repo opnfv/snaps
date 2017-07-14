@@ -111,8 +111,8 @@ def get_project(keystone=None, os_creds=None, project_name=None):
         if os_creds:
             keystone = keystone_client(os_creds)
         else:
-            raise Exception('Cannot lookup project without the proper '
-                            'credentials')
+            raise KeystoneException(
+                'Cannot lookup project without the proper credentials')
 
     if keystone.version == V2_VERSION:
         projects = keystone.tenants.list()
@@ -324,3 +324,9 @@ def grant_user_role_to_project(keystone, role, user, project):
         keystone.roles.add_user_role(user, os_role, tenant=project)
     else:
         keystone.roles.grant(os_role, user=user, project=project)
+
+
+class KeystoneException(Exception):
+    """
+    Exception when calls to the Keystone client cannot be served properly
+    """
