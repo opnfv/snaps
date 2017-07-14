@@ -39,7 +39,8 @@ def glance_client(os_creds):
     Creates and returns a glance client object
     :return: the glance client
     """
-    return Client(version=os_creds.image_api_version, session=keystone_utils.keystone_session(os_creds))
+    return Client(version=os_creds.image_api_version,
+                  session=keystone_utils.keystone_session(os_creds))
 
 
 def get_image(glance, image_name=None):
@@ -54,11 +55,13 @@ def get_image(glance, image_name=None):
         if glance.version == VERSION_1:
             if image.name == image_name:
                 image = glance.images.get(image.id)
-                return Image(name=image.name, image_id=image.id, size=image.size, properties=image.properties)
+                return Image(name=image.name, image_id=image.id,
+                             size=image.size, properties=image.properties)
         elif glance.version == VERSION_2:
             if image['name'] == image_name:
-                return Image(name=image['name'], image_id=image['id'], size=image['size'],
-                             properties=image.get('properties'))
+                return Image(
+                    name=image['name'], image_id=image['id'],
+                    size=image['size'], properties=image.get('properties'))
     return None
 
 
@@ -76,7 +79,7 @@ def get_image_status(glance, image):
         os_image = glance.images.get(image.id)
         return os_image['status']
     else:
-        raise Exception('Unsupported glance client version')
+        raise GlanceException('Unsupported glance client version')
 
 
 def create_image(glance, image_settings):
@@ -92,7 +95,7 @@ def create_image(glance, image_settings):
     elif glance.version == VERSION_2:
         return __create_image_v2(glance, image_settings)
     else:
-        raise Exception('Unsupported glance client version')
+        raise GlanceException('Unsupported glance client version')
 
 
 def __create_image_v1(glance, image_settings):
@@ -101,7 +104,7 @@ def __create_image_v1(glance, image_settings):
     :param glance: the glance client
     :param image_settings: the image settings object
     :return: the OpenStack image object
-    :raise Exception if using a file and it cannot be found
+    :raise exceptions from the Glance client or IOError when opening a file
     """
     created_image = None
 
@@ -109,26 +112,31 @@ def __create_image_v1(glance, image_settings):
     if image_settings.url:
         if image_settings.extra_properties:
             created_image = glance.images.create(
-                name=image_settings.name, disk_format=image_settings.format, container_format="bare",
-                location=image_settings.url, properties=image_settings.extra_properties,
+                name=image_settings.name, disk_format=image_settings.format,
+                container_format="bare", location=image_settings.url,
+                properties=image_settings.extra_properties,
                 is_public=image_settings.public)
         else:
-            created_image = glance.images.create(name=image_settings.name, disk_format=image_settings.format,
-                                                 container_format="bare", location=image_settings.url,
-                                                 is_public=image_settings.public)
+            created_image = glance.images.create(
+                name=image_settings.name, disk_format=image_settings.format,
+                container_format="bare", location=image_settings.url,
+                is_public=image_settings.public)
     elif image_settings.image_file:
         image_file = open(image_settings.image_file, 'rb')
         if image_settings.extra_properties:
             created_image = glance.images.create(
-                name=image_settings.name, disk_format=image_settings.format, container_format="bare", data=image_file,
-                properties=image_settings.extra_properties, is_public=image_settings.public)
+                name=image_settings.name, disk_format=image_settings.format,
+                container_format="bare", data=image_file,
+                properties=image_settings.extra_properties,
+                is_public=image_settings.public)
         else:
             created_image = glance.images.create(
-                name=image_settings.name, disk_format=image_settings.format, container_format="bare", data=image_file,
+                name=image_settings.name, disk_format=image_settings.format,
+                container_format="bare", data=image_file,
                 is_public=image_settings.public)
 
-    return Image(name=image_settings.name, image_id=created_image.id, size=created_image.size,
-                 properties=created_image.properties)
+    return Image(name=image_settings.name, image_id=created_image.id,
+                 size=created_image.size, properties=created_image.properties)
 
 
 def __create_image_v2(glance, image_settings):
@@ -137,7 +145,7 @@ def __create_image_v2(glance, image_settings):
     :param glance: the glance client v2
     :param image_settings: the image settings object
     :return: the OpenStack image object
-    :raise Exception if using a file and it cannot be found
+    :raise GlanceException or IOException or URLError
     """
     cleanup_temp_file = False
     image_file = None
@@ -146,7 +154,8 @@ def __create_image_v2(glance, image_settings):
     elif image_settings.url:
         file_name = str(uuid.uuid4())
         try:
-            image_file = file_utils.download(image_settings.url, './tmp', file_name)
+            image_file = file_utils.download(
+                image_settings.url, './tmp', file_name)
             image_filename = image_file.name
         except:
             os.remove('./tmp/' + file_name)
@@ -154,7 +163,7 @@ def __create_image_v2(glance, image_settings):
 
         cleanup_temp_file = True
     else:
-        raise Exception('Filename or URL of image not configured')
+        raise GlanceException('Filename or URL of image not configured')
 
     created_image = None
     try:
@@ -184,8 +193,9 @@ def __create_image_v2(glance, image_settings):
             os.remove(image_filename)
 
     updated_image = glance.images.get(created_image['id'])
-    return Image(name=updated_image['name'], image_id=updated_image['id'], size=updated_image['size'],
-                 properties=updated_image.get('properties'))
+    return Image(
+        name=updated_image['name'], image_id=updated_image['id'],
+        size=updated_image['size'], properties=updated_image.get('properties'))
 
 
 def delete_image(glance, image):
@@ -199,4 +209,10 @@ def delete_image(glance, image):
     elif glance.version == VERSION_2:
         glance.images.delete(image.id)
     else:
-        raise Exception('Unsupported glance client version')
+        raise GlanceException('Unsupported glance client version')
+
+
+class GlanceException(Exception):
+    """
+    Exception when calls to the Glance client cannot be served properly
+    """
