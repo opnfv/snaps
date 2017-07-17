@@ -1276,9 +1276,9 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
                 SecurityGroupSettings(name=sec_grp_name,
                                       rule_settings=[rule1, rule2]))
             self.sec_grp_creator.create()
-        except Exception as e:
+        except:
             self.tearDown()
-            raise Exception(str(e))
+            raise
 
     def tearDown(self):
         """
@@ -1400,15 +1400,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
         # Effectively blocks until VM's ssh port has been opened
         self.assertTrue(self.inst_creator.vm_ssh_active(block=True))
 
-        # TODO - Refactor config_nics() to return a status that can be
-        # validated here.
-        self.inst_creator.config_nics()
-
-        # TODO - *** ADD VALIDATION HERE ***
-        # TODO - Add validation that both floating IPs work
-        # TODO - Add tests where only one NIC has a floating IP
-        # TODO - Add tests where one attempts to place a floating IP on a
-        # network/router without an external gateway
+        self.assertEqual(0, self.inst_creator.config_nics())
 
 
 class InstanceSecurityGroupTests(OSIntegrationTestCase):
@@ -2084,11 +2076,11 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.image_creator.create()
 
         metadata = {
-            'cirros':
-                {'config':
-                     {'name': os_image_settings.name,
-                      'image_user': os_image_settings.image_user,
-                      'exists': True}}}
+            'cirros': {
+                'config': {
+                    'name': os_image_settings.name,
+                    'image_user': os_image_settings.image_user,
+                    'exists': True}}}
         test_image_settings = openstack_tests.cirros_image_settings(
             image_metadata=metadata)
         test_image = OpenStackImage(self.os_creds, test_image_settings)
@@ -2119,22 +2111,22 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
             openstack_tests.CIRROS_DEFAULT_RAMDISK_IMAGE_URL, self.tmpDir)
 
         metadata = {
-            'cirros':
-                {'config':
-                     {'name': self.image_name,
-                      'image_user': openstack_tests.CIRROS_USER,
-                      'image_file': self.image_file.name,
-                      'format': openstack_tests.DEFAULT_IMAGE_FORMAT,
-                      'kernel_image_settings':
-                          {'name': self.image_name + '-kernel',
-                           'image_user': openstack_tests.CIRROS_USER,
-                           'image_file': kernel_file.name,
-                           'format': openstack_tests.DEFAULT_IMAGE_FORMAT},
-                      'ramdisk_image_settings':
-                          {'name': self.image_name + '-ramdisk',
-                           'image_user': openstack_tests.CIRROS_USER,
-                           'image_file': ramdisk_file.name,
-                           'format': openstack_tests.DEFAULT_IMAGE_FORMAT}}}}
+            'cirros': {
+                'config': {
+                    'name': self.image_name,
+                    'image_user': openstack_tests.CIRROS_USER,
+                    'image_file': self.image_file.name,
+                    'format': openstack_tests.DEFAULT_IMAGE_FORMAT,
+                    'kernel_image_settings': {
+                        'name': self.image_name + '-kernel',
+                        'image_user': openstack_tests.CIRROS_USER,
+                        'image_file': kernel_file.name,
+                        'format': openstack_tests.DEFAULT_IMAGE_FORMAT},
+                    'ramdisk_image_settings': {
+                        'name': self.image_name + '-ramdisk',
+                        'image_user': openstack_tests.CIRROS_USER,
+                        'image_file': ramdisk_file.name,
+                        'format': openstack_tests.DEFAULT_IMAGE_FORMAT}}}}
 
         os_image_settings = openstack_tests.cirros_image_settings(
             name=self.image_name, image_metadata=metadata)
