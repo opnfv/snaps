@@ -59,8 +59,7 @@ def create_network(neutron, os_creds, network_settings):
         os_network = neutron.create_network(body=json_body)
         return Network(**os_network['network'])
     else:
-        logger.error("Failed to create network")
-        raise Exception
+        raise NeutronException('Failded to create network')
 
 
 def delete_network(neutron, network):
@@ -133,8 +132,7 @@ def create_subnet(neutron, subnet_settings, os_creds, network=None):
         subnets = neutron.create_subnet(body=json_body)
         return Subnet(**subnets['subnets'][0])
     else:
-        logger.error("Failed to create subnet.")
-        raise Exception
+        raise NeutronException('Failed to create subnet')
 
 
 def delete_subnet(neutron, subnet):
@@ -180,7 +178,7 @@ def create_router(neutron, os_creds, router_settings):
         return Router(**os_router['router'])
     else:
         logger.error("Failed to create router.")
-        raise Exception
+        raise NeutronException('Failed to create router')
 
 
 def delete_router(neutron, router):
@@ -220,8 +218,9 @@ def add_interface_router(neutron, router, subnet=None, port=None):
     :return: the interface router object
     """
     if subnet and port:
-        raise Exception('Cannot add interface to the router. Both subnet and '
-                        'port were sent in. Either or please.')
+        raise NeutronException(
+            'Cannot add interface to the router. Both subnet and '
+            'port were sent in. Either or please.')
 
     if neutron and router and (router or subnet):
         logger.info('Adding interface to router with name ' + router.name)
@@ -229,8 +228,9 @@ def add_interface_router(neutron, router, subnet=None, port=None):
             router=router.id, body=__create_port_json_body(subnet, port))
         return InterfaceRouter(**os_intf_router)
     else:
-        raise Exception('Unable to create interface router as neutron client,'
-                        ' router or subnet were not created')
+        raise NeutronException(
+            'Unable to create interface router as neutron client,'
+            ' router or subnet were not created')
 
 
 def remove_interface_router(neutron, router, subnet=None, port=None):
@@ -266,9 +266,11 @@ def __create_port_json_body(subnet=None, port=None):
     :return: the dict
     """
     if subnet and port:
-        raise Exception('Cannot create JSON body with both subnet and port')
+        raise NeutronException(
+            'Cannot create JSON body with both subnet and port')
     if not subnet and not port:
-        raise Exception('Cannot create JSON body without subnet or port')
+        raise NeutronException(
+            'Cannot create JSON body without subnet or port')
 
     if subnet:
         return {"subnet_id": subnet.id}
@@ -487,8 +489,8 @@ def create_floating_ip(neutron, ext_net_name):
         return FloatingIp(inst_id=fip['floatingip']['id'],
                           ip=fip['floatingip']['floating_ip_address'])
     else:
-        raise Exception('Cannot create floating IP, '
-                        'external network not found')
+        raise NeutronException(
+            'Cannot create floating IP, external network not found')
 
 
 def get_floating_ip(neutron, floating_ip):
@@ -534,3 +536,9 @@ def delete_floating_ip(neutron, floating_ip):
     logger.debug('Attempting to delete existing floating ip with IP - %s',
                  floating_ip.ip)
     return neutron.delete_floatingip(floating_ip.id)
+
+
+class NeutronException(Exception):
+    """
+    Exception when calls to the Keystone client cannot be served properly
+    """

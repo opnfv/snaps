@@ -24,6 +24,7 @@ from snaps.openstack.tests import validation_utils
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import keystone_utils
 from snaps.openstack.utils import neutron_utils
+from snaps.openstack.utils.neutron_utils import NeutronException
 
 __author__ = 'spisarski'
 
@@ -390,7 +391,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(NeutronException):
             self.interface_router = neutron_utils.add_interface_router(
                 self.neutron, self.router, self.subnet)
 
@@ -411,7 +412,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         validate_router(self.neutron, self.net_config.router_settings.name,
                         True)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(NeutronException):
             self.interface_router = neutron_utils.add_interface_router(
                 self.neutron, self.router, self.subnet)
 
