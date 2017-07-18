@@ -126,7 +126,7 @@ class OpenStackVmInstance:
 
         if block:
             if not self.vm_active(block=True):
-                raise Exception(
+                raise VmInstanceCreationError(
                     'Fatal error, VM did not become ACTIVE within the alloted '
                     'time')
 
@@ -136,7 +136,7 @@ class OpenStackVmInstance:
                 nova_utils.add_security_group(self.__nova, self.__vm,
                                               sec_grp_name)
             else:
-                raise Exception(
+                raise VmInstanceCreationError(
                     'Cannot applying security group with name ' +
                     sec_grp_name +
                     ' to VM that did not activate with name - ' +
@@ -157,7 +157,7 @@ class OpenStackVmInstance:
             port = port_dict.get(floating_ip_setting.port_name)
 
             if not port:
-                raise Exception(
+                raise VmInstanceCreationError(
                     'Cannot find port object with name - ' +
                     floating_ip_setting.port_name)
 
@@ -178,9 +178,9 @@ class OpenStackVmInstance:
                     floating_ip_setting.router_name)
                 self.__add_floating_ip(floating_ip, port, subnet)
             else:
-                raise Exception('Unable to add floating IP to port,'
-                                ' cannot locate router with an external '
-                                'gateway ')
+                raise VmInstanceCreationError(
+                    'Unable to add floating IP to port, cannot locate router '
+                    'with an external gateway ')
 
     def __ext_gateway_by_router(self, router_name):
         """
@@ -314,11 +314,12 @@ class OpenStackVmInstance:
                     count -= 1
                     pass
         else:
-            raise Exception(
+            raise VmInstanceCreationError(
                 'Unable find IP address on which to place the floating IP')
 
         logger.error('Timeout attempting to add the floating IP to instance.')
-        raise Exception('Timeout while attempting add floating IP to instance')
+        raise VmInstanceCreationError(
+            'Timeout while attempting add floating IP to instance')
 
     def get_os_creds(self):
         """
@@ -568,7 +569,8 @@ class OpenStackVmInstance:
             return False
 
         if status == 'ERROR':
-            raise Exception('Instance had an error during deployment')
+            raise VmInstanceCreationError(
+                'Instance had an error during deployment')
         logger.debug(
             'Instance status [%s] is - %s', self.instance_settings.name,
             status)
@@ -743,7 +745,7 @@ class VmInstanceSettings:
             elif isinstance(kwargs['security_group_names'], str):
                 self.security_group_names = [kwargs['security_group_names']]
             else:
-                raise Exception(
+                raise VmInstanceSettingsError(
                     'Invalid data type for security_group_names attribute')
         else:
             self.security_group_names = set()
@@ -781,11 +783,11 @@ class VmInstanceSettings:
             self.availability_zone = None
 
         if not self.name or not self.flavor:
-            raise Exception(
+            raise VmInstanceSettingsError(
                 'Instance configuration requires the attributes: name, flavor')
 
         if len(self.port_settings) == 0:
-            raise Exception(
+            raise VmInstanceSettingsError(
                 'Instance configuration requires port settings (aka. NICS)')
 
 
@@ -822,6 +824,24 @@ class FloatingIpSettings:
             self.provisioning = True
 
         if not self.name or not self.port_name or not self.router_name:
-            raise Exception(
+            raise FloatingIpSettingsError(
                 'The attributes name, port_name and router_name are required '
                 'for FloatingIPSettings')
+
+
+class VmInstanceSettingsError(Exception):
+    """
+    Exception to be thrown when an VM instance settings are incorrect
+    """
+
+
+class FloatingIpSettingsError(Exception):
+    """
+    Exception to be thrown when an VM instance settings are incorrect
+    """
+
+
+class VmInstanceCreationError(Exception):
+    """
+    Exception to be thrown when an VM instance cannot be created
+    """

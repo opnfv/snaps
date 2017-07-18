@@ -20,12 +20,14 @@ import unittest
 import uuid
 
 import os
+from neutronclient.common.exceptions import InvalidIpForSubnetClient
 
 from snaps import file_utils
 from snaps.openstack.create_flavor import OpenStackFlavor, FlavorSettings
 from snaps.openstack.create_image import OpenStackImage, ImageSettings
 from snaps.openstack.create_instance import (
-    VmInstanceSettings, OpenStackVmInstance, FloatingIpSettings)
+    VmInstanceSettings, OpenStackVmInstance, FloatingIpSettings,
+    VmInstanceSettingsError, FloatingIpSettingsError)
 from snaps.openstack.create_keypairs import OpenStackKeypair, KeypairSettings
 from snaps.openstack.create_network import OpenStackNetwork, PortSettings
 from snaps.openstack.create_router import OpenStackRouter
@@ -50,27 +52,27 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(VmInstanceSettingsError):
             VmInstanceSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(VmInstanceSettingsError):
             VmInstanceSettings(config=dict())
 
     def test_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(VmInstanceSettingsError):
             VmInstanceSettings(name='foo')
 
     def test_config_with_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(VmInstanceSettingsError):
             VmInstanceSettings(config={'name': 'foo'})
 
     def test_name_flavor_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(VmInstanceSettingsError):
             VmInstanceSettings(name='foo', flavor='bar')
 
     def test_config_with_name_flavor_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(VmInstanceSettingsError):
             VmInstanceSettings(config={'name': 'foo', 'flavor': 'bar'})
 
     def test_name_flavor_port_only(self):
@@ -175,35 +177,35 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FloatingIpSettingsError):
             FloatingIpSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FloatingIpSettingsError):
             FloatingIpSettings(**dict())
 
     def test_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FloatingIpSettingsError):
             FloatingIpSettings(name='foo')
 
     def test_config_with_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FloatingIpSettingsError):
             FloatingIpSettings(**{'name': 'foo'})
 
     def test_name_port_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FloatingIpSettingsError):
             FloatingIpSettings(name='foo', port_name='bar')
 
     def test_config_with_name_port_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FloatingIpSettingsError):
             FloatingIpSettings(**{'name': 'foo', 'port_name': 'bar'})
 
     def test_name_router_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FloatingIpSettingsError):
             FloatingIpSettings(name='foo', router_name='bar')
 
     def test_config_with_name_router_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FloatingIpSettingsError):
             FloatingIpSettings(**{'name': 'foo', 'router_name': 'bar'})
 
     def test_name_port_router_only(self):
@@ -882,7 +884,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             self.os_creds, instance_settings,
             self.image_creator.image_settings)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(InvalidIpForSubnetClient):
             self.inst_creator.create()
 
     def test_set_custom_valid_mac(self):
