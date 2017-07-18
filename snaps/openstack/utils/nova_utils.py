@@ -79,9 +79,8 @@ def create_server(nova, neutron, glance, instance_settings, image_settings,
 
     flavor = get_flavor_by_name(nova, instance_settings.flavor)
     if not flavor:
-        raise Exception(
-            'Flavor not found with name - %s',
-            instance_settings.flavor)
+        raise NovaException(
+            'Flavor not found with name - %s', instance_settings.flavor)
 
     image = glance_utils.get_image(glance, image_settings.name)
     if image:
@@ -99,7 +98,7 @@ def create_server(nova, neutron, glance, instance_settings, image_settings,
         return VmInst(name=server.name, inst_id=server.id,
                       networks=server.networks)
     else:
-        raise Exception(
+        raise NovaException(
             'Cannot create instance, image cannot be located with name %s',
             image_settings.name)
 
@@ -482,3 +481,9 @@ def add_floating_ip_to_server(nova, vm, floating_ip, ip_addr):
     """
     vm = __get_latest_server_os_object(nova, vm)
     vm.add_floating_ip(floating_ip.ip, ip_addr)
+
+
+class NovaException(Exception):
+    """
+    Exception when calls to the Keystone client cannot be served properly
+    """
