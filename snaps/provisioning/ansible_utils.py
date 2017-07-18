@@ -48,11 +48,11 @@ def apply_playbook(playbook_path, hosts_inv, host_user, ssh_priv_key_file_path,
     :return: the results
     """
     if not os.path.isfile(playbook_path):
-        raise Exception('Requested playbook not found - ' + playbook_path)
+        raise AnsibleException('Requested playbook not found - ' + playbook_path)
 
     pk_file_path = os.path.expanduser(ssh_priv_key_file_path)
     if not os.path.isfile(pk_file_path):
-        raise Exception('Requested private SSH key not found - ' +
+        raise AnsibleException('Requested private SSH key not found - ' +
                         pk_file_path)
 
     import ansible.constants
@@ -126,3 +126,9 @@ def ssh_client(ip, user, private_key_filepath, proxy_settings=None):
         return ssh
     except Exception as e:
         logger.warning('Unable to connect via SSH with message - ' + str(e))
+
+
+class AnsibleException(Exception):
+    """
+    Exception when calls to the Keystone client cannot be served properly
+    """
