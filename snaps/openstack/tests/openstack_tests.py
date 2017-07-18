@@ -21,7 +21,6 @@ from snaps.openstack.create_image import ImageSettings
 from snaps.openstack.create_network import NetworkSettings, SubnetSettings
 from snaps.openstack.create_router import RouterSettings
 from snaps.openstack.os_credentials import OSCreds, ProxySettings
-from snaps.openstack.utils import glance_utils
 
 __author__ = 'spisarski'
 
@@ -68,18 +67,6 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
         if not proj_name:
             proj_name = config.get('OS_TENANT_NAME')
 
-        proj_domain_id = 'default'
-        user_domain_id = 'default'
-
-        if config.get('OS_PROJECT_DOMAIN_ID'):
-            proj_domain_id = config['OS_PROJECT_DOMAIN_ID']
-        if config.get('OS_USER_DOMAIN_ID'):
-            user_domain_id = config['OS_USER_DOMAIN_ID']
-        if config.get('OS_IDENTITY_API_VERSION'):
-            version = int(config['OS_IDENTITY_API_VERSION'])
-        else:
-            version = 2
-
         proxy_settings = None
         if proxy_settings_str:
             tokens = re.split(':', proxy_settings_str)
@@ -97,26 +84,24 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
         if config.get('OS_INTERFACE'):
             interface = config.get('OS_INTERFACE')
 
-        os_creds = OSCreds(username=config['OS_USERNAME'],
-                           password=config['OS_PASSWORD'],
-                           auth_url=config['OS_AUTH_URL'],
-                           project_name=proj_name,
-                           identity_api_version=version,
-                           user_domain_id=user_domain_id,
-                           project_domain_id=proj_domain_id,
-                           interface=interface,
-                           proxy_settings=proxy_settings,
-                           cacert=https_cacert)
+        creds_dict = {
+            'username': config['OS_USERNAME'],
+            'password': config['OS_PASSWORD'],
+            'auth_url': config['OS_AUTH_URL'],
+            'project_name': proj_name,
+            'identity_api_version': config.get('OS_IDENTITY_API_VERSION'),
+            'image_api_version': config.get('OS_IMAGE_API_VERSION'),
+            'network_api_version': config.get('OS_NETWORK_API_VERSION'),
+            'compute_api_version': config.get('OS_COMPUTE_API_VERSION'),
+            'heat_api_version': config.get('OS_HEAT_API_VERSION'),
+            'user_domain_id': config.get('OS_USER_DOMAIN_ID'),
+            'project_domain_id': config.get('OS_PROJECT_DOMAIN_ID'),
+            'interface': interface,
+            'proxy_settings': proxy_settings,
+            'cacert': https_cacert}
     else:
         logger.info('Reading development os_env file - ' + dev_os_env_file)
         config = file_utils.read_yaml(dev_os_env_file)
-        identity_api_version = config.get('identity_api_version')
-        if not identity_api_version:
-            identity_api_version = 2
-
-        image_api_version = config.get('image_api_version')
-        if not image_api_version:
-            image_api_version = glance_utils.VERSION_2
 
         proxy_settings = None
         proxy_str = config.get('http_proxy')
@@ -126,14 +111,22 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
                 host=tokens[0], port=tokens[1],
                 ssh_proxy_cmd=config.get('ssh_proxy_cmd'))
 
-        os_creds = OSCreds(username=config['username'],
-                           password=config['password'],
-                           auth_url=config['os_auth_url'],
-                           project_name=config['project_name'],
-                           identity_api_version=identity_api_version,
-                           image_api_version=image_api_version,
-                           proxy_settings=proxy_settings)
+        creds_dict = {
+            'username': config['username'],
+            'password': config['password'],
+            'auth_url': config['os_auth_url'],
+            'project_name': config['project_name'],
+            'identity_api_version': config.get('identity_api_version'),
+            'image_api_version': config.get('image_api_version'),
+            'network_api_version': config.get('network_api_version'),
+            'compute_api_version': config.get('compute_api_version'),
+            'heat_api_version': config.get('heat_api_version'),
+            'user_domain_id': config.get('user_domain_id'),
+            'project_domain_id': config.get('project_domain_id'),
+            'interface': config.get('interface'),
+            'proxy_settings': proxy_settings, 'cacert': config.get('cacert')}
 
+    os_creds = OSCreds(**creds_dict)
     logger.info('OS Credentials = %s', os_creds)
     return os_creds
 
