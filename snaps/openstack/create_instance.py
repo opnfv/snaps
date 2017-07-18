@@ -405,7 +405,7 @@ class OpenStackVmInstance:
         """
         Responsible for configuring NICs on RPM systems where the instance has
         more than one configured port
-        :return: None
+        :return: the value returned by ansible_utils.apply_ansible_playbook()
         """
         if len(self.__ports) > 1 and len(self.__floating_ips) > 0:
             if self.vm_active(block=True) and self.vm_ssh_active(block=True):
@@ -413,11 +413,12 @@ class OpenStackVmInstance:
                     port_index = self.__ports.index((key, port))
                     if port_index > 0:
                         nic_name = 'eth' + repr(port_index)
-                        self.__config_nic(
+                        retval = self.__config_nic(
                             nic_name, port,
                             self.__get_first_provisioning_floating_ip().ip)
                         logger.info('Configured NIC - %s on VM - %s',
                                     nic_name, self.instance_settings.name)
+                        return retval
 
     def __get_first_provisioning_floating_ip(self):
         """
