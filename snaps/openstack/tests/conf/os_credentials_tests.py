@@ -57,26 +57,36 @@ class ProxySettingsUnitTests(unittest.TestCase):
         proxy_settings = ProxySettings(host='foo', port=1234)
         self.assertEqual('foo', proxy_settings.host)
         self.assertEqual(1234, proxy_settings.port)
+        self.assertEqual('foo', proxy_settings.https_host)
+        self.assertEqual(1234, proxy_settings.https_port)
         self.assertIsNone(proxy_settings.ssh_proxy_cmd)
 
     def test_minimum_kwargs(self):
         proxy_settings = ProxySettings(**{'host': 'foo', 'port': 1234})
         self.assertEqual('foo', proxy_settings.host)
         self.assertEqual(1234, proxy_settings.port)
+        self.assertEqual('foo', proxy_settings.https_host)
+        self.assertEqual(1234, proxy_settings.https_port)
         self.assertIsNone(proxy_settings.ssh_proxy_cmd)
 
     def test_all(self):
-        proxy_settings = ProxySettings(host='foo', port=1234,
-                                       ssh_proxy_cmd='proxy command')
+        proxy_settings = ProxySettings(
+            host='foo', port=1234, https_host='bar', https_port=2345,
+            ssh_proxy_cmd='proxy command')
         self.assertEqual('foo', proxy_settings.host)
         self.assertEqual(1234, proxy_settings.port)
+        self.assertEqual('bar', proxy_settings.https_host)
+        self.assertEqual(2345, proxy_settings.https_port)
         self.assertEqual('proxy command', proxy_settings.ssh_proxy_cmd)
 
     def test_all_kwargs(self):
         proxy_settings = ProxySettings(
-            **{'host': 'foo', 'port': 1234, 'ssh_proxy_cmd': 'proxy command'})
+            **{'host': 'foo', 'port': 1234, 'https_host': 'bar',
+               'https_port': 2345, 'ssh_proxy_cmd': 'proxy command'})
         self.assertEqual('foo', proxy_settings.host)
         self.assertEqual(1234, proxy_settings.port)
+        self.assertEqual('bar', proxy_settings.https_host)
+        self.assertEqual(2345, proxy_settings.https_port)
         self.assertEqual('proxy command', proxy_settings.ssh_proxy_cmd)
 
 
@@ -143,6 +153,14 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual('bar', os_creds.password)
         self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
+        self.assertEqual(2, os_creds.identity_api_version)
+        self.assertEqual(2, os_creds.image_api_version)
+        self.assertEqual(2, os_creds.compute_api_version)
+        self.assertEqual(1, os_creds.heat_api_version)
+        self.assertEqual('default', os_creds.user_domain_id)
+        self.assertEqual('default', os_creds.project_domain_id)
+        self.assertEqual('admin', os_creds.interface)
+        self.assertTrue(os_creds.cacert)
         self.assertIsNone(os_creds.proxy_settings)
 
     def test_minimal_kwargs(self):
@@ -153,6 +171,54 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual('bar', os_creds.password)
         self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
+        self.assertEqual(2, os_creds.identity_api_version)
+        self.assertEqual(2, os_creds.image_api_version)
+        self.assertEqual(2, os_creds.compute_api_version)
+        self.assertEqual(1, os_creds.heat_api_version)
+        self.assertEqual('default', os_creds.user_domain_id)
+        self.assertEqual('default', os_creds.project_domain_id)
+        self.assertEqual('admin', os_creds.interface)
+        self.assertTrue(os_creds.cacert)
+        self.assertIsNone(os_creds.proxy_settings)
+
+    def test_all_kwargs_versions_str(self):
+        os_creds = OSCreds(
+            **{'username': 'foo', 'password': 'bar',
+               'auth_url': 'http://foo.bar:5000/v2', 'project_name': 'hello',
+               'identity_api_version': '5', 'image_api_version': '6',
+               'compute_api_version': '7', 'heat_api_version': '8.0'})
+        self.assertEqual('foo', os_creds.username)
+        self.assertEqual('bar', os_creds.password)
+        self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
+        self.assertEqual('hello', os_creds.project_name)
+        self.assertEqual(5, os_creds.identity_api_version)
+        self.assertEqual(6, os_creds.image_api_version)
+        self.assertEqual(7, os_creds.compute_api_version)
+        self.assertEqual(8.0, os_creds.heat_api_version)
+        self.assertEqual('default', os_creds.user_domain_id)
+        self.assertEqual('default', os_creds.project_domain_id)
+        self.assertEqual('admin', os_creds.interface)
+        self.assertTrue(os_creds.cacert)
+        self.assertIsNone(os_creds.proxy_settings)
+
+    def test_all_kwargs_versions_num(self):
+        os_creds = OSCreds(
+            **{'username': 'foo', 'password': 'bar',
+               'auth_url': 'http://foo.bar:5000/v2', 'project_name': 'hello',
+               'identity_api_version': 5, 'image_api_version': 6,
+               'compute_api_version': 7, 'heat_api_version': 8.0})
+        self.assertEqual('foo', os_creds.username)
+        self.assertEqual('bar', os_creds.password)
+        self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
+        self.assertEqual('hello', os_creds.project_name)
+        self.assertEqual(5, os_creds.identity_api_version)
+        self.assertEqual(6, os_creds.image_api_version)
+        self.assertEqual(7, os_creds.compute_api_version)
+        self.assertEqual(8.0, os_creds.heat_api_version)
+        self.assertEqual('default', os_creds.user_domain_id)
+        self.assertEqual('default', os_creds.project_domain_id)
+        self.assertEqual('admin', os_creds.interface)
+        self.assertTrue(os_creds.cacert)
         self.assertIsNone(os_creds.proxy_settings)
 
     def test_proxy_settings_obj(self):
@@ -164,6 +230,14 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual('bar', os_creds.password)
         self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
+        self.assertEqual(2, os_creds.identity_api_version)
+        self.assertEqual(2, os_creds.image_api_version)
+        self.assertEqual(2, os_creds.compute_api_version)
+        self.assertEqual(1, os_creds.heat_api_version)
+        self.assertEqual('default', os_creds.user_domain_id)
+        self.assertEqual('default', os_creds.project_domain_id)
+        self.assertEqual('admin', os_creds.interface)
+        self.assertTrue(os_creds.cacert)
         self.assertEqual('foo', os_creds.proxy_settings.host)
         self.assertEqual(1234, os_creds.proxy_settings.port)
         self.assertIsNone(os_creds.proxy_settings.ssh_proxy_cmd)
@@ -178,6 +252,14 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual('bar', os_creds.password)
         self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
+        self.assertEqual(2, os_creds.identity_api_version)
+        self.assertEqual(2, os_creds.image_api_version)
+        self.assertEqual(2, os_creds.compute_api_version)
+        self.assertEqual(1, os_creds.heat_api_version)
+        self.assertEqual('default', os_creds.user_domain_id)
+        self.assertEqual('default', os_creds.project_domain_id)
+        self.assertEqual('admin', os_creds.interface)
+        self.assertTrue(os_creds.cacert)
         self.assertEqual('foo', os_creds.proxy_settings.host)
         self.assertEqual(1234, os_creds.proxy_settings.port)
         self.assertIsNone(os_creds.proxy_settings.ssh_proxy_cmd)
@@ -190,6 +272,14 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual('bar', os_creds.password)
         self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
+        self.assertEqual(2, os_creds.identity_api_version)
+        self.assertEqual(2, os_creds.image_api_version)
+        self.assertEqual(2, os_creds.compute_api_version)
+        self.assertEqual(1, os_creds.heat_api_version)
+        self.assertEqual('default', os_creds.user_domain_id)
+        self.assertEqual('default', os_creds.project_domain_id)
+        self.assertEqual('admin', os_creds.interface)
+        self.assertTrue(os_creds.cacert)
         self.assertEqual('foo', os_creds.proxy_settings.host)
         self.assertEqual(1234, os_creds.proxy_settings.port)
         self.assertIsNone(os_creds.proxy_settings.ssh_proxy_cmd)
@@ -203,6 +293,14 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual('bar', os_creds.password)
         self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
+        self.assertEqual(2, os_creds.identity_api_version)
+        self.assertEqual(2, os_creds.image_api_version)
+        self.assertEqual(2, os_creds.compute_api_version)
+        self.assertEqual(1, os_creds.heat_api_version)
+        self.assertEqual('default', os_creds.user_domain_id)
+        self.assertEqual('default', os_creds.project_domain_id)
+        self.assertEqual('admin', os_creds.interface)
+        self.assertTrue(os_creds.cacert)
         self.assertEqual('foo', os_creds.proxy_settings.host)
         self.assertEqual(1234, os_creds.proxy_settings.port)
         self.assertIsNone(os_creds.proxy_settings.ssh_proxy_cmd)
