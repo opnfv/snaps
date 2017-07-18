@@ -36,7 +36,8 @@ def heat_client(os_creds):
     :return: the client
     """
     logger.debug('Retrieving Nova Client')
-    return Client(1, session=keystone_utils.keystone_session(os_creds))
+    return Client(os_creds.heat_api_version,
+                  session=keystone_utils.keystone_session(os_creds))
 
 
 def get_stack_by_name(heat_cli, stack_name):
@@ -97,7 +98,8 @@ def create_stack(heat_cli, stack_settings):
     if stack_settings.template:
         args['template'] = stack_settings.template
     else:
-        args['template'] = parse_heat_template_str(file_utils.read_file(stack_settings.template_path))
+        args['template'] = parse_heat_template_str(
+            file_utils.read_file(stack_settings.template_path))
     args['stack_name'] = stack_settings.name
 
     if stack_settings.env_values:
@@ -118,8 +120,10 @@ def delete_stack(heat_cli, stack):
 
 
 def parse_heat_template_str(tmpl_str):
-    """Takes a heat template string, performs some simple validation and returns a dict containing the parsed structure.
-    This function supports both JSON and YAML Heat template formats.
+    """
+    Takes a heat template string, performs some simple validation and returns a
+    dict containing the parsed structure. This function supports both JSON and
+    YAML Heat template formats.
     """
     if tmpl_str.startswith('{'):
         tpl = jsonutils.loads(tmpl_str)

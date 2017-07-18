@@ -12,6 +12,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from neutronclient.common.utils import str2bool
+
+from snaps import file_utils
+from snaps.openstack.utils import glance_utils, keystone_utils
+
 __author__ = 'spisarski'
 
 
@@ -35,6 +40,8 @@ class OSCreds:
                                     Neutron clients
         :param compute_api_version: The OpenStack's API version to use for Nova
                                     clients
+        :param heat_api_version: The OpenStack's API version to use for Heat
+                                    clients
         :param user_domain_id: Used for v3 APIs
         :param project_domain_id: Used for v3 APIs
         :param interface: Used to specify the endpoint type for keystone as
@@ -49,14 +56,53 @@ class OSCreds:
         self.password = kwargs.get('password')
         self.auth_url = kwargs.get('auth_url')
         self.project_name = kwargs.get('project_name')
-        self.identity_api_version = kwargs.get('identity_api_version', 2)
-        self.image_api_version = kwargs.get('image_api_version', 2)
-        self.network_api_version = kwargs.get('network_api_version', 2)
-        self.compute_api_version = kwargs.get('compute_api_version', 2)
-        self.user_domain_id = kwargs.get('user_domain_id', 'default')
-        self.project_domain_id = kwargs.get('project_domain_id', 'default')
-        self.interface = kwargs.get('interface', 'admin')
+
+        if kwargs.get('identity_api_version') is None:
+            self.identity_api_version = keystone_utils.V2_VERSION_NUM
+        else:
+            self.identity_api_version = float(kwargs['identity_api_version'])
+
+        if kwargs.get('image_api_version') is None:
+            self.image_api_version = glance_utils.VERSION_2
+        else:
+            self.image_api_version = float(kwargs['image_api_version'])
+
+        if kwargs.get('network_api_version') is None:
+            self.network_api_version = 2
+        else:
+            self.network_api_version = float(kwargs['network_api_version'])
+
+        if kwargs.get('compute_api_version') is None:
+            self.compute_api_version = 2
+        else:
+            self.compute_api_version = float(kwargs['compute_api_version'])
+
+        if kwargs.get('heat_api_version') is None:
+            self.heat_api_version = 1
+        else:
+            self.heat_api_version = float(kwargs['heat_api_version'])
+
+        if kwargs.get('user_domain_id') is None:
+            self.user_domain_id = 'default'
+        else:
+            self.user_domain_id = kwargs['user_domain_id']
+
+        if kwargs.get('project_domain_id') is None:
+            self.project_domain_id = 'default'
+        else:
+            self.project_domain_id = kwargs['project_domain_id']
+
+        if kwargs.get('interface') is None:
+            self.interface = 'admin'
+        else:
+            self.interface = kwargs['interface']
+
         self.cacert = kwargs.get('cacert', True)
+        if isinstance(kwargs.get('cacert'), str):
+            if file_utils.file_exists(kwargs['cacert']):
+                self.cacert = kwargs['cacert']
+            else:
+                self.cacert = str2bool(self.cacert)
 
         if isinstance(kwargs.get('proxy_settings'), ProxySettings):
             self.proxy_settings = kwargs.get('proxy_settings')
@@ -106,10 +152,17 @@ class ProxySettings:
         Constructor
         :param host: the HTTP proxy host
         :param port: the HTTP proxy port
+        :param https_host: the HTTPS proxy host (defaults to host)
+        :param https_port: the HTTPS proxy port (defaults to port)
+        :param port: the HTTP proxy port
         :param ssh_proxy_cmd: the SSH proxy command string (optional)
         """
         self.host = kwargs.get('host')
         self.port = kwargs.get('port')
+
+        self.https_host = kwargs.get('https_host', self.host)
+        self.https_port = kwargs.get('https_port', self.port)
+
         self.ssh_proxy_cmd = kwargs.get('ssh_proxy_cmd')
 
         if not self.host or not self.port:
