@@ -65,7 +65,11 @@ def keystone_session(os_creds):
         req_session.proxies = {
             'http':
                 os_creds.proxy_settings.host + ':' +
-                os_creds.proxy_settings.port}
+                os_creds.proxy_settings.port,
+            'https':
+                os_creds.proxy_settings.https_host + ':' +
+                os_creds.proxy_settings.https_port
+        }
     return session.Session(auth=auth, session=req_session,
                            verify=os_creds.cacert)
 
