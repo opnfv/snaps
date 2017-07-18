@@ -14,6 +14,8 @@
 # limitations under the License.
 import logging
 import pkg_resources
+import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import uuid
 import unittest
 
@@ -27,6 +29,7 @@ from snaps.openstack.utils import deploy_utils, keystone_utils
 dev_os_env_file = pkg_resources.resource_filename(
     'snaps.openstack.tests.conf', 'os_env.yaml')
 
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 class OSComponentTestCase(unittest.TestCase):
 

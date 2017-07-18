@@ -57,26 +57,36 @@ class ProxySettingsUnitTests(unittest.TestCase):
         proxy_settings = ProxySettings(host='foo', port=1234)
         self.assertEqual('foo', proxy_settings.host)
         self.assertEqual(1234, proxy_settings.port)
+        self.assertEqual('foo', proxy_settings.https_host)
+        self.assertEqual(1234, proxy_settings.https_port)
         self.assertIsNone(proxy_settings.ssh_proxy_cmd)
 
     def test_minimum_kwargs(self):
         proxy_settings = ProxySettings(**{'host': 'foo', 'port': 1234})
         self.assertEqual('foo', proxy_settings.host)
         self.assertEqual(1234, proxy_settings.port)
+        self.assertEqual('foo', proxy_settings.https_host)
+        self.assertEqual(1234, proxy_settings.https_port)
         self.assertIsNone(proxy_settings.ssh_proxy_cmd)
 
     def test_all(self):
-        proxy_settings = ProxySettings(host='foo', port=1234,
-                                       ssh_proxy_cmd='proxy command')
+        proxy_settings = ProxySettings(
+            host='foo', port=1234, https_host='bar', https_port=2345,
+            ssh_proxy_cmd='proxy command')
         self.assertEqual('foo', proxy_settings.host)
         self.assertEqual(1234, proxy_settings.port)
+        self.assertEqual('bar', proxy_settings.https_host)
+        self.assertEqual(2345, proxy_settings.https_port)
         self.assertEqual('proxy command', proxy_settings.ssh_proxy_cmd)
 
     def test_all_kwargs(self):
         proxy_settings = ProxySettings(
-            **{'host': 'foo', 'port': 1234, 'ssh_proxy_cmd': 'proxy command'})
+            **{'host': 'foo', 'port': 1234, 'https_host': 'bar',
+               'https_port': 2345, 'ssh_proxy_cmd': 'proxy command'})
         self.assertEqual('foo', proxy_settings.host)
         self.assertEqual(1234, proxy_settings.port)
+        self.assertEqual('bar', proxy_settings.https_host)
+        self.assertEqual(2345, proxy_settings.https_port)
         self.assertEqual('proxy command', proxy_settings.ssh_proxy_cmd)
 
 

@@ -97,16 +97,13 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
         if config.get('OS_INTERFACE'):
             interface = config.get('OS_INTERFACE')
 
-        os_creds = OSCreds(username=config['OS_USERNAME'],
-                           password=config['OS_PASSWORD'],
-                           auth_url=config['OS_AUTH_URL'],
-                           project_name=proj_name,
-                           identity_api_version=version,
-                           user_domain_id=user_domain_id,
-                           project_domain_id=proj_domain_id,
-                           interface=interface,
-                           proxy_settings=proxy_settings,
-                           cacert=https_cacert)
+        creds_dict = {
+            'username': config['OS_USERNAME'],
+            'password': config['OS_PASSWORD'],
+            'auth_url': config['OS_AUTH_URL'], 'project_name': proj_name,
+            'identity_api_version': version, 'user_domain_id': user_domain_id,
+            'project_domain_id': proj_domain_id, 'interface': interface,
+            'proxy_settings': proxy_settings, 'cacert': https_cacert}
     else:
         logger.info('Reading development os_env file - ' + dev_os_env_file)
         config = file_utils.read_yaml(dev_os_env_file)
@@ -126,14 +123,16 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
                 host=tokens[0], port=tokens[1],
                 ssh_proxy_cmd=config.get('ssh_proxy_cmd'))
 
-        os_creds = OSCreds(username=config['username'],
-                           password=config['password'],
-                           auth_url=config['os_auth_url'],
-                           project_name=config['project_name'],
-                           identity_api_version=identity_api_version,
-                           image_api_version=image_api_version,
-                           proxy_settings=proxy_settings)
+        creds_dict = {
+            'username': config['username'], 'password': config['password'],
+            'auth_url': config['os_auth_url'],
+            'project_name': config['project_name'],
+            'identity_api_version': identity_api_version,
+            'image_api_version': image_api_version,
+            'interface': config.get('interface'),
+            'proxy_settings': proxy_settings, 'cacert': config.get('cacert')}
 
+    os_creds = OSCreds(**creds_dict)
     logger.info('OS Credentials = %s', os_creds)
     return os_creds
 

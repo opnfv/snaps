@@ -12,6 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from neutronclient.common.utils import str2bool
+
+from snaps import file_utils
+
 __author__ = 'spisarski'
 
 
@@ -57,6 +61,11 @@ class OSCreds:
         self.project_domain_id = kwargs.get('project_domain_id', 'default')
         self.interface = kwargs.get('interface', 'admin')
         self.cacert = kwargs.get('cacert', True)
+        if isinstance(kwargs.get('cacert'), str):
+            if file_utils.file_exists(kwargs['cacert']):
+                self.cacert = kwargs['cacert']
+            else:
+                self.cacert = str2bool(self.cacert)
 
         if isinstance(kwargs.get('proxy_settings'), ProxySettings):
             self.proxy_settings = kwargs.get('proxy_settings')
@@ -106,10 +115,17 @@ class ProxySettings:
         Constructor
         :param host: the HTTP proxy host
         :param port: the HTTP proxy port
+        :param https_host: the HTTPS proxy host (defaults to host)
+        :param https_port: the HTTPS proxy port (defaults to port)
+        :param port: the HTTP proxy port
         :param ssh_proxy_cmd: the SSH proxy command string (optional)
         """
         self.host = kwargs.get('host')
         self.port = kwargs.get('port')
+
+        self.https_host = kwargs.get('https_host', self.host)
+        self.https_port = kwargs.get('https_port', self.port)
+
         self.ssh_proxy_cmd = kwargs.get('ssh_proxy_cmd')
 
         if not self.host or not self.port:
