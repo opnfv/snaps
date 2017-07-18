@@ -399,6 +399,65 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
             log_level=log_level))
 
 
+def add_openstack_ci_tests(
+        suite, os_creds, ext_net_name, use_keystone=True, flavor_metadata=None,
+        image_metadata=None, use_floating_ips=True, log_level=logging.INFO):
+    """
+    Adds tests written for a CI server to run the tests to validate code
+    changes
+    :param suite: the unittest.TestSuite object to which to add the tests
+    :param os_creds: and instance of OSCreds that holds the credentials
+                     required by OpenStack
+    :param ext_net_name: the name of an external network on the cloud under
+                         test
+    :param use_keystone: when True, tests requiring direct access to Keystone
+                         are added as these need to be running on a host that
+                         has access to the cloud's private network
+    :param image_metadata: dict() object containing metadata for creating an
+                           image with custom config
+                           (see YAML files in examples/image-metadata)
+    :param flavor_metadata: dict() object containing the metadata required by
+                            your flavor based on your configuration:
+                            (i.e. {'hw:mem_page_size': 'large'})
+    :param use_floating_ips: when true, all tests requiring Floating IPs will
+                             be added to the suite
+    :param log_level: the logging level
+    :return: None as the tests will be adding to the 'suite' parameter object
+    """
+
+    add_unit_tests(suite)
+
+    add_openstack_client_tests(suite, os_creds, ext_net_name, use_keystone,
+                               log_level)
+
+    add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone,
+                            image_metadata, log_level)
+
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        SimpleHealthCheck, os_creds=os_creds, ext_net_name=ext_net_name,
+        use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+
+    if use_floating_ips:
+        suite.addTest(OSIntegrationTestCase.parameterize(
+            CreateInstanceSingleNetworkTests, os_creds=os_creds,
+            ext_net_name=ext_net_name, use_keystone=use_keystone,
+            flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+            log_level=log_level))
+
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateStackSuccessTests, os_creds=os_creds, ext_net_name=ext_net_name,
+        use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateStackNegativeTests, os_creds=os_creds, ext_net_name=ext_net_name,
+        use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+
+
 def add_openstack_staging_tests(suite, os_creds, ext_net_name,
                                 log_level=logging.INFO):
     """

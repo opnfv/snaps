@@ -1139,11 +1139,11 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
         """
         from snaps.openstack.utils import nova_utils
         nova = nova_utils.nova_client(self.admin_os_creds)
-        zones = nova_utils.get_nova_availability_zones(nova)
+        zone_hosts = nova_utils.get_availability_zone_hosts(nova)
 
         # Create Instance on each server/zone
         ctr = 0
-        for zone in zones:
+        for zone in zone_hosts:
             inst_name = self.vm_inst_name + '-' + zone
             ctr += 1
             port_settings = PortSettings(
@@ -1164,7 +1164,7 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
         # Validate instances to ensure they've been deployed to the correct
         # server
         index = 0
-        for zone in zones:
+        for zone in zone_hosts:
             creator = self.inst_creators[index]
             self.assertTrue(creator.vm_active(block=True))
             info = creator.get_vm_info()

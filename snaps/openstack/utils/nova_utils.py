@@ -91,9 +91,11 @@ def create_server(nova, neutron, glance, instance_settings, image_settings,
                 'key_name': keypair_name,
                 'security_groups':
                     instance_settings.security_group_names,
-                'userdata': instance_settings.userdata,
-                'availability_zone':
-                    instance_settings.availability_zone}
+                'userdata': instance_settings.userdata}
+
+        if instance_settings.availability_zone:
+            args['availability_zone'] = instance_settings.availability_zone
+
         server = nova.servers.create(**args)
         return VmInst(name=server.name, inst_id=server.id,
                       networks=server.networks)
@@ -322,16 +324,17 @@ def delete_keypair(nova, key):
     nova.keypairs.delete(key.id)
 
 
-def get_nova_availability_zones(nova):
+def get_availability_zone_hosts(nova, zone_name='nova'):
     """
     Returns the names of all nova active compute servers
     :param nova: the Nova client
+    :param zone_name: the Nova client
     :return: a list of compute server names
     """
     out = list()
     zones = nova.availability_zones.list()
     for zone in zones:
-        if zone.zoneName == 'nova':
+        if zone.zoneName == zone_name and zone.hosts:
             for key, host in zone.hosts.items():
                 if host['nova-compute']['available']:
                     out.append(zone.zoneName + ':' + key)
