@@ -20,7 +20,7 @@ from snaps.openstack.utils import nova_utils
 
 __author__ = 'spisarski'
 
-logger = logging.getLogger('create_image')
+logger = logging.getLogger('create_flavor')
 
 MEM_PAGE_SIZE_ANY = {'hw:mem_page_size': 'any'}
 MEM_PAGE_SIZE_LARGE = {'hw:mem_page_size': 'large'}
