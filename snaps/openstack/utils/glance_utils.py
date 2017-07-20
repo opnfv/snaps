@@ -65,6 +65,19 @@ def get_image(glance, image_name=None):
     return None
 
 
+def get_image_by_id(glance, image_id):
+    """
+    Returns an OpenStack image object for a given name
+    :param glance: the Glance client
+    :param image_id: the image ID to lookup
+    :return: the SNAPS-OO Domain Image object or None
+    """
+    image = glance.images.get(image_id)
+    return Image(
+        name=image['name'], image_id=image['id'],
+        size=image['size'], properties=image.get('properties'))
+
+
 def get_image_status(glance, image):
     """
     Returns a new OpenStack Image object for a given OpenStack image object
@@ -158,14 +171,15 @@ def __create_image_v2(glance, image_settings):
                 image_settings.url, './tmp', file_name)
             image_filename = image_file.name
         except:
-            os.remove('./tmp/' + file_name)
+            if image_file:
+                os.remove(image_file.name)
             raise
 
         cleanup_temp_file = True
     else:
         raise GlanceException('Filename or URL of image not configured')
 
-    created_image = None
+    os_image = None
     try:
         kwargs = dict()
         kwargs['name'] = image_settings.name
@@ -178,24 +192,25 @@ def __create_image_v2(glance, image_settings):
         if image_settings.extra_properties:
             kwargs.update(image_settings.extra_properties)
 
-        created_image = glance.images.create(**kwargs)
+        os_image = glance.images.create(**kwargs)
         image_file = open(image_filename, 'rb')
-        glance.images.upload(created_image['id'], image_file)
+        glance.images.upload(os_image['id'], image_file)
     except:
         logger.error('Unexpected exception creating image. Rolling back')
-        if created_image:
-            delete_image(glance, created_image)
+        if os_image:
+            delete_image(glance, Image(
+                name=os_image['name'], image_id=os_image['id'],
+                size=os_image['size'], properties=os_image.get('properties')))
         raise
     finally:
         if image_file:
+            logger.debug('Closing file %s', image_file.name)
             image_file.close()
         if cleanup_temp_file:
+            logger.info('Removing file %s', image_file.name)
             os.remove(image_filename)
 
-    updated_image = glance.images.get(created_image['id'])
-    return Image(
-        name=updated_image['name'], image_id=updated_image['id'],
-        size=updated_image['size'], properties=updated_image.get('properties'))
+    return get_image_by_id(glance, os_image['id'])
 
 
 def delete_image(glance, image):
@@ -204,12 +219,8 @@ def delete_image(glance, image):
     :param glance: the glance client
     :param image: the image to delete
     """
-    if glance.version == VERSION_1:
-        glance.images.delete(image)
-    elif glance.version == VERSION_2:
-        glance.images.delete(image.id)
-    else:
-        raise GlanceException('Unsupported glance client version')
+    logger.info('Deleting image named - %s', image.name)
+    glance.images.delete(image.id)
 
 
 class GlanceException(Exception):
