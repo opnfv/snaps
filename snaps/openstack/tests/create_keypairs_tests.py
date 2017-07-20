@@ -16,7 +16,8 @@ import unittest
 import uuid
 
 import os
-from snaps.openstack.create_keypairs import KeypairSettings, OpenStackKeypair
+from snaps.openstack.create_keypairs import (
+    KeypairSettings, OpenStackKeypair, KeypairSettingsError)
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import nova_utils
 
@@ -29,11 +30,11 @@ class KeypairSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeypairSettingsError):
             KeypairSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeypairSettingsError):
             KeypairSettings(**dict())
 
     def test_name_only(self):
@@ -84,7 +85,7 @@ class KeypairSettingsUnitTests(unittest.TestCase):
     def test_config_all(self):
         settings = KeypairSettings(
             **{'name': 'foo', 'public_filepath': '/foo/bar.pub',
-                    'private_filepath': '/foo/bar'})
+               'private_filepath': '/foo/bar'})
         self.assertEqual('foo', settings.name)
         self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertEqual('/foo/bar', settings.private_filepath)
