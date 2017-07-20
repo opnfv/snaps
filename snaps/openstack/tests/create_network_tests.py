@@ -17,7 +17,10 @@ import uuid
 
 from snaps.openstack import create_router
 from snaps.openstack.create_network import (OpenStackNetwork, NetworkSettings,
-                                            SubnetSettings, PortSettings)
+                                            SubnetSettings, PortSettings,
+                                            NetworkSettingsError,
+                                            SubnetSettingsError,
+                                            PortSettingsError)
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import (OSIntegrationTestCase,
                                                        OSComponentTestCase)
@@ -33,11 +36,11 @@ class NetworkSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(NetworkSettingsError):
             NetworkSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(NetworkSettingsError):
             NetworkSettings(**dict())
 
     def test_name_only(self):
@@ -102,19 +105,19 @@ class SubnetSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(SubnetSettingsError):
             SubnetSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(SubnetSettingsError):
             SubnetSettings(**dict())
 
     def test_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(SubnetSettingsError):
             SubnetSettings(name='foo')
 
     def test_config_with_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(SubnetSettingsError):
             SubnetSettings(**{'name': 'foo'})
 
     def test_name_cidr_only(self):
@@ -216,19 +219,19 @@ class PortSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(PortSettingsError):
             PortSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(PortSettingsError):
             PortSettings(**dict())
 
     def test_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(PortSettingsError):
             PortSettings(name='foo')
 
     def test_config_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(PortSettingsError):
             PortSettings(**{'name': 'foo'})
 
     def test_name_netname_only(self):
