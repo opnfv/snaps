@@ -149,28 +149,36 @@ class FlavorSettings:
             self.metadata = None
 
         if not self.name or not self.ram or not self.disk or not self.vcpus:
-            raise Exception(
+            raise FlavorSettingsError(
                 'The attributes name, ram, disk, and vcpus are required for'
                 'FlavorSettings')
 
         if not isinstance(self.ram, int):
-            raise Exception('The ram attribute must be a integer')
+            raise FlavorSettingsError('The ram attribute must be a integer')
 
         if not isinstance(self.disk, int):
-            raise Exception('The ram attribute must be a integer')
+            raise FlavorSettingsError('The ram attribute must be a integer')
 
         if not isinstance(self.vcpus, int):
-            raise Exception('The vcpus attribute must be a integer')
+            raise FlavorSettingsError('The vcpus attribute must be a integer')
 
         if self.ephemeral and not isinstance(self.ephemeral, int):
-            raise Exception('The ephemeral attribute must be an integer')
+            raise FlavorSettingsError(
+                'The ephemeral attribute must be an integer')
 
         if self.swap and not isinstance(self.swap, int):
-            raise Exception('The swap attribute must be an integer')
+            raise FlavorSettingsError('The swap attribute must be an integer')
 
         if self.rxtx_factor and not isinstance(self.rxtx_factor, (int, float)):
-            raise Exception(
+            raise FlavorSettingsError(
                 'The is_public attribute must be an integer or float')
 
         if self.is_public and not isinstance(self.is_public, bool):
-            raise Exception('The is_public attribute must be a boolean')
+            raise FlavorSettingsError(
+                'The is_public attribute must be a boolean')
+
+
+class FlavorSettingsError(Exception):
+    """
+    Exception to be thrown when an flavor settings are incorrect
+    """

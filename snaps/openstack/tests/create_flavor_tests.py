@@ -15,7 +15,8 @@
 import unittest
 import uuid
 
-from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
+from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor, \
+    FlavorSettingsError
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import nova_utils
 
@@ -28,169 +29,169 @@ class FlavorSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(config=dict())
 
     def test_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo')
 
     def test_config_with_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(config={'name': 'foo'})
 
     def test_name_ram_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo', ram=1)
 
     def test_config_with_name_ram_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(config={'name': 'foo', 'ram': 1})
 
     def test_name_ram_disk_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo', ram=1, disk=1)
 
     def test_config_with_name_ram_disk_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(config={'name': 'foo', 'ram': 1, 'disk': 1})
 
     def test_ram_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo', ram='bar', disk=2, vcpus=3, ephemeral=4,
                            swap=5, rxtx_factor=6.0,
                            is_public=False)
 
     def test_config_ram_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(
                 config={'name': 'foo', 'ram': 'bar', 'disk': 2, 'vcpus': 3,
                         'ephemeral': 4, 'swap': 5,
                         'rxtx_factor': 6.0, 'is_public': False})
 
     def test_ram_float(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo', ram=1.5, disk=2, vcpus=3, ephemeral=4,
                            swap=5, rxtx_factor=6.0, is_public=False)
 
     def test_config_ram_float(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(
                 config={'name': 'foo', 'ram': 1.5, 'disk': 2, 'vcpus': 3,
                         'ephemeral': 4, 'swap': 5,
                         'rxtx_factor': 6.0, 'is_public': False})
 
     def test_disk_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo', ram=1, disk='bar', vcpus=3, ephemeral=4,
                            swap=5, rxtx_factor=6.0,
                            is_public=False)
 
     def test_config_disk_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(
                 config={'name': 'foo', 'ram': 1, 'disk': 'bar', 'vcpus': 3,
                         'ephemeral': 4, 'swap': 5,
                         'rxtx_factor': 6.0, 'is_public': False})
 
     def test_disk_float(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo', ram=1, disk=2.5, vcpus=3, ephemeral=4,
                            swap=5, rxtx_factor=6.0, is_public=False)
 
     def test_config_disk_float(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(
                 config={'name': 'foo', 'ram': 1, 'disk': 2.5, 'vcpus': 3,
                         'ephemeral': 4, 'swap': 5,
                         'rxtx_factor': 6.0, 'is_public': False})
 
     def test_vcpus_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo', ram=1, disk=2, vcpus='bar', ephemeral=4,
                            swap=5, rxtx_factor=6.0,
                            is_public=False)
 
     def test_config_vcpus_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(
                 config={'name': 'foo', 'ram': 1, 'disk': 2, 'vcpus': 'bar',
                         'ephemeral': 4, 'swap': 5,
                         'rxtx_factor': 6.0, 'is_public': False})
 
     def test_ephemeral_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo', ram=1, disk=2, vcpus=3, ephemeral='bar',
                            swap=5, rxtx_factor=6.0,
                            is_public=False)
 
     def test_config_ephemeral_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(
                 config={'name': 'foo', 'ram': 1, 'disk': 2, 'vcpus': 3,
                         'ephemeral': 'bar', 'swap': 5,
                         'rxtx_factor': 6.0, 'is_public': False})
 
     def test_ephemeral_float(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo', ram=1, disk=2, vcpus=3, ephemeral=4.5,
                            swap=5, rxtx_factor=6.0, is_public=False)
 
     def test_config_ephemeral_float(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(
                 config={'name': 'foo', 'ram': 1, 'disk': 2, 'vcpus': 3,
                         'ephemeral': 4.5, 'swap': 5,
                         'rxtx_factor': 6.0, 'is_public': False})
 
     def test_swap_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo', ram=1, disk=2, vcpus=3, ephemeral=4,
                            swap='bar', rxtx_factor=6.0,
                            is_public=False)
 
     def test_config_swap_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(
                 config={'name': 'foo', 'ram': 1, 'disk': 2, 'vcpus': 3,
                         'ephemeral': 4, 'swap': 'bar',
                         'rxtx_factor': 6.0, 'is_public': False})
 
     def test_swap_float(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo', ram=1, disk=2, vcpus=3, ephemeral=4,
                            swap=5.5, rxtx_factor=6.0, is_public=False)
 
     def test_config_swap_float(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(
                 config={'name': 'foo', 'ram': 1, 'disk': 2, 'vcpus': 3,
                         'ephemeral': 4, 'swap': 5.5,
                         'rxtx_factor': 6.0, 'is_public': False})
 
     def test_rxtx_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo', ram=1, disk=2, vcpus=3, ephemeral=4,
                            swap=5, rxtx_factor='bar', is_public=False)
 
     def test_config_rxtx_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(
                 config={'name': 'foo', 'ram': 1, 'disk': 2, 'vcpus': 3,
                         'ephemeral': 4, 'swap': 5,
                         'rxtx_factor': 'bar', 'is_public': False})
 
     def test_is_pub_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(name='foo', ram=1, disk=2, vcpus=3, ephemeral=4,
                            swap=5, rxtx_factor=6.0, is_public='bar')
 
     def test_config_is_pub_string(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(FlavorSettingsError):
             FlavorSettings(
                 config={'name': 'foo', 'ram': 1, 'disk': 2, 'vcpus': 3,
                         'ephemeral': 4, 'swap': 5,
