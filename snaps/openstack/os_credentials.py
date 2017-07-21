@@ -97,8 +97,9 @@ class OSCreds:
         else:
             self.interface = kwargs['interface']
 
-        self.cacert = kwargs.get('cacert', True)
-        if isinstance(kwargs.get('cacert'), str):
+        self.cacert = False
+        if (kwargs.get('cacert') is not None
+                and isinstance(kwargs.get('cacert'), str)):
             if file_utils.file_exists(kwargs['cacert']):
                 self.cacert = kwargs['cacert']
             else:
