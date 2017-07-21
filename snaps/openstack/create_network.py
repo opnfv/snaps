@@ -189,7 +189,8 @@ class NetworkSettings:
                         SubnetSettings(**subnet_config['subnet']))
 
         if not self.name or len(self.name) < 1:
-            raise Exception('Name required for networks')
+            raise NetworkSettingsError('Name required for networks')
+            raise NetworkSettingsError('Name required for networks')
 
     def get_project_id(self, os_creds):
         """
@@ -232,7 +233,7 @@ class NetworkSettings:
             if project_id:
                 out['project_id'] = project_id
             else:
-                raise Exception(
+                raise NetworkSettingsError(
                     'Could not find project ID for project named - ' +
                     self.project_name)
         if self.network_type:
@@ -242,6 +243,12 @@ class NetworkSettings:
         if self.external:
             out['router:external'] = self.external
         return {'network': out}
+
+
+class NetworkSettingsError(Exception):
+    """
+    Exception to be thrown when networks settings attributes are incorrect
+    """
 
 
 class SubnetSettings:
@@ -286,9 +293,10 @@ class SubnetSettings:
                              dhcpv6-stateless, or slaac.
         :param ipv6_address_mode: A valid value is dhcpv6-stateful,
                                   dhcpv6-stateless, or slaac.
-        :raise: Exception when config does not have or cidr values are None
+        :raise: SubnetSettingsError when config does not have or cidr values
+                are None
         """
-        self.cidr = kwargs['cidr']
+        self.cidr = kwargs.get('cidr')
         if kwargs.get('ip_version'):
             self.ip_version = kwargs['ip_version']
         else:
@@ -314,7 +322,7 @@ class SubnetSettings:
         self.ipv6_address_mode = kwargs.get('ipv6_address_mode')
 
         if not self.name or not self.cidr:
-            raise Exception('Name and cidr required for subnets')
+            raise SubnetSettingsError('Name and cidr required for subnets')
 
     def dict_for_neutron(self, os_creds, network=None):
         """
@@ -344,7 +352,7 @@ class SubnetSettings:
             if project_id:
                 out['project_id'] = project_id
             else:
-                raise Exception(
+                raise SubnetSettingsError(
                     'Could not find project ID for project named - ' +
                     self.project_name)
         if self.start and self.end:
@@ -366,6 +374,12 @@ class SubnetSettings:
         if self.ipv6_address_mode:
             out['ipv6_address_mode'] = self.ipv6_address_mode
         return out
+
+
+class SubnetSettingsError(Exception):
+    """
+    Exception to be thrown when subnet settings attributes are incorrect
+    """
 
 
 class PortSettings:
@@ -435,7 +449,7 @@ class PortSettings:
         self.device_id = kwargs.get('device_id')
 
         if not self.name or not self.network_name:
-            raise Exception(
+            raise PortSettingsError(
                 'The attributes neutron, name, and network_name are required '
                 'for PortSettings')
 
@@ -456,7 +470,7 @@ class PortSettings:
                     self.fixed_ips.append({'ip_address': ip_addr_dict['ip'],
                                            'subnet_id': subnet.id})
                 else:
-                    raise Exception(
+                    raise PortSettingsError(
                         'Invalid port configuration, subnet does not exist '
                         'with name - ' + ip_addr_dict['subnet_name'])
 
@@ -487,7 +501,7 @@ class PortSettings:
                                                      self.network_name,
                                                      project_id)
         if not self.network:
-            raise Exception(
+            raise PortSettingsError(
                 'Cannot locate network with name - ' + self.network_name)
 
         out['network_id'] = self.network.id
@@ -500,7 +514,7 @@ class PortSettings:
             if project_id:
                 out['project_id'] = project_id
             else:
-                raise Exception(
+                raise PortSettingsError(
                     'Could not find project ID for project named - ' +
                     self.project_name)
         if self.mac_address:
@@ -535,3 +549,9 @@ class PortSettings:
                 self.opt_name == other.opt_name and
                 self.device_owner == other.device_owner and
                 self.device_id == other.device_id)
+
+
+class PortSettingsError(Exception):
+    """
+    Exception to be thrown when port settings attributes are incorrect
+    """
