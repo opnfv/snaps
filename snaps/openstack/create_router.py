@@ -39,7 +39,7 @@ class OpenStackRouter:
         self.__os_creds = os_creds
 
         if not router_settings:
-            raise Exception('router_settings is required')
+            raise RouterCreationError('router_settings is required')
 
         self.router_settings = router_settings
         self.__neutron = None
@@ -84,7 +84,7 @@ class OpenStackRouter:
                     self.__internal_router_interface = neutron_utils.add_interface_router(
                         self.__neutron, self.__router, subnet=internal_subnet)
             else:
-                raise Exception(
+                raise RouterCreationError(
                     'Subnet not found with name ' + internal_subnet_name)
 
         for port_setting in self.router_settings.port_settings:
@@ -108,7 +108,7 @@ class OpenStackRouter:
                                                        self.__router,
                                                        port=port)
                 else:
-                    raise Exception(
+                    raise RouterCreationError(
                         'Error creating port with name - ' + port_setting.name)
 
         return self.__router
@@ -163,6 +163,12 @@ class OpenStackRouter:
         return self.__internal_router_interface
 
 
+class RouterCreationError(Exception):
+    """
+    Exception to be thrown when an router instance cannot be created
+    """
+
+
 class RouterSettings:
     """
     Class representing a router configuration
@@ -209,7 +215,7 @@ class RouterSettings:
                         PortSettings(**interface['port']))
 
         if not self.name:
-            raise Exception('Name is required')
+            raise RouterSettingsError('Name is required')
 
     def dict_for_neutron(self, neutron, os_creds):
         """
@@ -239,7 +245,7 @@ class RouterSettings:
             if project_id:
                 out['project_id'] = project_id
             else:
-                raise Exception(
+                raise RouterSettingsError(
                     'Could not find project ID for project named - ' +
                     self.project_name)
         if self.admin_state_up is not None:
@@ -251,7 +257,7 @@ class RouterSettings:
                 ext_gw['network_id'] = ext_net.id
                 out['external_gateway_info'] = ext_gw
             else:
-                raise Exception(
+                raise RouterSettingsError(
                     'Could not find the external network named - ' +
                     self.external_gateway)
 
@@ -259,3 +265,9 @@ class RouterSettings:
         # TODO: Add external_fixed_ips Tests
 
         return {'router': out}
+
+
+class RouterSettingsError(Exception):
+    """
+    Exception to be thrown when router settings attributes are incorrect
+    """
