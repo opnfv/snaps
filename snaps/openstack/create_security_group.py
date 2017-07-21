@@ -240,11 +240,11 @@ class SecurityGroupSettings:
                         **rule_setting))
 
         if not self.name:
-            raise Exception('The attribute name is required')
+            raise SecurityGroupSettingsError('The attribute name is required')
 
         for rule_setting in self.rule_settings:
             if rule_setting.sec_grp_name is not self.name:
-                raise Exception(
+                raise SecurityGroupSettingsError(
                     'Rule settings must correspond with the name of this '
                     'security group')
 
@@ -272,7 +272,7 @@ class SecurityGroupSettings:
             if project_id:
                 out['project_id'] = project_id
             else:
-                raise Exception(
+                raise SecurityGroupSettingsError(
                     'Could not find project ID for project named - ' +
                     self.project_name)
 
@@ -303,6 +303,13 @@ class Ethertype(enum.Enum):
     """
     IPv4 = 4
     IPv6 = 6
+
+
+class SecurityGroupSettingsError(Exception):
+    """
+    Exception to be thrown when security group settings attributes are
+    invalid
+    """
 
 
 class SecurityGroupRuleSettings:
@@ -368,7 +375,8 @@ class SecurityGroupRuleSettings:
         self.remote_ip_prefix = kwargs.get('remote_ip_prefix')
 
         if not self.direction or not self.sec_grp_name:
-            raise Exception('direction and sec_grp_name are required')
+            raise SecurityGroupRuleSettingsError(
+                'direction and sec_grp_name are required')
 
     def dict_for_neutron(self, neutron):
         """
@@ -399,7 +407,7 @@ class SecurityGroupRuleSettings:
             if sec_grp:
                 out['security_group_id'] = sec_grp.id
             else:
-                raise Exception(
+                raise SecurityGroupRuleSettingsError(
                     'Cannot locate security group with name - ' +
                     self.sec_grp_name)
         if self.remote_group_id:
@@ -490,7 +498,8 @@ def map_direction(direction):
         elif dir_str == 'ingress':
             return Direction.ingress
         else:
-            raise Exception('Invalid Direction - ' + dir_str)
+            raise SecurityGroupRuleSettingsError(
+                'Invalid Direction - ' + dir_str)
 
 
 def map_protocol(protocol):
@@ -516,7 +525,8 @@ def map_protocol(protocol):
         elif proto_str == 'null':
             return Protocol.null
         else:
-            raise Exception('Invalid Protocol - ' + proto_str)
+            raise SecurityGroupRuleSettingsError(
+                'Invalid Protocol - ' + proto_str)
 
 
 def map_ethertype(ethertype):
@@ -538,4 +548,12 @@ def map_ethertype(ethertype):
         elif eth_str == 'IPv4':
             return Ethertype.IPv4
         else:
-            raise Exception('Invalid Ethertype - ' + eth_str)
+            raise SecurityGroupRuleSettingsError(
+                'Invalid Ethertype - ' + eth_str)
+
+
+class SecurityGroupRuleSettingsError(Exception):
+    """
+    Exception to be thrown when security group rule settings attributes are
+    invalid
+    """

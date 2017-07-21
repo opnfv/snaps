@@ -19,7 +19,9 @@ from snaps.openstack import create_security_group
 from snaps.openstack.create_security_group import (SecurityGroupSettings,
                                                    SecurityGroupRuleSettings,
                                                    Direction, Ethertype,
-                                                   Protocol)
+                                                   Protocol,
+                                                   SecurityGroupRuleSettingsError,
+                                                   SecurityGroupSettingsError)
 from snaps.openstack.tests import validation_utils
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import neutron_utils
@@ -33,19 +35,19 @@ class SecurityGroupRuleSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(SecurityGroupRuleSettingsError):
             SecurityGroupRuleSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(SecurityGroupRuleSettingsError):
             SecurityGroupRuleSettings(**dict())
 
     def test_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(SecurityGroupRuleSettingsError):
             SecurityGroupRuleSettings(sec_grp_name='foo')
 
     def test_config_with_name_only(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(SecurityGroupRuleSettingsError):
             SecurityGroupRuleSettings(**{'sec_grp_name': 'foo'})
 
     def test_name_and_direction(self):
@@ -105,11 +107,11 @@ class SecurityGroupSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(SecurityGroupSettingsError):
             SecurityGroupSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(SecurityGroupSettingsError):
             SecurityGroupSettings(**dict())
 
     def test_name_only(self):
@@ -123,7 +125,7 @@ class SecurityGroupSettingsUnitTests(unittest.TestCase):
     def test_invalid_rule(self):
         rule_setting = SecurityGroupRuleSettings(sec_grp_name='bar',
                                                  direction=Direction.ingress)
-        with self.assertRaises(Exception):
+        with self.assertRaises(SecurityGroupSettingsError):
             SecurityGroupSettings(name='foo', rule_settings=[rule_setting])
 
     def test_all(self):
