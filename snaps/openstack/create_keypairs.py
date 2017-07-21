@@ -130,4 +130,10 @@ class KeypairSettings:
         self.private_filepath = kwargs.get('private_filepath')
 
         if not self.name:
-            raise Exception('Name is a required attribute')
+            raise KeypairSettingsError('Name is a required attribute')
+
+
+class KeypairSettingsError(Exception):
+    """
+    Exception to be thrown when keypair settings are incorrect
+    """
