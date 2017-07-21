@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,8 @@ from snaps.openstack import create_router
 from snaps.openstack.create_network import (
     NetworkSettings, PortSettings)
 from snaps.openstack.create_network import OpenStackNetwork
-from snaps.openstack.create_router import RouterSettings
+from snaps.openstack.create_router import RouterSettings, RouterSettingsError, \
+    RouterCreationError
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import neutron_utils
 
@@ -38,11 +39,11 @@ class RouterSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(RouterSettingsError):
             RouterSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(RouterSettingsError):
             RouterSettings(**dict())
 
     def test_name_only(self):
@@ -338,7 +339,7 @@ class CreateRouterNegativeTests(OSIntegrationTestCase):
         """
         Test creating a router without a name.
         """
-        with self.assertRaises(Exception):
+        with self.assertRaises(RouterSettingsError):
             router_settings = RouterSettings(
                 name=None, external_gateway=self.ext_net_name)
             self.router_creator = create_router.OpenStackRouter(
@@ -349,7 +350,7 @@ class CreateRouterNegativeTests(OSIntegrationTestCase):
         """
         Test creating a router without a valid network gateway name.
         """
-        with self.assertRaises(Exception):
+        with self.assertRaises(RouterSettingsError):
             router_settings = RouterSettings(name=self.guid + '-pub-router',
                                              external_gateway="Invalid_name")
             self.router_creator = create_router.OpenStackRouter(
