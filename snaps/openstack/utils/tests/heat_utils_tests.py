@@ -139,6 +139,9 @@ class HeatUtilsCreateStackTests(OSComponentTestCase):
             if status == create_stack.STATUS_CREATE_COMPLETE:
                 is_active = True
                 break
+            elif status == create_stack.STATUS_CREATE_FAILED:
+                is_active = False
+                break
 
             time.sleep(3)
 

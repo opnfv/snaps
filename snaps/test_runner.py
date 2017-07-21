@@ -25,36 +25,51 @@ __author__ = 'spisarski'
 logger = logging.getLogger('test_runner')
 
 ARG_NOT_SET = "argument not set"
-LOG_LEVELS = {'FATAL': logging.FATAL, 'CRITICAL': logging.CRITICAL, 'ERROR': logging.ERROR, 'WARN': logging.WARN,
+LOG_LEVELS = {'FATAL': logging.FATAL, 'CRITICAL': logging.CRITICAL,
+              'ERROR': logging.ERROR, 'WARN': logging.WARN,
               'INFO': logging.INFO, 'DEBUG': logging.DEBUG}
 
 
-def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy_cmd, run_unit_tests,
-                        run_connection_tests, run_api_tests, run_integration_tests, run_staging_tests, flavor_metadata,
-                        image_metadata, use_keystone, use_floating_ips, log_level):
+def __create_test_suite(
+        source_filename, ext_net_name, proxy_settings, ssh_proxy_cmd,
+        run_unit_tests, run_connection_tests, run_api_tests,
+        run_integration_tests, run_staging_tests, flavor_metadata,
+        image_metadata, use_keystone, use_floating_ips, continuous_integration,
+        log_level):
     """
     Compiles the tests that should run
     :param source_filename: the OpenStack credentials file (required)
-    :param ext_net_name: the name of the external network to use for floating IPs (required)
-    :param run_unit_tests: when true, the tests not requiring OpenStack will be added to the test suite
-    :param run_connection_tests: when true, the tests that perform simple connections to OpenStack are executed
-    :param run_api_tests: when true, the tests that perform simple API calls to OpenStack are executed
+    :param ext_net_name: the name of the external network to use for floating
+                         IPs (required)
+    :param run_unit_tests: when true, the tests not requiring OpenStack will be
+                           added to the test suite
+    :param run_connection_tests: when true, the tests that perform simple
+                                 connections to OpenStack are executed
+    :param run_api_tests: when true, the tests that perform simple API calls to
+                          OpenStack are executed
     :param run_integration_tests: when true, the integration tests are executed
     :param run_staging_tests: when true, the staging tests are executed
     :param proxy_settings: <host>:<port> of the proxy server (optional)
-    :param ssh_proxy_cmd: the command used to connect via SSH over some proxy server (optional)
-    :param flavor_metadata: dict() object containing the metadata for flavors created for test VM instance
-    :param image_metadata: dict() object containing the metadata for overriding default images within the tests
-    :param use_keystone: when true, tests creating users and projects will be exercised and must be run on a host that
+    :param ssh_proxy_cmd: the command used to connect via SSH over some proxy
+                          server (optional)
+    :param flavor_metadata: dict() object containing the metadata for flavors
+                            created for test VM instance
+    :param image_metadata: dict() object containing the metadata for overriding
+                           default images within the tests
+    :param use_keystone: when true, tests creating users and projects will be
+                         exercised and must be run on a host that
                          has access to the cloud's administrative network
-    :param use_floating_ips: when true, tests requiring floating IPs will be executed
+    :param use_floating_ips: when true, tests requiring floating IPs will be
+                             executed
+    :param continuous_integration: when true, tests for CI will be run
     :param log_level: the logging level
     :return:
     """
     suite = unittest.TestSuite()
 
-    os_creds = openstack_tests.get_credentials(os_env_file=source_filename, proxy_settings_str=proxy_settings,
-                                               ssh_proxy_cmd=ssh_proxy_cmd)
+    os_creds = openstack_tests.get_credentials(
+        os_env_file=source_filename, proxy_settings_str=proxy_settings,
+        ssh_proxy_cmd=ssh_proxy_cmd)
 
     # Tests that do not require a remote connection to an OpenStack cloud
     if run_unit_tests:
@@ -63,31 +78,43 @@ def __create_test_suite(source_filename, ext_net_name, proxy_settings, ssh_proxy
     # Basic connection tests
     if run_connection_tests:
         test_suite_builder.add_openstack_client_tests(
-            suite=suite, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone, log_level=log_level)
+            suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
+            use_keystone=use_keystone, log_level=log_level)
 
     # Tests the OpenStack API calls
     if run_api_tests:
         test_suite_builder.add_openstack_api_tests(
-            suite=suite, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
-            image_metadata=image_metadata, log_level=log_level)
+            suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
+            use_keystone=use_keystone, image_metadata=image_metadata,
+            log_level=log_level)
 
     # Long running integration type tests
     if run_integration_tests:
         test_suite_builder.add_openstack_integration_tests(
-            suite=suite, os_creds=os_creds, ext_net_name=ext_net_name, use_keystone=use_keystone,
-            flavor_metadata=flavor_metadata, image_metadata=image_metadata, use_floating_ips=use_floating_ips,
+            suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
+            use_keystone=use_keystone, flavor_metadata=flavor_metadata,
+            image_metadata=image_metadata, use_floating_ips=use_floating_ips,
             log_level=log_level)
 
     if run_staging_tests:
         test_suite_builder.add_openstack_staging_tests(
-            suite=suite, os_creds=os_creds, ext_net_name=ext_net_name, log_level=log_level)
+            suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
+            log_level=log_level)
+
+    if continuous_integration:
+        test_suite_builder.add_openstack_ci_tests(
+            suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
+            use_keystone=use_keystone, flavor_metadata=flavor_metadata,
+            image_metadata=image_metadata, use_floating_ips=use_floating_ips,
+            log_level=log_level)
     return suite
 
 
 def main(arguments):
     """
     Begins running unit tests.
-    argv[1] if used must be the source filename else os_env.yaml will be leveraged instead
+    argv[1] if used must be the source filename else os_env.yaml will be
+    leveraged instead
     argv[2] if used must be the proxy server <host>:<port>
     """
     logger.info('Starting test suite')
@@ -108,17 +135,22 @@ def main(arguments):
         connection = arguments.include_connection != ARG_NOT_SET
         api = arguments.include_api != ARG_NOT_SET
         integration = arguments.include_integration != ARG_NOT_SET
+        ci = arguments.continuous_integration != ARG_NOT_SET
         staging = arguments.include_staging != ARG_NOT_SET
-        if not unit and not connection and not api and not integration and not staging:
+        if (not unit and not connection and not api and not integration
+                and not staging and not ci):
             unit = True
             connection = True
             api = True
             integration = True
 
-        suite = __create_test_suite(arguments.env, arguments.ext_net, arguments.proxy, arguments.ssh_proxy_cmd,
-                                    unit, connection, api, integration, staging, flavor_metadata, image_metadata,
-                                    arguments.use_keystone != ARG_NOT_SET,
-                                    arguments.floating_ips != ARG_NOT_SET, log_level)
+        suite = __create_test_suite(
+            arguments.env, arguments.ext_net, arguments.proxy,
+            arguments.ssh_proxy_cmd, unit, connection, api,
+            integration, staging, flavor_metadata, image_metadata,
+            arguments.use_keystone != ARG_NOT_SET,
+            arguments.floating_ips != ARG_NOT_SET,
+            ci, log_level)
     else:
         logger.error('Environment file or external network not defined')
         exit(1)
@@ -129,59 +161,92 @@ def main(arguments):
         i += 1
 
         if result.errors:
-            logger.error('Number of errors in test suite - ' + str(len(result.errors)))
+            logger.error('Number of errors in test suite - %s',
+                         len(result.errors))
             for test, message in result.errors:
                 logger.error(str(test) + " ERROR with " + message)
 
         if result.failures:
-            logger.error('Number of failures in test suite - ' + str(len(result.failures)))
+            logger.error('Number of failures in test suite - %s',
+                         len(result.failures))
             for test, message in result.failures:
                 logger.error(str(test) + " FAILED with " + message)
 
-        if (result.errors and len(result.errors) > 0) or (result.failures and len(result.failures) > 0):
+        if ((result.errors and len(result.errors) > 0)
+                or (result.failures and len(result.failures) > 0)):
             logger.error('See above for test failures')
             exit(1)
         else:
-            logger.info('All tests completed successfully in run #' + str(i))
+            logger.info('All tests completed successfully in run #%s', i)
 
-    logger.info('Successful completion of ' + str(i) + ' test runs')
+    logger.info('Successful completion of %s test runs', i)
     exit(0)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-e', '--env', dest='env', required=True, help='OpenStack credentials file')
-    parser.add_argument('-n', '--net', dest='ext_net', required=True, help='External network name')
-    parser.add_argument('-p', '--proxy', dest='proxy', nargs='?', default=None,
-                        help='Optonal HTTP proxy socket (<host>:<port>)')
-    parser.add_argument('-s', '--ssh-proxy-cmd', dest='ssh_proxy_cmd', nargs='?', default=None,
-                        help='Optonal SSH proxy command value')
-    parser.add_argument('-l', '--log-level', dest='log_level', default='INFO',
-                        help='Logging Level (FATAL|CRITICAL|ERROR|WARN|INFO|DEBUG)')
-    parser.add_argument('-u', '--unit-tests', dest='include_unit', default=ARG_NOT_SET, nargs='?',
-                        help='When argument is set, all tests not requiring OpenStack will be executed')
-    parser.add_argument('-c', '--connection-tests', dest='include_connection', default=ARG_NOT_SET, nargs='?',
-                        help='When argument is set, simple OpenStack connection tests will be executed')
-    parser.add_argument('-a', '--api-tests', dest='include_api', default=ARG_NOT_SET, nargs='?',
-                        help='When argument is set, OpenStack API tests will be executed')
-    parser.add_argument('-i', '--integration-tests', dest='include_integration', default=ARG_NOT_SET, nargs='?',
-                        help='When argument is set, OpenStack integrations tests will be executed')
-    parser.add_argument('-st', '--staging-tests', dest='include_staging', default=ARG_NOT_SET, nargs='?',
-                        help='When argument is set, OpenStack staging tests will be executed')
-    parser.add_argument('-f', '--floating-ips', dest='floating_ips', default=ARG_NOT_SET, nargs='?',
-                        help='When argument is set, all integration tests requiring Floating IPs will be executed')
-    parser.add_argument('-k', '--use-keystone', dest='use_keystone', default=ARG_NOT_SET, nargs='?',
-                        help='When argument is set, the tests will exercise the keystone APIs and must be run on a ' +
-                             'machine that has access to the admin network' +
-                             ' and is able to create users and groups')
-    parser.add_argument('-fm', '--flavor-meta', dest='flavor_metadata',
-                        default='{\"hw:mem_page_size\": \"any\"}',
-                        help='JSON string to be used as flavor metadata for all test instances created')
-    parser.add_argument('-im', '--image-meta', dest='image_metadata_file',
-                        default=None,
-                        help='Location of YAML file containing the image metadata')
-    parser.add_argument('-r', '--num-runs', dest='num_runs', default=1,
-                        help='Number of test runs to execute (default 1)')
+    parser.add_argument(
+        '-e', '--env', dest='env', required=True,
+        help='OpenStack credentials file')
+    parser.add_argument(
+        '-n', '--net', dest='ext_net', required=True,
+        help='External network name')
+    parser.add_argument(
+        '-p', '--proxy', dest='proxy', nargs='?', default=None,
+        help='Optonal HTTP proxy socket (<host>:<port>)')
+    parser.add_argument(
+        '-s', '--ssh-proxy-cmd', dest='ssh_proxy_cmd', nargs='?', default=None,
+        help='Optonal SSH proxy command value')
+    parser.add_argument(
+        '-l', '--log-level', dest='log_level', default='INFO',
+        help='Logging Level (FATAL|CRITICAL|ERROR|WARN|INFO|DEBUG)')
+    parser.add_argument(
+        '-u', '--unit-tests', dest='include_unit', default=ARG_NOT_SET,
+        nargs='?', help='When argument is set, all tests not requiring '
+                        'OpenStack will be executed')
+    parser.add_argument(
+        '-c', '--connection-tests', dest='include_connection',
+        default=ARG_NOT_SET, nargs='?',
+        help='When argument is set, simple OpenStack connection tests will be '
+             'executed')
+    parser.add_argument(
+        '-a', '--api-tests', dest='include_api', default=ARG_NOT_SET,
+        nargs='?',
+        help='When argument is set, OpenStack API tests will be executed')
+    parser.add_argument(
+        '-i', '--integration-tests', dest='include_integration',
+        default=ARG_NOT_SET, nargs='?',
+        help='When argument is set, OpenStack integrations tests will be '
+             'executed')
+    parser.add_argument(
+        '-st', '--staging-tests', dest='include_staging', default=ARG_NOT_SET,
+        nargs='?',
+        help='When argument is set, OpenStack staging tests will be executed')
+    parser.add_argument(
+        '-f', '--floating-ips', dest='floating_ips', default=ARG_NOT_SET,
+        nargs='?', help='When argument is set, all integration tests requiring'
+                        ' Floating IPs will be executed')
+    parser.add_argument(
+        '-k', '--use-keystone', dest='use_keystone', default=ARG_NOT_SET,
+        nargs='?',
+        help='When argument is set, the tests will exercise the keystone APIs '
+             'and must be run on a machine that has access to the admin '
+             'network and is able to create users and groups')
+    parser.add_argument(
+        '-fm', '--flavor-meta', dest='flavor_metadata',
+        help='JSON string to be used as flavor metadata for all test instances'
+             ' created')
+    parser.add_argument(
+        '-im', '--image-meta', dest='image_metadata_file', default=None,
+        help='Location of YAML file containing the image metadata')
+    parser.add_argument(
+        '-ci', '--continuous-integration', dest='continuous_integration',
+        default=ARG_NOT_SET, nargs='?',
+        help='When argument is set, OpenStack integrations tests will be '
+             'executed')
+    parser.add_argument(
+        '-r', '--num-runs', dest='num_runs', default=1,
+        help='Number of test runs to execute (default 1)')
 
     args = parser.parse_args()
 

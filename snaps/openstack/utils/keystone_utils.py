@@ -25,7 +25,8 @@ from snaps.domain.user import User
 
 logger = logging.getLogger('keystone_utils')
 
-V2_VERSION = 'v2.0'
+V2_VERSION_NUM = 2.0
+V2_VERSION_STR = 'v' + str(V2_VERSION_NUM)
 
 
 def get_session_auth(os_creds):
@@ -65,7 +66,11 @@ def keystone_session(os_creds):
         req_session.proxies = {
             'http':
                 os_creds.proxy_settings.host + ':' +
-                os_creds.proxy_settings.port}
+                os_creds.proxy_settings.port,
+            'https':
+                os_creds.proxy_settings.https_host + ':' +
+                os_creds.proxy_settings.https_port
+        }
     return session.Session(auth=auth, session=req_session,
                            verify=os_creds.cacert)
 
@@ -114,7 +119,7 @@ def get_project(keystone=None, os_creds=None, project_name=None):
             raise KeystoneException(
                 'Cannot lookup project without the proper credentials')
 
-    if keystone.version == V2_VERSION:
+    if keystone.version == V2_VERSION_STR:
         projects = keystone.tenants.list()
     else:
         projects = keystone.projects.list(**{'name': project_name})
@@ -133,7 +138,7 @@ def create_project(keystone, project_settings):
     :param project_settings: the project configuration
     :return: SNAPS-OO Project domain object
     """
-    if keystone.version == V2_VERSION:
+    if keystone.version == V2_VERSION_STR:
         os_project = keystone.tenants.create(
             project_settings.name, project_settings.description,
             project_settings.enabled)
@@ -152,7 +157,7 @@ def delete_project(keystone, project):
     :param keystone: the Keystone clien
     :param project: the SNAPS-OO Project domain object
     """
-    if keystone.version == V2_VERSION:
+    if keystone.version == V2_VERSION_STR:
         keystone.tenants.delete(project.id)
     else:
         keystone.projects.delete(project.id)
@@ -202,7 +207,7 @@ def create_user(keystone, user_settings):
         project = get_project(keystone=keystone,
                               project_name=user_settings.project_name)
 
-    if keystone.version == V2_VERSION:
+    if keystone.version == V2_VERSION_STR:
         project_id = None
         if project:
             project_id = project.id
@@ -267,7 +272,7 @@ def get_roles_by_user(keystone, user, project):
     :param project: the OpenStack project object (only required for v2)
     :return: a list of SNAPS-OO Role domain objects
     """
-    if keystone.version == V2_VERSION:
+    if keystone.version == V2_VERSION_STR:
         os_user = __get_os_user(keystone, user)
         roles = keystone.roles.roles_for_user(os_user, project)
     else:
@@ -322,7 +327,7 @@ def grant_user_role_to_project(keystone, role, user, project):
     """
 
     os_role = get_role_by_id(keystone, role.id)
-    if keystone.version == V2_VERSION:
+    if keystone.version == V2_VERSION_STR:
         keystone.roles.add_user_role(user, os_role, tenant=project)
     else:
         keystone.roles.grant(os_role, user=user, project=project)
