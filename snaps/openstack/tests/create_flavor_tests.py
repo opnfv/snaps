@@ -15,6 +15,7 @@
 import unittest
 import uuid
 
+from snaps.openstack import create_flavor
 from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor, \
     FlavorSettingsError
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
@@ -294,7 +295,7 @@ class CreateFlavorTests(OSComponentTestCase):
                                          vcpus=1)
         self.flavor_creator = OpenStackFlavor(self.os_creds, flavor_settings)
         flavor = self.flavor_creator.create()
-        self.assertTrue(validate_flavor(flavor_settings, flavor))
+        self.assertTrue(validate_flavor(self.nova, flavor_settings, flavor))
 
     def test_create_flavor_existing(self):
         """
@@ -306,7 +307,7 @@ class CreateFlavorTests(OSComponentTestCase):
                                          vcpus=1)
         self.flavor_creator = OpenStackFlavor(self.os_creds, flavor_settings)
         flavor = self.flavor_creator.create()
-        self.assertTrue(validate_flavor(flavor_settings, flavor))
+        self.assertTrue(validate_flavor(self.nova, flavor_settings, flavor))
 
         flavor_creator_2 = OpenStackFlavor(self.os_creds, flavor_settings)
         flavor2 = flavor_creator_2.create()
@@ -322,7 +323,7 @@ class CreateFlavorTests(OSComponentTestCase):
                                          vcpus=1)
         self.flavor_creator = OpenStackFlavor(self.os_creds, flavor_settings)
         flavor = self.flavor_creator.create()
-        self.assertTrue(validate_flavor(flavor_settings, flavor))
+        self.assertTrue(validate_flavor(self.nova, flavor_settings, flavor))
 
         # Clean Flavor
         self.flavor_creator.clean()
@@ -333,7 +334,7 @@ class CreateFlavorTests(OSComponentTestCase):
 
     def test_create_delete_flavor(self):
         """
-        Tests the creation of an OpenStack Security Group, the deletion, then
+        Tests the creation of an OpenStack Flavor, the deletion, then
         cleanup to ensure clean() does not
         raise any exceptions.
         """
@@ -342,7 +343,7 @@ class CreateFlavorTests(OSComponentTestCase):
                                          vcpus=1)
         self.flavor_creator = OpenStackFlavor(self.os_creds, flavor_settings)
         flavor = self.flavor_creator.create()
-        self.assertTrue(validate_flavor(flavor_settings, flavor))
+        self.assertTrue(validate_flavor(self.nova, flavor_settings, flavor))
 
         # Delete Flavor
         nova_utils.delete_flavor(self.nova, flavor)
@@ -354,17 +355,62 @@ class CreateFlavorTests(OSComponentTestCase):
 
         self.assertIsNone(self.flavor_creator.get_flavor())
 
-        # TODO - Add more tests to exercise all configuration options
+    def test_create_flavor_all_settings(self):
+        """
+        Tests the creation of an OpenStack Flavor, the deletion, then
+        cleanup to ensure clean() does not
+        raise any exceptions.
+        """
+        # Create Flavor
+        flavor_settings = FlavorSettings(
+            name=self.flavor_name, ram=1, disk=1, vcpus=1, ephemeral=2, swap=3,
+            rxtx_factor=2.2, is_public=False,
+            metadata=create_flavor.MEM_PAGE_SIZE_ANY)
+        self.flavor_creator = OpenStackFlavor(self.os_creds, flavor_settings)
+        flavor = self.flavor_creator.create()
+        self.assertTrue(validate_flavor(self.nova, flavor_settings, flavor))
+
+        # Delete Flavor
+        nova_utils.delete_flavor(self.nova, flavor)
+        self.assertIsNone(
+            nova_utils.get_flavor_by_name(self.nova, flavor_settings.name))
+
+        # Attempt to cleanup
+        self.flavor_creator.clean()
+
+        self.assertIsNone(self.flavor_creator.get_flavor())
 
 
-def validate_flavor(flavor_settings, flavor):
+def validate_flavor(nova, flavor_settings, flavor):
     """
     Validates the flavor_settings against the OpenStack flavor object
+    :param nova: the nova client
     :param flavor_settings: the settings used to create the flavor
     :param flavor: the OpenStack flavor object
     """
-    return flavor is not None \
-        and flavor_settings.name == flavor.name \
-        and flavor_settings.ram == flavor.ram \
-        and flavor_settings.disk == flavor.disk \
-        and flavor_settings.vcpus == flavor.vcpus
+    setting_meta = dict()
+    if flavor_settings.metadata:
+        setting_meta = flavor_settings.metadata
+    metadata = nova_utils.get_flavor_keys(nova, flavor)
+
+    equals = True
+    for key, value in setting_meta.items():
+        if metadata[key] != value:
+            equals = False
+            break
+
+    swap = str()
+    if flavor_settings.swap != 0:
+        swap = flavor_settings.swap
+
+    return (
+        flavor is not None and
+        flavor_settings.name == flavor.name and
+        flavor_settings.ram == flavor.ram and
+        flavor_settings.disk == flavor.disk and
+        flavor_settings.vcpus == flavor.vcpus and
+        flavor_settings.ephemeral == flavor.ephemeral and
+        swap == flavor.swap and
+        flavor_settings.rxtx_factor == flavor.rxtx_factor and
+        flavor_settings.is_public == flavor.is_public and
+        equals)

@@ -454,6 +454,17 @@ def set_flavor_keys(nova, flavor, metadata):
         os_flavor.set_keys(metadata)
 
 
+def get_flavor_keys(nova, flavor):
+    """
+    Sets metadata on the flavor
+    :param nova: the Nova client
+    :param flavor: the SNAPS flavor domain object
+    """
+    os_flavor = __get_os_flavor(nova, flavor)
+    if os_flavor:
+        return os_flavor.get_keys()
+
+
 def add_security_group(nova, vm, security_group_name):
     """
     Adds a security group to an existing VM
