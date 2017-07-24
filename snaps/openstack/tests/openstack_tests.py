@@ -73,12 +73,11 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
             proxy_settings = ProxySettings(host=tokens[0], port=tokens[1],
                                            ssh_proxy_cmd=ssh_proxy_cmd)
 
+        https_cacert = None
         if config.get('OS_CACERT'):
             https_cacert = config.get('OS_CACERT')
         elif config.get('OS_INSECURE'):
             https_cacert = False
-        else:
-            https_cacert = True
 
         interface = 'admin'
         if config.get('OS_INTERFACE'):

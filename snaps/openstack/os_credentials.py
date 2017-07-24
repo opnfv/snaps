@@ -97,12 +97,15 @@ class OSCreds:
         else:
             self.interface = kwargs['interface']
 
-        self.cacert = kwargs.get('cacert', True)
-        if isinstance(kwargs.get('cacert'), str):
-            if file_utils.file_exists(kwargs['cacert']):
-                self.cacert = kwargs['cacert']
+        self.cacert = False
+        if kwargs.get('cacert') is not None:
+            if isinstance(kwargs.get('cacert'), str):
+                if file_utils.file_exists(kwargs['cacert']):
+                    self.cacert = kwargs['cacert']
+                else:
+                    self.cacert = str2bool(kwargs['cacert'])
             else:
-                self.cacert = str2bool(self.cacert)
+                self.cacert = kwargs['cacert']
 
         if isinstance(kwargs.get('proxy_settings'), ProxySettings):
             self.proxy_settings = kwargs.get('proxy_settings')

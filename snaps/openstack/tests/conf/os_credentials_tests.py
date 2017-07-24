@@ -160,7 +160,7 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual('default', os_creds.user_domain_id)
         self.assertEqual('default', os_creds.project_domain_id)
         self.assertEqual('admin', os_creds.interface)
-        self.assertTrue(os_creds.cacert)
+        self.assertFalse(os_creds.cacert)
         self.assertIsNone(os_creds.proxy_settings)
 
     def test_minimal_kwargs(self):
@@ -178,7 +178,7 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual('default', os_creds.user_domain_id)
         self.assertEqual('default', os_creds.project_domain_id)
         self.assertEqual('admin', os_creds.interface)
-        self.assertTrue(os_creds.cacert)
+        self.assertFalse(os_creds.cacert)
         self.assertIsNone(os_creds.proxy_settings)
 
     def test_all_kwargs_versions_str(self):
@@ -186,7 +186,8 @@ class OSCredsUnitTests(unittest.TestCase):
             **{'username': 'foo', 'password': 'bar',
                'auth_url': 'http://foo.bar:5000/v2', 'project_name': 'hello',
                'identity_api_version': '5', 'image_api_version': '6',
-               'compute_api_version': '7', 'heat_api_version': '8.0'})
+               'compute_api_version': '7', 'heat_api_version': '8.0',
+               'cacert': 'true'})
         self.assertEqual('foo', os_creds.username)
         self.assertEqual('bar', os_creds.password)
         self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
@@ -206,7 +207,8 @@ class OSCredsUnitTests(unittest.TestCase):
             **{'username': 'foo', 'password': 'bar',
                'auth_url': 'http://foo.bar:5000/v2', 'project_name': 'hello',
                'identity_api_version': 5, 'image_api_version': 6,
-               'compute_api_version': 7, 'heat_api_version': 8.0})
+               'compute_api_version': 7, 'heat_api_version': 8.0,
+               'cacert': True})
         self.assertEqual('foo', os_creds.username)
         self.assertEqual('bar', os_creds.password)
         self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
@@ -237,7 +239,7 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual('default', os_creds.user_domain_id)
         self.assertEqual('default', os_creds.project_domain_id)
         self.assertEqual('admin', os_creds.interface)
-        self.assertTrue(os_creds.cacert)
+        self.assertFalse(os_creds.cacert)
         self.assertEqual('foo', os_creds.proxy_settings.host)
         self.assertEqual(1234, os_creds.proxy_settings.port)
         self.assertIsNone(os_creds.proxy_settings.ssh_proxy_cmd)
@@ -259,7 +261,7 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual('default', os_creds.user_domain_id)
         self.assertEqual('default', os_creds.project_domain_id)
         self.assertEqual('admin', os_creds.interface)
-        self.assertTrue(os_creds.cacert)
+        self.assertFalse(os_creds.cacert)
         self.assertEqual('foo', os_creds.proxy_settings.host)
         self.assertEqual(1234, os_creds.proxy_settings.port)
         self.assertIsNone(os_creds.proxy_settings.ssh_proxy_cmd)
@@ -279,7 +281,7 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual('default', os_creds.user_domain_id)
         self.assertEqual('default', os_creds.project_domain_id)
         self.assertEqual('admin', os_creds.interface)
-        self.assertTrue(os_creds.cacert)
+        self.assertFalse(os_creds.cacert)
         self.assertEqual('foo', os_creds.proxy_settings.host)
         self.assertEqual(1234, os_creds.proxy_settings.port)
         self.assertIsNone(os_creds.proxy_settings.ssh_proxy_cmd)
@@ -300,7 +302,7 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual('default', os_creds.user_domain_id)
         self.assertEqual('default', os_creds.project_domain_id)
         self.assertEqual('admin', os_creds.interface)
-        self.assertTrue(os_creds.cacert)
+        self.assertFalse(os_creds.cacert)
         self.assertEqual('foo', os_creds.proxy_settings.host)
         self.assertEqual(1234, os_creds.proxy_settings.port)
         self.assertIsNone(os_creds.proxy_settings.ssh_proxy_cmd)
