@@ -131,5 +131,11 @@ class ProjectSettings:
             self.enabled = True
 
         if not self.name:
-            raise Exception(
+            raise ProjectSettingsError(
                 "The attribute name is required for ProjectSettings")
+
+
+class ProjectSettingsError(Exception):
+    """
+    Exception to be thrown when project settings attributes are incorrect
+    """

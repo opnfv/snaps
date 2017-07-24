@@ -15,7 +15,8 @@
 import unittest
 import uuid
 
-from snaps.openstack.create_project import OpenStackProject, ProjectSettings
+from snaps.openstack.create_project import (
+    OpenStackProject, ProjectSettings, ProjectSettingsError)
 from snaps.openstack.create_security_group import OpenStackSecurityGroup
 from snaps.openstack.create_security_group import SecurityGroupSettings
 from snaps.openstack.create_user import OpenStackUser
@@ -32,11 +33,11 @@ class ProjectSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ProjectSettingsError):
             ProjectSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ProjectSettingsError):
             ProjectSettings(**dict())
 
     def test_name_only(self):
