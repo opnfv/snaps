@@ -318,7 +318,10 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
             self.neutron, self.os_creds, self.net_config.router_settings)
         validate_router(self.neutron, self.net_config.router_settings.name,
                         True)
-        # TODO - Add validation that the router gatway has been set
+
+        ext_net = neutron_utils.get_network(self.neutron, self.ext_net_name)
+        self.assertEqual(
+            self.router.external_gateway_info['network_id'], ext_net.id)
 
     def test_create_router_empty_name(self):
         """
