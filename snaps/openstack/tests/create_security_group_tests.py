@@ -16,12 +16,9 @@ import unittest
 import uuid
 
 from snaps.openstack import create_security_group
-from snaps.openstack.create_security_group import (SecurityGroupSettings,
-                                                   SecurityGroupRuleSettings,
-                                                   Direction, Ethertype,
-                                                   Protocol,
-                                                   SecurityGroupRuleSettingsError,
-                                                   SecurityGroupSettingsError)
+from snaps.openstack.create_security_group import (
+    SecurityGroupSettings, SecurityGroupRuleSettings, Direction, Ethertype,
+    Protocol, SecurityGroupRuleSettingsError, SecurityGroupSettingsError)
 from snaps.openstack.tests import validation_utils
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import neutron_utils
@@ -198,6 +195,54 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
                                                  description='hello group')
         self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(
             self.os_creds, sec_grp_settings)
+        self.sec_grp_creator.create()
+
+        sec_grp = neutron_utils.get_security_group(self.neutron,
+                                                   self.sec_grp_name)
+        self.assertIsNotNone(sec_grp)
+
+        validation_utils.objects_equivalent(
+            self.sec_grp_creator.get_security_group(), sec_grp)
+        rules = neutron_utils.get_rules_by_security_group(
+            self.neutron, self.sec_grp_creator.get_security_group())
+        self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
+        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(),
+                                            rules)
+
+    def test_create_group_admin_user_to_new_project(self):
+        """
+        Tests the creation of an OpenStack Security Group without custom rules.
+        """
+        # Create Image
+        sec_grp_settings = SecurityGroupSettings(
+            name=self.sec_grp_name, description='hello group',
+            project_name=self.admin_os_creds.project_name)
+        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(
+            self.os_creds, sec_grp_settings)
+        self.sec_grp_creator.create()
+
+        sec_grp = neutron_utils.get_security_group(self.neutron,
+                                                   self.sec_grp_name)
+        self.assertIsNotNone(sec_grp)
+
+        validation_utils.objects_equivalent(
+            self.sec_grp_creator.get_security_group(), sec_grp)
+        rules = neutron_utils.get_rules_by_security_group(
+            self.neutron, self.sec_grp_creator.get_security_group())
+        self.assertEqual(len(self.sec_grp_creator.get_rules()), len(rules))
+        validation_utils.objects_equivalent(self.sec_grp_creator.get_rules(),
+                                            rules)
+
+    def test_create_group_new_user_to_admin_project(self):
+        """
+        Tests the creation of an OpenStack Security Group without custom rules.
+        """
+        # Create Image
+        sec_grp_settings = SecurityGroupSettings(
+            name=self.sec_grp_name, description='hello group',
+            project_name=self.os_creds.project_name)
+        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(
+            self.admin_os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
         sec_grp = neutron_utils.get_security_group(self.neutron,

@@ -21,7 +21,7 @@ from snaps.openstack.create_network import (
     NetworkSettings, PortSettings)
 from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_router import (
-    RouterSettings, RouterSettingsError, RouterCreationError)
+    RouterSettings, RouterSettingsError)
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import neutron_utils
 
@@ -169,6 +169,46 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         self.assertTrue(verify_router_attributes(
             router, self.router_creator, ext_gateway=self.ext_net_name))
 
+    def test_create_router_admin_user_to_new_project(self):
+        """
+        Test creation of a most basic router with the admin user pointing
+        to the new project.
+        """
+        router_settings = RouterSettings(
+            name=self.guid + '-pub-router', external_gateway=self.ext_net_name,
+            project_name=self.os_creds.project_name)
+
+        self.router_creator = create_router.OpenStackRouter(
+            self.admin_os_creds, router_settings)
+        self.router_creator.create()
+
+        router = neutron_utils.get_router_by_name(self.neutron,
+                                                  router_settings.name)
+        self.assertIsNotNone(router)
+
+        self.assertTrue(verify_router_attributes(
+            router, self.router_creator, ext_gateway=self.ext_net_name))
+
+    def test_create_router_new_user_to_admin_project(self):
+        """
+        Test creation of a most basic router with the new user pointing
+        to the admin project.
+        """
+        router_settings = RouterSettings(
+            name=self.guid + '-pub-router', external_gateway=self.ext_net_name,
+            project_name=self.admin_os_creds.project_name)
+
+        self.router_creator = create_router.OpenStackRouter(
+            self.os_creds, router_settings)
+        self.router_creator.create()
+
+        router = neutron_utils.get_router_by_name(self.neutron,
+                                                  router_settings.name)
+        self.assertIsNotNone(router)
+
+        self.assertTrue(verify_router_attributes(
+            router, self.router_creator, ext_gateway=self.ext_net_name))
+
     def test_create_delete_router(self):
         """
         Test that clean() will not raise an exception if the router is deleted
@@ -257,14 +297,23 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         self.network_creator2.create()
 
         port_settings = [
-            create_network.PortSettings(name=self.guid + '-port1', ip_addrs=[
-                {'subnet_name': network_settings1.subnet_settings[0].name,
-                 'ip': static_gateway_ip1}],
-                                        network_name=network_settings1.name),
-            create_network.PortSettings(name=self.guid + '-port2', ip_addrs=[
-                {'subnet_name': network_settings2.subnet_settings[0].name,
-                 'ip': static_gateway_ip2}],
-                                          network_name=network_settings2.name)]
+            create_network.PortSettings(
+                name=self.guid + '-port1',
+                ip_addrs=[{
+                    'subnet_name':
+                        network_settings1.subnet_settings[0].name,
+                    'ip': static_gateway_ip1
+                }],
+                network_name=network_settings1.name,
+                project_name=self.os_creds.project_name),
+            create_network.PortSettings(
+                name=self.guid + '-port2',
+                ip_addrs=[{
+                    'subnet_name': network_settings2.subnet_settings[0].name,
+                    'ip': static_gateway_ip2
+                }],
+                network_name=network_settings2.name,
+                project_name=self.os_creds.project_name)]
 
         router_settings = RouterSettings(name=self.guid + '-pub-router',
                                          port_settings=port_settings)
@@ -293,14 +342,17 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         self.network_creator1.create()
 
         port_settings = [
-            create_network.PortSettings(name=self.guid + '-port1', ip_addrs=[
-                {'subnet_name': network_settings.subnet_settings[0].name,
-                 'ip': static_gateway_ip1}],
-                                        network_name=network_settings.name)]
+            create_network.PortSettings(
+                name=self.guid + '-port1',
+                ip_addrs=[{
+                    'subnet_name': network_settings.subnet_settings[0].name,
+                    'ip': static_gateway_ip1}],
+                network_name=network_settings.name,
+                project_name=self.os_creds.project_name)]
 
-        router_settings = RouterSettings(name=self.guid + '-pub-router',
-                                         external_gateway=self.ext_net_name,
-                                         port_settings=port_settings)
+        router_settings = RouterSettings(
+            name=self.guid + '-pub-router', external_gateway=self.ext_net_name,
+            port_settings=port_settings)
         self.router_creator = create_router.OpenStackRouter(self.os_creds,
                                                             router_settings)
         self.router_creator.create()

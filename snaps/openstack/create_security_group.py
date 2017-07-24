@@ -265,12 +265,13 @@ class SecurityGroupSettings:
         if self.description:
             out['description'] = self.description
         if self.project_name:
-            project = keystone_utils.get_project(keystone, self.project_name)
+            project = keystone_utils.get_project(
+                keystone=keystone, project_name=self.project_name)
             project_id = None
             if project:
                 project_id = project.id
             if project_id:
-                out['project_id'] = project_id
+                out['tenant_id'] = project_id
             else:
                 raise SecurityGroupSettingsError(
                     'Could not find project ID for project named - ' +

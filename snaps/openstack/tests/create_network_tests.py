@@ -464,6 +464,66 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         self.assertEqual(self.net_creator.get_network().id,
                          self.net_creator2.get_network().id)
 
+    def test_create_network_router_admin_user_to_new_project(self):
+        """
+        Tests the creation of an OpenStack network and router with the current
+        user to the admin project.
+        """
+        # Create Network/Subnet where the project names have been changed
+        admin_project_name = self.admin_os_creds.project_name
+        self.net_config.network_settings.project_name = admin_project_name
+        self.net_config.network_settings.subnet_settings[0].project_name = \
+            admin_project_name
+        self.net_creator = OpenStackNetwork(self.os_creds,
+                                            self.net_config.network_settings)
+        self.net_creator.create()
+
+        retrieved_net = neutron_utils.get_network(
+            self.neutron, self.net_config.network_settings.name)
+
+        self.assertEqual(self.net_creator.get_network().id, retrieved_net.id)
+
+        # Create Router
+        self.net_config.router_settings.project_name = admin_project_name
+        self.router_creator = create_router.OpenStackRouter(
+            self.os_creds, self.net_config.router_settings)
+        self.router_creator.create()
+
+        retrieved_router = neutron_utils.get_router_by_name(
+            self.neutron, self.router_creator.get_router().name)
+        self.assertEqual(
+            self.router_creator.get_router().id, retrieved_router.id)
+
+    def test_create_network_router_new_user_to_admin_project(self):
+        """
+        Tests the creation of an OpenStack network and router with the admin
+        user to the new project.
+        """
+        # Create Network/Subnet where the project names have been changed
+        new_project_name = self.os_creds.project_name
+        self.net_config.network_settings.project_name = new_project_name
+        self.net_config.network_settings.subnet_settings[0].project_name = \
+            new_project_name
+        self.net_creator = OpenStackNetwork(self.admin_os_creds,
+                                            self.net_config.network_settings)
+        self.net_creator.create()
+
+        retrieved_net = neutron_utils.get_network(
+            self.neutron, self.net_config.network_settings.name)
+
+        self.assertEqual(self.net_creator.get_network().id, retrieved_net.id)
+
+        # Create Router
+        self.net_config.router_settings.project_name = new_project_name
+        self.router_creator = create_router.OpenStackRouter(
+            self.admin_os_creds, self.net_config.router_settings)
+        self.router_creator.create()
+
+        retrieved_router = neutron_utils.get_router_by_name(
+            self.neutron, self.router_creator.get_router().name)
+        self.assertEqual(
+            self.router_creator.get_router().id, retrieved_router.id)
+
 
 class CreateNetworkTypeTests(OSComponentTestCase):
     """

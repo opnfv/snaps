@@ -190,7 +190,6 @@ class NetworkSettings:
 
         if not self.name or len(self.name) < 1:
             raise NetworkSettingsError('Name required for networks')
-            raise NetworkSettingsError('Name required for networks')
 
     def get_project_id(self, os_creds):
         """
@@ -203,8 +202,8 @@ class NetworkSettings:
         else:
             if self.project_name:
                 keystone = keystone_utils.keystone_client(os_creds)
-                project = keystone_utils.get_project(keystone,
-                                                     self.project_name)
+                project = keystone_utils.get_project(
+                    keystone=keystone, project_name=self.project_name)
                 if project:
                     return project.id
 
@@ -231,7 +230,7 @@ class NetworkSettings:
         if self.project_name:
             project_id = self.get_project_id(os_creds)
             if project_id:
-                out['project_id'] = project_id
+                out['tenant_id'] = project_id
             else:
                 raise NetworkSettingsError(
                     'Could not find project ID for project named - ' +
@@ -345,12 +344,13 @@ class SubnetSettings:
             out['name'] = self.name
         if self.project_name:
             keystone = keystone_utils.keystone_client(os_creds)
-            project = keystone_utils.get_project(keystone, self.project_name)
+            project = keystone_utils.get_project(
+                keystone=keystone, project_name=self.project_name)
             project_id = None
             if project:
                 project_id = project.id
             if project_id:
-                out['project_id'] = project_id
+                out['tenant_id'] = project_id
             else:
                 raise SubnetSettingsError(
                     'Could not find project ID for project named - ' +
@@ -492,7 +492,8 @@ class PortSettings:
         project_id = None
         if self.project_name:
             keystone = keystone_utils.keystone_client(os_creds)
-            project = keystone_utils.get_project(keystone, self.project_name)
+            project = keystone_utils.get_project(
+                keystone=keystone, project_name=self.project_name)
             if project:
                 project_id = project.id
 
@@ -512,7 +513,7 @@ class PortSettings:
             out['name'] = self.name
         if self.project_name:
             if project_id:
-                out['project_id'] = project_id
+                out['tenant_id'] = project_id
             else:
                 raise PortSettingsError(
                     'Could not find project ID for project named - ' +

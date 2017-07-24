@@ -31,6 +31,7 @@ dev_os_env_file = pkg_resources.resource_filename(
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
+
 class OSComponentTestCase(unittest.TestCase):
 
     def __init__(self, method_name='runTest', os_creds=None, ext_net_name=None,
@@ -82,7 +83,7 @@ class OSComponentTestCase(unittest.TestCase):
 class OSIntegrationTestCase(OSComponentTestCase):
 
     def __init__(self, method_name='runTest', os_creds=None, ext_net_name=None,
-                 use_keystone=False, flavor_metadata=None, image_metadata=None,
+                 use_keystone=True, flavor_metadata=None, image_metadata=None,
                  log_level=logging.DEBUG):
         """
         Super for integration tests requiring a connection to OpenStack
