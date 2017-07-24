@@ -44,7 +44,7 @@ from snaps.openstack.tests.create_instance_tests import (
     SimpleHealthCheck, CreateInstanceFromThreePartImage,
     CreateInstanceMockOfflineTests)
 from snaps.openstack.tests.create_keypairs_tests import (
-    CreateKeypairsTests, KeypairSettingsUnitTests)
+    CreateKeypairsTests, KeypairSettingsUnitTests, CreateKeypairsCleanupTests)
 from snaps.openstack.tests.create_network_tests import (
     CreateNetworkSuccessTests, NetworkSettingsUnitTests, PortSettingsUnitTests,
     SubnetSettingsUnitTests, CreateNetworkTypeTests)
@@ -320,6 +320,11 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
         log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
         CreateKeypairsTests, os_creds=os_creds, ext_net_name=ext_net_name,
+        use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateKeypairsCleanupTests, os_creds=os_creds, ext_net_name=ext_net_name,
         use_keystone=use_keystone,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))

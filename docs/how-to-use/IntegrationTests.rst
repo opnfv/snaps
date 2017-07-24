@@ -114,6 +114,29 @@ create_keypairs_tests.py - CreateKeypairsTests
 |                                       |               | existing public key file                                  |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_keypairs_tests.py - CreateKeypairsCleanupTests
+-----------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Nova API      | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_keypair_gen_files_delete_1| 2             | Ensures that new keypair files are deleted by default     |
+|                                       |               | by OpenStackKeypair#clean()                               |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_keypair_gen_files_delete_2| 2             | Ensures that new keypair files are deleted by         |
+|                                       |               | OpenStackKeypair#clean() when the settings delete_on_clean|
+|                                       |               | attribute is set to True                                  |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_keypair_gen_files_keep    | 2             | Ensures that new keypair files are not deleted by         |
+|                                       |               | OpenStackKeypair#clean()                                  |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_keypair_exist_files_keep  | 2             | Ensures that existing keypair files are not deleted by    |
+|                                       |               | OpenStackKeypair#clean()                                  |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_keypair_exist_files_delete| 2             | Ensures that existing keypair files are deleted by        |
+|                                       |               | OpenStackKeypair#clean()                                  |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_network_tests.py - CreateNetworkSuccessTests
 ---------------------------------------------------
 

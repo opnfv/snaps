@@ -15,7 +15,10 @@
 import logging
 
 import os
+from neutronclient.common.utils import str2bool
 from novaclient.exceptions import NotFound
+
+from snaps import file_utils
 from snaps.openstack.utils import nova_utils
 
 __author__ = 'spisarski'
@@ -63,7 +66,11 @@ class OpenStackKeypair:
                 self.__keypair = nova_utils.upload_keypair_file(
                     self.__nova, self.keypair_settings.name,
                     self.keypair_settings.public_filepath)
-                self.__delete_keys_on_clean = False
+
+                if self.keypair_settings.delete_on_clean is not None:
+                    self.__delete_keys_on_clean = self.keypair_settings.delete_on_clean
+                else:
+                    self.__delete_keys_on_clean = False
             else:
                 logger.info("Creating new keypair")
                 # TODO - Make this value configurable
@@ -74,7 +81,11 @@ class OpenStackKeypair:
                 nova_utils.save_keys_to_files(
                     keys, self.keypair_settings.public_filepath,
                     self.keypair_settings.private_filepath)
-                self.__delete_keys_on_clean = True
+
+                if self.keypair_settings.delete_on_clean is not None:
+                    self.__delete_keys_on_clean = self.keypair_settings.delete_on_clean
+                else:
+                    self.__delete_keys_on_clean = True
         elif self.__keypair and not os.path.isfile(
                 self.keypair_settings.private_filepath):
             logger.warn("The public key already exist in OpenStack \
@@ -94,10 +105,14 @@ class OpenStackKeypair:
             self.__keypair = None
 
         if self.__delete_keys_on_clean:
-            if self.keypair_settings.public_filepath:
+            if (self.keypair_settings.public_filepath and
+                    file_utils.file_exists(
+                        self.keypair_settings.public_filepath)):
                 os.chmod(self.keypair_settings.public_filepath, 0o777)
                 os.remove(self.keypair_settings.public_filepath)
-            if self.keypair_settings.private_filepath:
+            if (self.keypair_settings.private_filepath and
+                    file_utils.file_exists(
+                        self.keypair_settings.private_filepath)):
                 os.chmod(self.keypair_settings.private_filepath, 0o777)
                 os.remove(self.keypair_settings.private_filepath)
 
@@ -122,12 +137,22 @@ class KeypairSettings:
                                 public key file is or will be stored
         :param private_filepath: The path where the generated private key file
                                  will be stored
+        :param delete_on_clean: when True, the key files will be deleted when
+                                OpenStackKeypair#clean() is called
         :return:
         """
 
         self.name = kwargs.get('name')
         self.public_filepath = kwargs.get('public_filepath')
         self.private_filepath = kwargs.get('private_filepath')
+
+        if kwargs.get('delete_on_clean') is not None:
+            if isinstance(kwargs.get('delete_on_clean'), bool):
+                self.delete_on_clean = kwargs.get('delete_on_clean')
+            else:
+                self.delete_on_clean = str2bool(kwargs.get('delete_on_clean'))
+        else:
+            self.delete_on_clean = None
 
         if not self.name:
             raise KeypairSettingsError('Name is a required attribute')
