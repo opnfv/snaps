@@ -524,6 +524,22 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
         except Exception as e:
             self.fail('Invalid Exception ' + str(e))
 
+    def test_bad_image_image_type(self):
+        """
+        Expect an ImageCreationError when the image type bad
+        """
+        os_image_settings = openstack_tests.cirros_image_settings(
+            name=self.image_name)
+        self.image_creator = create_image.OpenStackImage(
+            self.os_creds,
+            create_image.ImageSettings(name=os_image_settings.name,
+                                       image_user=os_image_settings.image_user,
+                                       img_format='foo',
+                                       url=os_image_settings.url))
+
+        with self.assertRaises(Exception):
+            self.image_creator.create()
+
     def test_bad_image_file(self):
         """
         Expect an ImageCreationError when the image file does not exist
