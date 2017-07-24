@@ -19,6 +19,7 @@ import shutil
 import uuid
 
 from snaps import file_utils
+from snaps.openstack.tests import openstack_tests
 
 __author__ = 'spisarski'
 
@@ -30,36 +31,39 @@ class FileUtilsTests(unittest.TestCase):
 
     def setUp(self):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        self.tmpDir = 'tmp/' + str(guid)
-        if not os.path.exists(self.tmpDir):
-            os.makedirs(self.tmpDir)
+        self.tmp_dir = '.tmp/'
+        self.test_dir = self.tmp_dir + str(guid)
+        if not os.path.exists(self.test_dir):
+            os.makedirs(self.test_dir)
 
-        self.tmpFile = self.tmpDir + '/bar.txt'
+        self.tmpFile = self.test_dir + '/bar.txt'
         if not os.path.exists(self.tmpFile):
             open(self.tmpFile, 'wb')
 
     def tearDown(self):
-        if os.path.exists(self.tmpDir) and os.path.isdir(self.tmpDir):
-            shutil.rmtree(self.tmpDir)
+        if os.path.exists(self.test_dir) and os.path.isdir(self.test_dir):
+            shutil.rmtree(self.tmp_dir)
 
     def testFileIsDirectory(self):
         """
-        Ensure the file_utils.fileExists() method returns false with a directory
+        Ensure the file_utils.fileExists() method returns false with a
+        directory
         """
-        result = file_utils.file_exists(self.tmpDir)
+        result = file_utils.file_exists(self.test_dir)
         self.assertFalse(result)
-        # TODO - Cleanup directory
 
     def testFileNotExist(self):
         """
-        Ensure the file_utils.fileExists() method returns false with a bogus file
+        Ensure the file_utils.fileExists() method returns false with a bogus
+        file
         """
         result = file_utils.file_exists('/foo/bar.txt')
         self.assertFalse(result)
 
     def testFileExists(self):
         """
-        Ensure the file_utils.fileExists() method returns false with a directory
+        Ensure the file_utils.fileExists() method returns false with a
+        directory
         """
         if not os.path.exists(self.tmpFile):
             os.makedirs(self.tmpFile)
@@ -72,31 +76,36 @@ class FileUtilsTests(unittest.TestCase):
         Tests the file_utils.download() method when given a bad URL
         """
         with self.assertRaises(Exception):
-            file_utils.download('http://bunkUrl.com/foo/bar.iso', self.tmpDir)
+            file_utils.download('http://bunkUrl.com/foo/bar.iso',
+                                self.test_dir)
 
     def testDownloadBadDir(self):
         """
         Tests the file_utils.download() method when given a bad URL
         """
         with self.assertRaises(Exception):
-            file_utils.download('http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img', '/foo/bar')
+            file_utils.download(openstack_tests.CIRROS_DEFAULT_IMAGE_URL,
+                                '/foo/bar')
 
     def testCirrosImageDownload(self):
         """
-        Tests the file_utils.download() method when given a good Cirros QCOW2 URL
+        Tests the file_utils.download() method when given a good Cirros QCOW2
+        URL
         """
-        image_file = file_utils.download('http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img',
-                                         self.tmpDir)
+        image_file = file_utils.download(
+            openstack_tests.CIRROS_DEFAULT_IMAGE_URL, self.test_dir)
         self.assertIsNotNone(image_file)
-        self.assertTrue(image_file.name.endswith("cirros-0.3.4-x86_64-disk.img"))
-        self.assertTrue(image_file.name.startswith(self.tmpDir))
+        self.assertTrue(
+            image_file.name.endswith("cirros-0.3.4-x86_64-disk.img"))
+        self.assertTrue(image_file.name.startswith(self.test_dir))
 
     def testReadOSEnvFile(self):
         """
         Tests that the OS Environment file is correctly parsed
         :return:
         """
-        rc_file_path = pkg_resources.resource_filename('snaps.openstack.tests.conf', 'overcloudrc_test')
+        rc_file_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.conf', 'overcloudrc_test')
         os_env_dict = file_utils.read_os_env_file(rc_file_path)
         self.assertEqual('test_pw', os_env_dict['OS_PASSWORD'])
         self.assertEqual('http://foo:5000/v2.0/', os_env_dict['OS_AUTH_URL'])
