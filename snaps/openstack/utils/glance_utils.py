@@ -106,35 +106,24 @@ def __create_image_v1(glance, image_settings):
     :return: the OpenStack image object
     :raise exceptions from the Glance client or IOError when opening a file
     """
-    created_image = None
+    kwargs = {
+        'name': image_settings.name, 'disk_format': image_settings.format,
+        'container_format': 'bare', 'is_public': image_settings.public}
 
-    # TODO/REFACTOR - replace each call with one including kwargs
+    if image_settings.extra_properties:
+        kwargs['properties'] = image_settings.extra_properties
+
     if image_settings.url:
-        if image_settings.extra_properties:
-            created_image = glance.images.create(
-                name=image_settings.name, disk_format=image_settings.format,
-                container_format="bare", location=image_settings.url,
-                properties=image_settings.extra_properties,
-                is_public=image_settings.public)
-        else:
-            created_image = glance.images.create(
-                name=image_settings.name, disk_format=image_settings.format,
-                container_format="bare", location=image_settings.url,
-                is_public=image_settings.public)
+        kwargs['location'] = image_settings.url
     elif image_settings.image_file:
         image_file = open(image_settings.image_file, 'rb')
-        if image_settings.extra_properties:
-            created_image = glance.images.create(
-                name=image_settings.name, disk_format=image_settings.format,
-                container_format="bare", data=image_file,
-                properties=image_settings.extra_properties,
-                is_public=image_settings.public)
-        else:
-            created_image = glance.images.create(
-                name=image_settings.name, disk_format=image_settings.format,
-                container_format="bare", data=image_file,
-                is_public=image_settings.public)
+        kwargs['data'] = image_file
+    else:
+        logger.warn('Unable to create image with name - %s. No file or URL',
+                    image_settings.name)
+        return None
 
+    created_image = glance.images.create(**kwargs)
     return Image(name=image_settings.name, image_id=created_image.id,
                  size=created_image.size, properties=created_image.properties)
 

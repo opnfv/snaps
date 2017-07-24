@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from glanceclient.exc import HTTPBadRequest
 
 try:
     from urllib.request import URLError
@@ -514,8 +515,14 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
                                        img_format=os_image_settings.format,
                                        url="http://foo.bar"))
 
-        with self.assertRaises(URLError):
+        try:
             self.image_creator.create()
+        except HTTPBadRequest:
+            pass
+        except URLError:
+            pass
+        except Exception as e:
+            self.fail('Invalid Exception ' + str(e))
 
     def test_bad_image_file(self):
         """
