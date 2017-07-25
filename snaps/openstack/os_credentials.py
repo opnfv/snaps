@@ -51,6 +51,7 @@ class OSCreds:
                        is specified for https verification, or set to be False
                        to disable server certificate verification without cert
                        file
+        :param region_name: the region (optional default = None)
         """
         self.username = kwargs.get('username')
         self.password = kwargs.get('password')
@@ -96,6 +97,8 @@ class OSCreds:
             self.interface = 'admin'
         else:
             self.interface = kwargs['interface']
+
+        self.region_name = kwargs.get('region_name', None)
 
         self.cacert = False
         if kwargs.get('cacert') is not None:

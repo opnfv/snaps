@@ -40,7 +40,8 @@ def neutron_client(os_creds):
     :return: the client object
     """
     return Client(api_version=os_creds.network_api_version,
-                  session=keystone_utils.keystone_session(os_creds))
+                  session=keystone_utils.keystone_session(os_creds),
+                  region_name=os_creds.region_name)
 
 
 def create_network(neutron, os_creds, network_settings):

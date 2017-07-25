@@ -40,7 +40,8 @@ def glance_client(os_creds):
     :return: the glance client
     """
     return Client(version=os_creds.image_api_version,
-                  session=keystone_utils.keystone_session(os_creds))
+                  session=keystone_utils.keystone_session(os_creds),
+                  region_name=os_creds.region_name)
 
 
 def get_image(glance, image_name=None):
