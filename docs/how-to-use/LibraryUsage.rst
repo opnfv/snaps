@@ -34,12 +34,17 @@ attributes are listed below:
 -  image\_api\_version (Glance version 1 currently only validated)
 -  network\_api\_version (Neutron version 2 currently only validated)
 -  compute\_api\_version (Nova version 2 currently only validated)
+-  heat\_api\_version (Heat version 1 currently only validated)
 -  user\_domain\_id (default='default')
 -  project\_domain\_id (default='default')
+-  interface (default='admin', used to specify the endpoint type for keystone: public, admin, internal)
+-  cacert (default=False, expected values T|F to denote server certificate verification, else value contains the path to an HTTPS certificate)
 -  proxy\_settings
 
    -  host (the HTTP proxy host)
    -  port (the HTTP proxy port)
+   -  https\_host (the HTTPS proxy host, default value of host)
+   -  https\_port (the HTTPS proxy port, default value of port)
    -  ssh\_proxy\_cmd (same as the value placed into ssh -o
       ProxyCommand='<this config value>')
 

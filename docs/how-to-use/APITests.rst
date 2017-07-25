@@ -34,6 +34,12 @@ nova_utils_tests.py - NovaSmokeTests
 Ensures that a Nova client can be obtained as well as the proper
 exceptions thrown with the wrong credentials.
 
+heat_utils_tests.py - HeatSmokeTests
+------------------------------------
+
+Ensures that a Heat client can be obtained as well as the proper
+exceptions thrown with the wrong credentials.
+
 keystone_utils_tests.py - KeystoneUtilsTests
 --------------------------------------------
 
@@ -55,6 +61,12 @@ keystone_utils_tests.py - KeystoneUtilsTests
 | test_get_endpoint_fail_without   | 2 & 3         | Tests to ensure that improper credentials and proper      |
 | _proper_credentials              |               | service type cannot succeed                               |
 +----------------------------------+---------------+-----------------------------------------------------------+
+| test_get_endpoint_with_each      | 2 & 3         | Tests to ensure that an interface URL is returned for each|
+| _interface                       |               | supported interface type (i.e. public, internal, & admin) |
++----------------------------------+---------------+-----------------------------------------------------------+
+| test_grant_user_role_to_project  | 2 & 3         | Tests to ensure that one can grant a new user's role to a |
+|                                  |               | new project                                               |
++----------------------------------+---------------+-----------------------------------------------------------+
 
 create_user_tests.py - CreateUserSuccessTests
 ---------------------------------------------
@@ -64,6 +76,14 @@ create_user_tests.py - CreateUserSuccessTests
 | test_create_user                 | 2 & 3         | Tests the creation of a user with minimal configuration   |
 |                                  |               | settings via the utility functions                        |
 +----------------------------------+---------------+-----------------------------------------------------------+
+| test_create_user_2x              | 2 & 3         | Tests the creation of a user 2x and ensure it has been    |
+|                                  |               | done only once                                            |
++----------------------------------+---------------+-----------------------------------------------------------+
+| test_create_delete_user          | 2 & 3         | Tests the creation of a user and ensure clean can be      |
+|                                  |               | called 2x without exceptions being raised                 |
++----------------------------------+---------------+-----------------------------------------------------------+
+| test_create_admin_user           | 2 & 3         | Tests the creation of a user with an 'admin' role         |
++----------------------------------+---------------+-----------------------------------------------------------+
 
 create_project_tests.py - CreateProjectSuccessTests
 ---------------------------------------------------
@@ -71,13 +91,14 @@ create_project_tests.py - CreateProjectSuccessTests
 +----------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                        | Keystone API  | Description                                               |
 +==================================+===============+===========================================================+
-| test_create_user_minimal         | 2 & 3         | Tests the creation of a user via the OpenStackUser class  |
+| test_create_project              | 2 & 3         | Tests the creation of a project via the OpenStackProject  |
+|                                  |               | class                                                     |
 +----------------------------------+---------------+-----------------------------------------------------------+
-| test_create_user_2x              | 2 & 3         | Tests the creation of a user a second time via the        |
-|                                  |               | OpenStackUser class to ensure it is only created once     |
+| test_create_project_2x           | 2 & 3         | Tests the creation of a project a second time via the     |
+|                                  |               | OpenStackProject class to ensure it is only created once  |
 +----------------------------------+---------------+-----------------------------------------------------------+
-| test_create_delete_user          | 2 & 3         | Tests the creation and deletion of a user via the         |
-|                                  |               | OpenStackUser class to ensure that clean will not raise   |
+| test_create_delete_project       | 2 & 3         | Tests the creation and deletion of a project via the      |
+|                                  |               | OpenStackProject class to ensure that clean will not raise|
 |                                  |               | an exception                                              |
 +----------------------------------+---------------+-----------------------------------------------------------+
 
@@ -215,6 +236,18 @@ neutron_utils_tests.py - NeutronUtilsSecurityGroupTests
 | test_create_sec_grp_one_rule          | 2             | Ensures that neutron_utils.create_security_group_rule()   |
 |                                       |               | can add a rule to a security group                        |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_get_sec_grp_by_id                | 2             | Ensures that neutron_utils.get_security_group_by_id()     |
+|                                       |               | returns the expected security group                       |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+neutron_utils_tests.py - NeutronUtilsFloatingIpTests
+----------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Neutron API   | Description                                               |
++=======================================+===============+===========================================================+
+| test_floating_ips                     | 2             | Ensures that a floating IP can be created                 |
++---------------------------------------+---------------+-----------------------------------------------------------+
 
 nova_utils_tests.py - NovaUtilsKeypairTests
 -------------------------------------------
@@ -231,10 +264,6 @@ nova_utils_tests.py - NovaUtilsKeypairTests
 | test_create_key_from_file             | 2             | Ensures that a keypair can be properly created via        |
 |                                       |               | nova_utils.upload_keypair_file()                          |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_floating_ips                     | 2             | Ensures that a floating IP can be properly created via    |
-|                                       |               | nova_utils.create_floating_ip() [note: this test should   |
-|                                       |               | be moved to a new class]                                  |
-+---------------------------------------+---------------+-----------------------------------------------------------+
 
 nova_utils_tests.py - NovaUtilsFlavorTests
 ------------------------------------------
@@ -247,6 +276,16 @@ nova_utils_tests.py - NovaUtilsFlavorTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | test_create_delete_flavor             | 2             | Ensures that a flavor can be properly deleted via         |
 |                                       |               | nova_utils.delete_flavor()                                |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+nova_utils_tests.py - NovaUtilsInstanceTests
+--------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Nova API      | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_instance                  | 2             | Ensures that a VM instance can be properly created via    |
+|                                       |               | nova_utils.create_server()                                |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
 create_flavor_tests.py - CreateFlavorTests
@@ -268,3 +307,16 @@ create_flavor_tests.py - CreateFlavorTests
 |                                       |               | will not raise an exception when called and the object no |
 |                                       |               | longer exists                                             |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_delete_flavor_all_settings| 2             | Ensures that the OpenStackFlavor class will create a      |
+|                                       |               | a flavor properly with all supported settings             |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+heat_utils_tests.py - HeatUtilsCreateStackTests
+-----------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Glance API    | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_stack                     | 1             | Tests the heat_utils.create_stack() with a test template  |
++---------------------------------------+---------------+-----------------------------------------------------------+
+

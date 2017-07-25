@@ -24,11 +24,29 @@ FileUtilsTests
 -  testReadOSEnvFile - ensures that an OpenStack RC file can be properly
    parsed
 
+ProxySettingsUnitTests
+----------------------
+
+Ensures that all required members are included when constructing a
+ProxySettings object
+
+OSCredsUnitTests
+----------------
+
+Ensures that all required members are included when constructing a
+OSCreds object
+
 SecurityGroupRuleSettingsUnitTests
 ----------------------------------
 
 Ensures that all required members are included when constructing a
 SecurityGroupRuleSettings object
+
+SecurityGroupRuleDomainObjectTests
+----------------------------------
+
+Ensures that all required members are included when constructing a
+SecurityGroupRule domain object
 
 SecurityGroupSettingsUnitTests
 ------------------------------
@@ -36,11 +54,35 @@ SecurityGroupSettingsUnitTests
 Ensures that all required members are included when constructing a
 SecuirtyGroupSettings object
 
+SecurityGroupDomainObjectTests
+------------------------------
+
+Ensures that all required members are included when constructing a
+SecurityGroup domain object
+
 ImageSettingsUnitTests
 ----------------------
 
 Ensures that all required members are included when constructing a
 ImageSettings object
+
+ImageDomainObjectTests
+----------------------
+
+Ensures that all required members are included when constructing a
+Image domain object
+
+FlavorSettingsUnitTests
+-----------------------
+
+Ensures that all required members are included when constructing a
+FlavorSettings object
+
+FlavorDomainObjectTests
+-----------------------
+
+Ensures that all required members are included when constructing a
+Flavor domain object
 
 KeypairSettingsUnitTests
 ------------------------
@@ -48,11 +90,23 @@ KeypairSettingsUnitTests
 Ensures that all required members are included when constructing a
 KeypairSettings object
 
+KeypairDomainObjectTests
+------------------------
+
+Ensures that all required members are included when constructing a
+Keypair domain object
+
 UserSettingsUnitTests
 ---------------------
 
 Ensures that all required members are included when constructing a
 UserSettings object
+
+UserDomainObjectTests
+---------------------
+
+Ensures that all required members are included when constructing a
+User domain object
 
 ProjectSettingsUnitTests
 ------------------------
@@ -60,11 +114,29 @@ ProjectSettingsUnitTests
 Ensures that all required members are included when constructing a
 ProjectSettings object
 
+ProjectDomainObjectTests
+------------------------
+
+Ensures that all required members are included when constructing a
+Project domain object
+
+RoleDomainObjectTests
+---------------------
+
+Ensures that all required members are included when constructing a
+Role domain object
+
 NetworkSettingsUnitTests
 ------------------------
 
 Ensures that all required members are included when constructing a
 NetworkSettings object
+
+NetworkObjectTests
+------------------
+
+Ensures that all required members are included when constructing a
+Network domain object
 
 SubnetSettingsUnitTests
 -----------------------
@@ -72,11 +144,53 @@ SubnetSettingsUnitTests
 Ensures that all required members are included when constructing a
 SubnetSettings object
 
+SubnetObjectTests
+-----------------
+
+Ensures that all required members are included when constructing a
+Subnet domain object
+
 PortSettingsUnitTests
 ---------------------
 
 Ensures that all required members are included when constructing a
 PortSettings object
+
+PortDomainObjectTests
+---------------------
+
+Ensures that all required members are included when constructing a
+Port domain object
+
+RouterSettingsUnitTests
+-----------------------
+
+Ensures that all required members are included when constructing a
+RouterSettings object
+
+RouterDomainObjectTests
+-----------------------
+
+Ensures that all required members are included when constructing a
+Router domain object
+
+InterfaceRouterDomainObjectTests
+--------------------------------
+
+Ensures that all required members are included when constructing a
+InterfaceRouter domain object
+
+StackSettingsUnitTests
+----------------------
+
+Ensures that all required members are included when constructing a
+StackSettings object
+
+StackDomainObjectTests
+----------------------
+
+Ensures that all required members are included when constructing a
+Stack domain object
 
 FloatingIpSettingsUnitTests
 ---------------------------
@@ -84,8 +198,20 @@ FloatingIpSettingsUnitTests
 Ensures that all required members are included when constructing a
 FloatingIpSettings object
 
+FloatingIpDomainObjectTests
+---------------------------
+
+Ensures that all required members are included when constructing a
+FloatingIp domain object
+
 VmInstanceSettingsUnitTests
 ---------------------------
 
 Ensures that all required members are included when constructing a
 VmInstanceSettings object
+
+VmInstDomainObjectTests
+-----------------------
+
+Ensures that all required members are included when constructing a
+VmInst domain object

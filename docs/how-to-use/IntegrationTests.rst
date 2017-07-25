@@ -16,6 +16,12 @@ create_security_group_tests.py - CreateSecurityGroupTests
 | test_create_group_without_rules       | Keysone 2 & 3 | Ensures the OpenStackSecurityGroup class can create a     |
 |                                       | Neutron 2     | security group without any rules                          |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_group_admin_user_to_new   | Keysone 2 & 3 | Ensures the OpenStackSecurityGroup class can be created   |
+| _project                              | Neutron 2     | by the admin user and associated with a new project       |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_group_new_user_to_admin   | Keysone 2 & 3 | Ensures the OpenStackSecurityGroup class can be created   |
+| _project                              | Neutron 2     | by the new user and associated with the admin project     |
++---------------------------------------+---------------+-----------------------------------------------------------+
 | test_create_delete_group              | Keysone 2 & 3 | Ensures the OpenStackSecurityGroup class clean() method   |
 |                                       | Neutron 2     | will not raise an exception should the group be deleted by|
 |                                       |               | some other process                                        |
@@ -43,20 +49,23 @@ create_image_tests.py - CreateImageSuccessTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             | Glance API    | Description                                               |
 +=======================================+===============+===========================================================+
-| test_create_image_clean_url           | 1             | Ensures the OpenStackImage class can create an image from |
+| test_create_image_clean_url           | 1 & 2         | Ensures the OpenStackImage class can create an image from |
 |                                       |               | a download URL location                                   |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_image_clean_file          | 1             | Ensures the OpenStackImage class can create an image from |
+| test_create_image_clean_url_properties| 1 & 2         | Ensures the OpenStackImage class can create an image from |
+|                                       |               | a download URL location with custom properties            |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_image_clean_file          | 1 & 2         | Ensures the OpenStackImage class can create an image from |
 |                                       |               | a locally sourced image file                              |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_delete_image              | 1             | Ensures the OpenStackImage.clean() method deletes an image|
+| test_create_delete_image              | 1 & 2         | Ensures the OpenStackImage.clean() method deletes an image|
 |                                       |               | and does not raise an exception on subsequent calls to the|
 |                                       |               | clean() method                                            |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_same_image                | 1             | Ensures the OpenStackImage.create() method does not create|
+| test_create_same_image                | 1 & 2         | Ensures the OpenStackImage.create() method does not create|
 |                                       |               | another image when one already exists with the same name  |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_same_image_new_settings   | 1             | Tests the creation of an OpenStack image when the image   |
+| test_create_same_image_new_settings   | 1 & 2         | Tests the creation of an OpenStack image when the image   |
 |                                       |               | already exists and the configuration only contains the    |
 |                                       |               | the name.                                                 |
 +---------------------------------------+---------------+-----------------------------------------------------------+
@@ -67,14 +76,17 @@ create_image_tests.py - CreateImageNegativeTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             | Glance API    | Description                                               |
 +=======================================+===============+===========================================================+
-| test_bad_image_name                   | 1             | Ensures OpenStackImage.create() results in an Exception   |
+| test_bad_image_name                   | 1 & 2         | Ensures OpenStackImage.create() results in an Exception   |
 |                                       |               | being raised when the ImageSettings.name attribute has    |
 |                                       |               | not been set                                              |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_bad_image_url                    | 1             | Ensures OpenStackImage.create() results in an Exception   |
+| test_bad_image_url                    | 1 & 2         | Ensures OpenStackImage.create() results in an Exception   |
 |                                       |               | being raised when the download URL is invalid             |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_bad_image_file                   | 1             | Ensures OpenStackImage.create() results in an Exception   |
+| test_bad_image_type                   | 1 & 2         | Ensures OpenStackImage.create() results in an Exception   |
+|                                       |               | being raised when the image format is 'foo'               |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_bad_image_file                   | 1 & 2         | Ensures OpenStackImage.create() results in an Exception   |
 |                                       |               | being raised when the image file does not exist           |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
@@ -84,11 +96,14 @@ create_image_tests.py - CreateMultiPartImageTests
 +----------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                              | Glance API    | Description                                               |
 +========================================+===============+===========================================================+
-| test_create_three_part_image_from_url  | 1             | Ensures that a 3-part image can be created when each part |
+| test_create_three_part_image_from_url  | 1 & 2         | Ensures that a 3-part image can be created when each part |
 |                                        |               | is being sourced from URLs                                |
 +----------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_three_part_image_from_file | 1             | Ensures that a 3-part image can be created when each part |
-|                                        |               | is being sourced from local files                         |
+| test_create_three_part_image_from_file | 1 & 2         | Ensures that a 3-part image can be created when each part |
+| _3_creators                            |               | is being sourced from local files and 3 creators are used |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_three_part_image_from_url  | 1 & 2         | Ensures that a 3-part image can be created when each part |
+| _3_creators                            |               | is being sourced from a URL and 3 creators are used       |
 +----------------------------------------+---------------+-----------------------------------------------------------+
 
 create_keypairs_tests.py - CreateKeypairsTests
@@ -132,6 +147,14 @@ create_network_tests.py - CreateNetworkSuccessTests
 | test_create_networks_same_name        | 2             | Ensures that the OpenStackNetwork.create() method will not|
 |                                       |               | create a network with the same name                       |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_networks_router_admin_user| 2             | Ensures that the networks, subnets, and routers can be    |
+| _to_new_project                       |               | create created by an admin user and assigned to a new     |
+|                                       |               | project ID                                                |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_networks_router_new_user  | 2             | Ensures that the networks, subnets, and routers can be    |
+| _to_admin_project                     |               | create created by a new admin user and assigned to the    |
+|                                       |               | 'admin' project ID                                        |
++---------------------------------------+---------------+-----------------------------------------------------------+
 
 create_router_tests.py - CreateRouterSuccessTests
 -------------------------------------------------
@@ -141,6 +164,12 @@ create_router_tests.py - CreateRouterSuccessTests
 +=======================================+===============+===========================================================+
 | test_create_router_vanilla            | 2             | Ensures that a router can be created via the              |
 |                                       |               | OpenStackRouter class with minimal settings               |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_router_admin_user_to_new  | 2             | Ensures that a router can be created by an admin user and |
+| _project                              |               | assigned to a new project                                 |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_router_new_user_to_admin  | 2             | Ensures that a router can be created by a new user and    |
+| _project                              |               | assigned to the admin project                             |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | test_create_delete_router             | 2             | Ensures that a router can be deleted via the              |
 |                                       |               | OpenStackRouter.clean() method                            |
@@ -169,6 +198,38 @@ create_router_tests.py - CreateRouterNegativeTests
 +----------------------------------------+---------------+-----------------------------------------------------------+
 | test_create_router_invalid_gateway_name| 2             | Ensures that an exception is raised when attempting to    |
 |                                        |               | create a router to an external network that does not exist|
++----------------------------------------+---------------+-----------------------------------------------------------+
+
+create_stack_tests.py - CreateStackSuccessTests
+-----------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Neutron API   | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_stack_template_file       | 2             | Ensures that a Heat stack can be created with a file-based|
+|                                       |               | Heat template file                                        |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_stack_template_dict       | 2             | Ensures that a Heat stack can be created with a dictionary|
+|                                       |               | Heat template                                             |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_delete_stack              | 2             | Ensures that a Heat stack can be created and deleted      |
+|                                       |               | while having clean() called 2x without an exception       |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_same_stack                | 2             | Ensures that a Heat stack with the same name cannot be    |
+|                                       |               | created 2x                                                |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+create_stack_tests.py - CreateStackNegativeTests
+--------------------------------------------------
+
++----------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                              | Neutron API   | Description                                               |
++========================================+===============+===========================================================+
+| test_missing_dependencies              | 2             | Ensures that a Heat template fails to deploy when expected|
+|                                        |               | dependencies are missing                                  |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_bad_stack_file                    | 2             | Ensures that a Heat template fails to deploy when the Heat|
+|                                        |               | template file does not exist                              |
 +----------------------------------------+---------------+-----------------------------------------------------------+
 
 create_instance_tests.py - CreateInstanceSimpleTests
