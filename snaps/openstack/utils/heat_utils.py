@@ -37,7 +37,8 @@ def heat_client(os_creds):
     """
     logger.debug('Retrieving Nova Client')
     return Client(os_creds.heat_api_version,
-                  session=keystone_utils.keystone_session(os_creds))
+                  session=keystone_utils.keystone_session(os_creds),
+                  region_name=os_creds.region_name)
 
 
 def get_stack_by_name(heat_cli, stack_name):

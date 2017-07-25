@@ -45,7 +45,8 @@ def nova_client(os_creds):
     """
     logger.debug('Retrieving Nova Client')
     return Client(os_creds.compute_api_version,
-                  session=keystone_utils.keystone_session(os_creds))
+                  session=keystone_utils.keystone_session(os_creds),
+                  region_name=os_creds.region_name)
 
 
 def create_server(nova, neutron, glance, instance_settings, image_settings,

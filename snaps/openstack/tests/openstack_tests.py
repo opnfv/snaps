@@ -93,11 +93,14 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
             'network_api_version': config.get('OS_NETWORK_API_VERSION'),
             'compute_api_version': config.get('OS_COMPUTE_API_VERSION'),
             'heat_api_version': config.get('OS_HEAT_API_VERSION'),
-            'user_domain_id': config.get('OS_USER_DOMAIN_ID'),
-            'project_domain_id': config.get('OS_PROJECT_DOMAIN_ID'),
+            'user_domain_id': config.get(
+                'OS_USER_DOMAIN_ID', config.get('OS_USER_DOMAIN_NAME')),
+            'project_domain_id': config.get(
+                'OS_PROJECT_DOMAIN_ID', config.get('OS_PROJECT_DOMAIN_NAME')),
             'interface': interface,
             'proxy_settings': proxy_settings,
-            'cacert': https_cacert}
+            'cacert': https_cacert,
+            'region_name': config.get('OS_REGION_NAME')}
     else:
         logger.info('Reading development os_env file - ' + dev_os_env_file)
         config = file_utils.read_yaml(dev_os_env_file)
@@ -123,7 +126,9 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
             'user_domain_id': config.get('user_domain_id'),
             'project_domain_id': config.get('project_domain_id'),
             'interface': config.get('interface'),
-            'proxy_settings': proxy_settings, 'cacert': config.get('cacert')}
+            'proxy_settings': proxy_settings,
+            'cacert': config.get('cacert'),
+            'region_name': config.get('region_name')}
 
     os_creds = OSCreds(**creds_dict)
     logger.info('OS Credentials = %s', os_creds)

@@ -83,7 +83,9 @@ def keystone_client(os_creds):
     """
     return Client(
         version=os_creds.identity_api_version,
-        session=keystone_session(os_creds), interface=os_creds.interface)
+        session=keystone_session(os_creds),
+        interface=os_creds.interface,
+        region_name=os_creds.region_name)
 
 
 def get_endpoint(os_creds, service_type, interface='public'):
