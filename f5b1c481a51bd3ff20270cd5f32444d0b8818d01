@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aa4ed85_7f486f87",
+        "filename": "snaps/openstack/tests/conf/os_credentials_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 602
+      },
+      "writtenOn": "2017-07-25T21:03:36Z",
+      "side": 1,
+      "message": "i think this is the problem where you expect default while in joid we use something else. It should be part of credentials otherwise value can be default.",
+      "range": {
+        "startLine": 160,
+        "startChar": 0,
+        "endLine": 161,
+        "endChar": 63
+      },
+      "revId": "f5b1c481a51bd3ff20270cd5f32444d0b8818d01",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
