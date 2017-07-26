@@ -85,6 +85,14 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
         if config.get('OS_INTERFACE'):
             interface = config.get('OS_INTERFACE')
 
+        user_domain_id = config.get('OS_USER_DOMAIN_ID')
+        if user_domain_id:
+            user_domain_id = str(user_domain_id).lower()
+
+        project_domain_id = config.get('OS_PROJECT_DOMAIN_ID')
+        if project_domain_id:
+            project_domain_id = str(project_domain_id).lower()
+
         creds_dict = {
             'username': config['OS_USERNAME'],
             'password': config['OS_PASSWORD'],
@@ -95,9 +103,9 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
             'network_api_version': config.get('OS_NETWORK_API_VERSION'),
             'compute_api_version': config.get('OS_COMPUTE_API_VERSION'),
             'heat_api_version': config.get('OS_HEAT_API_VERSION'),
-            'user_domain_id': config.get('OS_USER_DOMAIN_ID'),
+            'user_domain_id': user_domain_id,
             'user_domain_name': config.get('OS_USER_DOMAIN_NAME'),
-            'project_domain_id': config.get('OS_PROJECT_DOMAIN_ID'),
+            'project_domain_id': project_domain_id,
             'project_domain_name': config.get('OS_PROJECT_DOMAIN_NAME'),
             'interface': interface,
             'proxy_settings': proxy_settings,
