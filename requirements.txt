@@ -6,4 +6,4 @@ python-heatclient>=1.6.1 # Apache-2.0
 ansible>=2.1.0
 wrapt>=1.7.0 # BSD License
 scp
-cryptography!=1.3.0,>=1.0 # BSD/Apache-2.0
+cryptography!=1.3.0,>=1.5 # BSD/Apache-2.0
