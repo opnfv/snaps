@@ -266,7 +266,6 @@ def __create_instances(os_conn_config, instances_config, image_dict,
             raise e
 
         logger.info('Created configured instances')
-    # TODO Should there be an error if there isn't an instances config
     return vm_dict
 
 
