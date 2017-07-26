@@ -1,0 +1,21 @@
+---
+- hosts: all
+  user: root
+
+  tasks:
+   - name: Clone SNAPS-OO
+     git:
+       repo: https://gerrit.opnfv.org/gerrit/snaps
+       dest: ~/snaps
+
+   - name: Install SNAPS-OO
+     command: pip install -e ~/snaps/
+
+   - name: Transfer copy_rc_file.sh
+     copy: src=copy_rc_file.sh dest=~/copy_rc_file.sh mode=0777
+
+   - name: Execute copy_rc_file.sh
+     command: ~/copy_rc_file.sh
+
+   - name: Execute Tests
+     command: python ~/snaps/snaps/test_runner.py -e ~/openrc -n public -ci
