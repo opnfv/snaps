@@ -42,8 +42,8 @@ class OSCreds:
                                     clients
         :param heat_api_version: The OpenStack's API version to use for Heat
                                     clients
-        :param user_domain_id: Used for v3 APIs
-        :param project_domain_id: Used for v3 APIs
+        :param user_domain_id: Used for v3 APIs (default='default')
+        :param project_domain_id: Used for v3 APIs (default='default')
         :param interface: Used to specify the endpoint type for keystone as
                           public, admin, internal
         :param proxy_settings: instance of os_credentials.ProxySettings class
