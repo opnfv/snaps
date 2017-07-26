@@ -614,8 +614,9 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         # Create Network
         network_type = 'flat'
 
-        # TODO - this value must be variable to work on all OpenStack pods
+        # This value must be variable to work on all OpenStack pods
         physical_network = 'datacentre'
+
         net_settings = NetworkSettings(
             name=self.net_config.network_settings.name,
             subnet_settings=self.net_config.network_settings.subnet_settings,
