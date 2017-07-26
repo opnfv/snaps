@@ -115,6 +115,9 @@ create_keypairs_tests.py - CreateKeypairsTests
 | test_create_keypair_only              | 2             | Ensures that a keypair object can be created simply by    |
 |                                       |               | only configuring a name                                   |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_keypair_large_key         | 2             | Ensures that a keypair object can be created with a large |
+|                                       |               | key of 10000 bytes                                        |
++---------------------------------------+---------------+-----------------------------------------------------------+
 | test_create_delete_keypair            | 2             | Ensures that a keypair object is deleted via              |
 |                                       |               | OpenStackKeypair.clean() and subsequent calls do not      |
 |                                       |               | result in exceptions                                      |
@@ -243,7 +246,7 @@ create_stack_tests.py - CreateStackSuccessTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
 create_stack_tests.py - CreateStackNegativeTests
---------------------------------------------------
+------------------------------------------------
 
 +----------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                              | Neutron API   | Description                                               |

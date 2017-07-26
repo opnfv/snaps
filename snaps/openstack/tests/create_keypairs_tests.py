@@ -39,9 +39,14 @@ class KeypairSettingsUnitTests(unittest.TestCase):
         with self.assertRaises(KeypairSettingsError):
             KeypairSettings(**dict())
 
+    def test_small_key_size(self):
+        with self.assertRaises(KeypairSettingsError):
+            KeypairSettings(name='foo', key_size=511)
+
     def test_name_only(self):
         settings = KeypairSettings(name='foo')
         self.assertEqual('foo', settings.name)
+        self.assertEqual(1024, settings.key_size)
         self.assertIsNone(settings.public_filepath)
         self.assertIsNone(settings.private_filepath)
         self.assertIsNone(settings.delete_on_clean)
@@ -49,6 +54,7 @@ class KeypairSettingsUnitTests(unittest.TestCase):
     def test_config_with_name_only(self):
         settings = KeypairSettings(**{'name': 'foo'})
         self.assertEqual('foo', settings.name)
+        self.assertEqual(1024, settings.key_size)
         self.assertIsNone(settings.public_filepath)
         self.assertIsNone(settings.private_filepath)
         self.assertIsNone(settings.delete_on_clean)
@@ -56,6 +62,7 @@ class KeypairSettingsUnitTests(unittest.TestCase):
     def test_name_pub_only(self):
         settings = KeypairSettings(name='foo', public_filepath='/foo/bar.pub')
         self.assertEqual('foo', settings.name)
+        self.assertEqual(1024, settings.key_size)
         self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertIsNone(settings.private_filepath)
         self.assertIsNone(settings.delete_on_clean)
@@ -64,6 +71,7 @@ class KeypairSettingsUnitTests(unittest.TestCase):
         settings = KeypairSettings(
             **{'name': 'foo', 'public_filepath': '/foo/bar.pub'})
         self.assertEqual('foo', settings.name)
+        self.assertEqual(1024, settings.key_size)
         self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertIsNone(settings.private_filepath)
         self.assertIsNone(settings.delete_on_clean)
@@ -71,6 +79,7 @@ class KeypairSettingsUnitTests(unittest.TestCase):
     def test_name_priv_only(self):
         settings = KeypairSettings(name='foo', private_filepath='/foo/bar')
         self.assertEqual('foo', settings.name)
+        self.assertEqual(1024, settings.key_size)
         self.assertIsNone(settings.public_filepath)
         self.assertEqual('/foo/bar', settings.private_filepath)
         self.assertIsNone(settings.delete_on_clean)
@@ -79,6 +88,7 @@ class KeypairSettingsUnitTests(unittest.TestCase):
         settings = KeypairSettings(
             **{'name': 'foo', 'private_filepath': '/foo/bar'})
         self.assertEqual('foo', settings.name)
+        self.assertEqual(1024, settings.key_size)
         self.assertIsNone(settings.public_filepath)
         self.assertEqual('/foo/bar', settings.private_filepath)
         self.assertIsNone(settings.delete_on_clean)
@@ -86,8 +96,10 @@ class KeypairSettingsUnitTests(unittest.TestCase):
     def test_all_delete_bool(self):
         settings = KeypairSettings(
             name='foo', public_filepath='/foo/bar.pub',
-            private_filepath='/foo/bar', delete_on_clean=True)
+            private_filepath='/foo/bar', delete_on_clean=True,
+            key_size=999)
         self.assertEqual('foo', settings.name)
+        self.assertEqual(999, settings.key_size)
         self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertEqual('/foo/bar', settings.private_filepath)
         self.assertTrue(settings.delete_on_clean)
@@ -97,6 +109,7 @@ class KeypairSettingsUnitTests(unittest.TestCase):
             name='foo', public_filepath='/foo/bar.pub',
             private_filepath='/foo/bar', delete_on_clean='True')
         self.assertEqual('foo', settings.name)
+        self.assertEqual(1024, settings.key_size)
         self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertEqual('/foo/bar', settings.private_filepath)
         self.assertTrue(settings.delete_on_clean)
@@ -106,6 +119,7 @@ class KeypairSettingsUnitTests(unittest.TestCase):
             name='foo', public_filepath='/foo/bar.pub',
             private_filepath='/foo/bar', delete_on_clean='true')
         self.assertEqual('foo', settings.name)
+        self.assertEqual(1024, settings.key_size)
         self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertEqual('/foo/bar', settings.private_filepath)
         self.assertTrue(settings.delete_on_clean)
@@ -115,6 +129,7 @@ class KeypairSettingsUnitTests(unittest.TestCase):
             name='foo', public_filepath='/foo/bar.pub',
             private_filepath='/foo/bar', delete_on_clean='False')
         self.assertEqual('foo', settings.name)
+        self.assertEqual(1024, settings.key_size)
         self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertEqual('/foo/bar', settings.private_filepath)
         self.assertFalse(settings.delete_on_clean)
@@ -122,8 +137,10 @@ class KeypairSettingsUnitTests(unittest.TestCase):
     def test_all_delete_str_false_lc(self):
         settings = KeypairSettings(
             name='foo', public_filepath='/foo/bar.pub',
-            private_filepath='/foo/bar', delete_on_clean='false')
+            private_filepath='/foo/bar', delete_on_clean='false',
+            key_size='999')
         self.assertEqual('foo', settings.name)
+        self.assertEqual(999, settings.key_size)
         self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertEqual('/foo/bar', settings.private_filepath)
         self.assertFalse(settings.delete_on_clean)
@@ -131,8 +148,10 @@ class KeypairSettingsUnitTests(unittest.TestCase):
     def test_config_all_delete_false_bool(self):
         settings = KeypairSettings(
             **{'name': 'foo', 'public_filepath': '/foo/bar.pub',
-               'private_filepath': '/foo/bar', 'delete_on_clean': False})
+               'private_filepath': '/foo/bar', 'delete_on_clean': False,
+               'key_size': 999})
         self.assertEqual('foo', settings.name)
+        self.assertEqual(999, settings.key_size)
         self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertEqual('/foo/bar', settings.private_filepath)
         self.assertFalse(settings.delete_on_clean)
@@ -142,6 +161,7 @@ class KeypairSettingsUnitTests(unittest.TestCase):
             **{'name': 'foo', 'public_filepath': '/foo/bar.pub',
                'private_filepath': '/foo/bar', 'delete_on_clean': 'False'})
         self.assertEqual('foo', settings.name)
+        self.assertEqual(1024, settings.key_size)
         self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertEqual('/foo/bar', settings.private_filepath)
         self.assertFalse(settings.delete_on_clean)
@@ -151,6 +171,7 @@ class KeypairSettingsUnitTests(unittest.TestCase):
             **{'name': 'foo', 'public_filepath': '/foo/bar.pub',
                'private_filepath': '/foo/bar', 'delete_on_clean': 'false'})
         self.assertEqual('foo', settings.name)
+        self.assertEqual(1024, settings.key_size)
         self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertEqual('/foo/bar', settings.private_filepath)
         self.assertFalse(settings.delete_on_clean)
@@ -158,8 +179,10 @@ class KeypairSettingsUnitTests(unittest.TestCase):
     def test_config_all_delete_false_str_foo(self):
         settings = KeypairSettings(
             **{'name': 'foo', 'public_filepath': '/foo/bar.pub',
-               'private_filepath': '/foo/bar', 'delete_on_clean': 'foo'})
+               'private_filepath': '/foo/bar', 'delete_on_clean': 'foo',
+               'key_size': '999'})
         self.assertEqual('foo', settings.name)
+        self.assertEqual(999, settings.key_size)
         self.assertEqual('/foo/bar.pub', settings.public_filepath)
         self.assertEqual('/foo/bar', settings.private_filepath)
         self.assertFalse(settings.delete_on_clean)
@@ -207,6 +230,19 @@ class CreateKeypairsTests(OSIntegrationTestCase):
         """
         self.keypair_creator = OpenStackKeypair(self.os_creds, KeypairSettings(
             name=self.keypair_name))
+        self.keypair_creator.create()
+
+        keypair = nova_utils.keypair_exists(self.nova,
+                                            self.keypair_creator.get_keypair())
+        self.assertEqual(self.keypair_creator.get_keypair(), keypair)
+
+    def test_create_keypair_large_key(self):
+        """
+        Tests the creation of a generated keypair without saving to file
+        :return:
+        """
+        self.keypair_creator = OpenStackKeypair(self.os_creds, KeypairSettings(
+            name=self.keypair_name, key_size=10000))
         self.keypair_creator.create()
 
         keypair = nova_utils.keypair_exists(self.nova,
