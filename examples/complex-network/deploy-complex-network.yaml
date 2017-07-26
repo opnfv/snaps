@@ -128,7 +128,7 @@ openstack:
                 - subnet_name: mgr-subnet-2
                   ip: 10.0.2.30
         floating_ips:
-# TODO - Why is only one of these floating IPs not working and why does it vary which one?
+# Add back after validation of multiple floating IP support
 #          - floating_ip:
 #              name: fip1
 #              port_name: mgr-app-port
@@ -199,7 +199,7 @@ openstack:
               port_name: site2-host-port
               subnet_name: site2-subnet
               router_name: site2-router
-# TODO - Add a playbook here...
+# Add a playbook here...
 #ansible:
 #    - playbook_location: main.yml
 #      hosts:
