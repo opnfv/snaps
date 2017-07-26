@@ -23,7 +23,7 @@ class User:
         """
         Constructor
         :param name: the user's name
-        :param id: the user's id
+        :param user_id: the user's id
         """
         self.name = name
         self.id = user_id

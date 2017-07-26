@@ -23,7 +23,7 @@ class Role:
         """
         Constructor
         :param name: the user's name
-        :param id: the user's id
+        :param role_id: the user's id
         """
         self.name = name
         self.id = role_id
