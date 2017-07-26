@@ -127,8 +127,12 @@ def get_project(keystone=None, os_creds=None, project_name=None):
         projects = keystone.projects.list(**{'name': project_name})
 
     for project in projects:
+        domain_id = None
+        if keystone.version != V2_VERSION_STR:
+            domain_id = project.domain_id
         if project.name == project_name:
-            return Project(name=project.name, project_id=project.id)
+            return Project(name=project.name, project_id=project.id,
+                           domain_id=domain_id)
 
     return None
 
@@ -140,6 +144,8 @@ def create_project(keystone, project_settings):
     :param project_settings: the project configuration
     :return: SNAPS-OO Project domain object
     """
+    domain_id = None
+
     if keystone.version == V2_VERSION_STR:
         os_project = keystone.tenants.create(
             project_settings.name, project_settings.description,
@@ -149,8 +155,10 @@ def create_project(keystone, project_settings):
             project_settings.name, project_settings.domain,
             description=project_settings.description,
             enabled=project_settings.enabled)
+        domain_id = os_project.domain_id
 
-    return Project(name=os_project.name, project_id=os_project.id)
+    return Project(
+        name=os_project.name, project_id=os_project.id, domain_id=domain_id)
 
 
 def delete_project(keystone, project):

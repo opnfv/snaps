@@ -15,6 +15,8 @@
 import unittest
 import uuid
 
+from keystoneclient.exceptions import BadRequest
+
 from snaps.openstack.create_project import (
     OpenStackProject, ProjectSettings, ProjectSettingsError)
 from snaps.openstack.create_security_group import OpenStackSecurityGroup
@@ -98,6 +100,19 @@ class CreateProjectSuccessTests(OSComponentTestCase):
         if self.project_creator:
             self.project_creator.clean()
 
+    def test_create_project_bad_domain(self):
+        """
+        Tests the creation of an OpenStack project with an invalid domain
+        value. This test will not do anything with a keystone v2.0 client.
+        """
+        if self.keystone.version != keystone_utils.V2_VERSION_STR:
+            self.project_settings.domain = 'foo'
+            self.project_creator = OpenStackProject(self.os_creds,
+                                                    self.project_settings)
+
+            with self.assertRaises(BadRequest):
+                self.project_creator.create()
+
     def test_create_project(self):
         """
         Tests the creation of an OpenStack project.
@@ -111,6 +126,8 @@ class CreateProjectSuccessTests(OSComponentTestCase):
             keystone=self.keystone, project_name=self.project_settings.name)
         self.assertIsNotNone(retrieved_project)
         self.assertEqual(created_project, retrieved_project)
+        self.assertTrue(validate_project(self.keystone, self.project_settings,
+                                         created_project))
 
     def test_create_project_2x(self):
         """
@@ -130,6 +147,8 @@ class CreateProjectSuccessTests(OSComponentTestCase):
         project2 = OpenStackProject(self.os_creds,
                                     self.project_settings).create()
         self.assertEqual(retrieved_project, project2)
+        self.assertTrue(validate_project(self.keystone, self.project_settings,
+                                         created_project))
 
     def test_create_delete_project(self):
         """
@@ -147,7 +166,8 @@ class CreateProjectSuccessTests(OSComponentTestCase):
 
         self.assertIsNone(self.project_creator.get_project())
 
-        # TODO - Expand tests
+        self.assertTrue(validate_project(self.keystone, self.project_settings,
+                                         created_project))
 
 
 class CreateProjectUserTests(OSComponentTestCase):
@@ -254,3 +274,19 @@ class CreateProjectUserTests(OSComponentTestCase):
 
             self.assertEqual(self.project_creator.get_project().id,
                              sec_grp.project_id)
+
+
+def validate_project(keystone, project_settings, project):
+    """
+    Validates that the project_settings used to create the project have been
+    properly set
+    :param keystone: the keystone client for version checking
+    :param project_settings: the settings used to create the project
+    :param project: the SNAPS-OO Project domain object
+    :return: T/F
+    """
+    if keystone.version == keystone_utils.V2_VERSION_STR:
+        return project_settings.name == project.name
+    else:
+        return (project_settings.name == project.name and
+                project_settings.domain == project.domain_id)

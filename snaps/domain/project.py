@@ -19,14 +19,16 @@ class Project:
     SNAPS domain object for Projects. Should contain attributes that
     are shared amongst cloud providers
     """
-    def __init__(self, name, project_id):
+    def __init__(self, name, project_id, domain_id=None):
         """
         Constructor
         :param name: the project's name
         :param project_id: the project's id
+        :param domain_id: the project's domain id
         """
         self.name = name
         self.id = project_id
+        self.domain_id = domain_id
 
     def __eq__(self, other):
         return self.name == other.name and self.id == other.id
