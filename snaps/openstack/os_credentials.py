@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from neutronclient.common.utils import str2bool
-
+import numbers
 from snaps import file_utils
 from snaps.openstack.utils import glance_utils, keystone_utils
 
@@ -165,9 +165,13 @@ class ProxySettings:
         """
         self.host = kwargs.get('host')
         self.port = kwargs.get('port')
+        if self.port and isinstance(self.port, numbers.Number):
+            self.port = str(self.port)
 
         self.https_host = kwargs.get('https_host', self.host)
         self.https_port = kwargs.get('https_port', self.port)
+        if self.https_port and isinstance(self.https_port, numbers.Number):
+            self.https_port = str(self.https_port)
 
         self.ssh_proxy_cmd = kwargs.get('ssh_proxy_cmd')
 
