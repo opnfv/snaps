@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aa4ed85_0deef0b4",
+        "filename": "snaps/openstack/os_credentials.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-07-27T14:44:48Z",
+      "side": 1,
+      "message": "Should it be \u0027proxy_settings_host\u0027?",
+      "range": {
+        "startLine": 166,
+        "startChar": 32,
+        "endLine": 166,
+        "endChar": 36
+      },
+      "revId": "8f164f7b703c10bcb48b09ba15a2e0e37104becc",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1aa4ed85_ad2c7c03",
+        "filename": "snaps/openstack/os_credentials.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-07-27T14:44:48Z",
+      "side": 1,
+      "message": "Should it be \u0027proxy_settings_port\u0027? just conform with those param in functest.",
+      "range": {
+        "startLine": 167,
+        "startChar": 32,
+        "endLine": 167,
+        "endChar": 36
+      },
+      "revId": "8f164f7b703c10bcb48b09ba15a2e0e37104becc",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
