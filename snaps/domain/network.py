@@ -130,6 +130,7 @@ class SecurityGroup:
         """
         self.name = kwargs.get('name')
         self.id = kwargs.get('id')
+        self.description = kwargs.get('description')
         self.project_id = kwargs.get('project_id', kwargs.get('tenant_id'))
 
     def __eq__(self, other):

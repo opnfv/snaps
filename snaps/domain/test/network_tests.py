@@ -133,10 +133,11 @@ class SecurityGroupDomainObjectTests(unittest.TestCase):
 
     def test_construction_proj_id_kwargs(self):
         sec_grp = SecurityGroup(
-            **{'name': 'name', 'id': 'id',
-               'project_id': 'foo'})
+            **{'name': 'name', 'id': 'id', 'project_id': 'foo',
+               'description': 'test desc'})
         self.assertEqual('name', sec_grp.name)
         self.assertEqual('id', sec_grp.id)
+        self.assertEqual('test desc', sec_grp.description)
         self.assertEqual('foo', sec_grp.project_id)
 
     def test_construction_tenant_id_kwargs(self):
@@ -146,11 +147,14 @@ class SecurityGroupDomainObjectTests(unittest.TestCase):
         self.assertEqual('name', sec_grp.name)
         self.assertEqual('id', sec_grp.id)
         self.assertEqual('foo', sec_grp.project_id)
+        self.assertIsNone(sec_grp.description)
 
     def test_construction_named(self):
-        sec_grp = SecurityGroup(tenant_id='foo', id='id', name='name')
+        sec_grp = SecurityGroup(description='test desc', tenant_id='foo',
+                                id='id', name='name')
         self.assertEqual('name', sec_grp.name)
         self.assertEqual('id', sec_grp.id)
+        self.assertEqual('test desc', sec_grp.description)
         self.assertEqual('foo', sec_grp.project_id)
 
 

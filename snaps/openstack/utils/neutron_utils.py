@@ -331,11 +331,7 @@ def create_security_group(neutron, keystone, sec_grp_settings):
                 sec_grp_settings.name)
     os_group = neutron.create_security_group(
         sec_grp_settings.dict_for_neutron(keystone))
-    return SecurityGroup(
-        id=os_group['security_group']['id'],
-        name=os_group['security_group']['name'],
-        project_id=os_group['security_group'].get(
-            'project_id', os_group['security_group'].get('tenant_id')))
+    return SecurityGroup(**os_group['security_group'])
 
 
 def delete_security_group(neutron, sec_grp):
@@ -360,9 +356,7 @@ def get_security_group(neutron, name):
     groups = neutron.list_security_groups(**{'name': name})
     for group in groups['security_groups']:
         if group['name'] == name:
-            return SecurityGroup(
-                id=group['id'], name=group['name'],
-                project_id=group.get('project_id', group.get('tenant_id')))
+            return SecurityGroup(**group)
     return None
 
 
@@ -378,9 +372,7 @@ def get_security_group_by_id(neutron, sec_grp_id):
     groups = neutron.list_security_groups(**{'id': sec_grp_id})
     for group in groups['security_groups']:
         if group['id'] == sec_grp_id:
-            return SecurityGroup(
-                id=group['id'], name=group['name'],
-                project_id=group.get('project_id', group.get('tenant_id')))
+            return SecurityGroup(**group)
     return None
 
 

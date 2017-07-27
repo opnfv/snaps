@@ -27,7 +27,10 @@ create_security_group_tests.py - CreateSecurityGroupTests
 |                                       |               | some other process                                        |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | test_create_group_with_one_simple_rule| Keysone 2 & 3 | Ensures the OpenStackSecurityGroup class can create a     |
-|                                       | Neutron 2     | security group with a single rule                         |
+|                                       | Neutron 2     | security group with a single simple rule                  |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_group_with_one_complex    | Keysone 2 & 3 | Ensures the OpenStackSecurityGroup class can create a     |
+| _rule                                 | Neutron 2     | security group with a single complex rule                 |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | test_create_group_with_several_rules  | Keysone 2 & 3 | Ensures the OpenStackSecurityGroup class can create a     |
 |                                       | Neutron 2     | security group with several rules                         |
