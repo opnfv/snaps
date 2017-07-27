@@ -232,12 +232,18 @@ def save_keys_to_files(keys=None, pub_file_path=None, priv_file_path=None):
 
             if not os.path.isdir(pub_dir):
                 os.mkdir(pub_dir)
-            public_handle = open(pub_expand_file, 'wb')
-            public_bytes = keys.public_key().public_bytes(
-                serialization.Encoding.OpenSSH,
-                serialization.PublicFormat.OpenSSH)
-            public_handle.write(public_bytes)
-            public_handle.close()
+
+            public_handle = None
+            try:
+                public_handle = open(pub_expand_file, 'wb')
+                public_bytes = keys.public_key().public_bytes(
+                    serialization.Encoding.OpenSSH,
+                    serialization.PublicFormat.OpenSSH)
+                public_handle.write(public_bytes)
+            finally:
+                if public_handle:
+                    public_handle.close()
+
             os.chmod(pub_expand_file, 0o400)
             logger.info("Saved public key to - " + pub_expand_file)
         if priv_file_path:
@@ -246,13 +252,19 @@ def save_keys_to_files(keys=None, pub_file_path=None, priv_file_path=None):
             priv_dir = os.path.dirname(priv_expand_file)
             if not os.path.isdir(priv_dir):
                 os.mkdir(priv_dir)
-            private_handle = open(priv_expand_file, 'wb')
-            private_handle.write(
-                keys.private_bytes(
-                    encoding=serialization.Encoding.PEM,
-                    format=serialization.PrivateFormat.TraditionalOpenSSL,
-                    encryption_algorithm=serialization.NoEncryption()))
-            private_handle.close()
+
+            private_handle = None
+            try:
+                private_handle = open(priv_expand_file, 'wb')
+                private_handle.write(
+                    keys.private_bytes(
+                        encoding=serialization.Encoding.PEM,
+                        format=serialization.PrivateFormat.TraditionalOpenSSL,
+                        encryption_algorithm=serialization.NoEncryption()))
+            finally:
+                if private_handle:
+                    private_handle.close()
+
             os.chmod(priv_expand_file, 0o400)
             logger.info("Saved private key to - " + priv_expand_file)
 
@@ -265,9 +277,14 @@ def upload_keypair_file(nova, name, file_path):
     :param file_path: the path to the public key file
     :return: the keypair object
     """
-    with open(os.path.expanduser(file_path), 'rb') as fpubkey:
-        logger.info('Saving keypair to - ' + file_path)
-        return upload_keypair(nova, name, fpubkey.read())
+    fpubkey = None
+    try:
+        with open(os.path.expanduser(file_path), 'rb') as fpubkey:
+            logger.info('Saving keypair to - ' + file_path)
+            return upload_keypair(nova, name, fpubkey.read())
+    finally:
+        if fpubkey:
+            fpubkey.close()
 
 
 def upload_keypair(nova, name, key):

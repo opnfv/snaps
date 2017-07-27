@@ -124,22 +124,30 @@ def __create_image_v1(glance, image_settings):
         'name': image_settings.name, 'disk_format': image_settings.format,
         'container_format': 'bare', 'is_public': image_settings.public}
 
-    if image_settings.extra_properties:
-        kwargs['properties'] = image_settings.extra_properties
+    image_file = None
 
-    if image_settings.url:
-        kwargs['location'] = image_settings.url
-    elif image_settings.image_file:
-        image_file = open(image_settings.image_file, 'rb')
-        kwargs['data'] = image_file
-    else:
-        logger.warn('Unable to create image with name - %s. No file or URL',
-                    image_settings.name)
-        return None
+    try:
+        if image_settings.extra_properties:
+            kwargs['properties'] = image_settings.extra_properties
 
-    created_image = glance.images.create(**kwargs)
-    return Image(name=image_settings.name, image_id=created_image.id,
-                 size=created_image.size, properties=created_image.properties)
+        if image_settings.url:
+            kwargs['location'] = image_settings.url
+        elif image_settings.image_file:
+            image_file = open(image_settings.image_file, 'rb')
+            kwargs['data'] = image_file
+        else:
+            logger.warn(
+                'Unable to create image with name - %s. No file or URL',
+                image_settings.name)
+            return None
+
+        created_image = glance.images.create(**kwargs)
+        return Image(name=image_settings.name, image_id=created_image.id,
+                     size=created_image.size,
+                     properties=created_image.properties)
+    finally:
+        if image_file:
+            image_file.close()
 
 
 def __create_image_v2(glance, image_settings):

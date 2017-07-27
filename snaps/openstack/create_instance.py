@@ -618,6 +618,7 @@ class OpenStackVmInstance:
         if len(self.__floating_ips) > 0:
             ssh = self.ssh_client()
             if ssh:
+                ssh.close()
                 return True
         return False
 

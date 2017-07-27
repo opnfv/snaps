@@ -1717,7 +1717,10 @@ def validate_ssh_client(instance_creator):
     if ssh_active:
         ssh_client = instance_creator.ssh_client()
         if ssh_client:
-            out = ssh_client.exec_command('pwd')[1]
+            try:
+                out = ssh_client.exec_command('pwd')[1]
+            finally:
+                ssh_client.close()
         else:
             return False
 

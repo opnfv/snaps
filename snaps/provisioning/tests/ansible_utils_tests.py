@@ -239,9 +239,14 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
 
         ssh_client = self.inst_creator.ssh_client()
         self.assertIsNotNone(ssh_client)
-        out = ssh_client.exec_command('pwd')[1].channel.in_buffer.read(1024)
-        self.assertIsNotNone(out)
-        self.assertGreater(len(out), 1)
+
+        try:
+            out = ssh_client.exec_command('pwd')[1].channel.in_buffer.read(
+                1024)
+            self.assertIsNotNone(out)
+            self.assertGreater(len(out), 1)
+        finally:
+            ssh_client.close()
 
         # Need to use the first floating IP as subsequent ones are currently
         # broken with Apex CO
@@ -257,14 +262,25 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         ssh = ansible_utils.ssh_client(ip, user, priv_key,
                                        self.os_creds.proxy_settings)
         self.assertIsNotNone(ssh)
-        scp = SCPClient(ssh.get_transport())
-        scp.get('~/hello.txt', self.test_file_local_path)
+
+        try:
+            scp = SCPClient(ssh.get_transport())
+            scp.get('~/hello.txt', self.test_file_local_path)
+        finally:
+            scp.close()
+            ssh.close()
 
         self.assertTrue(os.path.isfile(self.test_file_local_path))
 
-        with open(self.test_file_local_path) as f:
-            file_contents = f.readline()
-            self.assertEqual('Hello World!', file_contents)
+        test_file = None
+
+        try:
+            with open(self.test_file_local_path) as test_file:
+                file_contents = test_file.readline()
+                self.assertEqual('Hello World!', file_contents)
+        finally:
+            if test_file:
+                test_file.close()
 
     def test_apply_template_playbook(self):
         """
@@ -310,11 +326,21 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         ssh = ansible_utils.ssh_client(ip, user, priv_key,
                                        self.os_creds.proxy_settings)
         self.assertIsNotNone(ssh)
-        scp = SCPClient(ssh.get_transport())
-        scp.get('/tmp/hello.txt', self.test_file_local_path)
+
+        try:
+            scp = SCPClient(ssh.get_transport())
+            scp.get('/tmp/hello.txt', self.test_file_local_path)
+        finally:
+            scp.close()
+            ssh.close()
 
         self.assertTrue(os.path.isfile(self.test_file_local_path))
 
-        with open(self.test_file_local_path) as f:
-            file_contents = f.readline()
-            self.assertEqual('Hello Foo!', file_contents)
+        test_file = None
+        try:
+            with open(self.test_file_local_path) as test_file:
+                file_contents = test_file.readline()
+                self.assertEqual('Hello Foo!', file_contents)
+        finally:
+            if test_file:
+                test_file.close()

@@ -32,7 +32,8 @@ logger = logging.getLogger('file_utils')
 
 def file_exists(file_path):
     """
-    Returns True if the image file already exists and throws an exception if the path is a directory
+    Returns True if the image file already exists and throws an exception if
+    the path is a directory
     :return:
     """
     if os.path.exists(file_path):
@@ -55,7 +56,7 @@ def download(url, dest_path, name=None):
     dest = dest_path + '/' + name
     logger.debug('Downloading file from - ' + url)
     # Override proxy settings to use localhost to download file
-    f = None
+    download_file = None
 
     if not os.path.isdir(dest_path):
         try:
@@ -63,14 +64,14 @@ def download(url, dest_path, name=None):
         except:
             raise
     try:
-        with open(dest, 'wb') as f:
-            logger.debug('Saving file to - ' + os.path.abspath(f.name))
+        with open(dest, 'wb') as download_file:
+            logger.debug('Saving file to - ' + os.path.abspath(download_file.name))
             response = __get_url_response(url)
-            f.write(response.read())
-        return f
+            download_file.write(response.read())
+        return download_file
     finally:
-        if f:
-            f.close()
+        if download_file:
+            download_file.close()
 
 
 def get_content_length(url):
@@ -102,32 +103,45 @@ def read_yaml(config_file_path):
     :return: a dictionary
     """
     logger.debug('Attempting to load configuration file - ' + config_file_path)
-    with open(config_file_path) as config_file:
-        config = yaml.safe_load(config_file)
-        logger.info('Loaded configuration')
-    config_file.close()
-    logger.info('Closing configuration file')
-    return config
+    config_file = None
+    try:
+        with open(config_file_path) as config_file:
+            config = yaml.safe_load(config_file)
+            logger.info('Loaded configuration')
+        return config
+    finally:
+        if config_file:
+            logger.info('Closing configuration file')
+            config_file.close()
 
 
 def read_os_env_file(os_env_filename):
     """
     Reads the OS environment source file and returns a map of each key/value
-    Will ignore lines beginning with a '#' and will replace any single or double quotes contained within the value
+    Will ignore lines beginning with a '#' and will replace any single or
+    double quotes contained within the value
     :param os_env_filename: The name of the OS environment file to read
     :return: a dictionary
     """
     if os_env_filename:
-        logger.info('Attempting to read OS environment file - ' + os_env_filename)
+        logger.info('Attempting to read OS environment file - %s',
+                    os_env_filename)
         out = {}
-        for line in open(os_env_filename):
-            line = line.lstrip()
-            if not line.startswith('#') and line.startswith('export '):
-                line = line.lstrip('export ').strip()
-                tokens = line.split('=')
-                if len(tokens) > 1:
-                    # Remove leading and trailing ' & " characters from value
-                    out[tokens[0]] = tokens[1].lstrip('\'').lstrip('\"').rstrip('\'').rstrip('\"')
+        env_file = None
+        try:
+            env_file = open(os_env_filename)
+            for line in env_file:
+                line = line.lstrip()
+                if not line.startswith('#') and line.startswith('export '):
+                    line = line.lstrip('export ').strip()
+                    tokens = line.split('=')
+                    if len(tokens) > 1:
+                        # Remove leading and trailing ' & " characters from
+                        # value
+                        out[tokens[0]] = tokens[1].lstrip('\'').lstrip('\"').rstrip('\'').rstrip('\"')
+        finally:
+            if env_file:
+                env_file.close()
         return out
 
 
@@ -138,7 +152,12 @@ def read_file(filename):
     :return:
     """
     out = str()
-    for line in open(filename):
-        out += line
-
-    return out
+    the_file = None
+    try:
+        the_file = open(filename)
+        for line in the_file:
+            out += line
+        return out
+    finally:
+        if the_file:
+            the_file.close()

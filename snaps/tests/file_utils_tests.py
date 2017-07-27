@@ -37,10 +37,14 @@ class FileUtilsTests(unittest.TestCase):
             os.makedirs(self.test_dir)
 
         self.tmpFile = self.test_dir + '/bar.txt'
+        self.tmp_file_opened = None
         if not os.path.exists(self.tmpFile):
-            open(self.tmpFile, 'wb')
+            self.tmp_file_opened = open(self.tmpFile, 'wb')
 
     def tearDown(self):
+        if self.tmp_file_opened:
+            self.tmp_file_opened.close()
+
         if os.path.exists(self.test_dir) and os.path.isdir(self.test_dir):
             shutil.rmtree(self.tmp_dir)
 

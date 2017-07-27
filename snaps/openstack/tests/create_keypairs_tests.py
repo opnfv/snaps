@@ -285,9 +285,15 @@ class CreateKeypairsTests(OSIntegrationTestCase):
                                             self.keypair_creator.get_keypair())
         self.assertEqual(self.keypair_creator.get_keypair(), keypair)
 
-        file_key = open(os.path.expanduser(self.pub_file_path)).read()
-        self.assertEqual(self.keypair_creator.get_keypair().public_key,
-                         file_key)
+        pub_file = None
+        try:
+            pub_file = open(os.path.expanduser(self.pub_file_path))
+            file_key = pub_file.read()
+            self.assertEqual(self.keypair_creator.get_keypair().public_key,
+                             file_key)
+        finally:
+            if pub_file:
+                pub_file.close()
 
     def test_create_keypair_save_both(self):
         """
@@ -305,7 +311,16 @@ class CreateKeypairsTests(OSIntegrationTestCase):
                                             self.keypair_creator.get_keypair())
         self.assertEqual(self.keypair_creator.get_keypair(), keypair)
 
-        file_key = open(os.path.expanduser(self.pub_file_path)).read()
+        pub_file = None
+        try:
+            pub_file = open(os.path.expanduser(self.pub_file_path))
+            file_key = pub_file.read()
+            self.assertEqual(self.keypair_creator.get_keypair().public_key,
+                             file_key)
+        finally:
+            if pub_file:
+                pub_file.close()
+
         self.assertEqual(self.keypair_creator.get_keypair().public_key,
                          file_key)
 
@@ -328,7 +343,16 @@ class CreateKeypairsTests(OSIntegrationTestCase):
                                             self.keypair_creator.get_keypair())
         self.assertEqual(self.keypair_creator.get_keypair(), keypair)
 
-        file_key = open(os.path.expanduser(self.pub_file_path)).read()
+        pub_file = None
+        try:
+            pub_file = open(os.path.expanduser(self.pub_file_path))
+            file_key = pub_file.read()
+            self.assertEqual(self.keypair_creator.get_keypair().public_key,
+                             file_key)
+        finally:
+            if pub_file:
+                pub_file.close()
+
         self.assertEqual(self.keypair_creator.get_keypair().public_key,
                          file_key)
 
