@@ -68,13 +68,13 @@ class OpenStackKeypair:
                     self.keypair_settings.public_filepath)
 
                 if self.keypair_settings.delete_on_clean is not None:
-                    self.__delete_keys_on_clean = self.keypair_settings.delete_on_clean
+                    delete_on_clean = self.keypair_settings.delete_on_clean
+                    self.__delete_keys_on_clean = delete_on_clean
                 else:
                     self.__delete_keys_on_clean = False
             else:
                 logger.info("Creating new keypair")
-                # TODO - Make this value configurable
-                keys = nova_utils.create_keys(1024)
+                keys = nova_utils.create_keys(self.keypair_settings.key_size)
                 self.__keypair = nova_utils.upload_keypair(
                     self.__nova, self.keypair_settings.name,
                     nova_utils.public_key_openssh(keys))
@@ -83,7 +83,8 @@ class OpenStackKeypair:
                     self.keypair_settings.private_filepath)
 
                 if self.keypair_settings.delete_on_clean is not None:
-                    self.__delete_keys_on_clean = self.keypair_settings.delete_on_clean
+                    delete_on_clean = self.keypair_settings.delete_on_clean
+                    self.__delete_keys_on_clean = delete_on_clean
                 else:
                     self.__delete_keys_on_clean = True
         elif self.__keypair and not os.path.isfile(
@@ -137,6 +138,8 @@ class KeypairSettings:
                                 public key file is or will be stored
         :param private_filepath: The path where the generated private key file
                                  will be stored
+        :param key_size: The number of bytes for the key size when it needs to
+                         be generated (Must be >=512 default 1024)
         :param delete_on_clean: when True, the key files will be deleted when
                                 OpenStackKeypair#clean() is called
         :return:
@@ -145,6 +148,7 @@ class KeypairSettings:
         self.name = kwargs.get('name')
         self.public_filepath = kwargs.get('public_filepath')
         self.private_filepath = kwargs.get('private_filepath')
+        self.key_size = int(kwargs.get('key_size', 1024))
 
         if kwargs.get('delete_on_clean') is not None:
             if isinstance(kwargs.get('delete_on_clean'), bool):
@@ -156,6 +160,9 @@ class KeypairSettings:
 
         if not self.name:
             raise KeypairSettingsError('Name is a required attribute')
+
+        if self.key_size < 512:
+            raise KeypairSettingsError('key_size must be >=512')
 
 
 class KeypairSettingsError(Exception):
