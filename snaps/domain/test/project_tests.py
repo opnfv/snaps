@@ -22,12 +22,26 @@ class ProjectDomainObjectTests(unittest.TestCase):
     Tests the construction of the snaps.domain.test.Project class
     """
 
-    def test_construction_positional(self):
+    def test_construction_positional_minimal(self):
         project = Project('foo', '123-456')
         self.assertEqual('foo', project.name)
         self.assertEqual('123-456', project.id)
+        self.assertIsNone(project.domain_id)
 
-    def test_construction_named(self):
+    def test_construction_positional_all(self):
+        project = Project('foo', '123-456', 'hello')
+        self.assertEqual('foo', project.name)
+        self.assertEqual('123-456', project.id)
+        self.assertEqual('hello', project.domain_id)
+
+    def test_construction_named_minimal(self):
         project = Project(project_id='123-456', name='foo')
         self.assertEqual('foo', project.name)
         self.assertEqual('123-456', project.id)
+        self.assertIsNone(project.domain_id)
+
+    def test_construction_named_all(self):
+        project = Project(domain_id='hello', project_id='123-456', name='foo')
+        self.assertEqual('foo', project.name)
+        self.assertEqual('123-456', project.id)
+        self.assertEqual('hello', project.domain_id)

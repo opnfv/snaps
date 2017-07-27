@@ -91,6 +91,10 @@ create_project_tests.py - CreateProjectSuccessTests
 +----------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                        | Keystone API  | Description                                               |
 +==================================+===============+===========================================================+
+| test_create_project_bad_domain   | 3             | Ensures that keystone v3 clients using the domain ID      |
+|                                  |               | project setting project creation will fail with an invalid|
+|                                  |               | domain id/name                                            |
++----------------------------------+---------------+-----------------------------------------------------------+
 | test_create_project              | 2 & 3         | Tests the creation of a project via the OpenStackProject  |
 |                                  |               | class                                                     |
 +----------------------------------+---------------+-----------------------------------------------------------+
