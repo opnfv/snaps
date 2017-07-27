@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aa4ed85_4dab88d6",
+        "filename": "ci/run_tests.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 5473
+      },
+      "writtenOn": "2017-07-27T10:52:37Z",
+      "side": 1,
+      "message": "I think you would benefit from a \u0027set -e\u0027 here so you can abort the run if something bad happens.",
+      "revId": "60ffea419957c80156468655c7d78febb8978abd",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
