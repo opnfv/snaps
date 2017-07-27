@@ -48,7 +48,7 @@ DEFAULT_IMAGE_FORMAT = 'qcow2'
 
 
 def get_credentials(os_env_file=None, proxy_settings_str=None,
-                    ssh_proxy_cmd=None, dev_os_env_file=None):
+                    ssh_proxy_cmd=None, dev_os_env_file=None, overrides=None):
     """
     Returns the OpenStack credentials object. It first attempts to retrieve
     them from a standard OpenStack source file. If that file is None, it will
@@ -58,6 +58,8 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
     :param ssh_proxy_cmd: the SSH proxy command for your environment (optional)
     :param dev_os_env_file: the YAML file to retrieve both the OS credentials
                             and proxy settings
+    :param overrides: dict() containing values to override the credentials
+                      found and passed in.
     :return: the SNAPS credentials object
     """
     if os_env_file:
@@ -129,6 +131,9 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
             'proxy_settings': proxy_settings,
             'cacert': config.get('cacert'),
             'region_name': config.get('region_name')}
+
+    if overrides and isinstance(overrides, dict):
+        creds_dict.update(overrides)
 
     os_creds = OSCreds(**creds_dict)
     logger.info('OS Credentials = %s', os_creds)
