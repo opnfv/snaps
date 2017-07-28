@@ -81,8 +81,9 @@ class OpenStackRouter:
                 self.__internal_subnets.append(internal_subnet)
                 if internal_subnet and not cleanup and not existing:
                     logger.debug('Adding router to subnet...')
-                    self.__internal_router_interface = neutron_utils.add_interface_router(
+                    router_intf = neutron_utils.add_interface_router(
                         self.__neutron, self.__router, subnet=internal_subnet)
+                    self.__internal_router_interface = router_intf
             else:
                 raise RouterCreationError(
                     'Subnet not found with name ' + internal_subnet_name)
@@ -261,9 +262,6 @@ class RouterSettings:
                 raise RouterSettingsError(
                     'Could not find the external network named - ' +
                     self.external_gateway)
-
-        # TODO: Enable SNAT option for Router
-        # TODO: Add external_fixed_ips Tests
 
         return {'router': out}
 
