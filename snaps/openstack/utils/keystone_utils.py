@@ -41,7 +41,9 @@ def get_session_auth(os_creds):
                            password=os_creds.password,
                            project_name=os_creds.project_name,
                            user_domain_id=os_creds.user_domain_id,
-                           project_domain_id=os_creds.project_domain_id)
+                           user_domain_name=os_creds.user_domain_name,
+                           project_domain_id=os_creds.project_domain_id,
+                           project_domain_name=os_creds.project_domain_name)
     else:
         auth = v2.Password(auth_url=os_creds.auth_url,
                            username=os_creds.username,
