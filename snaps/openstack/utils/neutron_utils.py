@@ -448,17 +448,31 @@ def get_external_networks(neutron):
     return out
 
 
-def get_floating_ips(neutron):
+def get_floating_ips(neutron, ports=None):
     """
     Returns all of the floating IPs
+    When ports is not None, FIPs returned must be associated with one of the
+    ports in the list and a tuple 2 where the first element being the port's
+    name and the second being the FloatingIp SNAPS-OO domain object.
+    When ports is None, all known FloatingIp SNAPS-OO domain objects will be
+    returned in a list
     :param neutron: the Neutron client
-    :return: a list of SNAPS FloatingIp objects
+    :param ports: a list of SNAPS-OO Port objects to join
+    :return: a list of tuple 2 (port_name, SNAPS FloatingIp) objects when ports
+             is not None else a list of Port objects
     """
     out = list()
     fips = neutron.list_floatingips()
     for fip in fips['floatingips']:
-        out.append(FloatingIp(inst_id=fip['id'],
-                              ip=fip['floating_ip_address']))
+        if ports:
+            for port_name, port in ports:
+                if fip['port_id'] == port.id:
+                    out.append((port.name, FloatingIp(
+                        inst_id=fip['id'], ip=fip['floating_ip_address'])))
+                    break
+        else:
+            out.append(FloatingIp(inst_id=fip['id'],
+                                  ip=fip['floating_ip_address']))
 
     return out
 

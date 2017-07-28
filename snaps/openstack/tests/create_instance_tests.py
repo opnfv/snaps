@@ -746,6 +746,51 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
 
         self.assertTrue(validate_ssh_client(inst_creator))
 
+    def test_ssh_client_fip_second_creator(self):
+        """
+        Tests the ability to access a VM via SSH and a floating IP via a
+        creator that is identical to the original creator.
+        """
+        port_settings = PortSettings(
+            name=self.port_1_name,
+            network_name=self.pub_net_config.network_settings.name)
+
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings],
+            floating_ip_settings=[FloatingIpSettings(
+                name=self.floating_ip_name, port_name=self.port_1_name,
+                router_name=self.pub_net_config.router_settings.name)])
+
+        inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings,
+            keypair_settings=self.keypair_creator.keypair_settings)
+        self.inst_creators.append(inst_creator)
+
+        # block=True will force the create() method to block until the
+        vm_inst = inst_creator.create(block=True)
+        self.assertIsNotNone(vm_inst)
+
+        self.assertTrue(inst_creator.vm_active(block=True))
+
+        ip = inst_creator.get_port_ip(port_settings.name)
+        self.assertTrue(check_dhcp_lease(inst_creator, ip))
+
+        inst_creator.add_security_group(
+            self.sec_grp_creator.get_security_group())
+        self.assertEqual(vm_inst, inst_creator.get_vm_inst())
+
+        self.assertTrue(validate_ssh_client(inst_creator))
+
+        inst_creator2 = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings,
+            keypair_settings=self.keypair_creator.keypair_settings)
+        inst_creator2.create()
+        self.assertTrue(validate_ssh_client(inst_creator2))
+
 
 class CreateInstancePortManipulationTests(OSIntegrationTestCase):
     """

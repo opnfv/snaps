@@ -57,9 +57,6 @@ class OpenStackVmInstance:
         self.image_settings = image_settings
         self.keypair_settings = keypair_settings
 
-        # TODO - get rid of FIP list and only use the dict(). Need to fix
-        # populating this object when already exists
-        self.__floating_ips = list()
         self.__floating_ip_dict = dict()
 
         # Instantiated in self.create()
@@ -102,13 +99,14 @@ class OpenStackVmInstance:
                 logger.info(
                     'Found existing machine with name - %s',
                     self.instance_settings.name)
-                fips = neutron_utils.get_floating_ips(self.__neutron)
-                for fip in fips:
-                    for subnet_name, ips in server.networks.items():
-                        if fip.ip in ips:
-                            self.__floating_ips.append(fip)
-                            # TODO - Determine a means to associate to the FIP
-                            # configuration and add to FIP map
+
+                fips = neutron_utils.get_floating_ips(self.__neutron,
+                                                      self.__ports)
+                for port_name, fip in fips:
+                    settings = self.instance_settings.floating_ip_settings
+                    for fip_setting in settings:
+                        if port_name == fip_setting.port_name:
+                            self.__floating_ip_dict[fip_setting.name] = fip
 
     def __create_vm(self, block=False):
         """
@@ -170,7 +168,6 @@ class OpenStackVmInstance:
                     self.__neutron, floating_ip_setting.subnet_name)
                 floating_ip = neutron_utils.create_floating_ip(
                     self.__neutron, ext_gateway)
-                self.__floating_ips.append(floating_ip)
                 self.__floating_ip_dict[floating_ip_setting.name] = floating_ip
 
                 logger.info(
@@ -204,13 +201,12 @@ class OpenStackVmInstance:
         """
 
         # Cleanup floating IPs
-        for floating_ip in self.__floating_ips:
+        for name, floating_ip in self.__floating_ip_dict.items():
             try:
                 logger.info('Deleting Floating IP - ' + floating_ip.ip)
                 neutron_utils.delete_floating_ip(self.__neutron, floating_ip)
             except Exception as e:
                 logger.error('Error deleting Floating IP - ' + str(e))
-        self.__floating_ips = list()
         self.__floating_ip_dict = dict()
 
         # Cleanup ports
@@ -266,7 +262,7 @@ class OpenStackVmInstance:
             port = neutron_utils.get_port_by_name(self.__neutron,
                                                   port_setting.name)
             if port:
-                ports.append((port_setting.name, {'port': port}))
+                ports.append((port_setting.name, port))
             elif not cleanup:
                 # Exception will be raised when port with same name already
                 # exists
@@ -287,8 +283,8 @@ class OpenStackVmInstance:
         if subnet:
             # Take IP of subnet if there is one configured on which to place
             # the floating IP
-            for fixed_ip in port.fixed_ips:
-                if fixed_ip['subnet_id'] == subnet['subnet']['id']:
+            for fixed_ip in port.ips:
+                if fixed_ip['subnet_id'] == subnet.id:
                     ip = fixed_ip['ip_address']
                     break
         else:
@@ -408,7 +404,7 @@ class OpenStackVmInstance:
         more than one configured port
         :return: the value returned by ansible_utils.apply_ansible_playbook()
         """
-        if len(self.__ports) > 1 and len(self.__floating_ips) > 0:
+        if len(self.__ports) > 1 and len(self.__floating_ip_dict) > 0:
             if self.vm_active(block=True) and self.vm_ssh_active(block=True):
                 for key, port in self.__ports:
                     port_index = self.__ports.index((key, port))
@@ -432,8 +428,9 @@ class OpenStackVmInstance:
                 fip = self.__floating_ip_dict.get(floating_ip_setting.name)
                 if fip:
                     return fip
-                elif len(self.__floating_ips) > 0:
-                    return self.__floating_ips[0]
+                elif len(self.__floating_ip_dict) > 0:
+                    for key, fip in self.__floating_ip_dict.items():
+                        return fip
 
     def __config_nic(self, nic_name, port, ip):
         """
@@ -615,7 +612,7 @@ class OpenStackVmInstance:
         Returns True when can create a SSH session else False
         :return: T/F
         """
-        if len(self.__floating_ips) > 0:
+        if len(self.__floating_ip_dict) > 0:
             ssh = self.ssh_client()
             if ssh:
                 ssh.close()
@@ -632,9 +629,8 @@ class OpenStackVmInstance:
         fip = None
         if fip_name and self.__floating_ip_dict.get(fip_name):
             return self.__floating_ip_dict.get(fip_name)
-        if not fip and len(self.__floating_ips) > 0:
-            return self.__floating_ips[0]
-        return None
+        if not fip:
+            return self.__get_first_provisioning_floating_ip()
 
     def ssh_client(self, fip_name=None):
         """
@@ -646,7 +642,8 @@ class OpenStackVmInstance:
         fip = self.get_floating_ip(fip_name)
         if fip:
             return ansible_utils.ssh_client(
-                self.__floating_ips[0].ip, self.get_image_user(),
+                self.__get_first_provisioning_floating_ip().ip,
+                self.get_image_user(),
                 self.keypair_settings.private_filepath,
                 proxy_settings=self.__os_creds.proxy_settings)
         else:
