@@ -135,23 +135,13 @@ class OSCredsUnitTests(unittest.TestCase):
         with self.assertRaises(OSCredsError):
             OSCreds(**{'project_name': 'foo'})
 
-    def test_invalid_auth_url(self):
-        with self.assertRaises(OSCredsError):
-            OSCreds(username='foo', password='bar',
-                    auth_url='http://foo.bar', project_name='hello')
-
-    def test_invalid_auth_url_kwargs(self):
-        with self.assertRaises(OSCredsError):
-            OSCreds(**{'username': 'foo', 'password': 'bar',
-                    'auth_url': 'http://foo.bar', 'project_name': 'hello'})
-
     def test_minimal(self):
         os_creds = OSCreds(
             username='foo', password='bar', auth_url='http://foo.bar:5000/v2',
             project_name='hello')
         self.assertEqual('foo', os_creds.username)
         self.assertEqual('bar', os_creds.password)
-        self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
+        self.assertEqual('http://foo.bar:5000/v2.0', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
         self.assertEqual(2, os_creds.identity_api_version)
         self.assertEqual(2, os_creds.image_api_version)
@@ -172,7 +162,7 @@ class OSCredsUnitTests(unittest.TestCase):
                               'project_name': 'hello'})
         self.assertEqual('foo', os_creds.username)
         self.assertEqual('bar', os_creds.password)
-        self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
+        self.assertEqual('http://foo.bar:5000/v2.0', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
         self.assertEqual(2, os_creds.identity_api_version)
         self.assertEqual(2, os_creds.image_api_version)
@@ -196,7 +186,7 @@ class OSCredsUnitTests(unittest.TestCase):
                'cacert': 'true', 'region_name': 'test_region'})
         self.assertEqual('foo', os_creds.username)
         self.assertEqual('bar', os_creds.password)
-        self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
+        self.assertEqual('http://foo.bar:5000/v5', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
         self.assertEqual(5, os_creds.identity_api_version)
         self.assertEqual(6, os_creds.image_api_version)
@@ -220,7 +210,7 @@ class OSCredsUnitTests(unittest.TestCase):
                'cacert': True, 'region_name': 'test_region'})
         self.assertEqual('foo', os_creds.username)
         self.assertEqual('bar', os_creds.password)
-        self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
+        self.assertEqual('http://foo.bar:5000/v5', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
         self.assertEqual(5, os_creds.identity_api_version)
         self.assertEqual(6, os_creds.image_api_version)
@@ -238,11 +228,11 @@ class OSCredsUnitTests(unittest.TestCase):
     def test_proxy_settings_obj(self):
         proxy_settings = ProxySettings(host='foo', port=1234)
         os_creds = OSCreds(
-            username='foo', password='bar', auth_url='http://foo.bar:5000/v2',
+            username='foo', password='bar', auth_url='http://foo.bar:5000/',
             project_name='hello', proxy_settings=proxy_settings)
         self.assertEqual('foo', os_creds.username)
         self.assertEqual('bar', os_creds.password)
-        self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
+        self.assertEqual('http://foo.bar:5000/v2.0', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
         self.assertEqual(2, os_creds.identity_api_version)
         self.assertEqual(2, os_creds.image_api_version)
@@ -270,7 +260,7 @@ class OSCredsUnitTests(unittest.TestCase):
                'project_domain_name': 'domain4'})
         self.assertEqual('foo', os_creds.username)
         self.assertEqual('bar', os_creds.password)
-        self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
+        self.assertEqual('http://foo.bar:5000/v2.0', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
         self.assertEqual(2, os_creds.identity_api_version)
         self.assertEqual(2, os_creds.image_api_version)
@@ -295,7 +285,7 @@ class OSCredsUnitTests(unittest.TestCase):
             project_domain_id='domain3', project_domain_name='domain4')
         self.assertEqual('foo', os_creds.username)
         self.assertEqual('bar', os_creds.password)
-        self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
+        self.assertEqual('http://foo.bar:5000/v2.0', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
         self.assertEqual(2, os_creds.identity_api_version)
         self.assertEqual(2, os_creds.image_api_version)
@@ -319,7 +309,7 @@ class OSCredsUnitTests(unittest.TestCase):
                'region_name': 'test_region'})
         self.assertEqual('foo', os_creds.username)
         self.assertEqual('bar', os_creds.password)
-        self.assertEqual('http://foo.bar:5000/v2', os_creds.auth_url)
+        self.assertEqual('http://foo.bar:5000/v2.0', os_creds.auth_url)
         self.assertEqual('hello', os_creds.project_name)
         self.assertEqual(2, os_creds.identity_api_version)
         self.assertEqual(2, os_creds.image_api_version)

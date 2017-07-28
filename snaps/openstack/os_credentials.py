@@ -128,13 +128,34 @@ class OSCreds:
             raise OSCredsError('username, password, auth_url, and project_name'
                                ' are required')
 
-        auth_url_tokens = self.auth_url.split('/')
-        last_token = auth_url_tokens[len(auth_url_tokens) - 1]
-        if len(last_token) == 0:
-            last_token = auth_url_tokens[len(auth_url_tokens) - 2]
+        self.auth_url = self.__scrub_auth_url()
 
-        if not last_token.startswith('v'):
-            raise OSCredsError('auth_url last toke must start with \'v\'')
+    def __scrub_auth_url(self):
+        """
+        As the Python APIs are have more stringent requirements around how the
+        auth_url is formed than the CLI, this method will scrub any version
+        from the end of
+        :return:
+        """
+        auth_url_tokens = self.auth_url.rstrip('/').split('/')
+        last_token = auth_url_tokens[len(auth_url_tokens) - 1]
+        token_iters = len(auth_url_tokens)
+        if last_token.startswith('v'):
+            token_iters -= 1
+        if self.identity_api_version == keystone_utils.V2_VERSION_NUM:
+            last_token = keystone_utils.V2_VERSION_STR
+        else:
+            last_token = 'v' + str(int(self.identity_api_version))
+
+        new_url = None
+        for ctr in range(0, token_iters):
+            if new_url:
+                new_url += '/' + auth_url_tokens[ctr]
+            else:
+                new_url = auth_url_tokens[ctr]
+        new_url += '/' + last_token
+
+        return new_url
 
     @property
     def __str__(self):
