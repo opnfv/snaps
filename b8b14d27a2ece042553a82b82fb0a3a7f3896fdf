@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aa4ed85_289b9a73",
+        "filename": "snaps/openstack/tests/openstack_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-07-28T03:01:35Z",
+      "side": 1,
+      "message": "Hi Steven, after you updated user_domain_id and project_domain_id, \"functest env prepare\" failed in compass master, where OS_USER_DOMAIN_NAME\u003dDefault and OS_PROJECT_DOMAIN_NAME\u003dDefault are included in openrc.\n\nBut when i change them to lower case \"default\" in openrc or reset the code lines here as before:\n\u0027user_domain_id\u0027: config.get(\u0027OS_USER_DOMAIN_ID\u0027),\n\u0027project_domain_id\u0027: config.get(\u0027OS_PROJECT_DOMAIN_ID\u0027), \n\n\"functest env prepare\" run successfully. \n\nDo you know why? please check the email I sent you for detailed info. Thanks.",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 78
+      },
+      "revId": "b8b14d27a2ece042553a82b82fb0a3a7f3896fdf",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
