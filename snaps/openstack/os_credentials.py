@@ -42,8 +42,10 @@ class OSCreds:
                                     clients
         :param heat_api_version: The OpenStack's API version to use for Heat
                                     clients
-        :param user_domain_id: Used for v3 APIs (default='default')
-        :param project_domain_id: Used for v3 APIs (default='default')
+        :param user_domain_id: Used for v3 APIs (default=None)
+        :param user_domain_name: Used for v3 APIs (default='default')
+        :param project_domain_id: Used for v3 APIs (default=None)
+        :param project_domain_name: Used for v3 APIs (default='default')
         :param interface: Used to specify the endpoint type for keystone as
                           public, admin, internal
         :param proxy_settings: instance of os_credentials.ProxySettings class
@@ -83,15 +85,19 @@ class OSCreds:
         else:
             self.heat_api_version = float(kwargs['heat_api_version'])
 
-        if kwargs.get('user_domain_id') is None:
-            self.user_domain_id = 'default'
-        else:
-            self.user_domain_id = kwargs['user_domain_id']
+        self.user_domain_id = kwargs.get('user_domain_id')
 
-        if kwargs.get('project_domain_id') is None:
-            self.project_domain_id = 'default'
+        if kwargs.get('user_domain_name') is None:
+            self.user_domain_name = 'default'
         else:
-            self.project_domain_id = kwargs['project_domain_id']
+            self.user_domain_name = kwargs['user_domain_name']
+
+        self.project_domain_id = kwargs.get('project_domain_id')
+
+        if kwargs.get('project_domain_name') is None:
+            self.project_domain_name = 'default'
+        else:
+            self.project_domain_name = kwargs['project_domain_name']
 
         if kwargs.get('interface') is None:
             self.interface = 'admin'
@@ -141,8 +147,13 @@ class OSCreds:
                 ', image_api_version=' + str(self.image_api_version) +
                 ', network_api_version=' + str(self.network_api_version) +
                 ', compute_api_version=' + str(self.compute_api_version) +
+                ', heat_api_version=' + str(self.heat_api_version) +
                 ', user_domain_id=' + str(self.user_domain_id) +
+                ', user_domain_name=' + str(self.user_domain_name) +
+                ', project_domain_id=' + str(self.project_domain_id) +
+                ', project_domain_name=' + str(self.project_domain_name) +
                 ', interface=' + str(self.interface) +
+                ', region_name=' + str(self.region_name) +
                 ', proxy_settings=' + str(self.proxy_settings) +
                 ', cacert=' + str(self.cacert))
 
