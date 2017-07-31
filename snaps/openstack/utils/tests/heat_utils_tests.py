@@ -34,7 +34,7 @@ logger = logging.getLogger('nova_utils_tests')
 
 class HeatSmokeTests(OSComponentTestCase):
     """
-    Tests to ensure that the nova client can communicate with the cloud
+    Tests to ensure that the heat client can communicate with the cloud
     """
 
     def test_nova_connect_success(self):
@@ -69,16 +69,16 @@ class HeatSmokeTests(OSComponentTestCase):
 
 class HeatUtilsCreateStackTests(OSComponentTestCase):
     """
-    Test basic nova keypair functionality
+    Test basic Heat functionality
     """
 
     def setUp(self):
         """
-        Instantiates the CreateImage object that is responsible for downloading
-        and creating an OS image file within OpenStack
+        Instantiates OpenStack instances that cannot be spawned by Heat
         """
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        stack_name = self.__class__.__name__ + '-' + str(guid) + '-stack'
+        stack_name1 = self.__class__.__name__ + '-' + str(guid) + '-stack1'
+        stack_name2 = self.__class__.__name__ + '-' + str(guid) + '-stack2'
 
         self.image_creator = OpenStackImage(
             self.os_creds, openstack_tests.cirros_image_settings(
@@ -96,19 +96,29 @@ class HeatUtilsCreateStackTests(OSComponentTestCase):
                       'flavor_name': self.flavor_creator.flavor_settings.name}
         heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'test_heat_template.yaml')
-        self.stack_settings = StackSettings(
-            name=stack_name, template_path=heat_tmplt_path,
+        self.stack_settings1 = StackSettings(
+            name=stack_name1, template_path=heat_tmplt_path,
             env_values=env_values)
-        self.stack = None
+        self.stack_settings2 = StackSettings(
+            name=stack_name2, template_path=heat_tmplt_path,
+            env_values=env_values)
+        self.stack1 = None
+        self.stack2 = None
         self.heat_client = heat_utils.heat_client(self.os_creds)
 
     def tearDown(self):
         """
         Cleans the image and downloaded image file
         """
-        if self.stack:
+        if self.stack1:
             try:
-                heat_utils.delete_stack(self.heat_client, self.stack)
+                heat_utils.delete_stack(self.heat_client, self.stack1)
+            except:
+                pass
+
+        if self.stack2:
+            try:
+                heat_utils.delete_stack(self.heat_client, self.stack2)
             except:
                 pass
 
@@ -126,20 +136,25 @@ class HeatUtilsCreateStackTests(OSComponentTestCase):
 
     def test_create_stack(self):
         """
-        Tests the creation of an OpenStack keypair that does not exist.
+        Tests the creation of an OpenStack Heat stack1 that does not exist.
         """
-        self.stack = heat_utils.create_stack(self.heat_client,
-                                             self.stack_settings)
+        self.stack1 = heat_utils.create_stack(self.heat_client,
+                                              self.stack_settings1)
 
-        stack_query_1 = heat_utils.get_stack_by_name(self.heat_client,
-                                                     self.stack_settings.name)
-        self.assertEqual(self.stack.id, stack_query_1.id)
+        stack_query_1 = heat_utils.get_stack(
+            self.heat_client, stack_settings=self.stack_settings1)
+        self.assertEqual(self.stack1, stack_query_1)
 
-        stack_query_2 = heat_utils.get_stack_by_id(self.heat_client,
-                                                   self.stack.id)
-        self.assertEqual(self.stack.id, stack_query_2.id)
+        stack_query_2 = heat_utils.get_stack(
+            self.heat_client, stack_name=self.stack_settings1.name)
+        self.assertEqual(self.stack1, stack_query_2)
 
-        outputs = heat_utils.get_stack_outputs(self.heat_client, self.stack.id)
+        stack_query_3 = heat_utils.get_stack_by_id(self.heat_client,
+                                                   self.stack1.id)
+        self.assertEqual(self.stack1, stack_query_3)
+
+        outputs = heat_utils.get_stack_outputs(
+            self.heat_client, self.stack1.id)
         self.assertIsNotNone(outputs)
         self.assertEqual(0, len(outputs))
 
@@ -148,7 +163,85 @@ class HeatUtilsCreateStackTests(OSComponentTestCase):
         is_active = False
         while time.time() < end_time:
             status = heat_utils.get_stack_status(self.heat_client,
-                                                 self.stack.id)
+                                                 self.stack1.id)
+            if status == create_stack.STATUS_CREATE_COMPLETE:
+                is_active = True
+                break
+            elif status == create_stack.STATUS_CREATE_FAILED:
+                is_active = False
+                break
+
+            time.sleep(3)
+
+        self.assertTrue(is_active)
+
+    def test_create_stack_x2(self):
+        """
+        Tests the creation of an OpenStack keypair that does not exist.
+        """
+        self.stack1 = heat_utils.create_stack(self.heat_client,
+                                              self.stack_settings1)
+
+        stack1_query_1 = heat_utils.get_stack(
+            self.heat_client, stack_settings=self.stack_settings1)
+        self.assertEqual(self.stack1, stack1_query_1)
+
+        stack1_query_2 = heat_utils.get_stack(
+            self.heat_client, stack_name=self.stack_settings1.name)
+        self.assertEqual(self.stack1, stack1_query_2)
+
+        stack1_query_3 = heat_utils.get_stack_by_id(self.heat_client,
+                                                    self.stack1.id)
+        self.assertEqual(self.stack1, stack1_query_3)
+
+        outputs = heat_utils.get_stack_outputs(self.heat_client,
+                                               self.stack1.id)
+        self.assertIsNotNone(outputs)
+        self.assertEqual(0, len(outputs))
+
+        end_time = time.time() + create_stack.STACK_COMPLETE_TIMEOUT
+
+        is_active = False
+        while time.time() < end_time:
+            status = heat_utils.get_stack_status(self.heat_client,
+                                                 self.stack1.id)
+            if status == create_stack.STATUS_CREATE_COMPLETE:
+                is_active = True
+                break
+            elif status == create_stack.STATUS_CREATE_FAILED:
+                is_active = False
+                break
+
+            time.sleep(3)
+
+        self.assertTrue(is_active)
+
+        self.stack2 = heat_utils.create_stack(self.heat_client,
+                                              self.stack_settings2)
+
+        stack2_query_1 = heat_utils.get_stack(
+            self.heat_client, stack_settings=self.stack_settings2)
+        self.assertEqual(self.stack2, stack2_query_1)
+
+        stack2_query_2 = heat_utils.get_stack(
+            self.heat_client, stack_name=self.stack_settings2.name)
+        self.assertEqual(self.stack2, stack2_query_2)
+
+        stack2_query_3 = heat_utils.get_stack_by_id(self.heat_client,
+                                                    self.stack2.id)
+        self.assertEqual(self.stack2, stack2_query_3)
+
+        outputs = heat_utils.get_stack_outputs(self.heat_client,
+                                               self.stack2.id)
+        self.assertIsNotNone(outputs)
+        self.assertEqual(0, len(outputs))
+
+        end_time = time.time() + create_stack.STACK_COMPLETE_TIMEOUT
+
+        is_active = False
+        while time.time() < end_time:
+            status = heat_utils.get_stack_status(self.heat_client,
+                                                 self.stack2.id)
             if status == create_stack.STATUS_CREATE_COMPLETE:
                 is_active = True
                 break

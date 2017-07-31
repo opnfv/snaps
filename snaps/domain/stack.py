@@ -27,3 +27,7 @@ class Stack:
         """
         self.name = name
         self.id = stack_id
+
+    def __eq__(self, other):
+        return (self.name == other.name and
+                self.id == other.id)
