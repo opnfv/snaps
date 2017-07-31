@@ -253,8 +253,7 @@ class RouterSettings:
         if self.admin_state_up is not None:
             out['admin_state_up'] = self.admin_state_up
         if self.external_gateway:
-            ext_net = neutron_utils.get_network(neutron, self.external_gateway,
-                                                project_id)
+            ext_net = neutron_utils.get_network(neutron, self.external_gateway)
             if ext_net:
                 ext_gw['network_id'] = ext_net.id
                 out['external_gateway_info'] = ext_gw
