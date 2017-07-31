@@ -123,7 +123,7 @@ class CreateProjectSuccessTests(OSComponentTestCase):
         self.assertIsNotNone(created_project)
 
         retrieved_project = keystone_utils.get_project(
-            keystone=self.keystone, project_name=self.project_settings.name)
+            keystone=self.keystone, project_settings=self.project_settings)
         self.assertIsNotNone(retrieved_project)
         self.assertEqual(created_project, retrieved_project)
         self.assertTrue(validate_project(self.keystone, self.project_settings,
@@ -140,7 +140,7 @@ class CreateProjectSuccessTests(OSComponentTestCase):
         self.assertIsNotNone(created_project)
 
         retrieved_project = keystone_utils.get_project(
-            keystone=self.keystone, project_name=self.project_settings.name)
+            keystone=self.keystone, project_settings=self.project_settings)
         self.assertIsNotNone(retrieved_project)
         self.assertEqual(created_project, retrieved_project)
 

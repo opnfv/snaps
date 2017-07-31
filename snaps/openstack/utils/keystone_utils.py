@@ -104,18 +104,17 @@ def get_endpoint(os_creds, service_type, interface='public'):
         auth=auth, service_type=service_type, interface=interface)
 
 
-def get_project(keystone=None, os_creds=None, project_name=None):
+def get_project(keystone=None, os_creds=None, project_settings=None,
+                project_name=None):
     """
     Returns the first project object or None if not found
     :param keystone: the Keystone client
     :param os_creds: the OpenStack credentials used to obtain the Keystone
                      client if the keystone parameter is None
+    :param project_settings: a ProjectSettings object
     :param project_name: the name to query
     :return: the SNAPS-OO Project domain object or None
     """
-    if not project_name:
-        return None
-
     if not keystone:
         if os_creds:
             keystone = keystone_client(os_creds)
@@ -123,20 +122,29 @@ def get_project(keystone=None, os_creds=None, project_name=None):
             raise KeystoneException(
                 'Cannot lookup project without the proper credentials')
 
+    proj_filter = dict()
+
+    if project_name:
+        proj_filter['name'] = project_name
+    elif project_settings:
+        proj_filter['name'] = project_settings.name
+        proj_filter['description'] = project_settings.description
+        proj_filter['domain'] = project_settings.domain
+        proj_filter['enabled'] = project_settings.enabled
+
     if keystone.version == V2_VERSION_STR:
         projects = keystone.tenants.list()
     else:
-        projects = keystone.projects.list(**{'name': project_name})
+        projects = keystone.projects.list(**proj_filter)
 
     for project in projects:
-        domain_id = None
-        if keystone.version != V2_VERSION_STR:
-            domain_id = project.domain_id
-        if project.name == project_name:
+        if project.name == proj_filter['name']:
+            domain_id = None
+            if keystone.version != V2_VERSION_STR:
+                domain_id = project.domain_id
+
             return Project(name=project.name, project_id=project.id,
                            domain_id=domain_id)
-
-    return None
 
 
 def create_project(keystone, project_settings):
@@ -193,7 +201,9 @@ def get_user(keystone, username, project_name=None):
     :param project_name: the associated project (optional)
     :return: a SNAPS-OO User domain object or None
     """
-    project = get_project(keystone=keystone, project_name=project_name)
+    project = None
+    if project_name:
+        project = get_project(keystone=keystone, project_name=project_name)
 
     if project:
         users = keystone.users.list(tenant_id=project.id)

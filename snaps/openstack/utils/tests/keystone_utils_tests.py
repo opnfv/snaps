@@ -104,7 +104,7 @@ class KeystoneUtilsTests(OSComponentTestCase):
         self.assertEqual(self.project_name, self.project.name)
 
         project = keystone_utils.get_project(
-            keystone=self.keystone, project_name=project_settings.name)
+            keystone=self.keystone, project_settings=project_settings)
         self.assertIsNotNone(project)
         self.assertEqual(self.project_name, self.project.name)
 

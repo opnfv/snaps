@@ -48,7 +48,7 @@ class OpenStackProject:
         """
         self.__keystone = keystone_utils.keystone_client(self.__os_creds)
         self.__project = keystone_utils.get_project(
-            keystone=self.__keystone, project_name=self.project_settings.name)
+            keystone=self.__keystone, project_settings=self.project_settings)
         if self.__project:
             logger.info(
                 'Found project with name - ' + self.project_settings.name)
