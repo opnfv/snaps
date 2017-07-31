@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e4e1f49b",
+        "filename": "snaps/openstack/os_credentials.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 334
+      },
+      "writtenOn": "2017-07-31T13:04:08Z",
+      "side": 1,
+      "message": "should you really default this?  If so shouldn\u0027t it be a uuid?",
+      "range": {
+        "startLine": 45,
+        "startChar": 57,
+        "endLine": 45,
+        "endChar": 66
+      },
+      "revId": "20ea47c0a6d6b6c2a526c2187ffcae6bdea5b7a0",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_44eee08c",
+        "filename": "snaps/openstack/os_credentials.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 334
+      },
+      "writtenOn": "2017-07-31T13:04:08Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 47,
+        "startChar": 52,
+        "endLine": 47,
+        "endChar": 69
+      },
+      "revId": "20ea47c0a6d6b6c2a526c2187ffcae6bdea5b7a0",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
