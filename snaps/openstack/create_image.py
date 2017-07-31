@@ -56,8 +56,8 @@ class OpenStackImage:
         :return: The OpenStack Image object
         """
         self.__glance = glance_utils.glance_client(self.__os_creds)
-        self.__image = glance_utils.get_image(self.__glance,
-                                              self.image_settings.name)
+        self.__image = glance_utils.get_image(
+            self.__glance, image_settings=self.image_settings)
         if self.__image:
             logger.info('Found image with name - ' + self.image_settings.name)
             return self.__image
@@ -72,7 +72,7 @@ class OpenStackImage:
             if self.image_settings.kernel_image_settings:
                 self.__kernel_image = glance_utils.get_image(
                     self.__glance,
-                    self.image_settings.kernel_image_settings.name)
+                    image_settings=self.image_settings.kernel_image_settings)
 
                 if not self.__kernel_image and not cleanup:
                     logger.info(
@@ -85,7 +85,7 @@ class OpenStackImage:
             if self.image_settings.ramdisk_image_settings:
                 self.__ramdisk_image = glance_utils.get_image(
                     self.__glance,
-                    self.image_settings.ramdisk_image_settings.name)
+                    image_settings=self.image_settings.ramdisk_image_settings)
 
                 if not self.__ramdisk_image and not cleanup:
                     logger.info(

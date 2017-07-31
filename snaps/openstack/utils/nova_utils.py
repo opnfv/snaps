@@ -83,7 +83,7 @@ def create_server(nova, neutron, glance, instance_settings, image_settings,
         raise NovaException(
             'Flavor not found with name - %s', instance_settings.flavor)
 
-    image = glance_utils.get_image(glance, image_settings.name)
+    image = glance_utils.get_image(glance, image_settings=image_settings)
     if image:
         args = {'name': instance_settings.name,
                 'flavor': flavor,
