@@ -1,0 +1,118 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aa4ed85_83a07144",
+        "filename": "ci/ci_tests.yaml",
+        "patchSetId": 3
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 489
+      },
+      "writtenOn": "2017-07-31T08:07:04Z",
+      "side": 1,
+      "message": "What about verifying that the snaps directory doesn\u0027t exist or blowing it away or something first.",
+      "revId": "e0c0536e636037aabb1fe368c794d48f947d2fbf",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1aa4ed85_e3992520",
+        "filename": "ci/ci_tests.yaml",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 489
+      },
+      "writtenOn": "2017-07-31T08:07:04Z",
+      "side": 1,
+      "message": "Why not put everything into the snaps directory",
+      "revId": "e0c0536e636037aabb1fe368c794d48f947d2fbf",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1aa4ed85_a3a32d4e",
+        "filename": "ci/ci_tests.yaml",
+        "patchSetId": 3
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 489
+      },
+      "writtenOn": "2017-07-31T08:07:04Z",
+      "side": 1,
+      "message": "Are these the only options that are successfully running?  I don\u0027t think that this will have very much code coverage.",
+      "revId": "e0c0536e636037aabb1fe368c794d48f947d2fbf",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1aa4ed85_638535ac",
+        "filename": "ci/copy_rc_file.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 489
+      },
+      "writtenOn": "2017-07-31T08:07:04Z",
+      "side": 1,
+      "message": "Why don\u0027t you do this from the ansible playbook?",
+      "revId": "e0c0536e636037aabb1fe368c794d48f947d2fbf",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1aa4ed85_438a79c0",
+        "filename": "ci/copy_rc_file.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 489
+      },
+      "writtenOn": "2017-07-31T08:07:04Z",
+      "side": 1,
+      "message": "Move this to a separate line and verify the results.\nIsn\u0027t a destination needed.\n\nSome comments and a header would be great.  What does this do?  It sounds like find the location of the openrc file and then copies it  locally.\n\nThe openrc is a different name than you have in the ansible playbook.",
+      "range": {
+        "startLine": 3,
+        "startChar": 18,
+        "endLine": 3,
+        "endChar": 78
+      },
+      "revId": "e0c0536e636037aabb1fe368c794d48f947d2fbf",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1aa4ed85_039481e0",
+        "filename": "ci/run_tests.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 489
+      },
+      "writtenOn": "2017-07-31T08:07:04Z",
+      "side": 1,
+      "message": "Move this to a variable at the top of the file for readability and ease of changing / overwriting in other environments.",
+      "range": {
+        "startLine": 10,
+        "startChar": 20,
+        "endLine": 10,
+        "endChar": 35
+      },
+      "revId": "e0c0536e636037aabb1fe368c794d48f947d2fbf",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
