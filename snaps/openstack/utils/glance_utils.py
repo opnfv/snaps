@@ -44,26 +44,34 @@ def glance_client(os_creds):
                   region_name=os_creds.region_name)
 
 
-def get_image(glance, image_name=None):
+def get_image(glance, image_name=None, image_settings=None):
     """
     Returns an OpenStack image object for a given name
     :param glance: the Glance client
     :param image_name: the image name to lookup
+    :param image_settings: the image settings used for lookups
     :return: the image object or None
     """
-    images = glance.images.list()
+    img_filter = dict()
+    if image_settings:
+        if image_settings.exists:
+            img_filter = {'name': image_settings.name}
+        else:
+            img_filter = {'name': image_settings.name,
+                          'disk_format': image_settings.format}
+    elif image_name:
+        img_filter = {'name': image_name}
+
+    images = glance.images.list(**{'filters': img_filter})
     for image in images:
         if glance.version == VERSION_1:
-            if image.name == image_name:
-                image = glance.images.get(image.id)
-                return Image(name=image.name, image_id=image.id,
-                             size=image.size, properties=image.properties)
+            image = glance.images.get(image.id)
+            return Image(name=image.name, image_id=image.id,
+                         size=image.size, properties=image.properties)
         elif glance.version == VERSION_2:
-            if image['name'] == image_name:
-                return Image(
-                    name=image['name'], image_id=image['id'],
-                    size=image['size'], properties=image.get('properties'))
-    return None
+            return Image(
+                name=image['name'], image_id=image['id'],
+                size=image['size'], properties=image.get('properties'))
 
 
 def get_image_by_id(glance, image_id):

@@ -40,7 +40,7 @@ class GlanceSmokeTests(OSComponentTestCase):
         Tests to ensure that the proper credentials can connect.
         """
         glance = glance_utils.glance_client(self.os_creds)
-        image = glance_utils.get_image(glance, 'foo')
+        image = glance_utils.get_image(glance, image_name='foo')
         self.assertIsNone(image)
 
     def test_glance_connect_fail(self):
@@ -53,7 +53,7 @@ class GlanceSmokeTests(OSComponentTestCase):
             glance = glance_utils.glance_client(OSCreds(
                 username='user', password='pass', auth_url='url',
                 project_name='project'))
-            glance_utils.get_image(glance, 'foo')
+            glance_utils.get_image(glance, image_name='foo')
 
 
 class GlanceUtilsTests(OSComponentTestCase):
@@ -104,7 +104,8 @@ class GlanceUtilsTests(OSComponentTestCase):
 
             self.assertEqual(self.image_name, self.image.name)
 
-            image = glance_utils.get_image(self.glance, os_image_settings.name)
+            image = glance_utils.get_image(self.glance,
+                                           image_settings=os_image_settings)
             self.assertIsNotNone(image)
 
             validation_utils.objects_equivalent(self.image, image)
@@ -132,6 +133,7 @@ class GlanceUtilsTests(OSComponentTestCase):
         self.assertIsNotNone(self.image)
         self.assertEqual(self.image_name, self.image.name)
 
-        image = glance_utils.get_image(self.glance, file_image_settings.name)
+        image = glance_utils.get_image(
+            self.glance, image_settings=file_image_settings)
         self.assertIsNotNone(image)
         validation_utils.objects_equivalent(self.image, image)

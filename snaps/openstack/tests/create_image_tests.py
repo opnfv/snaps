@@ -316,8 +316,8 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         created_image = self.image_creator.create()
         self.assertIsNotNone(created_image)
 
-        retrieved_image = glance_utils.get_image(self.glance,
-                                                 self.image_settings.name)
+        retrieved_image = glance_utils.get_image(
+            self.glance, image_settings=self.image_settings)
         self.assertIsNotNone(retrieved_image)
         self.assertEqual(created_image.size, retrieved_image.size)
         self.assertEqual(get_image_size(self.image_settings),
@@ -337,8 +337,8 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         created_image = self.image_creator.create()
         self.assertIsNotNone(created_image)
 
-        retrieved_image = glance_utils.get_image(self.glance,
-                                                 self.image_settings.name)
+        retrieved_image = glance_utils.get_image(
+            self.glance, image_settings=self.image_settings)
         self.assertIsNotNone(retrieved_image)
         self.assertEqual(self.image_creator.get_image().size,
                          retrieved_image.size)
@@ -370,7 +370,7 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
             self.assertEqual(self.image_name, created_image.name)
 
             retrieved_image = glance_utils.get_image(
-                self.glance, file_image_settings.name)
+                self.glance, image_settings=file_image_settings)
             self.assertIsNotNone(retrieved_image)
             self.assertEqual(self.image_creator.get_image().size,
                              retrieved_image.size)
@@ -394,8 +394,8 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         created_image = self.image_creator.create()
         self.assertIsNotNone(created_image)
 
-        retrieved_image = glance_utils.get_image(self.glance,
-                                                 self.image_settings.name)
+        retrieved_image = glance_utils.get_image(
+            self.glance, image_settings=self.image_settings)
         self.assertIsNotNone(retrieved_image)
         self.assertEqual(self.image_creator.get_image().size,
                          retrieved_image.size)
@@ -406,7 +406,7 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         glance_utils.delete_image(self.glance, created_image)
 
         self.assertIsNone(glance_utils.get_image(
-            self.glance, self.image_creator.image_settings.name))
+            self.glance, image_settings=self.image_creator.image_settings))
 
         # Must not throw an exception when attempting to cleanup non-existent
         # image
@@ -422,8 +422,8 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
                                                          self.image_settings)
         image1 = self.image_creator.create()
 
-        retrieved_image = glance_utils.get_image(self.glance,
-                                                 self.image_settings.name)
+        retrieved_image = glance_utils.get_image(
+            self.glance, image_settings=self.image_settings)
         self.assertIsNotNone(retrieved_image)
         self.assertEqual(self.image_creator.get_image().size,
                          retrieved_image.size)
@@ -449,8 +449,8 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
                                                          self.image_settings)
         image1 = self.image_creator.create()
 
-        retrieved_image = glance_utils.get_image(self.glance,
-                                                 self.image_settings.name)
+        retrieved_image = glance_utils.get_image(
+            self.glance, image_settings=self.image_settings)
         self.assertIsNotNone(retrieved_image)
         self.assertEqual(self.image_creator.get_image().size,
                          retrieved_image.size)
@@ -616,20 +616,22 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
             image_creator.create()
 
             main_image = glance_utils.get_image(self.glance,
-                                                image_settings.name)
+                                                image_settings=image_settings)
             self.assertIsNotNone(main_image)
             self.assertIsNotNone(image_creator.get_image())
             self.assertEqual(image_creator.get_image().id, main_image.id)
 
             kernel_image = glance_utils.get_image(
-                self.glance, image_settings.kernel_image_settings.name)
+                self.glance,
+                image_settings=image_settings.kernel_image_settings)
             self.assertIsNotNone(kernel_image)
             self.assertIsNotNone(image_creator.get_kernel_image())
             self.assertEqual(kernel_image.id,
                              image_creator.get_kernel_image().id)
 
             ramdisk_image = glance_utils.get_image(
-                self.glance, image_settings.ramdisk_image_settings.name)
+                self.glance,
+                image_settings=image_settings.ramdisk_image_settings)
             self.assertIsNotNone(ramdisk_image)
             self.assertIsNotNone(image_creator.get_ramdisk_image())
             self.assertEqual(ramdisk_image.id,
@@ -732,8 +734,8 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         self.assertIsNotNone(created_image)
         self.assertEqual(self.image_name, created_image.name)
 
-        retrieved_image = glance_utils.get_image(self.glance,
-                                                 file_image_settings.name)
+        retrieved_image = glance_utils.get_image(
+            self.glance, image_settings=file_image_settings)
         self.assertIsNotNone(retrieved_image)
         self.assertEqual(self.image_creators[-1].get_image().size,
                          retrieved_image.size)
@@ -805,8 +807,8 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
             self.assertIsNotNone(created_image)
             self.assertEqual(self.image_name, created_image.name)
 
-            retrieved_image = glance_utils.get_image(self.glance,
-                                                     os_image_settings.name)
+            retrieved_image = glance_utils.get_image(
+                self.glance, image_settings=os_image_settings)
             self.assertIsNotNone(retrieved_image)
 
             self.assertEqual(self.image_creators[-1].get_image().size,
