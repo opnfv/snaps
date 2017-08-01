@@ -136,7 +136,7 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
         creds_dict.update(overrides)
 
     os_creds = OSCreds(**creds_dict)
-    logger.info('OS Credentials = %s', os_creds)
+    logger.info('OS Credentials = %s', os_creds.__str__)
     return os_creds
 
 
