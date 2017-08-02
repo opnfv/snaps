@@ -85,8 +85,10 @@ class KeystoneUtilsTests(OSComponentTestCase):
         """
         Tests the keystone_utils.create_user() function
         """
-        user_settings = UserSettings(name=self.username,
-                                     password=str(uuid.uuid4()))
+        user_settings = UserSettings(
+            name=self.username,
+            password=str(uuid.uuid4()),
+            domain_name=self.os_creds.user_domain_name)
         self.user = keystone_utils.create_user(self.keystone, user_settings)
         self.assertEqual(self.username, self.user.name)
 
@@ -98,7 +100,8 @@ class KeystoneUtilsTests(OSComponentTestCase):
         """
         Tests the keyston_utils.create_project() funtion
         """
-        project_settings = ProjectSettings(name=self.project_name)
+        project_settings = ProjectSettings(
+            name=self.project_name, domain=self.os_creds.project_domain_name)
         self.project = keystone_utils.create_project(self.keystone,
                                                      project_settings)
         self.assertEqual(self.project_name, self.project.name)
@@ -161,8 +164,9 @@ class KeystoneUtilsTests(OSComponentTestCase):
         Tests the keystone_utils function grant_user_role_to_project()
         :return:
         """
-        user_settings = UserSettings(name=self.username,
-                                     password=str(uuid.uuid4()))
+        user_settings = UserSettings(
+            name=self.username, password=str(uuid.uuid4()),
+            domain_name=self.os_creds.user_domain_name)
         self.user = keystone_utils.create_user(self.keystone, user_settings)
         self.assertEqual(self.username, self.user.name)
 
