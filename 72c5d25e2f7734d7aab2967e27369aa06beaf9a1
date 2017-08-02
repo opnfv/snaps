@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_8d81244d",
+        "filename": "ci/ci_tests.yaml",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-08-02T20:42:04Z",
+      "side": 1,
+      "message": "Great tip!",
+      "parentUuid": "da33351e_a4c08c7d",
+      "revId": "72c5d25e2f7734d7aab2967e27369aa06beaf9a1",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_64468425",
         "filename": "ci/run_tests.sh",
         "patchSetId": 4
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_ed955089",
+        "filename": "ci/run_tests.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-08-02T20:42:04Z",
+      "side": 1,
+      "message": "Please explain and a quick example would be nice.",
+      "parentUuid": "da33351e_64468425",
+      "revId": "72c5d25e2f7734d7aab2967e27369aa06beaf9a1",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_64cfa4b1",
         "filename": "requirements.txt",
         "patchSetId": 4
@@ -47,6 +83,24 @@
       "writtenOn": "2017-07-31T08:33:37Z",
       "side": 1,
       "message": "the previous cryptography version is sync with stable/ocata",
+      "revId": "72c5d25e2f7734d7aab2967e27369aa06beaf9a1",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_cd920c9f",
+        "filename": "requirements.txt",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-08-02T20:42:04Z",
+      "side": 1,
+      "message": "Please explain your thoughts here. I found that I needed 1.5 with the Pike CI instance.",
+      "parentUuid": "da33351e_64cfa4b1",
       "revId": "72c5d25e2f7734d7aab2967e27369aa06beaf9a1",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
