@@ -409,7 +409,7 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         neutron_utils.delete_network(self.neutron,
                                      self.net_creator.get_network())
         self.assertIsNone(neutron_utils.get_network(
-            self.neutron, self.net_creator.network_settings.name))
+            self.neutron, network_settings=self.net_creator.network_settings))
 
         # This shall not throw an exception here
         self.net_creator.clean()
@@ -479,7 +479,7 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         self.net_creator.create()
 
         retrieved_net = neutron_utils.get_network(
-            self.neutron, self.net_config.network_settings.name)
+            self.neutron, network_settings=self.net_config.network_settings)
 
         self.assertEqual(self.net_creator.get_network().id, retrieved_net.id)
 
@@ -509,7 +509,7 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         self.net_creator.create()
 
         retrieved_net = neutron_utils.get_network(
-            self.neutron, self.net_config.network_settings.name)
+            self.neutron, network_settings=self.net_config.network_settings)
 
         self.assertEqual(self.net_creator.get_network().id, retrieved_net.id)
 

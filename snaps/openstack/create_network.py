@@ -53,8 +53,8 @@ class OpenStackNetwork:
         logger.info(
             'Creating neutron network %s...' % self.network_settings.name)
         net_inst = neutron_utils.get_network(
-            self.__neutron, self.network_settings.name,
-            self.network_settings.get_project_id(self.__os_creds))
+            self.__neutron, network_settings=self.network_settings,
+            project_id=self.network_settings.get_project_id(self.__os_creds))
         if net_inst:
             self.__network = net_inst
         else:
@@ -498,9 +498,8 @@ class PortSettings:
                 project_id = project.id
 
         if not self.network:
-            self.network = neutron_utils.get_network(neutron,
-                                                     self.network_name,
-                                                     project_id)
+            self.network = neutron_utils.get_network(
+                neutron, network_name=self.network_name, project_id=project_id)
         if not self.network:
             raise PortSettingsError(
                 'Cannot locate network with name - ' + self.network_name)
