@@ -120,6 +120,12 @@ ProjectDomainObjectTests
 Ensures that all required members are included when constructing a
 Project domain object
 
+DomainDomainObjectTests
+-----------------------
+
+Ensures that all required members are included when constructing a
+Domain domain object
+
 RoleDomainObjectTests
 ---------------------
 

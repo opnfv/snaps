@@ -32,3 +32,20 @@ class Project:
 
     def __eq__(self, other):
         return self.name == other.name and self.id == other.id
+
+
+class Domain:
+    """
+    SNAPS domain object for OpenStack Keystone v3+ domains.
+    """
+    def __init__(self, name, domain_id=None):
+        """
+        Constructor
+        :param name: the project's name
+        :param domain_id: the project's domain id
+        """
+        self.name = name
+        self.id = domain_id
+
+    def __eq__(self, other):
+        return self.name == other.name and self.id == other.id

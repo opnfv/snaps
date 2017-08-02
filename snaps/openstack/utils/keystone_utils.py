@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@ from keystoneauth1.identity import v3, v2
 from keystoneauth1 import session
 import requests
 
-from snaps.domain.project import Project
+from snaps.domain.project import Project, Domain
 from snaps.domain.role import Role
 from snaps.domain.user import User
 
@@ -129,7 +129,7 @@ def get_project(keystone=None, os_creds=None, project_settings=None,
     elif project_settings:
         proj_filter['name'] = project_settings.name
         proj_filter['description'] = project_settings.description
-        proj_filter['domain'] = project_settings.domain
+        proj_filter['domain_name'] = project_settings.domain_name
         proj_filter['enabled'] = project_settings.enabled
 
     if keystone.version == V2_VERSION_STR:
@@ -161,8 +161,12 @@ def create_project(keystone, project_settings):
             project_settings.name, project_settings.description,
             project_settings.enabled)
     else:
+        os_domain = __get_os_domain_by_name(
+            keystone, project_settings.domain_name)
+        if not os_domain:
+            os_domain = project_settings.domain_name
         os_project = keystone.projects.create(
-            project_settings.name, project_settings.domain,
+            project_settings.name, os_domain,
             description=project_settings.description,
             enabled=project_settings.enabled)
         domain_id = os_project.domain_id
@@ -238,18 +242,21 @@ def create_user(keystone, user_settings):
             email=user_settings.email, tenant_id=project_id,
             enabled=user_settings.enabled)
     else:
+        os_domain = __get_os_domain_by_name(
+            keystone, user_settings.domain_name)
+        if not os_domain:
+            os_domain = user_settings.domain_name
         os_user = keystone.users.create(
             name=user_settings.name, password=user_settings.password,
             email=user_settings.email, project=project,
-            domain=user_settings.domain_name, enabled=user_settings.enabled)
+            domain=os_domain, enabled=user_settings.enabled)
 
     for role_name, role_project in user_settings.roles.items():
         os_role = get_role_by_name(keystone, role_name)
         os_project = get_project(keystone=keystone, project_name=role_project)
 
         if os_role and os_project:
-            existing_roles = get_roles_by_user(keystone, os_user,
-                                               os_project)
+            existing_roles = get_roles_by_user(keystone, os_user, os_project)
             found = False
             for role in existing_roles:
                 if role.id == os_role.id:
@@ -353,6 +360,31 @@ def grant_user_role_to_project(keystone, role, user, project):
         keystone.roles.add_user_role(user, os_role, tenant=project)
     else:
         keystone.roles.grant(os_role, user=user, project=project)
+
+
+def get_domain_by_id(keystone, domain_id):
+    """
+    Returns the first OpenStack domain with the given name else None
+    :param keystone: the Keystone client
+    :param domain_id: the domain ID to retrieve
+    :return: the SNAPS-OO Domain domain object
+    """
+    domain = keystone.domains.get(domain_id)
+    if domain:
+        return Domain(name=domain.name, domain_id=domain.id)
+
+
+def __get_os_domain_by_name(keystone, domain_name):
+    """
+    Returns the first OpenStack domain with the given name else None
+    :param keystone: the Keystone client
+    :param domain_name: the domain name to lookup
+    :return: the OpenStack domain object
+    """
+    domains = keystone.domains.list(name=domain_name)
+    for domain in domains:
+        if domain.name == domain_name:
+            return domain
 
 
 class KeystoneException(Exception):
