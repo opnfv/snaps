@@ -319,7 +319,8 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         validate_router(self.neutron, self.net_config.router_settings.name,
                         True)
 
-        ext_net = neutron_utils.get_network(self.neutron, self.ext_net_name)
+        ext_net = neutron_utils.get_network(
+            self.neutron, network_name=self.ext_net_name)
         self.assertEqual(
             self.router.external_gateway_info['network_id'], ext_net.id)
 
@@ -805,7 +806,7 @@ def validate_network(neutron, name, exists):
     :param exists: Whether or not the network name should exist or not
     :return: True/False
     """
-    network = neutron_utils.get_network(neutron, name)
+    network = neutron_utils.get_network(neutron, network_name=name)
     if exists and network:
         return True
     if not exists and not network:

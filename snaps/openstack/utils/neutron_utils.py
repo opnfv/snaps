@@ -74,42 +74,44 @@ def delete_network(neutron, network):
         neutron.delete_network(network.id)
 
 
-def get_network(neutron, network_name, project_id=None):
+def get_network(neutron, network_settings=None, network_name=None,
+                project_id=None):
     """
-    Returns an object (dictionary) of the first network found with a given name
-    and project_id (if included)
+    Returns Network SNAPS-OO domain object the first network found with
+    either the given attributes from the network_settings object if not None,
+    else the query will use just the name from the network_name parameter.
+    When the project_id is included, that will be added to the query filter.
     :param neutron: the client
+    :param network_settings: the NetworkSettings object used to create filter
     :param network_name: the name of the network to retrieve
     :param project_id: the id of the network's project
     :return: a SNAPS-OO Network domain object
     """
     net_filter = dict()
-    if network_name:
+    if network_settings:
+        net_filter['name'] = network_settings.name
+    elif network_name:
         net_filter['name'] = network_name
+
     if project_id:
         net_filter['project_id'] = project_id
 
     networks = neutron.list_networks(**net_filter)
     for network, netInsts in networks.items():
         for inst in netInsts:
-            if inst.get('name') == network_name:
-                return Network(**inst)
-    return None
+            return Network(**inst)
 
 
 def get_network_by_id(neutron, network_id):
     """
-    Returns the network object (dictionary) with the given ID
+    Returns the network object (dictionary) with the given ID else None
     :param neutron: the client
     :param network_id: the id of the network to retrieve
     :return: a SNAPS-OO Network domain object
     """
-    networks = neutron.list_networks(**{'id': network_id})
-    for network, netInsts in networks.items():
-        for inst in netInsts:
-            if inst.get('id') == network_id:
-                return Network(**inst)
-    return None
+    network = neutron.get(network_id)
+    if network:
+        return Network(**network)
 
 
 def create_subnet(neutron, subnet_settings, os_creds, network=None):
@@ -486,7 +488,7 @@ def create_floating_ip(neutron, ext_net_name):
     :return: the SNAPS FloatingIp object
     """
     logger.info('Creating floating ip to external network - ' + ext_net_name)
-    ext_net = get_network(neutron, ext_net_name)
+    ext_net = get_network(neutron, network_name=ext_net_name)
     if ext_net:
         fip = neutron.create_floatingip(
             body={'floatingip':
