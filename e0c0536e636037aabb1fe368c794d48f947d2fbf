@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_adf34809",
+        "filename": "ci/ci_tests.yaml",
+        "patchSetId": 3
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-08-02T20:50:52Z",
+      "side": 1,
+      "message": "Combined the clone and install per Cedric\u0027s suggestion.",
+      "parentUuid": "1aa4ed85_83a07144",
+      "revId": "e0c0536e636037aabb1fe368c794d48f947d2fbf",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1aa4ed85_e3992520",
         "filename": "ci/ci_tests.yaml",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2017-07-31T08:07:04Z",
       "side": 1,
       "message": "Why not put everything into the snaps directory",
+      "revId": "e0c0536e636037aabb1fe368c794d48f947d2fbf",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8df804e7",
+        "filename": "ci/ci_tests.yaml",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-08-02T20:50:52Z",
+      "side": 1,
+      "message": "Easier to find in ~ but if can move to ~/src/snaps if there are any other objections, esp from the octopus team.",
+      "parentUuid": "1aa4ed85_e3992520",
       "revId": "e0c0536e636037aabb1fe368c794d48f947d2fbf",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_eddc3077",
+        "filename": "ci/ci_tests.yaml",
+        "patchSetId": 3
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-08-02T20:50:52Z",
+      "side": 1,
+      "message": "These tests cover most of the lines but floating IPs do not work on the CI server. This is really the best we can do for now.",
+      "parentUuid": "1aa4ed85_a3a32d4e",
+      "revId": "e0c0536e636037aabb1fe368c794d48f947d2fbf",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1aa4ed85_638535ac",
         "filename": "ci/copy_rc_file.sh",
         "patchSetId": 3
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_cdd96c85",
+        "filename": "ci/copy_rc_file.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-08-02T20:50:52Z",
+      "side": 1,
+      "message": "I tried and it didn\u0027t work. Let me know if you know of any syntax that will...",
+      "parentUuid": "1aa4ed85_638535ac",
+      "revId": "e0c0536e636037aabb1fe368c794d48f947d2fbf",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1aa4ed85_438a79c0",
         "filename": "ci/copy_rc_file.sh",
         "patchSetId": 3
@@ -81,6 +153,30 @@
       "writtenOn": "2017-07-31T08:07:04Z",
       "side": 1,
       "message": "Move this to a separate line and verify the results.\nIsn\u0027t a destination needed.\n\nSome comments and a header would be great.  What does this do?  It sounds like find the location of the openrc file and then copies it  locally.\n\nThe openrc is a different name than you have in the ansible playbook.",
+      "range": {
+        "startLine": 3,
+        "startChar": 18,
+        "endLine": 3,
+        "endChar": 78
+      },
+      "revId": "e0c0536e636037aabb1fe368c794d48f947d2fbf",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_adca289f",
+        "filename": "ci/copy_rc_file.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-08-02T20:50:52Z",
+      "side": 1,
+      "message": "The bash script should return non 0 if the scp command should fail causing the ansbile playbook execution to abend I believe\n\nthe destination is ~ which does not seem to be appearing on the web interface\n\nThe filename \"openrc\" is being leveraged as the -e option to test_runner.py in the playbook.",
+      "parentUuid": "1aa4ed85_438a79c0",
       "range": {
         "startLine": 3,
         "startChar": 18,
