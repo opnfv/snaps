@@ -111,18 +111,17 @@ class ProjectSettings:
         """
         Constructor
         :param name: the project's name (required)
-        :param domain: the project's domain name (default 'default'). Field is
-                       used for v3 clients
+        :param domain or domain_name: the project's domain name
+                                      (default = 'Default').
+                                      Field is used for v3 clients
         :param description: the description (optional)
         :param enabled: denotes whether or not the user is enabled
                         (default True)
         """
 
         self.name = kwargs.get('name')
-        if kwargs.get('domain'):
-            self.domain = kwargs['domain']
-        else:
-            self.domain = 'default'
+        self.domain_name = kwargs.get(
+            'domain', kwargs.get('domain', 'Default'))
 
         self.description = kwargs.get('description')
         if kwargs.get('enabled') is not None:

@@ -45,14 +45,14 @@ class ProjectSettingsUnitTests(unittest.TestCase):
     def test_name_only(self):
         settings = ProjectSettings(name='foo')
         self.assertEqual('foo', settings.name)
-        self.assertEqual('default', settings.domain)
+        self.assertEqual('Default', settings.domain_name)
         self.assertIsNone(settings.description)
         self.assertTrue(settings.enabled)
 
     def test_config_with_name_only(self):
         settings = ProjectSettings(**{'name': 'foo'})
         self.assertEqual('foo', settings.name)
-        self.assertEqual('default', settings.domain)
+        self.assertEqual('Default', settings.domain_name)
         self.assertIsNone(settings.description)
         self.assertTrue(settings.enabled)
 
@@ -60,7 +60,7 @@ class ProjectSettingsUnitTests(unittest.TestCase):
         settings = ProjectSettings(name='foo', domain='bar',
                                    description='foobar', enabled=False)
         self.assertEqual('foo', settings.name)
-        self.assertEqual('bar', settings.domain)
+        self.assertEqual('bar', settings.domain_name)
         self.assertEqual('foobar', settings.description)
         self.assertFalse(settings.enabled)
 
@@ -69,7 +69,7 @@ class ProjectSettingsUnitTests(unittest.TestCase):
             **{'name': 'foo', 'domain': 'bar', 'description': 'foobar',
                'enabled': False})
         self.assertEqual('foo', settings.name)
-        self.assertEqual('bar', settings.domain)
+        self.assertEqual('bar', settings.domain_name)
         self.assertEqual('foobar', settings.description)
         self.assertFalse(settings.enabled)
 
@@ -86,7 +86,9 @@ class CreateProjectSuccessTests(OSComponentTestCase):
         """
         guid = str(uuid.uuid4())[:-19]
         guid = self.__class__.__name__ + '-' + guid
-        self.project_settings = ProjectSettings(name=guid + '-name')
+        self.project_settings = ProjectSettings(
+            name=guid + '-name',
+            domain=self.os_creds.project_domain_name)
 
         self.keystone = keystone_utils.keystone_client(self.os_creds)
 
@@ -106,7 +108,7 @@ class CreateProjectSuccessTests(OSComponentTestCase):
         value. This test will not do anything with a keystone v2.0 client.
         """
         if self.keystone.version != keystone_utils.V2_VERSION_STR:
-            self.project_settings.domain = 'foo'
+            self.project_settings.domain_name = 'foo'
             self.project_creator = OpenStackProject(self.os_creds,
                                                     self.project_settings)
 
@@ -182,7 +184,9 @@ class CreateProjectUserTests(OSComponentTestCase):
         """
         guid = str(uuid.uuid4())[:-19]
         self.guid = self.__class__.__name__ + '-' + guid
-        self.project_settings = ProjectSettings(name=self.guid + '-name')
+        self.project_settings = ProjectSettings(
+            name=self.guid + '-name',
+            domain=self.os_creds.project_domain_name)
 
         self.keystone = keystone_utils.keystone_client(self.os_creds)
 
@@ -288,5 +292,6 @@ def validate_project(keystone, project_settings, project):
     if keystone.version == keystone_utils.V2_VERSION_STR:
         return project_settings.name == project.name
     else:
+        domain = keystone_utils.get_domain_by_id(keystone, project.domain_id)
         return (project_settings.name == project.name and
-                project_settings.domain == project.domain_id)
+                project_settings.domain_name == domain.name)

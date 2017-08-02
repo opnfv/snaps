@@ -23,7 +23,8 @@ from snaps.domain.test.network_tests import (
     SecurityGroupDomainObjectTests, SecurityGroupRuleDomainObjectTests,
     PortDomainObjectTests, RouterDomainObjectTests,
     InterfaceRouterDomainObjectTests, NetworkObjectTests, SubnetObjectTests)
-from snaps.domain.test.project_tests import ProjectDomainObjectTests
+from snaps.domain.test.project_tests import (
+    ProjectDomainObjectTests, DomainDomainObjectTests)
 from snaps.domain.test.role_tests import RoleDomainObjectTests
 from snaps.domain.test.stack_tests import StackDomainObjectTests
 from snaps.domain.test.user_tests import UserDomainObjectTests
@@ -122,6 +123,8 @@ def add_unit_tests(suite):
         ProjectSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         ProjectDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        DomainDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         RoleDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
@@ -324,7 +327,8 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
-        CreateKeypairsCleanupTests, os_creds=os_creds, ext_net_name=ext_net_name,
+        CreateKeypairsCleanupTests, os_creds=os_creds,
+        ext_net_name=ext_net_name,
         use_keystone=use_keystone,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))

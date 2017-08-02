@@ -102,9 +102,11 @@ class CreateUserSuccessTests(OSComponentTestCase):
         """
         guid = str(uuid.uuid4())[:-19]
         guid = self.__class__.__name__ + '-' + guid
-        self.user_settings = UserSettings(name=guid + '-name',
-                                          password=guid + '-password',
-                                          roles={'admin': 'admin'})
+        self.user_settings = UserSettings(
+            name=guid + '-name',
+            password=guid + '-password',
+            roles={'admin': 'admin'},
+            domain_name=self.os_creds.user_domain_name)
 
         self.keystone = keystone_utils.keystone_client(self.os_creds)
 
