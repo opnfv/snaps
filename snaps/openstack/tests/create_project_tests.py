@@ -86,7 +86,9 @@ class CreateProjectSuccessTests(OSComponentTestCase):
         """
         guid = str(uuid.uuid4())[:-19]
         guid = self.__class__.__name__ + '-' + guid
-        self.project_settings = ProjectSettings(name=guid + '-name')
+        self.project_settings = ProjectSettings(
+            name=guid + '-name',
+            domain=self.os_creds.project_domain_name)
 
         self.keystone = keystone_utils.keystone_client(self.os_creds)
 
@@ -182,7 +184,9 @@ class CreateProjectUserTests(OSComponentTestCase):
         """
         guid = str(uuid.uuid4())[:-19]
         self.guid = self.__class__.__name__ + '-' + guid
-        self.project_settings = ProjectSettings(name=self.guid + '-name')
+        self.project_settings = ProjectSettings(
+            name=self.guid + '-name',
+            domain=self.os_creds.project_domain_name)
 
         self.keystone = keystone_utils.keystone_client(self.os_creds)
 
