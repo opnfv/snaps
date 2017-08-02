@@ -55,8 +55,8 @@ class OpenStackHeatStack:
         :return: The OpenStack Stack object
         """
         self.__heat_cli = heat_utils.heat_client(self.__os_creds)
-        self.__stack = heat_utils.get_stack_by_name(self.__heat_cli,
-                                                    self.stack_settings.name)
+        self.__stack = heat_utils.get_stack(
+            self.__heat_cli, stack_settings=self.stack_settings)
         if self.__stack:
             logger.info('Found stack with name - ' + self.stack_settings.name)
             return self.__stack
@@ -214,6 +214,13 @@ class StackSettings:
 
         if not self.template and not self.template_path:
             raise StackSettingsError('A Heat template is required')
+
+    def __eq__(self, other):
+        return (self.name == other.name and
+                self.template == other.template and
+                self.template_path == other.template_path and
+                self.env_values == other.env_values and
+                self.stack_create_timeout == other.stack_create_timeout)
 
 
 class StackSettingsError(Exception):

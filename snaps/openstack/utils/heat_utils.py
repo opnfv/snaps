@@ -41,18 +41,28 @@ def heat_client(os_creds):
                   region_name=os_creds.region_name)
 
 
-def get_stack_by_name(heat_cli, stack_name):
+def get_stack(heat_cli, stack_settings=None, stack_name=None):
     """
-    Returns a domain Stack object
+    Returns the first domain Stack object found. When stack_setting
+    is not None, the filter created will take the name attribute. When
+    stack_settings is None and stack_name is not, stack_name will be used
+    instead. When both are None, the first stack object received will be
+    returned, else None
     :param heat_cli: the OpenStack heat client
-    :param stack_name: the name of the heat stack
+    :param stack_settings: a StackSettings object
+    :param stack_name: the name of the heat stack to return
     :return: the Stack domain object else None
     """
-    stacks = heat_cli.stacks.list(**{'name': stack_name})
+
+    stack_filter = dict()
+    if stack_settings:
+        stack_filter['stack_name'] = stack_settings.name
+    elif stack_name:
+        stack_filter['stack_name'] = stack_name
+
+    stacks = heat_cli.stacks.list(**stack_filter)
     for stack in stacks:
         return Stack(name=stack.identifier, stack_id=stack.id)
-
-    return None
 
 
 def get_stack_by_id(heat_cli, stack_id):
