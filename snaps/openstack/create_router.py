@@ -75,8 +75,8 @@ class OpenStackRouter:
                     self.__neutron, self.__os_creds, self.router_settings)
 
         for internal_subnet_name in self.router_settings.internal_subnets:
-            internal_subnet = neutron_utils.get_subnet_by_name(
-                self.__neutron, internal_subnet_name)
+            internal_subnet = neutron_utils.get_subnet(
+                self.__neutron, subnet_name=internal_subnet_name)
             if internal_subnet:
                 self.__internal_subnets.append(internal_subnet)
                 if internal_subnet and not cleanup and not existing:
