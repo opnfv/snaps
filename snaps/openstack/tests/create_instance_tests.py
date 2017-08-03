@@ -475,15 +475,15 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
             self.image_creator.image_settings)
 
         vm_inst = self.inst_creator.create()
-        self.assertEqual(1, len(
-            nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
+        self.assertIsNotNone(nova_utils.get_server(
+            self.nova, vm_inst_settings=instance_settings))
 
         # Delete instance
         nova_utils.delete_vm_instance(self.nova, vm_inst)
 
         self.assertTrue(self.inst_creator.vm_deleted(block=True))
-        self.assertEqual(0, len(
-            nova_utils.get_servers_by_name(self.nova, instance_settings.name)))
+        self.assertIsNone(nova_utils.get_server(
+            self.nova, vm_inst_settings=instance_settings))
 
         # Exception should not be thrown
         self.inst_creator.clean()
