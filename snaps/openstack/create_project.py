@@ -15,7 +15,7 @@
 import logging
 
 from keystoneclient.exceptions import NotFound
-from snaps.openstack.utils import keystone_utils
+from snaps.openstack.utils import keystone_utils, neutron_utils
 
 __author__ = 'spisarski'
 
@@ -66,6 +66,15 @@ class OpenStackProject:
         :return: void
         """
         if self.__project:
+            # Delete security group 'default' if exists
+            neutron = neutron_utils.neutron_client(self.__os_creds)
+            default_sec_grp = neutron_utils.get_security_group(
+                neutron, 'default',
+                tenant_id=self.__project.id)
+            if default_sec_grp:
+                neutron_utils.delete_security_group(neutron, default_sec_grp)
+
+            # Delete Project
             try:
                 keystone_utils.delete_project(self.__keystone, self.__project)
             except NotFound:
