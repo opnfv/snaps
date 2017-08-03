@@ -259,8 +259,8 @@ class OpenStackVmInstance:
         ports = list()
 
         for port_setting in port_settings:
-            port = neutron_utils.get_port_by_name(self.__neutron,
-                                                  port_setting.name)
+            port = neutron_utils.get_port(
+                self.__neutron, port_settings=port_setting)
             if port:
                 ports.append((port_setting.name, port))
             elif not cleanup:

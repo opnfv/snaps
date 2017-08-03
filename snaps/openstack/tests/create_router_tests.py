@@ -326,6 +326,13 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
 
         self.assertTrue(verify_router_attributes(router, self.router_creator))
 
+        # Instantiate second identical creator to ensure a second router
+        # has not been created
+        router_creator2 = create_router.OpenStackRouter(
+            self.os_creds, router_settings)
+        router2 = router_creator2.create()
+        self.assertIsNotNone(self.router_creator.get_router(), router2)
+
     def test_create_router_external_network(self):
         """
         Test creation of a router connected to an external network and a
