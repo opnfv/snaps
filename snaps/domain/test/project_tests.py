@@ -14,12 +14,12 @@
 # limitations under the License.
 
 import unittest
-from snaps.domain.project import Project
+from snaps.domain.project import Project, Domain
 
 
 class ProjectDomainObjectTests(unittest.TestCase):
     """
-    Tests the construction of the snaps.domain.test.Project class
+    Tests the construction of the snaps.domain.project.Project class
     """
 
     def test_construction_positional_minimal(self):
@@ -45,3 +45,19 @@ class ProjectDomainObjectTests(unittest.TestCase):
         self.assertEqual('foo', project.name)
         self.assertEqual('123-456', project.id)
         self.assertEqual('hello', project.domain_id)
+
+
+class DomainDomainObjectTests(unittest.TestCase):
+    """
+    Tests the construction of the snaps.domain.project.Domain class
+    """
+
+    def test_construction_positional(self):
+        domain = Domain('foo', '123-456')
+        self.assertEqual('foo', domain.name)
+        self.assertEqual('123-456', domain.id)
+
+    def test_construction_named_minimal(self):
+        domain = Domain(domain_id='123-456', name='foo')
+        self.assertEqual('foo', domain.name)
+        self.assertEqual('123-456', domain.id)
