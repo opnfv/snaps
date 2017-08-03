@@ -17,7 +17,7 @@ import uuid
 from snaps.openstack.create_project import ProjectSettings
 from snaps.openstack.create_user import UserSettings
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
-from snaps.openstack.utils import keystone_utils
+from snaps.openstack.utils import keystone_utils, neutron_utils
 
 __author__ = 'spisarski'
 
@@ -73,7 +73,18 @@ class KeystoneUtilsTests(OSComponentTestCase):
         Cleans the remote OpenStack objects
         """
         if self.project:
-                keystone_utils.delete_project(self.keystone, self.project)
+            neutron = neutron_utils.neutron_client(self.os_creds)
+            default_sec_grp = neutron_utils.get_security_group(
+                neutron, 'default',
+                tenant_id=self.project.id)
+            if default_sec_grp:
+                try:
+                    neutron_utils.delete_security_group(
+                        neutron, default_sec_grp)
+                except:
+                    pass
+
+            keystone_utils.delete_project(self.keystone, self.project)
 
         if self.user:
             keystone_utils.delete_user(self.keystone, self.user)
