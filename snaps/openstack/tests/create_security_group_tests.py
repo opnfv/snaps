@@ -200,8 +200,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
             self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron,
-                                                   self.sec_grp_name)
+        sec_grp = neutron_utils.get_security_group(
+            self.neutron, sec_grp_settings=sec_grp_settings)
         self.assertIsNotNone(sec_grp)
 
         validation_utils.objects_equivalent(
@@ -229,8 +229,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
             self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron,
-                                                   self.sec_grp_name)
+        sec_grp = neutron_utils.get_security_group(
+            self.neutron, sec_grp_settings=sec_grp_settings)
         self.assertIsNotNone(sec_grp)
 
         validation_utils.objects_equivalent(
@@ -258,8 +258,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
             self.admin_os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron,
-                                                   self.sec_grp_name)
+        sec_grp = neutron_utils.get_security_group(
+            self.neutron, sec_grp_settings=sec_grp_settings)
         self.assertIsNotNone(sec_grp)
 
         validation_utils.objects_equivalent(
@@ -294,7 +294,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
         neutron_utils.delete_security_group(self.neutron, created_sec_grp)
         self.assertIsNone(neutron_utils.get_security_group(
-            self.neutron, self.sec_grp_creator.sec_grp_settings.name))
+            self.neutron,
+            sec_grp_settings=self.sec_grp_creator.sec_grp_settings))
 
         self.sec_grp_creator.clean()
 
@@ -316,8 +317,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
             self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron,
-                                                   self.sec_grp_name)
+        sec_grp = neutron_utils.get_security_group(
+            self.neutron, sec_grp_settings=sec_grp_settings)
         validation_utils.objects_equivalent(
             self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(
@@ -351,8 +352,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
             self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron,
-                                                   self.sec_grp_name)
+        sec_grp = neutron_utils.get_security_group(
+            self.neutron, sec_grp_settings=sec_grp_settings)
         validation_utils.objects_equivalent(
             self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(
@@ -395,8 +396,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
             self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron,
-                                                   self.sec_grp_name)
+        sec_grp = neutron_utils.get_security_group(
+            self.neutron, sec_grp_settings=sec_grp_settings)
         validation_utils.objects_equivalent(
             self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(
@@ -428,8 +429,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
             self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron,
-                                                   self.sec_grp_name)
+        sec_grp = neutron_utils.get_security_group(
+            self.neutron, sec_grp_settings=sec_grp_settings)
         validation_utils.objects_equivalent(
             self.sec_grp_creator.get_security_group(), sec_grp)
 
@@ -484,8 +485,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
             self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron,
-                                                   self.sec_grp_name)
+        sec_grp = neutron_utils.get_security_group(
+            self.neutron, sec_grp_settings=sec_grp_settings)
         validation_utils.objects_equivalent(
             self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(
@@ -535,8 +536,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
             self.os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
-        sec_grp = neutron_utils.get_security_group(self.neutron,
-                                                   self.sec_grp_name)
+        sec_grp = neutron_utils.get_security_group(
+            self.neutron, sec_grp_settings=sec_grp_settings)
         validation_utils.objects_equivalent(
             self.sec_grp_creator.get_security_group(), sec_grp)
 
@@ -597,7 +598,7 @@ def validate_sec_grp_rules(neutron, rule_settings, rules):
                     setting_proto = rule_setting.protocol.name
 
                 sec_grp = neutron_utils.get_security_group(
-                    neutron, rule_setting.sec_grp_name)
+                    neutron, sec_grp_name=rule_setting.sec_grp_name)
 
                 setting_eth_type = create_security_group.Ethertype.IPv4
                 if rule_setting.ethertype:
