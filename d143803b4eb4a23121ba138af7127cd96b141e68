@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_bedd3045",
+        "filename": "snaps/openstack/tests/os_source_file_test.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-08-04T09:56:38Z",
+      "side": 1,
+      "message": "Hi, Steven. I believe it should be self.admin_os_creds here.",
+      "range": {
+        "startLine": 148,
+        "startChar": 59,
+        "endLine": 148,
+        "endChar": 72
+      },
+      "revId": "d143803b4eb4a23121ba138af7127cd96b141e68",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_fee69815",
+        "filename": "snaps/openstack/tests/os_source_file_test.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-08-04T09:56:38Z",
+      "side": 1,
+      "message": "self.admin_os_creds, right?",
+      "range": {
+        "startLine": 154,
+        "startChar": 27,
+        "endLine": 154,
+        "endChar": 40
+      },
+      "revId": "d143803b4eb4a23121ba138af7127cd96b141e68",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5e8d0431",
+        "filename": "snaps/openstack/tests/os_source_file_test.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-08-04T09:56:38Z",
+      "side": 1,
+      "message": "self.admin_os_creds?\n\nAlthough snaps_health_check will pass no matter it is self.admin_os_creds or self.os_creds, 6 tests in snaps_smoke still failed in Joid, complaining like this: \nForbidden: You are not authorized to perform the requested action: identity:list_projects.(HTTP 403)\n\nPlease refer to http://paste.openstack.org/raw/617523/ for detailed info.\n\nBut there is no such error in compass OSA.",
+      "range": {
+        "startLine": 161,
+        "startChar": 32,
+        "endLine": 161,
+        "endChar": 45
+      },
+      "revId": "d143803b4eb4a23121ba138af7127cd96b141e68",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
