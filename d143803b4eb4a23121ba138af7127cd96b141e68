@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_9ed66cc4",
+        "filename": "snaps/openstack/tests/os_source_file_test.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-08-04T14:32:06Z",
+      "side": 1,
+      "message": "At this point, they are the same. Using self.admin_os_creds instead would be good for clarity sake.",
+      "parentUuid": "da33351e_bedd3045",
+      "range": {
+        "startLine": 148,
+        "startChar": 59,
+        "endLine": 148,
+        "endChar": 72
+      },
+      "revId": "d143803b4eb4a23121ba138af7127cd96b141e68",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_fee69815",
         "filename": "snaps/openstack/tests/os_source_file_test.py",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_feda18e8",
+        "filename": "snaps/openstack/tests/os_source_file_test.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-08-04T14:32:06Z",
+      "side": 1,
+      "message": "Same response as above :)",
+      "parentUuid": "da33351e_fee69815",
+      "range": {
+        "startLine": 154,
+        "startChar": 27,
+        "endLine": 154,
+        "endChar": 40
+      },
+      "revId": "d143803b4eb4a23121ba138af7127cd96b141e68",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_5e8d0431",
         "filename": "snaps/openstack/tests/os_source_file_test.py",
         "patchSetId": 1
@@ -59,6 +107,30 @@
       "writtenOn": "2017-08-04T09:56:38Z",
       "side": 1,
       "message": "self.admin_os_creds?\n\nAlthough snaps_health_check will pass no matter it is self.admin_os_creds or self.os_creds, 6 tests in snaps_smoke still failed in Joid, complaining like this: \nForbidden: You are not authorized to perform the requested action: identity:list_projects.(HTTP 403)\n\nPlease refer to http://paste.openstack.org/raw/617523/ for detailed info.\n\nBut there is no such error in compass OSA.",
+      "range": {
+        "startLine": 161,
+        "startChar": 32,
+        "endLine": 161,
+        "endChar": 45
+      },
+      "revId": "d143803b4eb4a23121ba138af7127cd96b141e68",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5e9a2415",
+        "filename": "snaps/openstack/tests/os_source_file_test.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-08-04T14:32:06Z",
+      "side": 1,
+      "message": "same comment as above.\nI have a feeling that something other role may need to be added to the new test user just in the case for Joid. We also cannot rule out that Joid may be doing something incorrect...",
+      "parentUuid": "da33351e_5e8d0431",
       "range": {
         "startLine": 161,
         "startChar": 32,
