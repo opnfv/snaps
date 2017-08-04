@@ -145,17 +145,20 @@ class OSIntegrationTestCase(OSComponentTestCase):
         self.role = None
 
         if self.use_keystone:
-            self.keystone = keystone_utils.keystone_client(self.os_creds)
+            self.keystone = keystone_utils.keystone_client(self.admin_os_creds)
             guid = self.__class__.__name__ + '-' + str(uuid.uuid4())[:-19]
             project_name = guid + '-proj'
             self.project_creator = deploy_utils.create_project(
-                self.admin_os_creds, ProjectSettings(name=project_name))
+                self.admin_os_creds, ProjectSettings(
+                    name=project_name,
+                    domain=self.admin_os_creds.project_domain_name))
 
             self.user_creator = deploy_utils.create_user(
                 self.admin_os_creds, UserSettings(
                     name=guid + '-user', password=guid,
                     project_name=project_name, roles={
-                        'admin': self.project_creator.project_settings.name}))
+                        'admin': self.project_creator.project_settings.name},
+                    domain_name=self.admin_os_creds.user_domain_name))
 
             self.os_creds = self.user_creator.get_os_creds(
                 self.project_creator.project_settings.name)
