@@ -386,23 +386,38 @@ def delete_security_group(neutron, sec_grp):
     neutron.delete_security_group(sec_grp.id)
 
 
-def get_security_group(neutron, name, tenant_id=None):
+def get_security_group(neutron, sec_grp_settings=None, sec_grp_name=None,
+                       project_id=None):
     """
-    Returns the first security group object of the given name else None
+    Returns the first security group for a given query. The query gets built
+    from the sec_grp_settings parameter if not None, else only the name of
+    the security group will be used, else if the query parameters are None then
+    None will be returned
     :param neutron: the client
-    :param name: the name of security group object to retrieve
+    :param sec_grp_settings: an instance of SecurityGroupSettings config object
+    :param sec_grp_name: the name of security group object to retrieve
+    :param project_id: the ID of the project/tentant object that owns the
+                       secuity group to retrieve
     :return: a SNAPS-OO SecurityGroup domain object or None if not found
     """
-    logger.info('Retrieving security group with name - ' + name)
 
-    filter = {'name': name}
-    if tenant_id:
-        filter['tenant_id'] = tenant_id
-    groups = neutron.list_security_groups(**filter)
+    sec_grp_filter = dict()
+    if project_id:
+        sec_grp_filter['tenant_id'] = project_id
+
+    if sec_grp_settings:
+        sec_grp_filter['name'] = sec_grp_settings.name
+
+        if sec_grp_settings.description:
+            sec_grp_filter['description'] = sec_grp_settings.description
+    elif sec_grp_name:
+        sec_grp_filter['name'] = sec_grp_name
+    else:
+        return None
+
+    groups = neutron.list_security_groups(**sec_grp_filter)
     for group in groups['security_groups']:
-        if group['name'] == name:
-            return SecurityGroup(**group)
-    return None
+        return SecurityGroup(**group)
 
 
 def get_security_group_by_id(neutron, sec_grp_id):

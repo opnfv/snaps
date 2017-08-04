@@ -69,8 +69,8 @@ class OpenStackProject:
             # Delete security group 'default' if exists
             neutron = neutron_utils.neutron_client(self.__os_creds)
             default_sec_grp = neutron_utils.get_security_group(
-                neutron, 'default',
-                tenant_id=self.__project.id)
+                neutron, sec_grp_name='default',
+                project_id=self.__project.id)
             if default_sec_grp:
                 try:
                     neutron_utils.delete_security_group(

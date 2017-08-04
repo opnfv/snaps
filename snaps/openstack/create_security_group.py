@@ -59,7 +59,7 @@ class OpenStackSecurityGroup:
             'Creating security group %s...' % self.sec_grp_settings.name)
 
         self.__security_group = neutron_utils.get_security_group(
-            self.__neutron, self.sec_grp_settings.name)
+            self.__neutron, sec_grp_settings=self.sec_grp_settings)
         if not self.__security_group and not cleanup:
             # Create the security group
             self.__security_group = neutron_utils.create_security_group(
@@ -84,7 +84,7 @@ class OpenStackSecurityGroup:
 
             # Refresh security group object to reflect the new rules added
             self.__security_group = neutron_utils.get_security_group(
-                self.__neutron, self.sec_grp_settings.name)
+                self.__neutron, sec_grp_settings=self.sec_grp_settings)
         else:
             # Populate rules
             existing_rules = neutron_utils.get_rules_by_security_group(
@@ -404,7 +404,7 @@ class SecurityGroupRuleSettings:
             out['protocol'] = self.protocol.name
         if self.sec_grp_name:
             sec_grp = neutron_utils.get_security_group(
-                neutron, self.sec_grp_name)
+                neutron, sec_grp_name=self.sec_grp_name)
             if sec_grp:
                 out['security_group_id'] = sec_grp.id
             else:
