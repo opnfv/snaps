@@ -347,7 +347,7 @@ def delete_security_group(neutron, sec_grp):
     neutron.delete_security_group(sec_grp.id)
 
 
-def get_security_group(neutron, name):
+def get_security_group(neutron, name, tenant_id=None):
     """
     Returns the first security group object of the given name else None
     :param neutron: the client
@@ -356,7 +356,10 @@ def get_security_group(neutron, name):
     """
     logger.info('Retrieving security group with name - ' + name)
 
-    groups = neutron.list_security_groups(**{'name': name})
+    filter = {'name': name}
+    if tenant_id:
+        filter['tenant_id'] = tenant_id
+    groups = neutron.list_security_groups(**filter)
     for group in groups['security_groups']:
         if group['name'] == name:
             return SecurityGroup(**group)
