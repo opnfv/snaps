@@ -24,6 +24,7 @@ from novaclient.exceptions import NotFound
 
 from snaps.domain.flavor import Flavor
 from snaps.domain.keypair import Keypair
+from snaps.domain.project import ComputeQuotas
 from snaps.domain.vm_inst import VmInst
 from snaps.openstack.utils import keystone_utils, glance_utils, neutron_utils
 
@@ -520,6 +521,40 @@ def add_floating_ip_to_server(nova, vm, floating_ip, ip_addr):
     """
     vm = __get_latest_server_os_object(nova, vm)
     vm.add_floating_ip(floating_ip.ip, ip_addr)
+
+
+def get_compute_quotas(nova, project_id):
+    """
+    Returns a list of all available keypairs
+    :param nova: the Nova client
+    :param project_id: the project's ID of the quotas to lookup
+    :return: an object of type ComputeQuotas or None if not found
+    """
+    quotas = nova.quotas.get(tenant_id=project_id)
+    if quotas:
+        return ComputeQuotas(quotas)
+
+
+def update_quotas(nova, project_id, compute_quotas):
+    """
+    Updates the compute quotas for a given project
+    :param nova: the Nova client
+    :param project_id: the project's ID that requires quota updates
+    :param compute_quotas: an object of type ComputeQuotas containing the
+                           values to update
+    :return:
+    """
+    update_values = dict()
+    update_values['metadata_items'] = compute_quotas.metadata_items
+    update_values['cores'] = compute_quotas.cores
+    update_values['instances'] = compute_quotas.instances
+    update_values['injected_files'] = compute_quotas.injected_files
+    update_values['injected_file_content_bytes'] = compute_quotas.injected_file_content_bytes
+    update_values['ram'] = compute_quotas.ram
+    update_values['fixed_ips'] = compute_quotas.fixed_ips
+    update_values['key_pairs'] = compute_quotas.key_pairs
+
+    return nova.quotas.update(project_id, **update_values)
 
 
 class NovaException(Exception):

@@ -24,7 +24,8 @@ from snaps.domain.test.network_tests import (
     PortDomainObjectTests, RouterDomainObjectTests,
     InterfaceRouterDomainObjectTests, NetworkObjectTests, SubnetObjectTests)
 from snaps.domain.test.project_tests import (
-    ProjectDomainObjectTests, DomainDomainObjectTests)
+    ProjectDomainObjectTests, DomainDomainObjectTests,
+    ComputeQuotasDomainObjectTests, NetworkQuotasDomainObjectTests)
 from snaps.domain.test.role_tests import RoleDomainObjectTests
 from snaps.domain.test.stack_tests import StackDomainObjectTests
 from snaps.domain.test.user_tests import UserDomainObjectTests
@@ -125,6 +126,10 @@ def add_unit_tests(suite):
         ProjectDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         DomainDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        ComputeQuotasDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        NetworkQuotasDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         RoleDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
