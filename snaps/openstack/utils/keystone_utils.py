@@ -107,7 +107,9 @@ def get_endpoint(os_creds, service_type, interface='public'):
 def get_project(keystone=None, os_creds=None, project_settings=None,
                 project_name=None):
     """
-    Returns the first project object or None if not found
+    Returns the first project where the project_settings is used for the query
+    if not None, else the project_name parameter is used for the query. If both
+    parameters are None, None is returned
     :param keystone: the Keystone client
     :param os_creds: the OpenStack credentials used to obtain the Keystone
                      client if the keystone parameter is None
@@ -131,6 +133,8 @@ def get_project(keystone=None, os_creds=None, project_settings=None,
         proj_filter['description'] = project_settings.description
         proj_filter['domain_name'] = project_settings.domain_name
         proj_filter['enabled'] = project_settings.enabled
+    else:
+        return None
 
     if keystone.version == V2_VERSION_STR:
         projects = keystone.tenants.list()

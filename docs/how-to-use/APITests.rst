@@ -105,6 +105,9 @@ create_project_tests.py - CreateProjectSuccessTests
 |                                  |               | OpenStackProject class to ensure that clean will not raise|
 |                                  |               | an exception                                              |
 +----------------------------------+---------------+-----------------------------------------------------------+
+| test_update_quotas               | 2 & 3         | Tests the ability to update quota values                  |
+|                                  | nova & neutron|                                                           |
++----------------------------------+---------------+-----------------------------------------------------------+
 
 create_project_tests.py - CreateProjectUserTests
 ------------------------------------------------

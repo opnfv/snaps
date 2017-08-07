@@ -15,7 +15,8 @@
 import logging
 
 from keystoneclient.exceptions import NotFound
-from snaps.openstack.utils import keystone_utils, neutron_utils
+
+from snaps.openstack.utils import keystone_utils, neutron_utils, nova_utils
 
 __author__ = 'spisarski'
 
@@ -111,6 +112,38 @@ class OpenStackProject:
 
         keystone_utils.grant_user_role_to_project(self.__keystone, self.__role,
                                                   user, self.__project)
+
+    def get_compute_quotas(self):
+        """
+        Returns the compute quotas as an instance of the ComputeQuotas class
+        :return:
+        """
+        nova = nova_utils.nova_client(self.__os_creds)
+        return nova_utils.get_compute_quotas(nova, self.__project.id)
+
+    def get_network_quotas(self):
+        """
+        Returns the network quotas as an instance of the NetworkQuotas class
+        :return:
+        """
+        neutron = neutron_utils.neutron_client(self.__os_creds)
+        return neutron_utils.get_network_quotas(neutron, self.__project.id)
+
+    def update_compute_quotas(self, compute_quotas):
+        """
+        Updates the compute quotas for this project
+        :param compute_quotas: a ComputeQuotas object.
+        """
+        nova = nova_utils.nova_client(self.__os_creds)
+        nova_utils.update_quotas(nova, self.__project.id, compute_quotas)
+
+    def update_network_quotas(self, network_quotas):
+        """
+        Updates the network quotas for this project
+        :param network_quotas: a NetworkQuotas object.
+        """
+        neutron = neutron_utils.neutron_client(self.__os_creds)
+        neutron_utils.update_quotas(neutron, self.__project.id, network_quotas)
 
 
 class ProjectSettings:

@@ -20,6 +20,7 @@ from neutronclient.neutron.client import Client
 from snaps.domain.network import (
     Port, SecurityGroup, SecurityGroupRule, Router, InterfaceRouter, Subnet,
     Network)
+from snaps.domain.project import NetworkQuotas
 from snaps.domain.vm_inst import FloatingIp
 from snaps.openstack.utils import keystone_utils
 
@@ -613,6 +614,39 @@ def delete_floating_ip(neutron, floating_ip):
     logger.debug('Attempting to delete existing floating ip with IP - %s',
                  floating_ip.ip)
     return neutron.delete_floatingip(floating_ip.id)
+
+
+def get_network_quotas(neutron, project_id):
+    """
+    Returns a list of all available keypairs
+    :param nova: the Nova client
+    :param project_id: the project's ID of the quotas to lookup
+    :return: an object of type NetworkQuotas or None if not found
+    """
+    quota = neutron.show_quota(project_id)
+    if quota:
+        return NetworkQuotas(**quota['quota'])
+
+
+def update_quotas(neutron, project_id, network_quotas):
+    """
+    Updates the networking quotas for a given project
+    :param neutron: the Neutron client
+    :param project_id: the project's ID that requires quota updates
+    :param network_quotas: an object of type NetworkQuotas containing the
+                           values to update
+    :return:
+    """
+    update_body = dict()
+    update_body['security_group'] = network_quotas.security_group
+    update_body['security_group_rule'] = network_quotas.security_group_rule
+    update_body['floatingip'] = network_quotas.floatingip
+    update_body['network'] = network_quotas.network
+    update_body['port'] = network_quotas.port
+    update_body['router'] = network_quotas.router
+    update_body['subnet'] = network_quotas.subnet
+
+    return neutron.update_quota(project_id, {'quota': update_body})
 
 
 class NeutronException(Exception):
