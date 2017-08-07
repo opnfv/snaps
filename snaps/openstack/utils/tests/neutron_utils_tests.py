@@ -828,7 +828,7 @@ def validate_router(neutron, name, exists):
     :param exists: Whether or not the network name should exist or not
     :return: True/False
     """
-    router = neutron_utils.get_router_by_name(neutron, name)
+    router = neutron_utils.get_router(neutron, router_name=name)
     if exists and router:
         return True
     return False

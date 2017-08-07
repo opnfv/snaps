@@ -187,7 +187,8 @@ class OpenStackVmInstance:
         :param router_name: The name of the router to lookup
         :return: the external network name or None
         """
-        router = neutron_utils.get_router_by_name(self.__neutron, router_name)
+        router = neutron_utils.get_router(
+            self.__neutron, router_name=router_name)
         if router and router.external_gateway_info:
             network = neutron_utils.get_network_by_id(
                 self.__neutron,

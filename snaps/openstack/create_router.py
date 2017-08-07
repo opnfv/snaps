@@ -64,8 +64,8 @@ class OpenStackRouter:
         logger.debug(
             'Creating Router with name - ' + self.router_settings.name)
         existing = False
-        router_inst = neutron_utils.get_router_by_name(
-            self.__neutron, self.router_settings.name)
+        router_inst = neutron_utils.get_router(
+            self.__neutron, router_settings=self.router_settings)
         if router_inst:
             self.__router = router_inst
             existing = True

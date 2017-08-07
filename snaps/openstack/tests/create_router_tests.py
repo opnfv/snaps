@@ -162,8 +162,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
                                                             router_settings)
         self.router_creator.create()
 
-        router = neutron_utils.get_router_by_name(self.neutron,
-                                                  router_settings.name)
+        router = neutron_utils.get_router(self.neutron,
+                                          router_settings=router_settings)
         self.assertIsNotNone(router)
 
         self.assertTrue(verify_router_attributes(
@@ -182,8 +182,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
             self.admin_os_creds, router_settings)
         self.router_creator.create()
 
-        router = neutron_utils.get_router_by_name(self.neutron,
-                                                  router_settings.name)
+        router = neutron_utils.get_router(self.neutron,
+                                          router_settings=router_settings)
         self.assertIsNotNone(router)
 
         self.assertTrue(verify_router_attributes(
@@ -202,8 +202,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
             self.os_creds, router_settings)
         self.router_creator.create()
 
-        router = neutron_utils.get_router_by_name(self.neutron,
-                                                  router_settings.name)
+        router = neutron_utils.get_router(self.neutron,
+                                          router_settings=router_settings)
         self.assertIsNotNone(router)
 
         self.assertTrue(verify_router_attributes(
@@ -221,14 +221,14 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
             self.os_creds, self.router_settings)
         created_router = self.router_creator.create()
         self.assertIsNotNone(created_router)
-        retrieved_router = neutron_utils.get_router_by_name(
-            self.neutron, self.router_settings.name)
+        retrieved_router = neutron_utils.get_router(
+            self.neutron, router_settings=self.router_settings)
         self.assertIsNotNone(retrieved_router)
 
         neutron_utils.delete_router(self.neutron, created_router)
 
-        retrieved_router = neutron_utils.get_router_by_name(
-            self.neutron, self.router_settings.name)
+        retrieved_router = neutron_utils.get_router(
+            self.neutron, router_settings=self.router_settings)
         self.assertIsNone(retrieved_router)
 
         # Should not raise an exception
@@ -245,8 +245,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
                                                             router_settings)
         self.router_creator.create()
 
-        router = neutron_utils.get_router_by_name(self.neutron,
-                                                  router_settings.name)
+        router = neutron_utils.get_router(self.neutron,
+                                          router_settings=router_settings)
         self.assertIsNotNone(router)
 
         self.assertTrue(verify_router_attributes(router, self.router_creator,
@@ -263,8 +263,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
                                                             router_settings)
         self.router_creator.create()
 
-        router = neutron_utils.get_router_by_name(self.neutron,
-                                                  router_settings.name)
+        router = neutron_utils.get_router(self.neutron,
+                                          router_settings=router_settings)
         self.assertIsNotNone(router)
 
         self.assertTrue(verify_router_attributes(router, self.router_creator,
@@ -321,8 +321,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
                                                             router_settings)
         self.router_creator.create()
 
-        router = neutron_utils.get_router_by_name(self.neutron,
-                                                  router_settings.name)
+        router = neutron_utils.get_router(self.neutron,
+                                          router_settings=router_settings)
 
         self.assertTrue(verify_router_attributes(router, self.router_creator))
 
@@ -364,8 +364,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
                                                             router_settings)
         self.router_creator.create()
 
-        router = neutron_utils.get_router_by_name(self.neutron,
-                                                  router_settings.name)
+        router = neutron_utils.get_router(self.neutron,
+                                          router_settings=router_settings)
 
         self.assertTrue(verify_router_attributes(
             router, self.router_creator, ext_gateway=self.ext_net_name))

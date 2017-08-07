@@ -476,8 +476,8 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
             self.os_creds, self.net_config.router_settings)
         self.router_creator.create()
 
-        retrieved_router = neutron_utils.get_router_by_name(
-            self.neutron, self.router_creator.get_router().name)
+        retrieved_router = neutron_utils.get_router(
+            self.neutron, router_settings=self.router_creator.router_settings)
         self.assertEqual(
             self.router_creator.get_router().id, retrieved_router.id)
 
@@ -506,8 +506,8 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
             self.admin_os_creds, self.net_config.router_settings)
         self.router_creator.create()
 
-        retrieved_router = neutron_utils.get_router_by_name(
-            self.neutron, self.router_creator.get_router().name)
+        retrieved_router = neutron_utils.get_router(
+            self.neutron, router_settings=self.router_creator.router_settings)
         self.assertEqual(
             self.router_creator.get_router().id, retrieved_router.id)
 
