@@ -17,6 +17,7 @@ import uuid
 
 from keystoneclient.exceptions import BadRequest
 
+from snaps.domain.project import ComputeQuotas, NetworkQuotas
 from snaps.openstack.create_project import (
     OpenStackProject, ProjectSettings, ProjectSettingsError)
 from snaps.openstack.create_security_group import OpenStackSecurityGroup
@@ -24,7 +25,7 @@ from snaps.openstack.create_security_group import SecurityGroupSettings
 from snaps.openstack.create_user import OpenStackUser
 from snaps.openstack.create_user import UserSettings
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
-from snaps.openstack.utils import keystone_utils
+from snaps.openstack.utils import keystone_utils, nova_utils, neutron_utils
 
 __author__ = 'spisarski'
 
@@ -170,6 +171,57 @@ class CreateProjectSuccessTests(OSComponentTestCase):
 
         self.assertTrue(validate_project(self.keystone, self.project_settings,
                                          created_project))
+
+    def test_update_quotas(self):
+        """
+        Tests the creation of an OpenStack project where the quotas get
+        updated.
+        """
+        self.project_creator = OpenStackProject(self.os_creds,
+                                                self.project_settings)
+        created_project = self.project_creator.create()
+        self.assertIsNotNone(created_project)
+
+        retrieved_project = keystone_utils.get_project(
+            keystone=self.keystone, project_settings=self.project_settings)
+        self.assertIsNotNone(retrieved_project)
+        self.assertEqual(created_project, retrieved_project)
+        self.assertTrue(validate_project(self.keystone, self.project_settings,
+                                         created_project))
+
+        orig_compute_quotas = self.project_creator.compute_quotas
+        orig_network_quotas = self.project_creator.network_quotas
+
+        update_compute_quotas = ComputeQuotas(
+            **{'metadata_items': 64, 'cores': 5, 'instances': 5,
+               'injected_files': 3, 'injected_file_content_bytes': 5120,
+               'ram': 25600, 'fixed_ips': 100, 'key_pairs': 50})
+        self.project_creator.update_compute_quotas(update_compute_quotas)
+
+        update_network_quotas = NetworkQuotas(
+            **{'security_group': 5, 'security_group_rule': 50,
+               'floatingip': 25, 'network': 5, 'port': 25, 'router': 6,
+               'subnet': 7})
+        self.project_creator.update_network_quotas(update_network_quotas)
+
+        self.assertNotEqual(orig_compute_quotas,
+                            self.project_creator.compute_quotas)
+        self.assertEqual(update_compute_quotas,
+                         self.project_creator.compute_quotas)
+        self.assertNotEqual(orig_network_quotas,
+                            self.project_creator.network_quotas)
+        self.assertEqual(update_network_quotas,
+                         self.project_creator.network_quotas)
+
+        nova = nova_utils.nova_client(self.os_creds)
+        new_compute_quotas = nova_utils.get_compute_quotas(
+            nova, self.project_creator.get_project().id)
+        self.assertEqual(update_compute_quotas, new_compute_quotas)
+
+        neutron = neutron_utils.neutron_client(self.os_creds)
+        new_network_quotas = neutron_utils.get_network_quotas(
+            neutron, self.project_creator.get_project().id)
+        self.assertEqual(update_network_quotas, new_network_quotas)
 
 
 class CreateProjectUserTests(OSComponentTestCase):
