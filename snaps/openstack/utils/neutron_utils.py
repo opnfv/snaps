@@ -307,18 +307,32 @@ def delete_port(neutron, port):
     neutron.delete_port(port.id)
 
 
-def get_port_by_name(neutron, port_name):
+def get_port(neutron, port_settings=None, port_name=None):
     """
-    Returns the first port object (dictionary) found with a given name
+    Returns the first port object (dictionary) found for the given query
     :param neutron: the client
-    :param port_name: the name of the port to retrieve
+    :param port_settings: the PortSettings object used for generating the query
+    :param port_name: if port_settings is None, this name is the value to place
+                      into the query
     :return: a SNAPS-OO Port domain object
     """
-    ports = neutron.list_ports(**{'name': port_name})
+    port_filter = dict()
+
+    if port_settings:
+        port_filter['name'] = port_settings.name
+        if port_settings.admin_state_up:
+            port_filter['admin_state_up'] = port_settings.admin_state_up
+        if port_settings.device_id:
+            port_filter['device_id'] = port_settings.device_id
+        if port_settings.mac_address:
+            port_filter['mac_address'] = port_settings.mac_address
+    elif port_name:
+        port_filter['name'] = port_name
+
+    ports = neutron.list_ports(**port_filter)
     for port in ports['ports']:
-        if port['name'] == port_name:
-            return Port(name=port['name'], id=port['id'],
-                        ips=port['fixed_ips'], mac_address=port['mac_address'])
+        return Port(name=port['name'], id=port['id'],
+                    ips=port['fixed_ips'], mac_address=port['mac_address'])
     return None
 
 

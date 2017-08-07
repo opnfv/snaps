@@ -65,8 +65,8 @@ def create_server(nova, neutron, glance, instance_settings, image_settings,
     ports = list()
 
     for port_setting in instance_settings.port_settings:
-        ports.append(neutron_utils.get_port_by_name(
-            neutron, port_setting.name))
+        ports.append(neutron_utils.get_port(
+            neutron, port_settings=port_setting))
     nics = []
     for port in ports:
         kv = dict()

@@ -89,8 +89,8 @@ class OpenStackRouter:
                     'Subnet not found with name ' + internal_subnet_name)
 
         for port_setting in self.router_settings.port_settings:
-            port = neutron_utils.get_port_by_name(self.__neutron,
-                                                  port_setting.name)
+            port = neutron_utils.get_port(
+                self.__neutron, port_settings=port_setting)
             logger.info(
                 'Retrieved port %s for router - %s', port_setting.name,
                 self.router_settings.name)
