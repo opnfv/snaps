@@ -126,6 +126,18 @@ DomainDomainObjectTests
 Ensures that all required members are included when constructing a
 Domain domain object
 
+ComputeQuotasDomainObjectTests
+------------------------------
+
+Ensures that all required members are included when constructing a
+ComputeQuotas domain object
+
+NetworkQuotasDomainObjectTests
+------------------------------
+
+Ensures that all required members are included when constructing a
+NetworkQuotas domain object
+
 RoleDomainObjectTests
 ---------------------
 
