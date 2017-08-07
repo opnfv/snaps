@@ -164,8 +164,9 @@ class OpenStackVmInstance:
             ext_gateway = self.__ext_gateway_by_router(
                 floating_ip_setting.router_name)
             if ext_gateway:
-                subnet = neutron_utils.get_subnet_by_name(
-                    self.__neutron, floating_ip_setting.subnet_name)
+                subnet = neutron_utils.get_subnet(
+                    self.__neutron,
+                    subnet_name=floating_ip_setting.subnet_name)
                 floating_ip = neutron_utils.create_floating_ip(
                     self.__neutron, ext_gateway)
                 self.__floating_ip_dict[floating_ip_setting.name] = floating_ip
@@ -350,8 +351,8 @@ class OpenStackVmInstance:
         port = self.get_port_by_name(port_name)
         if port:
             if subnet_name:
-                subnet = neutron_utils.get_subnet_by_name(self.__neutron,
-                                                          subnet_name)
+                subnet = neutron_utils.get_subnet(
+                    self.__neutron, subnet_name=subnet_name)
                 if not subnet:
                     logger.warning('Cannot retrieve port IP as subnet could '
                                    'not be located with name - %s',

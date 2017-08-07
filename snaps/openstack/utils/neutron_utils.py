@@ -147,19 +147,44 @@ def delete_subnet(neutron, subnet):
         neutron.delete_subnet(subnet.id)
 
 
-def get_subnet_by_name(neutron, subnet_name):
+def get_subnet(neutron, subnet_settings=None, subnet_name=None):
     """
-    Returns the first subnet object (dictionary) found with a given name
+    Returns the first subnet object that fits the query else None including
+    if subnet_settings or subnet_name parameters are None.
     :param neutron: the client
-    :param subnet_name: the name of the network to retrieve
-    :return: a SNAPS-OO Subnet domain object
+    :param subnet_settings: the subnet settings of the object to retrieve
+    :param subnet_name: the name of the subnet to retrieve
+    :return: a SNAPS-OO Subnet domain object or None
     """
-    subnets = neutron.list_subnets(**{'name': subnet_name})
-    for subnet, subnetInst in subnets.items():
-        for inst in subnetInst:
-            if inst['name'] == subnet_name:
-                return Subnet(**inst)
-    return None
+    sub_filter = dict()
+    if subnet_settings:
+        sub_filter['name'] = subnet_settings.name
+        sub_filter['cidr'] = subnet_settings.cidr
+        if subnet_settings.gateway_ip:
+            sub_filter['gateway_ip'] = subnet_settings.gateway_ip
+
+        if subnet_settings.enable_dhcp is not None:
+            sub_filter['enable_dhcp'] = subnet_settings.enable_dhcp
+
+        if subnet_settings.destination:
+            sub_filter['destination'] = subnet_settings.destination
+
+        if subnet_settings.nexthop:
+            sub_filter['nexthop'] = subnet_settings.nexthop
+
+        if subnet_settings.ipv6_ra_mode:
+            sub_filter['ipv6_ra_mode'] = subnet_settings.ipv6_ra_mode
+
+        if subnet_settings.ipv6_address_mode:
+            sub_filter['ipv6_address_mode'] = subnet_settings.ipv6_address_mode
+    elif subnet_name:
+        sub_filter['name'] = subnet_name
+    else:
+        return None
+
+    subnets = neutron.list_subnets(**sub_filter)
+    for subnet in subnets['subnets']:
+        return Subnet(**subnet)
 
 
 def create_router(neutron, os_creds, router_settings):

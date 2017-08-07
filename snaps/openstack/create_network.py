@@ -71,8 +71,8 @@ class OpenStackNetwork:
 
         logger.debug('Creating Subnets....')
         for subnet_setting in self.network_settings.subnet_settings:
-            sub_inst = neutron_utils.get_subnet_by_name(
-                self.__neutron, subnet_setting.name)
+            sub_inst = neutron_utils.get_subnet(
+                self.__neutron, subnet_settings=subnet_setting)
             if sub_inst:
                 self.__subnets.append(sub_inst)
                 logger.debug(
@@ -463,9 +463,8 @@ class PortSettings:
             self.fixed_ips = list()
 
             for ip_addr_dict in self.ip_addrs:
-                subnet = neutron_utils.get_subnet_by_name(neutron,
-                                                          ip_addr_dict[
-                                                              'subnet_name'])
+                subnet = neutron_utils.get_subnet(
+                    neutron, subnet_name=ip_addr_dict['subnet_name'])
                 if subnet:
                     self.fixed_ips.append({'ip_address': ip_addr_dict['ip'],
                                            'subnet_id': subnet.id})

@@ -357,19 +357,6 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
             self.router_creator.clean()
 
         if self.net_creator:
-            if len(self.net_creator.get_subnets()) > 0:
-                # Validate subnet has been deleted
-                neutron_utils_tests.validate_subnet(
-                    self.neutron,
-                    self.net_creator.network_settings.subnet_settings[0].name,
-                    self.net_creator.network_settings.subnet_settings[0].cidr,
-                    False)
-
-            if self.net_creator.get_network():
-                # Validate network has been deleted
-                neutron_utils_tests.validate_network(
-                    self.neutron, self.net_creator.network_settings.name,
-                    False)
             self.net_creator.clean()
 
         super(self.__class__, self).__clean__()
@@ -384,14 +371,14 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         self.net_creator.create()
 
         # Validate network was created
-        neutron_utils_tests.validate_network(
-            self.neutron, self.net_creator.network_settings.name, True)
+        self.assertTrue(neutron_utils_tests.validate_network(
+            self.neutron, self.net_creator.network_settings.name, True))
 
         # Validate subnets
-        neutron_utils_tests.validate_subnet(
+        self.assertTrue(neutron_utils_tests.validate_subnet(
             self.neutron,
             self.net_creator.network_settings.subnet_settings[0].name,
-            self.net_creator.network_settings.subnet_settings[0].cidr, True)
+            self.net_creator.network_settings.subnet_settings[0].cidr, True))
 
     def test_create_delete_network(self):
         """
@@ -403,8 +390,8 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         self.net_creator.create()
 
         # Validate network was created
-        neutron_utils_tests.validate_network(
-            self.neutron, self.net_creator.network_settings.name, True)
+        self.assertTrue(neutron_utils_tests.validate_network(
+            self.neutron, self.net_creator.network_settings.name, True))
 
         neutron_utils.delete_network(self.neutron,
                                      self.net_creator.get_network())
@@ -429,14 +416,14 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         self.router_creator.create()
 
         # Validate network was created
-        neutron_utils_tests.validate_network(
-            self.neutron, self.net_creator.network_settings.name, True)
+        self.assertTrue(neutron_utils_tests.validate_network(
+            self.neutron, self.net_creator.network_settings.name, True))
 
         # Validate subnets
-        neutron_utils_tests.validate_subnet(
+        self.assertTrue(neutron_utils_tests.validate_subnet(
             self.neutron,
             self.net_creator.network_settings.subnet_settings[0].name,
-            self.net_creator.network_settings.subnet_settings[0].cidr, True)
+            self.net_creator.network_settings.subnet_settings[0].cidr, True))
 
         # Validate routers
         neutron_utils_tests.validate_router(
@@ -550,19 +537,6 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         Cleans the network
         """
         if self.net_creator:
-            if len(self.net_creator.get_subnets()) > 0:
-                # Validate subnet has been deleted
-                neutron_utils_tests.validate_subnet(
-                    self.neutron,
-                    self.net_creator.network_settings.subnet_settings[0].name,
-                    self.net_creator.network_settings.subnet_settings[0].cidr,
-                    False)
-
-            if self.net_creator.get_network():
-                # Validate network has been deleted
-                neutron_utils_tests.validate_network(
-                    self.neutron, self.net_creator.network_settings.name,
-                    False)
             self.net_creator.clean()
 
     def test_create_network_type_vlan(self):
@@ -581,8 +555,8 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         network = self.net_creator.create()
 
         # Validate network was created
-        neutron_utils_tests.validate_network(
-            self.neutron, net_settings.name, True)
+        self.assertTrue(neutron_utils_tests.validate_network(
+            self.neutron, net_settings.name, True))
 
         self.assertEquals(network_type, network.type)
 
@@ -602,8 +576,8 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         network = self.net_creator.create()
 
         # Validate network was created
-        neutron_utils_tests.validate_network(self.neutron, net_settings.name,
-                                             True)
+        self.assertTrue(neutron_utils_tests.validate_network(
+            self.neutron, net_settings.name, True))
 
         self.assertEqual(network_type, network.type)
 
@@ -625,8 +599,8 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         network = self.net_creator.create()
 
         # Validate network was created
-        neutron_utils_tests.validate_network(
-            self.neutron, net_settings.name, True)
+        self.assertTrue(neutron_utils_tests.validate_network(
+            self.neutron, net_settings.name, True))
 
         self.assertEquals(network_type, network.type)
 
