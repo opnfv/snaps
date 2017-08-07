@@ -1,0 +1,8 @@
+Verified+1: jenkins-ci <jenkins-opnfv-ci@opnfv.org>
+Code-Review+1: Linda Wang <wangwulin@huawei.com>
+Code-Review+2: Steven Pisarski <s.pisarski@cablelabs.com>
+Submitted-by: Steven Pisarski <s.pisarski@cablelabs.com>
+Submitted-at: Mon, 07 Aug 2017 14:31:06 +0000
+Reviewed-on: https://gerrit.opnfv.org/gerrit/38717
+Project: snaps
+Branch: refs/heads/master
