@@ -91,9 +91,9 @@ class OpenStackVmInstance:
         VM with the same name already exists
         within the project
         """
-        servers = nova_utils.get_servers_by_name(self.__nova,
-                                                 self.instance_settings.name)
-        for server in servers:
+        server = nova_utils.get_server(
+            self.__nova, vm_inst_settings=self.instance_settings)
+        if server:
             if server.name == self.instance_settings.name:
                 self.__vm = server
                 logger.info(

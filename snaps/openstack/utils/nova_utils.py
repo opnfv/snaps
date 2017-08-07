@@ -106,19 +106,26 @@ def create_server(nova, neutron, glance, instance_settings, image_settings,
             image_settings.name)
 
 
-def get_servers_by_name(nova, name):
+def get_server(nova, vm_inst_settings=None, server_name=None):
     """
-    Returns a list of servers with a given name
+    Returns a VmInst object for the first server instance found.
     :param nova: the Nova client
-    :param name: the server name
-    :return: the list of snaps.domain.VmInst objects
+    :param vm_inst_settings: the VmInstanceSettings object from which to build
+                             the query if not None
+    :param server_name: the server with this name to return if vm_inst_settings
+                        is not None
+    :return: a snaps.domain.VmInst object or None if not found
     """
-    out = list()
-    servers = nova.servers.list(search_opts={'name': name})
+    search_opts = dict()
+    if vm_inst_settings:
+        search_opts['name'] = vm_inst_settings.name
+    elif server_name:
+        search_opts['name'] = server_name
+
+    servers = nova.servers.list(search_opts=search_opts)
     for server in servers:
-        out.append(VmInst(name=server.name, inst_id=server.id,
-                          networks=server.networks))
-    return out
+        return VmInst(name=server.name, inst_id=server.id,
+                      networks=server.networks)
 
 
 def __get_latest_server_os_object(nova, server):
