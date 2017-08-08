@@ -149,7 +149,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         # Create Flavor
         self.flavor_creator = OpenStackFlavor(
             self.admin_os_creds,
-            FlavorSettings(name=self.guid + '-flavor-name', ram=128, disk=10,
+            FlavorSettings(name=self.guid + '-flavor-name', ram=256, disk=10,
                            vcpus=1))
         self.flavor_creator.create()
 

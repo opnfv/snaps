@@ -89,7 +89,7 @@ class HeatUtilsCreateStackTests(OSComponentTestCase):
         # Create Flavor
         self.flavor_creator = OpenStackFlavor(
             self.os_creds,
-            FlavorSettings(name=guid + '-flavor', ram=128, disk=10, vcpus=1))
+            FlavorSettings(name=guid + '-flavor', ram=256, disk=10, vcpus=1))
         self.flavor_creator.create()
 
         env_values = {'image_name': self.image_creator.image_settings.name,
