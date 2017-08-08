@@ -218,18 +218,29 @@ def delete_router(neutron, router):
         neutron.delete_router(router=router.id)
 
 
-def get_router_by_name(neutron, router_name):
+def get_router(neutron, router_settings=None, router_name=None):
     """
-    Returns the first router object (dictionary) found with a given name
+    Returns the first router object (dictionary) found the given the settings
+    values if not None, else finds the first with the value of the router_name
+    parameter, else None
     :param neutron: the client
+    :param router_settings: the RouterSettings object
     :param router_name: the name of the network to retrieve
     :return: a SNAPS-OO Router domain object
     """
-    routers = neutron.list_routers(**{'name': router_name})
-    for router, routerInst in routers.items():
-        for inst in routerInst:
-            if inst.get('name') == router_name:
-                return Router(**inst)
+    router_filter = dict()
+    if router_settings:
+        router_filter['name'] = router_settings.name
+        if router_settings.admin_state_up is not None:
+            router_filter['admin_state_up'] = router_settings.admin_state_up
+    elif router_name:
+        router_filter['name'] = router_name
+    else:
+        return None
+
+    routers = neutron.list_routers(**router_filter)
+    for routerInst in routers['routers']:
+        return Router(**routerInst)
     return None
 
 
