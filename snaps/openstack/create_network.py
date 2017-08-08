@@ -465,7 +465,7 @@ class PortSettings:
             for ip_addr_dict in self.ip_addrs:
                 subnet = neutron_utils.get_subnet(
                     neutron, subnet_name=ip_addr_dict['subnet_name'])
-                if subnet:
+                if subnet and 'ip' in ip_addr_dict:
                     self.fixed_ips.append({'ip_address': ip_addr_dict['ip'],
                                            'subnet_id': subnet.id})
                 else:

@@ -281,6 +281,16 @@ create_instance_tests.py - SimpleHealthCheck
 |                                       | Neutron 2     | port and it's assigned IP address                         |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_instance_tests.py - CreateInstanceTwoNetTests
+----------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | API Versions  | Description                                               |
++=======================================+===============+===========================================================+
+| test_ping_via_router                  | Nova 2        | Tests the ability of two VMs on different private overlay |
+|                                       | Neutron 2     | networks tied together with a router to ping each other   |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_instance_tests.py - CreateInstanceSingleNetworkTests
 -----------------------------------------------------------
 

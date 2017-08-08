@@ -23,14 +23,16 @@ import os
 from neutronclient.common.exceptions import InvalidIpForSubnetClient
 
 from snaps import file_utils
+from snaps.openstack import create_network, create_router
 from snaps.openstack.create_flavor import OpenStackFlavor, FlavorSettings
 from snaps.openstack.create_image import OpenStackImage, ImageSettings
 from snaps.openstack.create_instance import (
     VmInstanceSettings, OpenStackVmInstance, FloatingIpSettings,
     VmInstanceSettingsError, FloatingIpSettingsError)
 from snaps.openstack.create_keypairs import OpenStackKeypair, KeypairSettings
-from snaps.openstack.create_network import OpenStackNetwork, PortSettings
-from snaps.openstack.create_router import OpenStackRouter
+from snaps.openstack.create_network import (
+    OpenStackNetwork, PortSettings, NetworkSettings)
+from snaps.openstack.create_router import OpenStackRouter, RouterSettings
 from snaps.openstack.create_security_group import (
     SecurityGroupSettings, OpenStackSecurityGroup, SecurityGroupRuleSettings,
     Direction, Protocol)
@@ -2403,6 +2405,235 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
 
+class CreateInstanceTwoNetTests(OSIntegrationTestCase):
+    """
+    Tests the ability of two VMs to communicate when attached to separate
+    private networks that are tied together with a router.
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file within OpenStack
+        """
+        super(self.__class__, self).__start__()
+
+        cidr1 = '10.200.201.0/24'
+        cidr2 = '10.200.202.0/24'
+        static_gateway_ip1 = '10.200.201.1'
+        static_gateway_ip2 = '10.200.202.1'
+        self.ip1 = '10.200.201.5'
+        self.ip2 = '10.200.202.5'
+
+        self.nova = nova_utils.nova_client(self.os_creds)
+
+        # Initialize for tearDown()
+        self.image_creator = None
+        self.network_creators = list()
+        self.router_creator = None
+        self.flavor_creator = None
+        self.sec_grp_creator = None
+        self.inst_creators = list()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.vm_inst1_name = self.guid + '-inst1'
+        self.vm_inst2_name = self.guid + '-inst2'
+        self.port_1_name = self.guid + '-vm1-port'
+        self.port_2_name = self.guid + '-vm2-port'
+        self.net_config_1 = NetworkSettings(
+            name=self.guid + '-net1',
+            subnet_settings=[
+                create_network.SubnetSettings(
+                    cidr=cidr1, name=self.guid + '-subnet1',
+                    gateway_ip=static_gateway_ip1)])
+        self.net_config_2 = NetworkSettings(
+            name=self.guid + '-net2',
+            subnet_settings=[
+                create_network.SubnetSettings(
+                    cidr=cidr2, name=self.guid + '-subnet2',
+                    gateway_ip=static_gateway_ip2)])
+
+        image_name = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        os_image_settings = openstack_tests.cirros_image_settings(
+            name=image_name, image_metadata=self.image_metadata)
+
+        try:
+            # Create Image
+            self.image_creator = OpenStackImage(self.os_creds,
+                                                os_image_settings)
+            self.image_creator.create()
+
+            # First network is public
+            self.network_creators.append(OpenStackNetwork(
+                self.os_creds, self.net_config_1))
+            # Second network is private
+            self.network_creators.append(OpenStackNetwork(
+                self.os_creds, self.net_config_2))
+            for network_creator in self.network_creators:
+                network_creator.create()
+
+            port_settings = [
+                create_network.PortSettings(
+                    name=self.guid + '-router-port1',
+                    ip_addrs=[{
+                        'subnet_name':
+                            self.net_config_1.subnet_settings[0].name,
+                        'ip': static_gateway_ip1
+                    }],
+                    network_name=self.net_config_1.name,
+                    project_name=self.os_creds.project_name),
+                create_network.PortSettings(
+                    name=self.guid + '-router-port2',
+                    ip_addrs=[{
+                        'subnet_name':
+                            self.net_config_2.subnet_settings[0].name,
+                        'ip': static_gateway_ip2
+                    }],
+                    network_name=self.net_config_2.name,
+                    project_name=self.os_creds.project_name)]
+
+            router_settings = RouterSettings(name=self.guid + '-pub-router',
+                                             port_settings=port_settings)
+            self.router_creator = create_router.OpenStackRouter(
+                self.os_creds, router_settings)
+            self.router_creator.create()
+
+            # Create Flavor
+            self.flavor_creator = OpenStackFlavor(
+                self.admin_os_creds,
+                FlavorSettings(name=self.guid + '-flavor-name', ram=512,
+                               disk=10, vcpus=2,
+                               metadata=self.flavor_metadata))
+            self.flavor_creator.create()
+
+            sec_grp_name = self.guid + '-sec-grp'
+            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
+                                              direction=Direction.ingress,
+                                              protocol=Protocol.icmp)
+            self.sec_grp_creator = OpenStackSecurityGroup(
+                self.os_creds,
+                SecurityGroupSettings(name=sec_grp_name,
+                                      rule_settings=[rule1]))
+            self.sec_grp_creator.create()
+        except:
+            self.tearDown()
+            raise
+
+    def tearDown(self):
+        """
+        Cleans the created objects
+        """
+        for inst_creator in self.inst_creators:
+            try:
+                inst_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning VM instance with message '
+                    '- %s', e)
+
+        if self.flavor_creator:
+            try:
+                self.flavor_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning flavor with message - %s',
+                    e)
+
+        if self.router_creator:
+            try:
+                self.router_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning router with message - %s',
+                    e)
+
+        for network_creator in self.network_creators:
+            try:
+                network_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
+
+        if self.sec_grp_creator:
+            try:
+                self.sec_grp_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning security group with message'
+                    ' - %s', e)
+
+        if self.image_creator and not self.image_creator.image_settings.exists:
+            try:
+                self.image_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning image with message - %s', e)
+
+        super(self.__class__, self).__clean__()
+
+    def test_ping_via_router(self):
+        """
+        Tests the creation of two OpenStack instances with one port on
+        different private networks wit a router in between to ensure that they
+        can ping
+        through
+        """
+        # Create ports/NICs for instance
+        ports_settings = []
+        ctr = 1
+        for network_creator in self.network_creators:
+            ports_settings.append(PortSettings(
+                name=self.guid + '-port-' + str(ctr),
+                network_name=network_creator.network_settings.name))
+            ctr += 1
+
+        # Configure instances
+        instance1_settings = VmInstanceSettings(
+            name=self.vm_inst1_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            userdata=_get_ping_userdata(self.ip2),
+            port_settings=[PortSettings(
+                name=self.port_1_name,
+                ip_addrs=[{
+                    'subnet_name':
+                        self.net_config_1.subnet_settings[0].name,
+                    'ip': self.ip1
+                }],
+                network_name=self.network_creators[0].network_settings.name)])
+        instance2_settings = VmInstanceSettings(
+            name=self.vm_inst2_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            userdata=_get_ping_userdata(self.ip1),
+            port_settings=[PortSettings(
+                name=self.port_2_name,
+                ip_addrs=[{
+                    'subnet_name':
+                        self.net_config_2.subnet_settings[0].name,
+                    'ip': self.ip2
+                }],
+                network_name=self.network_creators[1].network_settings.name)])
+
+        # Create instances
+        self.inst_creators.append(OpenStackVmInstance(
+            self.os_creds, instance1_settings,
+            self.image_creator.image_settings))
+        self.inst_creators.append(OpenStackVmInstance(
+            self.os_creds, instance2_settings,
+            self.image_creator.image_settings))
+
+        for inst_creator in self.inst_creators:
+            inst_creator.create(block=True)
+
+        # Check for DHCP lease
+        self.assertTrue(check_dhcp_lease(self.inst_creators[0], self.ip1))
+        self.assertTrue(check_dhcp_lease(self.inst_creators[1], self.ip2))
+
+        # Effectively blocks until VM has been properly activated
+        self.assertTrue(check_ping(self.inst_creators[0]))
+        self.assertTrue(check_ping(self.inst_creators[1]))
+
+
 def check_dhcp_lease(inst_creator, ip, timeout=160):
     """
     Returns true if the expected DHCP lease has been acquired
@@ -2430,3 +2661,43 @@ def check_dhcp_lease(inst_creator, ip, timeout=160):
         logger.debug('Full console output -\n' + full_log)
 
     return found
+
+
+def _get_ping_userdata(test_ip):
+    """
+    Returns the post VM creation script to be added into the VM's userdata
+    :param test_ip: the IP value to substitute into the script
+    :return: the bash script contents
+    """
+    if test_ip:
+        return ("#!/bin/sh\n\n"
+                "while true; do\n"
+                " ping -c 1 %s 2>&1 >/dev/null\n"
+                " RES=$?\n"
+                " if [ \"Z$RES\" = \"Z0\" ] ; then\n"
+                "  echo 'vPing OK'\n"
+                "  break\n"
+                " else\n"
+                "  echo 'vPing KO'\n"
+                " fi\n"
+                " sleep 1\n"
+                "done\n" % test_ip)
+    return None
+
+
+def check_ping(vm_creator, timeout=160):
+    """
+    Check for VM for ping result
+    """
+    tries = 0
+
+    while tries < timeout:
+        time.sleep(1)
+        p_console = vm_creator.get_console_output()
+        if "vPing OK" in p_console:
+            return True
+        elif "failed to read iid from metadata" in p_console or tries > 5:
+            return False
+        tries += 1
+
+    return False
