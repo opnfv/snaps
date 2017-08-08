@@ -299,7 +299,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10,
+                FlavorSettings(name=guid + '-flavor-name', ram=256, disk=10,
                                vcpus=1, metadata=self.flavor_metadata))
             self.flavor_creator.create()
         except Exception as e:
@@ -406,7 +406,7 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10,
+                FlavorSettings(name=guid + '-flavor-name', ram=256, disk=10,
                                vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
@@ -544,7 +544,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10,
+                FlavorSettings(name=guid + '-flavor-name', ram=256, disk=10,
                                vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
@@ -837,7 +837,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10,
+                FlavorSettings(name=guid + '-flavor-name', ram=256, disk=10,
                                vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
         except Exception as e:
@@ -1501,7 +1501,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=self.guid + '-flavor-name', ram=128,
+                FlavorSettings(name=self.guid + '-flavor-name', ram=256,
                                disk=10, vcpus=2,
                                metadata=self.flavor_metadata))
             self.flavor_creator.create()
@@ -1836,7 +1836,7 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorSettings(name=guid + '-flavor-name', ram=128, disk=10,
+                FlavorSettings(name=guid + '-flavor-name', ram=256, disk=10,
                                vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
@@ -1958,7 +1958,7 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
             self.flavor_creator = OpenStackFlavor(
                 self.os_creds,
                 FlavorSettings(
-                    name=self.guid + '-flavor-name', ram=128, disk=10,
+                    name=self.guid + '-flavor-name', ram=256, disk=10,
                     vcpus=1))
             self.flavor_creator.create()
         except Exception as e:

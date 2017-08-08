@@ -249,7 +249,7 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
             self.flavor_creator = OpenStackFlavor(
                 self.os_creds,
                 FlavorSettings(
-                    name=guid + '-flavor-name', ram=128, disk=10, vcpus=1))
+                    name=guid + '-flavor-name', ram=256, disk=10, vcpus=1))
             self.flavor_creator.create()
 
             port_settings = PortSettings(name=guid + '-port',
