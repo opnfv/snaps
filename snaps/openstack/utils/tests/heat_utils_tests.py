@@ -25,7 +25,7 @@ from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_stack import StackSettings
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
-from snaps.openstack.utils import heat_utils
+from snaps.openstack.utils import heat_utils, neutron_utils
 
 __author__ = 'spisarski'
 
@@ -77,13 +77,14 @@ class HeatUtilsCreateStackTests(OSComponentTestCase):
         Instantiates OpenStack instances that cannot be spawned by Heat
         """
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        stack_name1 = self.__class__.__name__ + '-' + str(guid) + '-stack1'
-        stack_name2 = self.__class__.__name__ + '-' + str(guid) + '-stack2'
+        stack_name1 = guid + '-stack1'
+        stack_name2 = guid + '-stack2'
+        self.network_name = guid + '-net'
+        self.subnet_name = guid + '-subnet'
 
         self.image_creator = OpenStackImage(
             self.os_creds, openstack_tests.cirros_image_settings(
-                name=self.__class__.__name__ + '-' + str(guid) + '-image',
-                image_metadata=self.image_metadata))
+                name=guid + '-image', image_metadata=self.image_metadata))
         self.image_creator.create()
 
         # Create Flavor
@@ -93,7 +94,9 @@ class HeatUtilsCreateStackTests(OSComponentTestCase):
         self.flavor_creator.create()
 
         env_values = {'image_name': self.image_creator.image_settings.name,
-                      'flavor_name': self.flavor_creator.flavor_settings.name}
+                      'flavor_name': self.flavor_creator.flavor_settings.name,
+                      'net_name': self.network_name,
+                      'subnet_name': self.subnet_name}
         heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'test_heat_template.yaml')
         self.stack_settings1 = StackSettings(
@@ -174,6 +177,21 @@ class HeatUtilsCreateStackTests(OSComponentTestCase):
             time.sleep(3)
 
         self.assertTrue(is_active)
+
+        resources = heat_utils.get_resources(self.heat_client, self.stack1)
+        self.assertIsNotNone(resources)
+        self.assertEqual(4, len(resources))
+
+        neutron = neutron_utils.neutron_client(self.os_creds)
+        networks = heat_utils.get_stack_networks(
+            self.heat_client, neutron, self.stack1)
+        self.assertIsNotNone(networks)
+        self.assertEqual(1, len(networks))
+        self.assertEqual(self.network_name, networks[0].name)
+
+        subnets = neutron_utils.get_subnets_by_network(neutron, networks[0])
+        self.assertEqual(1, len(subnets))
+        self.assertEqual(self.subnet_name, subnets[0].name)
 
     def test_create_stack_x2(self):
         """

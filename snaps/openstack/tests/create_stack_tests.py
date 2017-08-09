@@ -33,7 +33,7 @@ from snaps.openstack import create_stack
 from snaps.openstack.create_stack import StackSettings, StackSettingsError
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
-from snaps.openstack.utils import heat_utils
+from snaps.openstack.utils import heat_utils, neutron_utils
 
 __author__ = 'spisarski'
 
@@ -132,7 +132,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         """
         super(self.__class__, self).__start__()
 
-        self.guid = str(uuid.uuid4())
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
         self.heat_creds = self.admin_os_creds
         self.heat_creds.project_name = self.admin_os_creds.project_name
@@ -142,7 +142,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
 
         self.image_creator = OpenStackImage(
             self.heat_creds, openstack_tests.cirros_image_settings(
-                name=self.__class__.__name__ + '-' + str(self.guid) + '-image',
+                name=self.guid + '-image',
                 image_metadata=self.image_metadata))
         self.image_creator.create()
 
@@ -153,9 +153,13 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
                            vcpus=1))
         self.flavor_creator.create()
 
+        self.network_name = self.guid + '-net'
+        self.subnet_name = self.guid + '-subnet'
         self.env_values = {
             'image_name': self.image_creator.image_settings.name,
-            'flavor_name': self.flavor_creator.flavor_settings.name}
+            'flavor_name': self.flavor_creator.flavor_settings.name,
+            'net_name': self.network_name,
+            'subnet_name': self.subnet_name}
 
         self.heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'test_heat_template.yaml')
@@ -207,6 +211,11 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertEqual(created_stack.id, retrieved_stack.id)
         self.assertIsNotNone(self.stack_creator.get_outputs())
         self.assertEquals(0, len(self.stack_creator.get_outputs()))
+
+        resources = heat_utils.get_resources(
+            self.heat_cli, self.stack_creator.get_stack())
+        self.assertIsNotNone(resources)
+        self.assertEqual(4, len(resources))
 
     def test_create_stack_template_dict(self):
         """
@@ -308,6 +317,42 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
                                                          stack_settings)
         stack2 = stack_creator2.create()
         self.assertEqual(created_stack1.id, stack2.id)
+
+    def test_retrieve_network_creators(self):
+        """
+        Tests the creation of an OpenStack stack from Heat template file and
+        the retrieval of the network creator.
+        """
+        stack_settings = StackSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template_path=self.heat_tmplt_path,
+            env_values=self.env_values)
+        self.stack_creator = create_stack.OpenStackHeatStack(self.heat_creds,
+                                                             stack_settings)
+        created_stack = self.stack_creator.create()
+        self.assertIsNotNone(created_stack)
+
+        net_creators = self.stack_creator.get_network_creators()
+        self.assertIsNotNone(net_creators)
+        self.assertEqual(1, len(net_creators))
+        self.assertEqual(self.network_name, net_creators[0].get_network().name)
+
+        neutron = neutron_utils.neutron_client(self.os_creds)
+        net_by_name = neutron_utils.get_network(
+            neutron, network_name=net_creators[0].get_network().name)
+        self.assertEqual(net_creators[0].get_network(), net_by_name)
+        self.assertIsNotNone(neutron_utils.get_network_by_id(
+            neutron, net_creators[0].get_network().id))
+
+        self.assertEqual(1, len(net_creators[0].get_subnets()))
+        subnet = net_creators[0].get_subnets()[0]
+        subnet_by_name = neutron_utils.get_subnet(
+            neutron, subnet_name=subnet.name)
+        self.assertEqual(subnet, subnet_by_name)
+
+        subnet_by_id = neutron_utils.get_subnet_by_id(neutron, subnet.id)
+        self.assertIsNotNone(subnet_by_id)
+        self.assertEqual(subnet_by_name, subnet_by_id)
 
 
 class CreateStackNegativeTests(OSIntegrationTestCase):

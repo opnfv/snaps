@@ -17,7 +17,10 @@ import logging
 import time
 
 from heatclient.exc import HTTPNotFound
-from snaps.openstack.utils import heat_utils
+
+from snaps.openstack.create_network import (
+    OpenStackNetwork, NetworkSettings, SubnetSettings)
+from snaps.openstack.utils import heat_utils, neutron_utils
 
 __author__ = 'spisarski'
 
@@ -51,7 +54,11 @@ class OpenStackHeatStack:
         """
         Creates the heat stack in OpenStack if it does not already exist and
         returns the domain Stack object
-        :param cleanup: Denotes whether or not this is being called for cleanup
+        :param cleanup: When true, this object is initialized only via queries,
+                        else objects will be created when the queries return
+                        None. The name of this parameter should be changed to
+                        something like 'readonly' as the same goes with all of
+                        the other creator classes.
         :return: The OpenStack Stack object
         """
         self.__heat_cli = heat_utils.heat_client(self.__os_creds)
@@ -131,6 +138,65 @@ class OpenStackHeatStack:
             timeout = self.stack_settings.stack_create_timeout
         return self._stack_status_check(STATUS_CREATE_COMPLETE, block, timeout,
                                         poll_interval)
+
+    def get_network_creators(self):
+        """
+        Returns a list of network creator objects as configured by the heat
+        template
+        :return: list() of OpenStackNetwork objects
+        """
+
+        neutron = neutron_utils.neutron_client(self.__os_creds)
+
+        out = list()
+        stack_networks = heat_utils.get_stack_networks(
+            self.__heat_cli, neutron, self.__stack)
+
+        for stack_network in stack_networks:
+            net_settings = self.__create_network_settings(
+                neutron, stack_network)
+            net_creator = OpenStackNetwork(self.__os_creds, net_settings)
+            out.append(net_creator)
+            net_creator.create(cleanup=True)
+
+        return out
+
+    def __create_network_settings(self, neutron, network):
+        """
+        Returns a NetworkSettings object
+        :param neutron: the neutron client
+        :param network: a SNAPS-OO Network domain object
+        :return:
+        """
+        return NetworkSettings(
+            name=network.name, network_type=network.type,
+            subnet_settings=self.__create_subnet_settings(neutron, network))
+
+    def __create_subnet_settings(self, neutron, network):
+        """
+        Returns a list of SubnetSettings objects for a given network
+        :param neutron: the OpenStack neutron client
+        :param network: the SNAPS-OO Network domain object
+        :return: a list
+        """
+        out = list()
+
+        subnets = neutron_utils.get_subnets_by_network(neutron, network)
+        for subnet in subnets:
+            kwargs = dict()
+            kwargs['cidr'] = subnet.cidr
+            kwargs['ip_version'] = subnet.ip_version
+            kwargs['name'] = subnet.name
+            kwargs['start'] = subnet.start
+            kwargs['end'] = subnet.end
+            kwargs['gateway_ip'] = subnet.gateway_ip
+            kwargs['enable_dhcp'] = subnet.enable_dhcp
+            kwargs['dns_nameservers'] = subnet.dns_nameservers
+            kwargs['host_routes'] = subnet.host_routes
+            kwargs['ipv6_ra_mode'] = subnet.ipv6_ra_mode
+            kwargs['ipv6_address_mode'] = subnet.ipv6_address_mode
+            out.append(SubnetSettings(**kwargs))
+        return out
 
     def _stack_status_check(self, expected_status_code, block, timeout,
                             poll_interval):
@@ -228,14 +294,8 @@ class StackSettingsError(Exception):
     Exception to be thrown when an stack settings are incorrect
     """
 
-    def __init__(self, message):
-        Exception.__init__(self, message)
-
 
 class StackCreationError(Exception):
     """
     Exception to be thrown when an stack cannot be created
     """
-
-    def __init__(self, message):
-        Exception.__init__(self, message)

@@ -20,9 +20,9 @@ from heatclient.common.template_format import yaml_loader
 from oslo_serialization import jsonutils
 
 from snaps import file_utils
-from snaps.domain.stack import Stack
+from snaps.domain.stack import Stack, Resource
 
-from snaps.openstack.utils import keystone_utils
+from snaps.openstack.utils import keystone_utils, neutron_utils
 
 __author__ = 'spisarski'
 
@@ -128,6 +128,54 @@ def delete_stack(heat_cli, stack):
     :param stack: the OpenStack Heat stack object
     """
     heat_cli.stacks.delete(stack.id)
+
+
+def __get_os_resources(heat_cli, stack):
+    """
+    Returns all of the OpenStack resource objects for a given stack
+    :param heat_cli: the OpenStack heat client
+    :param stack: the SNAPS-OO Stack domain object
+    :return: a list
+    """
+    return heat_cli.resources.list(stack.id)
+
+
+def get_resources(heat_cli, stack):
+    """
+    Returns all of the OpenStack resource objects for a given stack
+    :param heat_cli: the OpenStack heat client
+    :param stack: the SNAPS-OO Stack domain object
+    :return: a list
+    """
+    os_resources = __get_os_resources(heat_cli, stack)
+
+    if os_resources:
+        out = list()
+        for os_resource in os_resources:
+            out.append(Resource(resource_type=os_resource.resource_type,
+                                resource_id=os_resource.physical_resource_id))
+        return out
+
+
+def get_stack_networks(heat_cli, neutron, stack):
+    """
+    Returns an instance of NetworkSettings for each network owned by this stack
+    :param heat_cli: the OpenStack heat client object
+    :param neutron: the OpenStack neutron client object
+    :param stack: the SNAPS-OO Stack domain object
+    :return: a list of NetworkSettings
+    """
+
+    out = list()
+    resources = get_resources(heat_cli, stack)
+    for resource in resources:
+        if resource.type == 'OS::Neutron::Net':
+            network = neutron_utils.get_network_by_id(
+                neutron, resource.id)
+            if network:
+                out.append(network)
+
+    return out
 
 
 def parse_heat_template_str(tmpl_str):
