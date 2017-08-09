@@ -26,7 +26,8 @@ from snaps.domain.test.network_tests import (
 from snaps.domain.test.project_tests import (
     ProjectDomainObjectTests, DomainDomainObjectTests)
 from snaps.domain.test.role_tests import RoleDomainObjectTests
-from snaps.domain.test.stack_tests import StackDomainObjectTests
+from snaps.domain.test.stack_tests import (
+    StackDomainObjectTests, ResourceDomainObjectTests)
 from snaps.domain.test.user_tests import UserDomainObjectTests
 from snaps.domain.test.vm_inst_tests import (
     VmInstDomainObjectTests, FloatingIpDomainObjectTests)
@@ -151,6 +152,8 @@ def add_unit_tests(suite):
         VmInstanceSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         StackDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        ResourceDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         StackSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

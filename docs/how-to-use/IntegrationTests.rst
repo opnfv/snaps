@@ -247,6 +247,9 @@ create_stack_tests.py - CreateStackSuccessTests
 | test_create_same_stack                | 2             | Ensures that a Heat stack with the same name cannot be    |
 |                                       |               | created 2x                                                |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_same_stack                | 2             | Ensures that a Heat stack with the same name cannot be    |
+|                                       |               | created 2x                                                |
++---------------------------------------+---------------+-----------------------------------------------------------+
 
 create_stack_tests.py - CreateStackNegativeTests
 ------------------------------------------------
