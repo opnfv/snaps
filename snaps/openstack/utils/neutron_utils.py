@@ -187,6 +187,35 @@ def get_subnet(neutron, subnet_settings=None, subnet_name=None):
         return Subnet(**subnet)
 
 
+def get_subnet_by_id(neutron, subnet_id):
+    """
+    Returns a SNAPS-OO Subnet domain object for a given ID
+    :param neutron: the OpenStack neutron client
+    :param subnet_id: the subnet ID
+    :return: a Subnet object
+    """
+    os_subnet = neutron.show_subnet(subnet_id)
+    if os_subnet and 'subnet' in os_subnet:
+        return Subnet(**os_subnet['subnet'])
+
+
+def get_subnets_by_network(neutron, network):
+    """
+    Returns a list of SNAPS-OO Subnet domain objects
+    :param neutron: the OpenStack neutron client
+    :param network: the SNAPS-OO Network domain object
+    :return: a list of Subnet objects
+    """
+    out = list()
+
+    os_subnets = neutron.list_subnets(network_id=network.id)
+
+    for os_subnet in os_subnets['subnets']:
+        out.append(Subnet(**os_subnet))
+
+    return out
+
+
 def create_router(neutron, os_creds, router_settings):
     """
     Creates a router for OpenStack

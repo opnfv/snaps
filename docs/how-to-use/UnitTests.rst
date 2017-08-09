@@ -198,6 +198,12 @@ StackDomainObjectTests
 Ensures that all required members are included when constructing a
 Stack domain object
 
+ResourceDomainObjectTests
+-------------------------
+
+Ensures that all required members are included when constructing a
+Resource domain object
+
 FloatingIpSettingsUnitTests
 ---------------------------
 

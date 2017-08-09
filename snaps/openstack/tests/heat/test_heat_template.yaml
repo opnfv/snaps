@@ -13,16 +13,27 @@ parameters:
     label: Instance Type
     description: Type of instance (flavor) to be used
     default: m1.small
+  net_name:
+    type: string
+    label: Test network name
+    description: The name of the stack's network
+    default: test_net
+  subnet_name:
+    type: string
+    label: Test subnet name
+    description: The name of the stack's subnet
+    default: test_subnet
 
 resources:
   private_net:
     type: OS::Neutron::Net
     properties:
-      name: test_net
+      name: { get_param: net_name }
 
   private_subnet:
     type: OS::Neutron::Subnet
     properties:
+      name: { get_param: subnet_name }
       network_id: { get_resource: private_net }
       cidr: 10.0.0.0/24
 

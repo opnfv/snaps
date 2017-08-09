@@ -152,9 +152,15 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
         Cleans the remote OpenStack objects
         """
         if self.subnet:
-            neutron_utils.delete_subnet(self.neutron, self.subnet)
+            try:
+                neutron_utils.delete_subnet(self.neutron, self.subnet)
+            except:
+                pass
         if self.network:
-            neutron_utils.delete_network(self.neutron, self.network)
+            try:
+                neutron_utils.delete_network(self.neutron, self.network)
+            except:
+                pass
 
     def test_create_subnet(self):
         """
@@ -172,6 +178,16 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
             self.neutron, subnet_setting, self.os_creds, network=self.network)
         self.assertTrue(validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
+
+        subnet_query1 = neutron_utils.get_subnet(
+            self.neutron, subnet_name=subnet_setting.name)
+        self.assertEqual(self.subnet, subnet_query1)
+
+        subnet_query2 = neutron_utils.get_subnets_by_network(self.neutron,
+                                                             self.network)
+        self.assertIsNotNone(subnet_query2)
+        self.assertEqual(1, len(subnet_query2))
+        self.assertEqual(self.subnet, subnet_query2[0])
 
     def test_create_subnet_null_name(self):
         """
@@ -201,12 +217,22 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
             self.neutron, self.net_config.network_settings.name, True))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
-        neutron_utils.create_subnet(
+        self.subnet = neutron_utils.create_subnet(
             self.neutron, subnet_setting, self.os_creds, network=self.network)
         self.assertTrue(validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
         self.assertFalse(validate_subnet(
             self.neutron, '', subnet_setting.cidr, True))
+
+        subnet_query1 = neutron_utils.get_subnet(
+            self.neutron, subnet_name=subnet_setting.name)
+        self.assertEqual(self.subnet, subnet_query1)
+
+        subnet_query2 = neutron_utils.get_subnets_by_network(self.neutron,
+                                                             self.network)
+        self.assertIsNotNone(subnet_query2)
+        self.assertEqual(1, len(subnet_query2))
+        self.assertEqual(self.subnet, subnet_query2[0])
 
     def test_create_subnet_null_cidr(self):
         """
@@ -272,17 +298,29 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
                                                   self.subnet)
 
         if self.router:
-            neutron_utils.delete_router(self.neutron, self.router)
-            validate_router(self.neutron, self.router.name, False)
+            try:
+                neutron_utils.delete_router(self.neutron, self.router)
+                validate_router(self.neutron, self.router.name, False)
+            except:
+                pass
 
         if self.port:
-            neutron_utils.delete_port(self.neutron, self.port)
+            try:
+                neutron_utils.delete_port(self.neutron, self.port)
+            except:
+                pass
 
         if self.subnet:
-            neutron_utils.delete_subnet(self.neutron, self.subnet)
+            try:
+                neutron_utils.delete_subnet(self.neutron, self.subnet)
+            except:
+                pass
 
         if self.network:
-            neutron_utils.delete_network(self.neutron, self.network)
+            try:
+                neutron_utils.delete_network(self.neutron, self.network)
+            except:
+                pass
 
     def test_create_router_simple(self):
         """
@@ -757,7 +795,11 @@ class NeutronUtilsFloatingIpTests(OSComponentTestCase):
         Cleans the image and downloaded image file
         """
         if self.floating_ip:
-            neutron_utils.delete_floating_ip(self.neutron, self.floating_ip)
+            try:
+                neutron_utils.delete_floating_ip(
+                    self.neutron, self.floating_ip)
+            except:
+                pass
 
     def test_floating_ips(self):
         """
