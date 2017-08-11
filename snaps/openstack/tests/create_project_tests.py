@@ -267,7 +267,7 @@ class CreateProjectUserTests(OSComponentTestCase):
         user_creator = OpenStackUser(
             self.os_creds, UserSettings(
                 name=self.guid + '-user',
-                password=self.guid, roles={'admin': 'admin'},
+                password=self.guid, roles={'admin':  self.project_settings.name},
                 domain_name=self.os_creds.user_domain_name))
         self.project_creator.assoc_user(user_creator.create())
         self.user_creators.append(user_creator)
@@ -297,7 +297,7 @@ class CreateProjectUserTests(OSComponentTestCase):
         user_creator_1 = OpenStackUser(
             self.os_creds, UserSettings(
                 name=self.guid + '-user1', password=self.guid,
-                roles={'admin': 'admin'},
+                roles={'admin': self.project_settings.name},
                 domain_name=self.os_creds.user_domain_name))
         self.project_creator.assoc_user(user_creator_1.create())
         self.user_creators.append(user_creator_1)
@@ -305,7 +305,7 @@ class CreateProjectUserTests(OSComponentTestCase):
         user_creator_2 = OpenStackUser(
             self.os_creds, UserSettings(
                 name=self.guid + '-user2', password=self.guid,
-                roles={'admin': 'admin'},
+                roles={'admin': self.project_settings.name},
                 domain_name=self.os_creds.user_domain_name))
         self.project_creator.assoc_user(user_creator_2.create())
         self.user_creators.append(user_creator_2)
