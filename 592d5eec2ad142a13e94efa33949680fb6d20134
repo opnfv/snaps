@@ -22,6 +22,30 @@
       "revId": "592d5eec2ad142a13e94efa33949680fb6d20134",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8ebbccc3",
+        "filename": "ci/squid.conf",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-08-11T14:35:12Z",
+      "side": 1,
+      "message": "I still don\u0027t like having to install squid to perform these tests but there isn\u0027t any other means other than messing with the routes on the control machine. This squid.conf file is basically a copy of the default one that comes with the distribution with minor hacks to open it up.",
+      "parentUuid": "da33351e_0ea05c8f",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 2
+      },
+      "revId": "592d5eec2ad142a13e94efa33949680fb6d20134",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
