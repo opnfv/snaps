@@ -14,12 +14,12 @@
 # limitations under the License.
 
 import unittest
-from snaps.domain.stack import Stack
+from snaps.domain.stack import Stack, Resource
 
 
 class StackDomainObjectTests(unittest.TestCase):
     """
-    Tests the construction of the snaps.domain.test.Stack class
+    Tests the construction of the snaps.domain.Stack class
     """
 
     def test_construction_positional(self):
@@ -31,3 +31,19 @@ class StackDomainObjectTests(unittest.TestCase):
         stack = Stack(stack_id='id', name='name')
         self.assertEqual('name', stack.name)
         self.assertEqual('id', stack.id)
+
+
+class ResourceDomainObjectTests(unittest.TestCase):
+    """
+    Tests the construction of the snaps.domain.Resource class
+    """
+
+    def test_construction_positional(self):
+        resource = Resource('foo', 'bar')
+        self.assertEqual('foo', resource.type)
+        self.assertEqual('bar', resource.id)
+
+    def test_construction_named(self):
+        resource = Resource(resource_id='bar', resource_type='foo')
+        self.assertEqual('foo', resource.type)
+        self.assertEqual('bar', resource.id)

@@ -25,11 +25,16 @@ class Network:
         """
         self.name = kwargs.get('name')
         self.id = kwargs.get('id')
-        self.type = kwargs.get('provider:network_type')
+        self.admin_state_up = kwargs.get('admin_state_up')
+        self.shared = kwargs.get('shared')
+        self.external = kwargs.get('router:external', kwargs.get('external'))
+        self.type = kwargs.get('provider:network_type', kwargs.get('type'))
 
     def __eq__(self, other):
         return (self.name == other.name and self.id == other.id and
-                self.type == other.type)
+                self.admin_state_up == other.admin_state_up and
+                self.shared == other.shared and
+                self.external == other.external and self.type == other.type)
 
 
 class Subnet:
@@ -44,10 +49,37 @@ class Subnet:
         self.name = kwargs.get('name')
         self.id = kwargs.get('id')
         self.cidr = kwargs.get('cidr')
+        self.ip_version = kwargs.get('ip_version')
+        self.gateway_ip = kwargs.get('gateway_ip')
+        self.enable_dhcp = kwargs.get('enable_dhcp')
+        self.dns_nameservers = kwargs.get('dns_nameservers')
+        self.host_routes = kwargs.get('host_routes')
+        self.ipv6_ra_mode = kwargs.get('ipv6_ra_mode')
+        self.ipv6_address_mode = kwargs.get('ipv6_address_mode')
+
+        self.start = None
+        self.end = None
+        if ('allocation_pools' in kwargs and
+                len(kwargs['allocation_pools']) > 0):
+            # Will need to ultimately support a list of pools
+            pools = kwargs['allocation_pools'][0]
+            if 'start' in pools:
+                self.start = pools['start']
+            if 'end' in pools:
+                self.end = pools['end']
 
     def __eq__(self, other):
-        return (self.name == other.name and self.id == other.id and
-                self.cidr == other.cidr)
+        return (self.name == other.name and
+                self.id == other.id and
+                self.cidr == other.cidr and
+                self.ip_version == other.ip_version and
+                self.gateway_ip == other.gateway_ip and
+                self.enable_dhcp == other.enable_dhcp and
+                self.dns_nameservers == other.dns_nameservers and
+                self.host_routes == other.host_routes and
+                self.ipv6_ra_mode == other.ipv6_ra_mode and
+                self.ipv6_address_mode == other.ipv6_address_mode and
+                self.start == other.start and self.end == other.end)
 
 
 class Port:

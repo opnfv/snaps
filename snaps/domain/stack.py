@@ -31,3 +31,17 @@ class Stack:
     def __eq__(self, other):
         return (self.name == other.name and
                 self.id == other.id)
+
+
+class Resource:
+    """
+    SNAPS domain object for resources created by a heat template
+    """
+    def __init__(self, resource_type, resource_id):
+        """
+        Constructor
+        :param resource_type: the type
+        :param resource_id: the ID attached to the resource of the given type
+        """
+        self.type = resource_type
+        self.id = resource_id

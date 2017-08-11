@@ -24,18 +24,40 @@ class NetworkObjectTests(unittest.TestCase):
     Tests the construction of the snaps.domain.network.Network class
     """
 
-    def test_construction_kwargs(self):
+    def test_construction_kwargs_1(self):
         network = Network(
-            **{'name': 'name', 'id': 'id', 'provider:network_type': 'flat'})
-        self.assertEqual('name', network.name)
-        self.assertEqual('id', network.id)
+            **{'name': 'foo', 'id': 'bar', 'provider:network_type': 'flat',
+               'admin_state_up': False, 'shared': True,
+               'router:external': False})
+        self.assertEqual('foo', network.name)
+        self.assertEqual('bar', network.id)
         self.assertEqual('flat', network.type)
+        self.assertFalse(network.admin_state_up)
+        self.assertFalse(network.external)
+        self.assertTrue(network.shared)
+
+    def test_construction_kwargs_2(self):
+        network = Network(
+            **{'name': 'foo', 'id': 'bar', 'type': 'flat',
+               'admin_state_up': False, 'shared': True,
+               'external': False})
+        self.assertEqual('foo', network.name)
+        self.assertEqual('bar', network.id)
+        self.assertEqual('flat', network.type)
+        self.assertFalse(network.admin_state_up)
+        self.assertFalse(network.external)
+        self.assertTrue(network.shared)
 
     def test_construction_named(self):
-        network = Network(id='id', name='name')
-        self.assertEqual('name', network.name)
-        self.assertEqual('id', network.id)
-        self.assertIsNone(network.type)
+        network = Network(
+            name='foo', id='bar', type='flat', admin_state_up=False,
+            shared=True, external=False)
+        self.assertEqual('foo', network.name)
+        self.assertEqual('bar', network.id)
+        self.assertEqual('flat', network.type)
+        self.assertFalse(network.admin_state_up)
+        self.assertFalse(network.external)
+        self.assertTrue(network.shared)
 
 
 class SubnetObjectTests(unittest.TestCase):
@@ -45,16 +67,39 @@ class SubnetObjectTests(unittest.TestCase):
 
     def test_construction_kwargs(self):
         subnet = Subnet(
-            **{'name': 'name', 'id': 'id', 'cidr': '10.0.0.0/24'})
-        self.assertEqual('name', subnet.name)
-        self.assertEqual('id', subnet.id)
+            **{'name': 'foo', 'id': 'bar', 'cidr': '10.0.0.0/24',
+               'ip_version': 4, 'gateway_ip': '10.0.0.1', 'enable_dhcp': True,
+               'dns_nameservers': ['8.8.8.8'], 'host_routes': list(),
+               'ipv6_ra_mode': 'hello', 'ipv6_address_mode': 'world'})
+        self.assertEqual('foo', subnet.name)
+        self.assertEqual('bar', subnet.id)
         self.assertEqual('10.0.0.0/24', subnet.cidr)
+        self.assertEqual(4, subnet.ip_version)
+        self.assertEqual('10.0.0.1', subnet.gateway_ip)
+        self.assertTrue(subnet.enable_dhcp)
+        self.assertEqual(1, len(subnet.dns_nameservers))
+        self.assertEqual('8.8.8.8', subnet.dns_nameservers[0])
+        self.assertEqual(list(), subnet.host_routes)
+        self.assertEqual('hello', subnet.ipv6_ra_mode)
+        self.assertEqual('world', subnet.ipv6_address_mode)
 
     def test_construction_named(self):
-        subnet = Subnet(cidr='10.0.0.0/24', id='id', name='name')
-        self.assertEqual('name', subnet.name)
-        self.assertEqual('id', subnet.id)
+        subnet = Subnet(
+            name='foo', id='bar', cidr='10.0.0.0/24',
+            ip_version=4, gateway_ip='10.0.0.1', enable_dhcp=True,
+            dns_nameservers=['8.8.8.8'], host_routes=list(),
+            ipv6_ra_mode='hello', ipv6_address_mode='world')
+        self.assertEqual('foo', subnet.name)
+        self.assertEqual('bar', subnet.id)
         self.assertEqual('10.0.0.0/24', subnet.cidr)
+        self.assertEqual(4, subnet.ip_version)
+        self.assertEqual('10.0.0.1', subnet.gateway_ip)
+        self.assertTrue(subnet.enable_dhcp)
+        self.assertEqual(1, len(subnet.dns_nameservers))
+        self.assertEqual('8.8.8.8', subnet.dns_nameservers[0])
+        self.assertEqual(list(), subnet.host_routes)
+        self.assertEqual('hello', subnet.ipv6_ra_mode)
+        self.assertEqual('world', subnet.ipv6_address_mode)
 
 
 class PortDomainObjectTests(unittest.TestCase):
