@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_0ea05c8f",
+        "filename": "ci/squid.conf",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-08-11T14:30:42Z",
+      "side": 1,
+      "message": "Space should be removed here.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 2
+      },
+      "revId": "592d5eec2ad142a13e94efa33949680fb6d20134",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
