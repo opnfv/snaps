@@ -1,0 +1,17 @@
+---
+- hosts: all
+  user: root
+
+  tasks:
+   - yum: name=squid
+     when: ansible_distribution == "CentOS"
+   - apt: name=squid
+     when: ansible_distribution == "Ubuntu"
+
+   - name: Transfer squid.conf
+     copy: src=squid.conf dest=/etc/squid/squid.conf mode=0640
+
+   - name: Bounce Squid
+     systemd:
+      name: squid
+      state: reloaded
