@@ -1766,17 +1766,16 @@ def validate_ssh_client(instance_creator):
         if ssh_client:
             try:
                 out = ssh_client.exec_command('pwd')[1]
+                channel = out.channel
+                in_buffer = channel.in_buffer
+                pwd_out = in_buffer.read(1024)
+                if not pwd_out or len(pwd_out) < 10:
+                    return False
+                return True
             finally:
                 ssh_client.close()
         else:
             return False
-
-        channel = out.channel
-        in_buffer = channel.in_buffer
-        pwd_out = in_buffer.read(1024)
-        if not pwd_out or len(pwd_out) < 10:
-            return False
-        return True
 
     return False
 
