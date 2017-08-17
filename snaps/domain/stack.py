@@ -35,7 +35,7 @@ class Stack:
 
 class Resource:
     """
-    SNAPS domain object for resources created by a heat template
+    SNAPS domain object for a resource created by a heat template
     """
     def __init__(self, resource_type, resource_id):
         """
@@ -45,3 +45,18 @@ class Resource:
         """
         self.type = resource_type
         self.id = resource_id
+
+
+class Output:
+    """
+    SNAPS domain object for an output defined by a heat template
+    """
+    def __init__(self, **kwargs):
+        """
+        Constructor
+        :param description: the output description
+        :param output_key: the output's key
+        """
+        self.description = kwargs.get('description')
+        self.key = kwargs.get('output_key')
+        self.value = kwargs.get('output_value')

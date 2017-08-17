@@ -107,20 +107,95 @@ class PortDomainObjectTests(unittest.TestCase):
     Tests the construction of the snaps.domain.network.Port class
     """
 
-    def test_construction_kwargs(self):
+    def test_construction_ips_kwargs(self):
         ips = ['10', '11']
         port = Port(
-            **{'name': 'name', 'id': 'id', 'ips': ips})
-        self.assertEqual('name', port.name)
-        self.assertEqual('id', port.id)
+            **{'name': 'foo', 'id': 'bar', 'description': 'test desc',
+               'ips': ips, 'mac_address': 'abc123',
+               'allowed_address_pairs': list(), 'admin_state_up': False,
+               'device_id': 'def456', 'device_owner': 'joe',
+               'network_id': 'ghi789', 'port_security_enabled': False,
+               'security_groups': list(), 'tenant_id': 'jkl098'})
+        self.assertEqual('foo', port.name)
+        self.assertEqual('bar', port.id)
+        self.assertEqual('test desc', port.description)
         self.assertEqual(ips, port.ips)
+        self.assertEqual('abc123', port.mac_address)
+        self.assertEqual(list(), port.allowed_address_pairs)
+        self.assertFalse(port.admin_state_up)
+        self.assertEqual('def456', port.device_id)
+        self.assertEqual('joe', port.device_owner)
+        self.assertEqual('ghi789', port.network_id)
+        self.assertFalse(port.port_security_enabled)
+        self.assertEqual(list(), port.security_groups)
+        self.assertEqual(list(), port.security_groups)
 
-    def test_construction_named(self):
+    def test_construction_fixed_ips_kwargs(self):
         ips = ['10', '11']
-        port = Port(ips=ips, id='id', name='name')
-        self.assertEqual('name', port.name)
-        self.assertEqual('id', port.id)
+        port = Port(
+            **{'name': 'foo', 'id': 'bar', 'description': 'test desc',
+               'fixed_ips': ips, 'mac_address': 'abc123',
+               'allowed_address_pairs': list(), 'admin_state_up': False,
+               'device_id': 'def456', 'device_owner': 'joe',
+               'network_id': 'ghi789', 'port_security_enabled': False,
+               'security_groups': list(), 'tenant_id': 'jkl098'})
+        self.assertEqual('foo', port.name)
+        self.assertEqual('bar', port.id)
+        self.assertEqual('test desc', port.description)
         self.assertEqual(ips, port.ips)
+        self.assertEqual('abc123', port.mac_address)
+        self.assertEqual(list(), port.allowed_address_pairs)
+        self.assertFalse(port.admin_state_up)
+        self.assertEqual('def456', port.device_id)
+        self.assertEqual('joe', port.device_owner)
+        self.assertEqual('ghi789', port.network_id)
+        self.assertFalse(port.port_security_enabled)
+        self.assertEqual(list(), port.security_groups)
+        self.assertEqual(list(), port.security_groups)
+
+    def test_construction_named_ips(self):
+        ips = ['10', '11']
+        port = Port(
+            mac_address='abc123', description='test desc', ips=ips, id='bar',
+            name='foo', allowed_address_pairs=list(), admin_state_up=False,
+            device_id='def456', device_owner='joe', network_id='ghi789',
+            port_security_enabled=False, security_groups=list(),
+            tenant_id='jkl098')
+        self.assertEqual('foo', port.name)
+        self.assertEqual('bar', port.id)
+        self.assertEqual('test desc', port.description)
+        self.assertEqual(ips, port.ips)
+        self.assertEqual('abc123', port.mac_address)
+        self.assertEqual(list(), port.allowed_address_pairs)
+        self.assertFalse(port.admin_state_up)
+        self.assertEqual('def456', port.device_id)
+        self.assertEqual('joe', port.device_owner)
+        self.assertEqual('ghi789', port.network_id)
+        self.assertFalse(port.port_security_enabled)
+        self.assertEqual(list(), port.security_groups)
+        self.assertEqual(list(), port.security_groups)
+
+    def test_construction_named_fixed_ips(self):
+        ips = ['10', '11']
+        port = Port(
+            mac_address='abc123', description='test desc', fixed_ips=ips,
+            id='bar', name='foo', allowed_address_pairs=list(),
+            admin_state_up=False, device_id='def456', device_owner='joe',
+            network_id='ghi789', port_security_enabled=False,
+            security_groups=list(), tenant_id='jkl098')
+        self.assertEqual('foo', port.name)
+        self.assertEqual('bar', port.id)
+        self.assertEqual('test desc', port.description)
+        self.assertEqual(ips, port.ips)
+        self.assertEqual('abc123', port.mac_address)
+        self.assertEqual(list(), port.allowed_address_pairs)
+        self.assertFalse(port.admin_state_up)
+        self.assertEqual('def456', port.device_id)
+        self.assertEqual('joe', port.device_owner)
+        self.assertEqual('ghi789', port.network_id)
+        self.assertFalse(port.port_security_enabled)
+        self.assertEqual(list(), port.security_groups)
+        self.assertEqual(list(), port.security_groups)
 
 
 class RouterDomainObjectTests(unittest.TestCase):

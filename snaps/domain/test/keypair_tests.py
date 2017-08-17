@@ -23,13 +23,16 @@ class KeypairDomainObjectTests(unittest.TestCase):
     """
 
     def test_construction_positional(self):
-        keypair = Keypair('foo', '123-456', 'foo-bar')
+        keypair = Keypair('foo', '123-456', 'foo-bar', '01:02:03')
         self.assertEqual('foo', keypair.name)
         self.assertEqual('123-456', keypair.id)
         self.assertEqual('foo-bar', keypair.public_key)
+        self.assertEqual('01:02:03', keypair.fingerprint)
 
     def test_construction_named(self):
-        keypair = Keypair(public_key='foo-bar', id='123-456', name='foo')
+        keypair = Keypair(fingerprint='01:02:03', public_key='foo-bar',
+                          kp_id='123-456', name='foo')
         self.assertEqual('foo', keypair.name)
         self.assertEqual('123-456', keypair.id)
         self.assertEqual('foo-bar', keypair.public_key)
+        self.assertEqual('01:02:03', keypair.fingerprint)

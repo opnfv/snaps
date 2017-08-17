@@ -16,6 +16,10 @@ import logging
 import uuid
 
 import os
+import time
+
+from snaps import file_utils
+from snaps.openstack import create_instance
 from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_instance import VmInstanceSettings
@@ -130,7 +134,7 @@ class NovaUtilsKeypairTests(OSComponentTestCase):
         Tests that the generated RSA keys are properly saved to files
         :return:
         """
-        nova_utils.save_keys_to_files(self.keys, self.pub_key_file_path,
+        file_utils.save_keys_to_files(self.keys, self.pub_key_file_path,
                                       self.priv_key_file_path)
         self.keypair = nova_utils.upload_keypair_file(self.nova,
                                                       self.keypair_name,
@@ -308,6 +312,19 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
 
         self.assertIsNotNone(self.vm_inst)
 
+        # Wait until instance is ACTIVE
+        iters = 0
+        active = False
+        while iters < 60:
+            if create_instance.STATUS_ACTIVE == nova_utils.get_server_status(
+                    self.nova, self.vm_inst):
+                active = True
+                break
+
+            time.sleep(3)
+            iters += 1
+
+        self.assertTrue(active)
         vm_inst = nova_utils.get_latest_server_object(self.nova, self.vm_inst)
 
         self.assertEqual(self.vm_inst.name, vm_inst.name)

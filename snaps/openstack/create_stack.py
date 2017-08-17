@@ -18,8 +18,10 @@ import time
 
 from heatclient.exc import HTTPNotFound
 
-from snaps.openstack.create_network import (
-    OpenStackNetwork, NetworkSettings, SubnetSettings)
+from snaps.openstack.create_instance import OpenStackVmInstance
+from snaps.openstack.utils import nova_utils, settings_utils, glance_utils
+
+from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.utils import heat_utils, neutron_utils
 
 __author__ = 'spisarski'
@@ -31,6 +33,7 @@ POLL_INTERVAL = 3
 STATUS_CREATE_FAILED = 'CREATE_FAILED'
 STATUS_CREATE_COMPLETE = 'CREATE_COMPLETE'
 STATUS_DELETE_COMPLETE = 'DELETE_COMPLETE'
+STATUS_DELETE_FAILED = 'DELETE_FAILED'
 
 
 class OpenStackHeatStack:
@@ -38,15 +41,33 @@ class OpenStackHeatStack:
     Class responsible for creating an heat stack in OpenStack
     """
 
-    def __init__(self, os_creds, stack_settings):
+    def __init__(self, os_creds, stack_settings, image_settings=None,
+                 keypair_settings=None):
         """
         Constructor
         :param os_creds: The OpenStack connection credentials
         :param stack_settings: The stack settings
+        :param image_settings: A list of ImageSettings objects that were used
+                               for spawning this stack
+        :param image_settings: A list of ImageSettings objects that were used
+                               for spawning this stack
+        :param keypair_settings: A list of KeypairSettings objects that were
+                                 used for spawning this stack
         :return:
         """
         self.__os_creds = os_creds
         self.stack_settings = stack_settings
+
+        if image_settings:
+            self.image_settings = image_settings
+        else:
+            self.image_settings = None
+
+        if image_settings:
+            self.keypair_settings = keypair_settings
+        else:
+            self.keypair_settings = None
+
         self.__stack = None
         self.__heat_cli = None
 
@@ -93,11 +114,39 @@ class OpenStackHeatStack:
         """
         if self.__stack:
             try:
+                logger.info('Deleting stack - %s' + self.__stack.name)
                 heat_utils.delete_stack(self.__heat_cli, self.__stack)
+
+                try:
+                    self.stack_deleted(block=True)
+                except StackError as e:
+                    # Stack deletion seems to fail quite a bit
+                    logger.warn('Stack did not delete properly - %s', e)
+
+                    # Delete VMs first
+                    for vm_inst_creator in self.get_vm_inst_creators():
+                        try:
+                            vm_inst_creator.clean()
+                            if not vm_inst_creator.vm_deleted(block=True):
+                                logger.warn('Unable to deleted VM - %s',
+                                            vm_inst_creator.get_vm_inst().name)
+                        except:
+                            logger.warn('Unexpected error deleting VM - %s ',
+                                        vm_inst_creator.get_vm_inst().name)
+
+                logger.info('Attempting to delete again stack - %s',
+                            self.__stack.name)
+
+                # Delete Stack again
+                heat_utils.delete_stack(self.__heat_cli, self.__stack)
+                deleted = self.stack_deleted(block=True)
+                if not deleted:
+                    raise StackError(
+                        'Stack could not be deleted ' + self.__stack.name)
             except HTTPNotFound:
                 pass
 
-        self.__stack = None
+            self.__stack = None
 
     def get_stack(self):
         """
@@ -113,7 +162,7 @@ class OpenStackHeatStack:
         object
         :return:
         """
-        return heat_utils.get_stack_outputs(self.__heat_cli, self.__stack.id)
+        return heat_utils.get_outputs(self.__heat_cli, self.__stack)
 
     def get_status(self):
         """
@@ -137,7 +186,23 @@ class OpenStackHeatStack:
         if not timeout:
             timeout = self.stack_settings.stack_create_timeout
         return self._stack_status_check(STATUS_CREATE_COMPLETE, block, timeout,
-                                        poll_interval)
+                                        poll_interval, STATUS_CREATE_FAILED)
+
+    def stack_deleted(self, block=False, timeout=None,
+                      poll_interval=POLL_INTERVAL):
+        """
+        Returns true when the stack status returns the value of
+        expected_status_code
+        :param block: When true, thread will block until active or timeout
+                      value in seconds has been exceeded (False)
+        :param timeout: The timeout value
+        :param poll_interval: The polling interval in seconds
+        :return: T/F
+        """
+        if not timeout:
+            timeout = self.stack_settings.stack_create_timeout
+        return self._stack_status_check(STATUS_DELETE_COMPLETE, block, timeout,
+                                        poll_interval, STATUS_DELETE_FAILED)
 
     def get_network_creators(self):
         """
@@ -153,7 +218,7 @@ class OpenStackHeatStack:
             self.__heat_cli, neutron, self.__stack)
 
         for stack_network in stack_networks:
-            net_settings = self.__create_network_settings(
+            net_settings = settings_utils.create_network_settings(
                 neutron, stack_network)
             net_creator = OpenStackNetwork(self.__os_creds, net_settings)
             out.append(net_creator)
@@ -161,45 +226,41 @@ class OpenStackHeatStack:
 
         return out
 
-    def __create_network_settings(self, neutron, network):
+    def get_vm_inst_creators(self, heat_keypair_option=None):
         """
-        Returns a NetworkSettings object
-        :param neutron: the neutron client
-        :param network: a SNAPS-OO Network domain object
-        :return:
+        Returns a list of VM Instance creator objects as configured by the heat
+        template
+        :return: list() of OpenStackVmInstance objects
         """
-        return NetworkSettings(
-            name=network.name, network_type=network.type,
-            subnet_settings=self.__create_subnet_settings(neutron, network))
 
-    def __create_subnet_settings(self, neutron, network):
-        """
-        Returns a list of SubnetSettings objects for a given network
-        :param neutron: the OpenStack neutron client
-        :param network: the SNAPS-OO Network domain object
-        :return: a list
-        """
         out = list()
+        nova = nova_utils.nova_client(self.__os_creds)
 
-        subnets = neutron_utils.get_subnets_by_network(neutron, network)
-        for subnet in subnets:
-            kwargs = dict()
-            kwargs['cidr'] = subnet.cidr
-            kwargs['ip_version'] = subnet.ip_version
-            kwargs['name'] = subnet.name
-            kwargs['start'] = subnet.start
-            kwargs['end'] = subnet.end
-            kwargs['gateway_ip'] = subnet.gateway_ip
-            kwargs['enable_dhcp'] = subnet.enable_dhcp
-            kwargs['dns_nameservers'] = subnet.dns_nameservers
-            kwargs['host_routes'] = subnet.host_routes
-            kwargs['ipv6_ra_mode'] = subnet.ipv6_ra_mode
-            kwargs['ipv6_address_mode'] = subnet.ipv6_address_mode
-            out.append(SubnetSettings(**kwargs))
+        stack_servers = heat_utils.get_stack_servers(
+            self.__heat_cli, nova, self.__stack)
+
+        neutron = neutron_utils.neutron_client(self.__os_creds)
+        glance = glance_utils.glance_client(self.__os_creds)
+
+        for stack_server in stack_servers:
+            vm_inst_settings = settings_utils.create_vm_inst_settings(
+                nova, neutron, stack_server)
+            image_settings = settings_utils.determine_image_settings(
+                glance, stack_server, self.image_settings)
+            keypair_settings = settings_utils.determine_keypair_settings(
+                self.__heat_cli, self.__stack, stack_server,
+                keypair_settings=self.keypair_settings,
+                priv_key_key=heat_keypair_option)
+            vm_inst_creator = OpenStackVmInstance(
+                self.__os_creds, vm_inst_settings, image_settings,
+                keypair_settings)
+            out.append(vm_inst_creator)
+            vm_inst_creator.create(cleanup=True)
+
         return out
 
     def _stack_status_check(self, expected_status_code, block, timeout,
-                            poll_interval):
+                            poll_interval, fail_status):
         """
         Returns true when the stack status returns the value of
         expected_status_code
@@ -209,6 +270,7 @@ class OpenStackHeatStack:
                       value in seconds has been exceeded (False)
         :param timeout: The timeout value
         :param poll_interval: The polling interval in seconds
+        :param fail_status: Returns false if the fail_status code is found
         :return: T/F
         """
         # sleep and wait for stack status change
@@ -218,7 +280,7 @@ class OpenStackHeatStack:
             start = time.time() - timeout
 
         while timeout > time.time() - start:
-            status = self._status(expected_status_code)
+            status = self._status(expected_status_code, fail_status)
             if status:
                 logger.debug(
                     'Stack is active with name - ' + self.stack_settings.name)
@@ -234,7 +296,7 @@ class OpenStackHeatStack:
             'Timeout checking for stack status for ' + expected_status_code)
         return False
 
-    def _status(self, expected_status_code):
+    def _status(self, expected_status_code, fail_status=STATUS_CREATE_FAILED):
         """
         Returns True when active else False
         :param expected_status_code: stack status evaluated with this string
@@ -247,8 +309,8 @@ class OpenStackHeatStack:
                 'Cannot stack status for stack with ID - ' + self.__stack.id)
             return False
 
-        if status == STATUS_CREATE_FAILED:
-            raise StackCreationError('Stack had an error during deployment')
+        if fail_status and status == fail_status:
+            raise StackError('Stack had an error')
         logger.debug('Stack status is - ' + status)
         return status == expected_status_code
 
@@ -298,4 +360,10 @@ class StackSettingsError(Exception):
 class StackCreationError(Exception):
     """
     Exception to be thrown when an stack cannot be created
+    """
+
+
+class StackError(Exception):
+    """
+    General exception
     """

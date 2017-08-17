@@ -38,8 +38,6 @@ class FileUtilsTests(unittest.TestCase):
 
         self.tmpFile = self.test_dir + '/bar.txt'
         self.tmp_file_opened = None
-        if not os.path.exists(self.tmpFile):
-            self.tmp_file_opened = open(self.tmpFile, 'wb')
 
     def tearDown(self):
         if self.tmp_file_opened:
@@ -69,6 +67,9 @@ class FileUtilsTests(unittest.TestCase):
         Ensure the file_utils.fileExists() method returns false with a
         directory
         """
+        if not os.path.exists(self.tmpFile):
+            self.tmp_file_opened = open(self.tmpFile, 'wb')
+
         if not os.path.exists(self.tmpFile):
             os.makedirs(self.tmpFile)
 
@@ -115,3 +116,20 @@ class FileUtilsTests(unittest.TestCase):
         self.assertEqual('http://foo:5000/v2.0/', os_env_dict['OS_AUTH_URL'])
         self.assertEqual('admin', os_env_dict['OS_USERNAME'])
         self.assertEqual('admin', os_env_dict['OS_TENANT_NAME'])
+
+    def test_write_str_to_file(self):
+        """
+        Ensure the file_utils.fileExists() method returns false with a
+        directory
+        """
+        test_val = 'test string'
+
+        test_file = file_utils.save_string_to_file(
+            test_val, self.tmpFile)
+        result1 = file_utils.file_exists(self.tmpFile)
+        self.assertTrue(result1)
+        result2 = file_utils.file_exists(test_file.name)
+        self.assertTrue(result2)
+
+        file_contents = file_utils.read_file(self.tmpFile)
+        self.assertEqual(test_val, file_contents)

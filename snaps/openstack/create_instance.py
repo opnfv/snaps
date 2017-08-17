@@ -68,7 +68,11 @@ class OpenStackVmInstance:
     def create(self, cleanup=False, block=False):
         """
         Creates a VM instance
-        :param cleanup: When true, only perform lookups for OpenStack objects.
+        :param cleanup: When true, this object is initialized only via queries,
+                        else objects will be created when the queries return
+                        None. The name of this parameter should be changed to
+                        something like 'readonly' as the same goes with all of
+                        the other creator classes.
         :param block: Thread will block until instance has either become
                       active, error, or timeout waiting.
                       Additionally, when True, floating IPs will not be applied
@@ -102,11 +106,16 @@ class OpenStackVmInstance:
 
                 fips = neutron_utils.get_floating_ips(self.__neutron,
                                                       self.__ports)
-                for port_name, fip in fips:
+                for port_id, fip in fips:
                     settings = self.instance_settings.floating_ip_settings
                     for fip_setting in settings:
-                        if port_name == fip_setting.port_name:
+                        if port_id == fip_setting.port_id:
                             self.__floating_ip_dict[fip_setting.name] = fip
+                        else:
+                            port = neutron_utils.get_port_by_id(
+                                self.__neutron, port_id)
+                            if port and port.name == fip_setting.port_name:
+                                self.__floating_ip_dict[fip_setting.name] = fip
 
     def __create_vm(self, block=False):
         """
@@ -213,7 +222,7 @@ class OpenStackVmInstance:
 
         # Cleanup ports
         for name, port in self.__ports:
-            logger.info('Deleting Port - ' + name)
+            logger.info('Deleting Port with ID - %S ' + port.id)
             try:
                 neutron_utils.delete_port(self.__neutron, port)
             except PortNotFoundClient as e:
@@ -263,6 +272,14 @@ class OpenStackVmInstance:
         for port_setting in port_settings:
             port = neutron_utils.get_port(
                 self.__neutron, port_settings=port_setting)
+            if not port:
+                network = neutron_utils.get_network(
+                    self.__neutron, network_name=port_setting.network_name)
+                net_ports = neutron_utils.get_ports(self.__neutron, network)
+                for net_port in net_ports:
+                    if port_setting.mac_address == net_port.mac_address:
+                        port = net_port
+                        break
             if port:
                 ports.append((port_setting.name, port))
             elif not cleanup:
@@ -331,7 +348,7 @@ class OpenStackVmInstance:
         Returns the latest version of this server object from OpenStack
         :return: Server object
         """
-        return self.__vm
+        return nova_utils.get_server_object_by_id(self.__nova, self.__vm.id)
 
     def get_console_output(self):
         """
@@ -506,8 +523,8 @@ class OpenStackVmInstance:
 
     def vm_active(self, block=False, poll_interval=POLL_INTERVAL):
         """
-        Returns true when the VM status returns the value of
-        expected_status_code
+        Returns true when the VM status returns the value of the constant
+        STATUS_ACTIVE
         :param block: When true, thread will block until active or timeout
                       value in seconds has been exceeded (False)
         :param poll_interval: The polling interval in seconds
@@ -560,7 +577,10 @@ class OpenStackVmInstance:
         :return: T/F
         """
         if not self.__vm:
-            return False
+            if expected_status_code == STATUS_DELETED:
+                return True
+            else:
+                return False
 
         status = nova_utils.get_server_status(self.__nova, self.__vm)
         if not status:
@@ -702,7 +722,7 @@ class VmInstanceSettings:
         """
         Constructor
         :param name: the name of the VM
-        :param flavor: the VM's flavor
+        :param flavor: the VM's flavor name
         :param port_settings: the port configuration settings (required)
         :param security_group_names: a set of names of the security groups to
                                      add to the VM
@@ -816,6 +836,7 @@ class FloatingIpSettings:
         """
         self.name = kwargs.get('name')
         self.port_name = kwargs.get('port_name')
+        self.port_id = kwargs.get('port_id')
         self.router_name = kwargs.get('router_name')
         self.subnet_name = kwargs.get('subnet_name')
         if kwargs.get('provisioning') is not None:
@@ -823,10 +844,14 @@ class FloatingIpSettings:
         else:
             self.provisioning = True
 
-        if not self.name or not self.port_name or not self.router_name:
+        # if not self.name or not self.port_name or not self.router_name:
+        if not self.name or not self.router_name:
             raise FloatingIpSettingsError(
-                'The attributes name, port_name and router_name are required '
-                'for FloatingIPSettings')
+                'The attributes name, port_name and router_name are required')
+
+        if not self.port_name and not self.port_id:
+            raise FloatingIpSettingsError(
+                'The attributes port_name or port_id are required')
 
 
 class VmInstanceSettingsError(Exception):

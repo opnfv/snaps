@@ -332,7 +332,7 @@ class CreateKeypairsTests(OSIntegrationTestCase):
         :return:
         """
         keys = nova_utils.create_keys()
-        nova_utils.save_keys_to_files(keys=keys,
+        file_utils.save_keys_to_files(keys=keys,
                                       pub_file_path=self.pub_file_path)
         self.keypair_creator = OpenStackKeypair(
             self.os_creds, KeypairSettings(name=self.keypair_name,
@@ -448,7 +448,7 @@ class CreateKeypairsCleanupTests(OSIntegrationTestCase):
         :return:
         """
         keys = nova_utils.create_keys()
-        nova_utils.save_keys_to_files(
+        file_utils.save_keys_to_files(
             keys=keys, pub_file_path=self.pub_file_path,
             priv_file_path=self.priv_file_path)
         self.keypair_creator = OpenStackKeypair(
@@ -468,7 +468,7 @@ class CreateKeypairsCleanupTests(OSIntegrationTestCase):
         :return:
         """
         keys = nova_utils.create_keys()
-        nova_utils.save_keys_to_files(
+        file_utils.save_keys_to_files(
             keys=keys, pub_file_path=self.pub_file_path,
             priv_file_path=self.priv_file_path)
         self.keypair_creator = OpenStackKeypair(
