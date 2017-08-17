@@ -149,6 +149,8 @@ class NetworkSettings:
         :param network_type: the type of network (i.e. vlan|flat).
         :param physical_network: the name of the physical network
                                  (this is required when network_type is 'flat')
+        :param segmentation_id: the id of the segmentation
+                                 (this is required when network_type is 'vlan')
         :param subnets or subnet_settings: List of SubnetSettings objects.
         :return:
         """
@@ -175,6 +177,7 @@ class NetworkSettings:
 
         self.network_type = kwargs.get('network_type')
         self.physical_network = kwargs.get('physical_network')
+        self.segmentation_id = kwargs.get('segmentation_id')
 
         self.subnet_settings = list()
         subnet_settings = kwargs.get('subnets')
@@ -239,6 +242,8 @@ class NetworkSettings:
             out['provider:network_type'] = self.network_type
         if self.physical_network:
             out['provider:physical_network'] = self.physical_network
+        if self.segmentation_id:
+            out['provider:segmentation_id'] = self.segmentation_id
         if self.external:
             out['router:external'] = self.external
         return {'network': out}
