@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_1c48882c",
+        "filename": "snaps/openstack/create_network.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-08-17T13:38:10Z",
+      "side": 1,
+      "message": "Please test this new attribute in the source file create_network_tests.py. NetworkSettingsUnitTests will need to validate the attribute and I would like to see at least one test that uses this attribute in at least one way. You can use the class CreateNetworkTypeTests as this one is not included with the Functest \u0027snaps-smoke\u0027 or any of the other SNAPS suite of tests. If the test(s) you write that excercise this attribute should work on all pods without any special test configuration (i.e. images and flavors), you should use the test class CreateNetworkSuccessTests instead.\n\nnote: if it makes sense, feel free to extend any of the existing test cases to fit your needs.",
+      "revId": "2a5f283435f7f7be611fcfd61c9f021d8ed90154",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
