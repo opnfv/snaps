@@ -92,13 +92,32 @@ class Port:
         Constructor
         :param name: the security group's name
         :param id: the security group's id
-        :param ips: a list of IP addresses
+        :param description: description
+        :param ips|fixed_ips: a list of IP addresses
+        :param mac_address: the port's MAC addresses
+        :param allowed_address_pairs: the port's allowed_address_pairs value
+        :param admin_state_up: T|F whether or not the port is up
+        :param device_id: device's ID
+        :param device_owner: device's owner
+        :param network_id: associated network ID
+        :param port_security_enabled: T|F whether or not the port security is
+                                      enabled
+        :param security_groups: the security group IDs associated with port
+        :param project_id: the associated project/tenant ID
         """
         self.name = kwargs.get('name')
         self.id = kwargs.get('id')
-        self.ips = kwargs.get('ips')
+        self.description = kwargs.get('description')
+        self.ips = kwargs.get('ips', kwargs.get('fixed_ips'))
         self.mac_address = kwargs.get('mac_address')
         self.allowed_address_pairs = kwargs.get('allowed_address_pairs')
+        self.admin_state_up = kwargs.get('admin_state_up')
+        self.device_id = kwargs.get('device_id')
+        self.device_owner = kwargs.get('device_owner')
+        self.network_id = kwargs.get('network_id')
+        self.port_security_enabled = kwargs.get('port_security_enabled')
+        self.security_groups = kwargs.get('security_groups')
+        self.project_id = kwargs.get('tenant_id', kwargs.get('project_id'))
 
     def __eq__(self, other):
         return (self.name == other.name and self.id == other.id and

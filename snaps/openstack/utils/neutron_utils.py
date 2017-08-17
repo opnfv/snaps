@@ -248,6 +248,18 @@ def delete_router(neutron, router):
         neutron.delete_router(router=router.id)
 
 
+def get_router_by_id(neutron, router_id):
+    """
+    Returns a router with a given ID, else None if not found
+    :param neutron: the client
+    :param router_id: the Router ID
+    :return: a SNAPS-OO Router domain object
+    """
+    router = neutron.show_router(router_id)
+    if router:
+        return Router(**router['router'])
+
+
 def get_router(neutron, router_settings=None, router_name=None):
     """
     Returns the first router object (dictionary) found the given the settings
@@ -385,21 +397,62 @@ def get_port(neutron, port_settings=None, port_name=None):
     port_filter = dict()
 
     if port_settings:
-        port_filter['name'] = port_settings.name
+        if port_settings.name and len(port_settings.name) > 0:
+            port_filter['name'] = port_settings.name
         if port_settings.admin_state_up:
             port_filter['admin_state_up'] = port_settings.admin_state_up
         if port_settings.device_id:
             port_filter['device_id'] = port_settings.device_id
         if port_settings.mac_address:
             port_filter['mac_address'] = port_settings.mac_address
+        if port_settings.network_name:
+            network = get_network(neutron,
+                                  network_name=port_settings.network_name)
+            port_filter['network_id'] = network.id
     elif port_name:
         port_filter['name'] = port_name
 
     ports = neutron.list_ports(**port_filter)
     for port in ports['ports']:
-        return Port(name=port['name'], id=port['id'],
-                    ips=port['fixed_ips'], mac_address=port['mac_address'])
+        return Port(**port)
     return None
+
+
+def get_port_by_id(neutron, port_id):
+    """
+    Returns a SNAPS-OO Port domain object for the given ID or none if not found
+    :param neutron: the client
+    :param port_id: the to query
+    :return: a SNAPS-OO Port domain object or None
+    """
+    port = neutron.show_port(port_id)
+    if port:
+        return Port(**port['port'])
+    return None
+
+
+def get_ports(neutron, network, ips=None):
+    """
+    Returns a list of SNAPS-OO Port objects for all OpenStack Port objects that
+    are associated with the 'network' parameter
+    :param neutron: the client
+    :param network: SNAPS-OO Network domain object
+    :param ips: the IPs to lookup if not None
+    :return: a SNAPS-OO Port domain object or None if not found
+    """
+    out = list()
+    ports = neutron.list_ports(**{'network_id': network.id})
+    for port in ports['ports']:
+        if ips:
+            for fixed_ips in port['fixed_ips']:
+                if ('ip_address' in fixed_ips and
+                        fixed_ips['ip_address'] in ips) or ips is None:
+                    out.append(Port(**port))
+                    break
+        else:
+            out.append(Port(**port))
+
+    return out
 
 
 def create_security_group(neutron, keystone, sec_grp_settings):
@@ -554,12 +607,13 @@ def get_floating_ips(neutron, ports=None):
     Returns all of the floating IPs
     When ports is not None, FIPs returned must be associated with one of the
     ports in the list and a tuple 2 where the first element being the port's
-    name and the second being the FloatingIp SNAPS-OO domain object.
+    ID and the second being the FloatingIp SNAPS-OO domain object.
     When ports is None, all known FloatingIp SNAPS-OO domain objects will be
     returned in a list
     :param neutron: the Neutron client
-    :param ports: a list of SNAPS-OO Port objects to join
-    :return: a list of tuple 2 (port_name, SNAPS FloatingIp) objects when ports
+    :param ports: a list of tuple 2 where index 0 is the port name and index 1
+                  is the SNAPS-OO Port object
+    :return: a list of tuple 2 (port_id, SNAPS FloatingIp) objects when ports
              is not None else a list of Port objects
     """
     out = list()
@@ -567,13 +621,11 @@ def get_floating_ips(neutron, ports=None):
     for fip in fips['floatingips']:
         if ports:
             for port_name, port in ports:
-                if fip['port_id'] == port.id:
-                    out.append((port.name, FloatingIp(
-                        inst_id=fip['id'], ip=fip['floating_ip_address'])))
+                if port and port.id == fip['port_id']:
+                    out.append((port.id, FloatingIp(**fip)))
                     break
         else:
-            out.append(FloatingIp(inst_id=fip['id'],
-                                  ip=fip['floating_ip_address']))
+            out.append(FloatingIp(**fip))
 
     return out
 
@@ -593,7 +645,7 @@ def create_floating_ip(neutron, ext_net_name):
             body={'floatingip':
                   {'floating_network_id': ext_net.id}})
 
-        return FloatingIp(inst_id=fip['floatingip']['id'],
+        return FloatingIp(id=fip['floatingip']['id'],
                           ip=fip['floatingip']['floating_ip_address'])
     else:
         raise NeutronException(
@@ -612,8 +664,7 @@ def get_floating_ip(neutron, floating_ip):
                  floating_ip.ip)
     os_fip = __get_os_floating_ip(neutron, floating_ip)
     if os_fip:
-        return FloatingIp(
-            inst_id=os_fip['id'], ip=os_fip['floating_ip_address'])
+        return FloatingIp(id=os_fip['id'], ip=os_fip['floating_ip_address'])
 
 
 def __get_os_floating_ip(neutron, floating_ip):
@@ -648,7 +699,7 @@ def delete_floating_ip(neutron, floating_ip):
 def get_network_quotas(neutron, project_id):
     """
     Returns a list of all available keypairs
-    :param nova: the Nova client
+    :param neutron: the neutron client
     :param project_id: the project's ID of the quotas to lookup
     :return: an object of type NetworkQuotas or None if not found
     """

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import unittest
-from snaps.domain.stack import Stack, Resource
+from snaps.domain.stack import Stack, Resource, Output
 
 
 class StackDomainObjectTests(unittest.TestCase):
@@ -47,3 +47,24 @@ class ResourceDomainObjectTests(unittest.TestCase):
         resource = Resource(resource_id='bar', resource_type='foo')
         self.assertEqual('foo', resource.type)
         self.assertEqual('bar', resource.id)
+
+
+class OutputDomainObjectTests(unittest.TestCase):
+    """
+    Tests the construction of the snaps.domain.Resource class
+    """
+
+    def test_construction_kwargs(self):
+        kwargs = {'description': 'foo', 'output_key': 'test_key',
+                  'output_value': 'bar'}
+        resource = Output(**kwargs)
+        self.assertEqual('foo', resource.description)
+        self.assertEqual('test_key', resource.key)
+        self.assertEqual('bar', resource.value)
+
+    def test_construction_named(self):
+        resource = Output(description='foo', output_key='test_key',
+                          output_value='bar')
+        self.assertEqual('foo', resource.description)
+        self.assertEqual('test_key', resource.key)
+        self.assertEqual('bar', resource.value)

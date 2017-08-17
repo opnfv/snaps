@@ -23,16 +23,26 @@ class VmInstDomainObjectTests(unittest.TestCase):
     """
 
     def test_construction_positional(self):
-        vm_inst = VmInst('name', 'id', dict())
+        vm_inst = VmInst('name', 'id', '456', '123', dict(), 'kp-name', list())
         self.assertEqual('name', vm_inst.name)
         self.assertEqual('id', vm_inst.id)
+        self.assertEqual('456', vm_inst.image_id)
+        self.assertEqual('123', vm_inst.flavor_id)
         self.assertEqual(dict(), vm_inst.networks)
+        self.assertEqual('kp-name', vm_inst.keypair_name)
+        self.assertEqual(list(), vm_inst.sec_grp_names)
 
     def test_construction_named(self):
-        vm_inst = VmInst(networks=dict(), inst_id='id', name='name')
+        vm_inst = VmInst(sec_grp_names=list(), networks=dict(), inst_id='id',
+                         name='name', flavor_id='123', image_id='456',
+                         keypair_name='kp-name')
         self.assertEqual('name', vm_inst.name)
         self.assertEqual('id', vm_inst.id)
+        self.assertEqual('456', vm_inst.image_id)
+        self.assertEqual('123', vm_inst.flavor_id)
         self.assertEqual(dict(), vm_inst.networks)
+        self.assertEqual('kp-name', vm_inst.keypair_name)
+        self.assertEqual(list(), vm_inst.sec_grp_names)
 
 
 class FloatingIpDomainObjectTests(unittest.TestCase):
@@ -40,12 +50,63 @@ class FloatingIpDomainObjectTests(unittest.TestCase):
     Tests the construction of the snaps.domain.test.Image class
     """
 
-    def test_construction_positional(self):
-        vm_inst = FloatingIp('id-123', '10.0.0.1')
-        self.assertEqual('id-123', vm_inst.id)
-        self.assertEqual('10.0.0.1', vm_inst.ip)
+    def test_construction_kwargs_ip_proj(self):
+        kwargs = {'id': 'foo', 'description': 'bar', 'ip': '192.168.122.3',
+                  'fixed_ip_address': '10.0.0.3',
+                  'floating_network_id': 'id_of_net', 'port_id': 'id_of_port',
+                  'router_id': 'id_of_router', 'project_id': 'id_of_proj'}
+        vm_inst = FloatingIp(**kwargs)
+        self.assertEqual('foo', vm_inst.id)
+        self.assertEqual('bar', vm_inst.description)
+        self.assertEqual('192.168.122.3', vm_inst.ip)
+        self.assertEqual('10.0.0.3', vm_inst.fixed_ip_address)
+        self.assertEqual('id_of_net', vm_inst.floating_network_id)
+        self.assertEqual('id_of_port', vm_inst.port_id)
+        self.assertEqual('id_of_router', vm_inst.router_id)
+        self.assertEqual('id_of_proj', vm_inst.project_id)
 
-    def test_construction_named(self):
-        vm_inst = FloatingIp(ip='10.0.0.1', inst_id='id-123')
-        self.assertEqual('id-123', vm_inst.id)
-        self.assertEqual('10.0.0.1', vm_inst.ip)
+    def test_construction_kwargs_fixed_ip_tenant(self):
+        kwargs = {'id': 'foo', 'description': 'bar',
+                  'floating_ip_address': '192.168.122.3',
+                  'fixed_ip_address': '10.0.0.3',
+                  'floating_network_id': 'id_of_net', 'port_id': 'id_of_port',
+                  'router_id': 'id_of_router', 'tenant_id': 'id_of_proj'}
+        vm_inst = FloatingIp(**kwargs)
+        self.assertEqual('foo', vm_inst.id)
+        self.assertEqual('bar', vm_inst.description)
+        self.assertEqual('192.168.122.3', vm_inst.ip)
+        self.assertEqual('10.0.0.3', vm_inst.fixed_ip_address)
+        self.assertEqual('id_of_net', vm_inst.floating_network_id)
+        self.assertEqual('id_of_port', vm_inst.port_id)
+        self.assertEqual('id_of_router', vm_inst.router_id)
+        self.assertEqual('id_of_proj', vm_inst.project_id)
+
+    def test_construction_named_ip_proj(self):
+        vm_inst = FloatingIp(
+            id='foo', description='bar', ip='192.168.122.3',
+            fixed_ip_address='10.0.0.3', floating_network_id='id_of_net',
+            port_id='id_of_port', router_id='id_of_router',
+            project_id='id_of_proj')
+        self.assertEqual('foo', vm_inst.id)
+        self.assertEqual('bar', vm_inst.description)
+        self.assertEqual('192.168.122.3', vm_inst.ip)
+        self.assertEqual('10.0.0.3', vm_inst.fixed_ip_address)
+        self.assertEqual('id_of_net', vm_inst.floating_network_id)
+        self.assertEqual('id_of_port', vm_inst.port_id)
+        self.assertEqual('id_of_router', vm_inst.router_id)
+        self.assertEqual('id_of_proj', vm_inst.project_id)
+
+    def test_construction_kwargs_named_fixed_ip_tenant(self):
+        vm_inst = FloatingIp(
+            id='foo', description='bar', floating_ip_address='192.168.122.3',
+            fixed_ip_address='10.0.0.3', floating_network_id='id_of_net',
+            port_id='id_of_port', router_id='id_of_router',
+            tenant_id='id_of_proj')
+        self.assertEqual('foo', vm_inst.id)
+        self.assertEqual('bar', vm_inst.description)
+        self.assertEqual('192.168.122.3', vm_inst.ip)
+        self.assertEqual('10.0.0.3', vm_inst.fixed_ip_address)
+        self.assertEqual('id_of_net', vm_inst.floating_network_id)
+        self.assertEqual('id_of_port', vm_inst.port_id)
+        self.assertEqual('id_of_router', vm_inst.router_id)
+        self.assertEqual('id_of_proj', vm_inst.project_id)

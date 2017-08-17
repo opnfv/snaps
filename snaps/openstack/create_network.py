@@ -389,10 +389,10 @@ class PortSettings:
 
     def __init__(self, **kwargs):
         """
-        Constructor - all parameters are optional
-        :param name: A symbolic name for the port.
+        Constructor
+        :param name: A symbolic name for the port (optional).
         :param network_name: The name of the network on which to create the
-                             port.
+                             port (required).
         :param admin_state_up: A boolean value denoting the administrative
                                status of the port. True = up / False = down
         :param project_name: The name of the project who owns the network.
@@ -448,10 +448,9 @@ class PortSettings:
         self.device_owner = kwargs.get('device_owner')
         self.device_id = kwargs.get('device_id')
 
-        if not self.name or not self.network_name:
+        if not self.network_name:
             raise PortSettingsError(
-                'The attributes neutron, name, and network_name are required '
-                'for PortSettings')
+                'The attribute network_name is required')
 
     def __set_fixed_ips(self, neutron):
         """

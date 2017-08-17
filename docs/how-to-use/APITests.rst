@@ -318,12 +318,52 @@ create_flavor_tests.py - CreateFlavorTests
 |                                       |               | a flavor properly with all supported settings             |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
-heat_utils_tests.py - HeatUtilsCreateStackTests
------------------------------------------------
+heat_utils_tests.py - HeatUtilsCreateSimpleStackTests
+-----------------------------------------------------
 
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| Test Name                             | Glance API    | Description                                               |
+| Test Name                             | Heat API      | Description                                               |
 +=======================================+===============+===========================================================+
 | test_create_stack                     | 1             | Tests the heat_utils.create_stack() with a test template  |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_stack_x2                  | 1             | Tests the heat_utils.create_stack() with a test template  |
+|                                       |               | and attempts to deploy a second time w/o actually         |
+|                                       |               | deploying any objects                                     |
++---------------------------------------+---------------+-----------------------------------------------------------+
 
+heat_utils_tests.py - HeatUtilsCreateComplexStackTests
+------------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Heat API      | Description                                               |
++=======================================+===============+===========================================================+
+| test_get_settings_from_stack          | 1             | Tests the heat_utils functions that are responsible for   |
+|                                       |               | reverse engineering settings objects of the types deployed|
+|                                       |               | by Heat                                                   |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+settings_utils_tests.py - SettingsUtilsNetworkingTests
+------------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | API           | Description                                               |
++=======================================+===============+===========================================================+
+| test_derive_net_settings_no_subnet    | Neutron 2     | Tests to ensure that derived NetworkSettings from an      |
+|                                       |               | OpenStack network are correct without a subnet            |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_derive_net_settings_two_subnets  | Neutron 2     | Tests to ensure that derived NetworkSettings from an      |
+|                                       |               | OpenStack network are correct with two subnets            |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+
+settings_utils_tests.py - SettingsUtilsVmInstTests
+--------------------------------------------------
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | API           | Description                                               |
++=======================================+===============+===========================================================+
+| test_derive_vm_inst_settings          | Neutron 2     | Tests to ensure that derived VmInstanceSettings from an   |
+|                                       |               | OpenStack VM instance is correct                          |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_derive_image_settings            | Neutron 2     | Tests to ensure that derived ImageSettings from an        |
+|                                       |               | OpenStack VM instance is correct                          |
++---------------------------------------+---------------+-----------------------------------------------------------+
