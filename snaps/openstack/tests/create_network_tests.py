@@ -51,6 +51,7 @@ class NetworkSettingsUnitTests(unittest.TestCase):
         self.assertIsNone(settings.project_name)
         self.assertFalse(settings.external)
         self.assertIsNone(settings.network_type)
+        self.assertIsNone(settings.segmentation_id)
         self.assertEqual(0, len(settings.subnet_settings))
 
     def test_config_with_name_only(self):
@@ -61,6 +62,7 @@ class NetworkSettingsUnitTests(unittest.TestCase):
         self.assertIsNone(settings.project_name)
         self.assertFalse(settings.external)
         self.assertIsNone(settings.network_type)
+        self.assertIsNone(settings.segmentation_id)
         self.assertEqual(0, len(settings.subnet_settings))
 
     def test_all(self):
@@ -68,23 +70,26 @@ class NetworkSettingsUnitTests(unittest.TestCase):
         settings = NetworkSettings(name='foo', admin_state_up=False,
                                    shared=True, project_name='bar',
                                    external=True,
-                                   network_type='flat', physical_network='phy',
+                                   network_type='vlan', physical_network='phy',
+                                   segmentation_id=2366,
                                    subnet_settings=[sub_settings])
         self.assertEqual('foo', settings.name)
         self.assertFalse(settings.admin_state_up)
         self.assertTrue(settings.shared)
         self.assertEqual('bar', settings.project_name)
         self.assertTrue(settings.external)
-        self.assertEqual('flat', settings.network_type)
+        self.assertEqual('vlan', settings.network_type)
         self.assertEqual('phy', settings.physical_network)
+        self.assertEqual(2366, settings.segmentation_id)
         self.assertEqual(1, len(settings.subnet_settings))
         self.assertEqual('foo-subnet', settings.subnet_settings[0].name)
 
     def test_config_all(self):
         settings = NetworkSettings(
             **{'name': 'foo', 'admin_state_up': False, 'shared': True,
-               'project_name': 'bar', 'external': True, 'network_type': 'flat',
+               'project_name': 'bar', 'external': True, 'network_type': 'vlan',
                'physical_network': 'phy',
+               'segmentation_id': 2366,
                'subnets':
                    [{'subnet': {'name': 'foo-subnet',
                                 'cidr': '10.0.0.0/24'}}]})
@@ -93,8 +98,9 @@ class NetworkSettingsUnitTests(unittest.TestCase):
         self.assertTrue(settings.shared)
         self.assertEqual('bar', settings.project_name)
         self.assertTrue(settings.external)
-        self.assertEqual('flat', settings.network_type)
+        self.assertEqual('vlan', settings.network_type)
         self.assertEqual('phy', settings.physical_network)
+        self.assertEqual(2366, settings.segmentation_id)
         self.assertEqual(1, len(settings.subnet_settings))
         self.assertEqual('foo-subnet', settings.subnet_settings[0].name)
 
@@ -549,6 +555,35 @@ class CreateNetworkTypeTests(OSComponentTestCase):
             name=self.net_config.network_settings.name,
             subnet_settings=self.net_config.network_settings.subnet_settings,
             network_type=network_type)
+
+        # When setting the network_type, creds must be admin
+        self.net_creator = OpenStackNetwork(self.os_creds, net_settings)
+        network = self.net_creator.create()
+
+        # Validate network was created
+        self.assertTrue(neutron_utils_tests.validate_network(
+            self.neutron, net_settings.name, True))
+
+        self.assertEquals(network_type, network.type)
+
+    def test_create_network_type_vlan_with_physical_net_and_seg_id(self):
+        """
+        Tests the creation of an OpenStack network of type vlan with
+        specified physical network and segmentation id.
+        """
+        # Create Network
+        network_type = 'vlan'
+
+        # The two values must be variable to work on all OpenStack pods
+        physical_network = 'datacentre'
+        segmentation_id = 2366
+
+        net_settings = NetworkSettings(
+            name=self.net_config.network_settings.name,
+            subnet_settings=self.net_config.network_settings.subnet_settings,
+            network_type=network_type,
+            physical_network=physical_network,
+            segmentation_id=segmentation_id)
 
         # When setting the network_type, creds must be admin
         self.net_creator = OpenStackNetwork(self.os_creds, net_settings)
