@@ -77,19 +77,6 @@ class ImageSettingsUnitTests(unittest.TestCase):
             ImageSettings(
                 **{'name': 'foo', 'image_user': 'bar', 'format': 'qcow2'})
 
-    def test_name_user_format_url_file_only(self):
-        with self.assertRaises(ImageSettingsError):
-            ImageSettings(name='foo', image_user='bar', img_format='qcow2',
-                          url='http://foo.com',
-                          image_file='/foo/bar.qcow')
-
-    def test_config_with_name_user_format_url_file_only(self):
-        with self.assertRaises(ImageSettingsError):
-            ImageSettings(
-                **{'name': 'foo', 'image_user': 'bar', 'format': 'qcow2',
-                   'download_url': 'http://foo.com',
-                   'image_file': '/foo/bar.qcow'})
-
     def test_name_user_format_url_only(self):
         settings = ImageSettings(name='foo', image_user='bar',
                                  img_format='qcow2', url='http://foo.com')

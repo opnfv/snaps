@@ -738,8 +738,12 @@ class VmInstanceSettings:
                                     waiting obtaining an SSH connection to a VM
         :param availability_zone: the name of the compute server on which to
                                   deploy the VM (optional)
-        :param userdata: the cloud-init script to run after the VM has been
-                         started
+        :param userdata: the string contents of any optional cloud-init script
+                         to execute after the VM has been activated.
+                         This value may also contain a dict who's key value
+                         must contain the key 'cloud-init_file' which denotes
+                         the location of some file containing the cloud-init
+                         script
         """
         self.name = kwargs.get('name')
         self.flavor = kwargs.get('flavor')

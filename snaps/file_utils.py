@@ -39,10 +39,11 @@ def file_exists(file_path):
     the path is a directory
     :return:
     """
-    if os.path.exists(file_path):
-        if os.path.isdir(file_path):
+    expanded_path = os.path.expanduser(file_path)
+    if os.path.exists(expanded_path):
+        if os.path.isdir(expanded_path):
             return False
-        return os.path.isfile(file_path)
+        return os.path.isfile(expanded_path)
     return False
 
 

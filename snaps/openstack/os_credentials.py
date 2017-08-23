@@ -100,7 +100,7 @@ class OSCreds:
             self.project_domain_name = kwargs['project_domain_name']
 
         if kwargs.get('interface') is None:
-            self.interface = 'admin'
+            self.interface = 'public'
         else:
             self.interface = kwargs['interface']
 
