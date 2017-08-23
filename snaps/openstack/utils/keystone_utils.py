@@ -176,6 +176,7 @@ def create_project(keystone, project_settings):
             enabled=project_settings.enabled)
         domain_id = os_project.domain_id
 
+    logger.info('Created project with name - %s', project_settings.name)
     return Project(
         name=os_project.name, project_id=os_project.id, domain_id=domain_id)
 
@@ -186,6 +187,7 @@ def delete_project(keystone, project):
     :param keystone: the Keystone clien
     :param project: the SNAPS-OO Project domain object
     """
+    logger.info('Deleting project with name - %s', project.name)
     if keystone.version == V2_VERSION_STR:
         keystone.tenants.delete(project.id)
     else:
@@ -273,6 +275,7 @@ def create_user(keystone, user_settings):
                     project=os_project)
 
     if os_user:
+        logger.info('Created user with name - %s', os_user.name)
         return User(name=os_user.name, user_id=os_user.id)
 
 
@@ -282,6 +285,7 @@ def delete_user(keystone, user):
     :param keystone: the Keystone client
     :param user: the SNAPS-OO User domain object
     """
+    logger.info('Deleting user with name - %s', user.name)
     keystone.users.delete(user.id)
 
 
@@ -337,6 +341,7 @@ def create_role(keystone, name):
     :return: a SNAPS-OO Role domain object
     """
     role = keystone.roles.create(name)
+    logger.info('Created role with name - %s', role.name)
     return Role(name=role.name, role_id=role.id)
 
 
@@ -347,6 +352,7 @@ def delete_role(keystone, role):
     :param role: the SNAPS-OO Role domain object to delete
     :return:
     """
+    logger.info('Deleting role with name - %s', role.name)
     keystone.roles.delete(role.id)
 
 
@@ -361,6 +367,7 @@ def grant_user_role_to_project(keystone, role, user, project):
     """
 
     os_role = get_role_by_id(keystone, role.id)
+    logger.info('Granting role %s to project %s', role.name, project)
     if keystone.version == V2_VERSION_STR:
         keystone.roles.add_user_role(user, os_role, tenant=project)
     else:

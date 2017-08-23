@@ -56,8 +56,12 @@ class OpenStackKeypair:
 
         logger.info('Creating keypair %s...' % self.keypair_settings.name)
 
-        self.__keypair = nova_utils.get_keypair_by_name(
-            self.__nova, self.keypair_settings.name)
+        try:
+            self.__keypair = nova_utils.get_keypair_by_name(
+                self.__nova, self.keypair_settings.name)
+        except Exception as e:
+            logger.warn('Cannot load existing keypair - %s', e)
+            return
 
         if not self.__keypair and not cleanup:
             if self.keypair_settings.public_filepath and os.path.isfile(
@@ -109,13 +113,17 @@ class OpenStackKeypair:
             if (self.keypair_settings.public_filepath and
                     file_utils.file_exists(
                         self.keypair_settings.public_filepath)):
-                os.chmod(self.keypair_settings.public_filepath, 0o777)
-                os.remove(self.keypair_settings.public_filepath)
+                expanded_path = os.path.expanduser(
+                    self.keypair_settings.public_filepath)
+                os.chmod(expanded_path, 0o755)
+                os.remove(expanded_path)
             if (self.keypair_settings.private_filepath and
                     file_utils.file_exists(
                         self.keypair_settings.private_filepath)):
-                os.chmod(self.keypair_settings.private_filepath, 0o777)
-                os.remove(self.keypair_settings.private_filepath)
+                expanded_path = os.path.expanduser(
+                    self.keypair_settings.private_filepath)
+                os.chmod(expanded_path, 0o755)
+                os.remove(expanded_path)
 
     def get_keypair(self):
         """
