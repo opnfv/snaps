@@ -22,6 +22,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from novaclient.client import Client
 from novaclient.exceptions import NotFound
 
+from snaps import file_utils
 from snaps.domain.flavor import Flavor
 from snaps.domain.keypair import Keypair
 from snaps.domain.project import ComputeQuotas
@@ -86,6 +87,18 @@ def create_server(nova, neutron, glance, instance_settings, image_settings,
 
     image = glance_utils.get_image(glance, image_settings=image_settings)
     if image:
+        userdata = None
+        if instance_settings.userdata:
+            if isinstance(instance_settings.userdata, str):
+                userdata = instance_settings.userdata + '\n'
+            elif (isinstance(instance_settings.userdata, dict) and
+                  'script_file' in instance_settings.userdata):
+                try:
+                    userdata = file_utils.read_file(
+                        instance_settings.userdata['script_file'])
+                except Exception as e:
+                    logger.warn('error reading userdata file %s - %s',
+                                instance_settings.userdata, e)
         args = {'name': instance_settings.name,
                 'flavor': flavor,
                 'image': image,
@@ -93,7 +106,7 @@ def create_server(nova, neutron, glance, instance_settings, image_settings,
                 'key_name': keypair_name,
                 'security_groups':
                     instance_settings.security_group_names,
-                'userdata': instance_settings.userdata}
+                'userdata': userdata}
 
         if instance_settings.availability_zone:
             args['availability_zone'] = instance_settings.availability_zone
@@ -252,7 +265,7 @@ def save_keys_to_files(keys=None, pub_file_path=None, priv_file_path=None):
                 if public_handle:
                     public_handle.close()
 
-            os.chmod(pub_expand_file, 0o400)
+            os.chmod(pub_expand_file, 0o600)
             logger.info("Saved public key to - " + pub_expand_file)
         if priv_file_path:
             # To support '~'
@@ -273,7 +286,7 @@ def save_keys_to_files(keys=None, pub_file_path=None, priv_file_path=None):
                 if private_handle:
                     private_handle.close()
 
-            os.chmod(priv_expand_file, 0o400)
+            os.chmod(priv_expand_file, 0o600)
             logger.info("Saved private key to - " + priv_expand_file)
 
 
