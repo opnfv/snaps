@@ -14,7 +14,7 @@
 # limitations under the License.
 import logging
 
-from keystoneclient.exceptions import NotFound
+from keystoneclient.exceptions import NotFound, Conflict
 
 from snaps.openstack.utils import keystone_utils, neutron_utils, nova_utils
 
@@ -40,6 +40,7 @@ class OpenStackProject:
         self.__project = None
         self.__role = None
         self.__keystone = None
+        self.__role_name = self.project_settings.name + '-role'
 
     def create(self, cleanup=False):
         """
@@ -56,6 +57,14 @@ class OpenStackProject:
         elif not cleanup:
             self.__project = keystone_utils.create_project(
                 self.__keystone, self.project_settings)
+            for username in self.project_settings.users:
+                user = keystone_utils.get_user(self.__keystone, username)
+                if user:
+                    try:
+                        self.assoc_user(user)
+                    except Conflict as e:
+                        logger.warn('Unable to associate user %s due to %s',
+                                    user.name, e)
         else:
             logger.info('Did not create image due to cleanup mode')
 
@@ -93,6 +102,12 @@ class OpenStackProject:
                 pass
             self.__project = None
 
+        # Final role check in case init was done from an existing instance
+        role = keystone_utils.get_role_by_name(
+            self.__keystone, self.__role_name)
+        if role:
+            keystone_utils.delete_role(self.__keystone, role)
+
     def get_project(self):
         """
         Returns the OpenStack project object populated on create()
@@ -107,8 +122,11 @@ class OpenStackProject:
         :return:
         """
         if not self.__role:
-            self.__role = keystone_utils.create_role(
-                self.__keystone, self.project_settings.name + '-role')
+            self.__role = keystone_utils.get_role_by_name(
+                self.__keystone, self.__role_name)
+            if not self.__role:
+                self.__role = keystone_utils.create_role(
+                    self.__keystone, self.__role_name)
 
         keystone_utils.grant_user_role_to_project(self.__keystone, self.__role,
                                                   user, self.__project)
@@ -161,6 +179,7 @@ class ProjectSettings:
                                       (default = 'Default').
                                       Field is used for v3 clients
         :param description: the description (optional)
+        :param users: list of users to associat project to (optional)
         :param enabled: denotes whether or not the user is enabled
                         (default True)
         """
@@ -174,6 +193,8 @@ class ProjectSettings:
             self.enabled = kwargs['enabled']
         else:
             self.enabled = True
+
+        self.users = kwargs.get('users', list())
 
         if not self.name:
             raise ProjectSettingsError(
