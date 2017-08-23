@@ -199,7 +199,7 @@ def __create_image_v2(glance, image_settings):
             kwargs.update(image_settings.extra_properties)
 
         os_image = glance.images.create(**kwargs)
-        image_file = open(image_filename, 'rb')
+        image_file = open(os.path.expanduser(image_filename), 'rb')
         glance.images.upload(os_image['id'], image_file)
     except:
         logger.error('Unexpected exception creating image. Rolling back')

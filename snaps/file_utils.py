@@ -36,10 +36,11 @@ def file_exists(file_path):
     the path is a directory
     :return:
     """
-    if os.path.exists(file_path):
-        if os.path.isdir(file_path):
+    expanded_path = os.path.expanduser(file_path)
+    if os.path.exists(expanded_path):
+        if os.path.isdir(expanded_path):
             return False
-        return os.path.isfile(file_path)
+        return os.path.isfile(expanded_path)
     return False
 
 
@@ -65,7 +66,8 @@ def download(url, dest_path, name=None):
             raise
     try:
         with open(dest, 'wb') as download_file:
-            logger.debug('Saving file to - ' + os.path.abspath(download_file.name))
+            logger.debug('Saving file to - %s',
+                         os.path.abspath(download_file.name))
             response = __get_url_response(url)
             download_file.write(response.read())
         return download_file
