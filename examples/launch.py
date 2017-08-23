@@ -25,9 +25,14 @@ from snaps import file_utils
 from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
 from snaps.openstack.create_image import ImageSettings, OpenStackImage
 from snaps.openstack.create_instance import VmInstanceSettings
-from snaps.openstack.create_keypairs import KeypairSettings
-from snaps.openstack.create_network import PortSettings, NetworkSettings
-from snaps.openstack.create_router import RouterSettings
+from snaps.openstack.create_keypairs import KeypairSettings, OpenStackKeypair
+from snaps.openstack.create_network import (
+    PortSettings, NetworkSettings, OpenStackNetwork)
+from snaps.openstack.create_project import OpenStackProject, ProjectSettings
+from snaps.openstack.create_router import RouterSettings, OpenStackRouter
+from snaps.openstack.create_security_group import (
+    OpenStackSecurityGroup, SecurityGroupSettings)
+from snaps.openstack.create_user import OpenStackUser, UserSettings
 from snaps.openstack.os_credentials import OSCreds, ProxySettings
 from snaps.openstack.utils import deploy_utils
 from snaps.provisioning import ansible_utils
@@ -37,6 +42,46 @@ __author__ = 'spisarski'
 logger = logging.getLogger('deploy_venv')
 
 ARG_NOT_SET = "argument not set"
+DEFAULT_CREDS_KEY = 'admin'
+
+
+def __get_creds_dict(os_conn_config):
+    """
+    Returns a dict of OSCreds where the key is the creds name.
+    For backwards compatibility, credentials not contained in a list (only
+    one) will be returned with the key of None
+    :param os_conn_config: the credential configuration
+    :return: a dict of OSCreds objects
+    """
+    if 'connection' in os_conn_config:
+        return {DEFAULT_CREDS_KEY: __get_os_credentials(os_conn_config)}
+    elif 'connections' in os_conn_config:
+        out = dict()
+        for os_conn_dict in os_conn_config['connections']:
+            config = os_conn_dict.get('connection')
+            if not config:
+                raise Exception('Invalid connection format')
+
+            name = config.get('name')
+            if not name:
+                raise Exception('Connection config requires a name field')
+
+            out[name] = __get_os_credentials(os_conn_dict)
+        return out
+
+
+def __get_creds(os_creds_dict, inst_config):
+    """
+    Returns the appropriate credentials
+    :param os_creds_dict:
+    :param inst_config:
+    :return: an OSCreds instance or None
+    """
+    os_creds = os_creds_dict.get(DEFAULT_CREDS_KEY)
+    if inst_config.get('os_creds_name'):
+        if 'os_creds_name' in inst_config:
+            os_creds = os_creds_dict[inst_config['os_creds_name']]
+    return os_creds
 
 
 def __get_os_credentials(os_conn_config):
@@ -46,17 +91,21 @@ def __get_os_credentials(os_conn_config):
     :param os_conn_config: The configuration holding the credentials
     :return: an OSCreds instance
     """
+    config = os_conn_config.get('connection')
+    if not config:
+        raise Exception('Invalid connection configuration')
+
     proxy_settings = None
-    http_proxy = os_conn_config.get('http_proxy')
+    http_proxy = config.get('http_proxy')
     if http_proxy:
         tokens = re.split(':', http_proxy)
-        ssh_proxy_cmd = os_conn_config.get('ssh_proxy_cmd')
+        ssh_proxy_cmd = config.get('ssh_proxy_cmd')
         proxy_settings = ProxySettings(host=tokens[0], port=tokens[1],
                                        ssh_proxy_cmd=ssh_proxy_cmd)
 
     os_conn_config['proxy_settings'] = proxy_settings
 
-    return OSCreds(**os_conn_config)
+    return OSCreds(**config)
 
 
 def __parse_ports_config(config):
@@ -71,155 +120,44 @@ def __parse_ports_config(config):
     return out
 
 
-def __create_flavors(os_conn_config, flavors_config, cleanup=False):
+def __create_instances(os_creds_dict, creator_class, config_class, config,
+                       config_key, cleanup=False):
     """
-    Returns a dictionary of flavors where the key is the image name and the
-    value is the image object
-    :param os_conn_config: The OpenStack connection credentials
-    :param flavors_config: The list of image configurations
+    Returns a dictionary of SNAPS creator objects where the key is the name
+    :param os_creds_dict: Dictionary of OSCreds objects where the key is the
+                          name
+    :param config: The list of configurations for the same type
+    :param config_key: The list of configurations for the same type
     :param cleanup: Denotes whether or not this is being called for cleanup
     :return: dictionary
     """
-    flavors = {}
+    out = {}
 
-    if flavors_config:
+    if config:
         try:
-            for flavor_config_dict in flavors_config:
-                flavor_config = flavor_config_dict.get('flavor')
-                if flavor_config and flavor_config.get('name'):
-                    flavor_creator = OpenStackFlavor(
-                        __get_os_credentials(os_conn_config),
-                        FlavorSettings(**flavor_config))
-                    flavor_creator.create(cleanup=cleanup)
-                    flavors[flavor_config['name']] = flavor_creator
+            for config_dict in config:
+                inst_config = config_dict.get(config_key)
+                if inst_config:
+                    creator = creator_class(
+                        __get_creds(os_creds_dict, inst_config),
+                        config_class(**inst_config))
+                    creator.create(cleanup=cleanup)
+                    out[inst_config['name']] = creator
+            logger.info('Created configured %s', config_key)
         except Exception as e:
-            for key, flavor_creator in flavors.items():
-                flavor_creator.clean()
-            raise e
-        logger.info('Created configured flavors')
+            logger.error('Unexpected error instantiating creator [%s] '
+                         'with exception %s', creator_class, e)
 
-    return flavors
+    return out
 
 
-def __create_images(os_conn_config, images_config, cleanup=False):
+def __create_vm_instances(os_creds_dict, instances_config, image_dict,
+                          keypairs_dict, cleanup=False):
     """
-    Returns a dictionary of images where the key is the image name and the
-    value is the image object
-    :param os_conn_config: The OpenStack connection credentials
-    :param images_config: The list of image configurations
-    :param cleanup: Denotes whether or not this is being called for cleanup
-    :return: dictionary
-    """
-    images = {}
-
-    if images_config:
-        try:
-            for image_config_dict in images_config:
-                image_config = image_config_dict.get('image')
-                if image_config and image_config.get('name'):
-                    images[image_config['name']] = deploy_utils.create_image(
-                        __get_os_credentials(os_conn_config),
-                        ImageSettings(**image_config), cleanup)
-        except Exception as e:
-            for key, image_creator in images.items():
-                image_creator.clean()
-            raise e
-        logger.info('Created configured images')
-
-    return images
-
-
-def __create_networks(os_conn_config, network_confs, cleanup=False):
-    """
-    Returns a dictionary of networks where the key is the network name and the
-    value is the network object
-    :param os_conn_config: The OpenStack connection credentials
-    :param network_confs: The list of network configurations
-    :param cleanup: Denotes whether or not this is being called for cleanup
-    :return: dictionary
-    """
-    network_dict = {}
-
-    if network_confs:
-        try:
-            for network_conf in network_confs:
-                net_name = network_conf['network']['name']
-                os_creds = __get_os_credentials(os_conn_config)
-                network_dict[net_name] = deploy_utils.create_network(
-                    os_creds, NetworkSettings(**network_conf['network']),
-                    cleanup)
-        except Exception as e:
-            for key, net_creator in network_dict.items():
-                net_creator.clean()
-            raise e
-
-        logger.info('Created configured networks')
-
-    return network_dict
-
-
-def __create_routers(os_conn_config, router_confs, cleanup=False):
-    """
-    Returns a dictionary of networks where the key is the network name and the
-    value is the network object
-    :param os_conn_config: The OpenStack connection credentials
-    :param router_confs: The list of router configurations
-    :param cleanup: Denotes whether or not this is being called for cleanup
-    :return: dictionary
-    """
-    router_dict = {}
-    os_creds = __get_os_credentials(os_conn_config)
-
-    if router_confs:
-        try:
-            for router_conf in router_confs:
-                router_name = router_conf['router']['name']
-                router_dict[router_name] = deploy_utils.create_router(
-                    os_creds, RouterSettings(**router_conf['router']), cleanup)
-        except Exception as e:
-            for key, router_creator in router_dict.items():
-                router_creator.clean()
-            raise e
-
-        logger.info('Created configured networks')
-
-    return router_dict
-
-
-def __create_keypairs(os_conn_config, keypair_confs, cleanup=False):
-    """
-    Returns a dictionary of keypairs where the key is the keypair name and the
-    value is the keypair object
-    :param os_conn_config: The OpenStack connection credentials
-    :param keypair_confs: The list of keypair configurations
-    :param cleanup: Denotes whether or not this is being called for cleanup
-    :return: dictionary
-    """
-    keypairs_dict = {}
-    if keypair_confs:
-        try:
-            for keypair_dict in keypair_confs:
-                keypair_config = keypair_dict['keypair']
-                kp_settings = KeypairSettings(**keypair_config)
-                keypairs_dict[
-                    keypair_config['name']] = deploy_utils.create_keypair(
-                    __get_os_credentials(os_conn_config), kp_settings, cleanup)
-        except Exception as e:
-            for key, keypair_creator in keypairs_dict.items():
-                keypair_creator.clean()
-            raise e
-
-        logger.info('Created configured keypairs')
-
-    return keypairs_dict
-
-
-def __create_instances(os_conn_config, instances_config, image_dict,
-                       keypairs_dict, cleanup=False):
-    """
-    Returns a dictionary of instances where the key is the instance name and
-    the value is the VM object
-    :param os_conn_config: The OpenStack connection credentials
+    Returns a dictionary of OpenStackVmInstance objects where the key is the
+    instance name
+    :param os_creds_dict: Dictionary of OSCreds objects where the key is the
+                          name
     :param instances_config: The list of VM instance configurations
     :param image_dict: A dictionary of images that will probably be used to
                        instantiate the VM instance
@@ -228,8 +166,6 @@ def __create_instances(os_conn_config, instances_config, image_dict,
     :param cleanup: Denotes whether or not this is being called for cleanup
     :return: dictionary
     """
-    os_creds = __get_os_credentials(os_conn_config)
-
     vm_dict = {}
 
     if instances_config:
@@ -245,7 +181,8 @@ def __create_instances(os_conn_config, instances_config, image_dict,
                             kp_name = conf.get('keypair_name')
                             vm_dict[conf[
                                 'name']] = deploy_utils.create_vm_instance(
-                                os_creds, instance_settings,
+                                __get_creds(os_creds_dict, conf),
+                                instance_settings,
                                 image_creator.image_settings,
                                 keypair_creator=keypairs_dict[kp_name],
                                 cleanup=cleanup)
@@ -258,24 +195,19 @@ def __create_instances(os_conn_config, instances_config, image_dict,
                 else:
                     raise Exception('Instance configuration is None. Cannot '
                                     'instantiate')
+            logger.info('Created configured instances')
         except Exception as e:
-            logger.error('Unexpected error creating instances. Attempting to '
-                         'cleanup environment - %s', e)
-            for key, inst_creator in vm_dict.items():
-                inst_creator.clean()
-            raise e
-
-        logger.info('Created configured instances')
+            logger.error('Unexpected error creating VM instances - %s', e)
     return vm_dict
 
 
-def __apply_ansible_playbooks(ansible_configs, os_conn_config, vm_dict,
+def __apply_ansible_playbooks(ansible_configs, os_creds_dict, vm_dict,
                               image_dict, flavor_dict, env_file):
     """
     Applies ansible playbooks to running VMs with floating IPs
     :param ansible_configs: a list of Ansible configurations
-    :param os_conn_config: the OpenStack connection configuration used to
-                           create an OSCreds instance
+    :param os_creds_dict: Dictionary of OSCreds objects where the key is the
+                          name
     :param vm_dict: the dictionary of newly instantiated VMs where the name is
                     the key
     :param image_dict: the dictionary of newly instantiated images where the
@@ -303,7 +235,7 @@ def __apply_ansible_playbooks(ansible_configs, os_conn_config, vm_dict,
 
         # Apply playbooks
         for ansible_config in ansible_configs:
-            os_creds = __get_os_credentials(os_conn_config)
+            os_creds = os_creds_dict.get(None, 'admin')
             __apply_ansible_playbook(ansible_config, os_creds, vm_dict,
                                      image_dict, flavor_dict)
 
@@ -341,8 +273,8 @@ def __apply_ansible_playbook(ansible_config, os_creds, vm_dict, image_dict,
             if retval != 0:
                 # Not a fatal type of event
                 logger.warning(
-                    'Unable to apply playbook found at location - ' +
-                    ansible_config('playbook_location'))
+                    'Unable to apply playbook found at location - %s',
+                    ansible_config.get('playbook_location'))
 
 
 def __get_connection_info(ansible_config, vm_dict):
@@ -591,47 +523,76 @@ def main(arguments):
     if config:
         os_config = config.get('openstack')
 
-        os_conn_config = None
         creators = list()
         vm_dict = dict()
         images_dict = dict()
         flavors_dict = dict()
+        os_creds_dict = dict()
+        clean = arguments.clean is not ARG_NOT_SET
 
         if os_config:
+            os_creds_dict = __get_creds_dict(os_config)
+
             try:
-                os_conn_config = os_config.get('connection')
+                # Create projects
+                projects_dict = __create_instances(
+                    os_creds_dict, OpenStackProject, ProjectSettings,
+                    os_config.get('projects'), 'project', clean)
+                creators.append(projects_dict)
+
+                # Create users
+                users_dict = __create_instances(
+                    os_creds_dict, OpenStackUser, UserSettings,
+                    os_config.get('users'), 'user', clean)
+                creators.append(users_dict)
+
+                # Associate new users to projects
+                if not clean:
+                    for project_creator in projects_dict.values():
+                        users = project_creator.project_settings.users
+                        for user_name in users:
+                            user_creator = users_dict.get(user_name)
+                            if user_creator:
+                                project_creator.assoc_user(
+                                    user_creator.get_user())
 
                 # Create flavors
-                flavors_dict = __create_flavors(
-                    os_conn_config, os_config.get('flavors'),
-                    arguments.clean is not ARG_NOT_SET)
+                flavors_dict = __create_instances(
+                    os_creds_dict, OpenStackFlavor, FlavorSettings,
+                    os_config.get('flavors'), 'flavor', clean)
                 creators.append(flavors_dict)
 
                 # Create images
-                images_dict = __create_images(
-                    os_conn_config, os_config.get('images'),
-                    arguments.clean is not ARG_NOT_SET)
+                images_dict = __create_instances(
+                    os_creds_dict, OpenStackImage, ImageSettings,
+                    os_config.get('images'), 'image', clean)
                 creators.append(images_dict)
 
-                # Create network
-                creators.append(__create_networks(
-                    os_conn_config, os_config.get('networks'),
-                    arguments.clean is not ARG_NOT_SET))
+                # Create networks
+                creators.append(__create_instances(
+                    os_creds_dict, OpenStackNetwork, NetworkSettings,
+                    os_config.get('networks'), 'network', clean))
 
                 # Create routers
-                creators.append(__create_routers(
-                    os_conn_config, os_config.get('routers'),
-                    arguments.clean is not ARG_NOT_SET))
+                creators.append(__create_instances(
+                    os_creds_dict, OpenStackRouter, RouterSettings,
+                    os_config.get('routers'), 'router', clean))
 
                 # Create keypairs
-                keypairs_dict = __create_keypairs(
-                    os_conn_config, os_config.get('keypairs'),
-                    arguments.clean is not ARG_NOT_SET)
+                keypairs_dict = __create_instances(
+                    os_creds_dict, OpenStackKeypair, KeypairSettings,
+                    os_config.get('keypairs'), 'keypair', clean)
                 creators.append(keypairs_dict)
 
+                # Create security groups
+                creators.append(__create_instances(
+                    os_creds_dict, OpenStackSecurityGroup,
+                    SecurityGroupSettings,
+                    os_config.get('security_groups'), 'security_group', clean))
+
                 # Create instance
-                vm_dict = __create_instances(
-                    os_conn_config, os_config.get('instances'),
+                vm_dict = __create_vm_instances(
+                    os_creds_dict, os_config.get('instances'),
                     images_dict, keypairs_dict,
                     arguments.clean is not ARG_NOT_SET)
                 creators.append(vm_dict)
@@ -641,7 +602,7 @@ def main(arguments):
                 logger.error(
                     'Unexpected error deploying environment. Rolling back due'
                     ' to - ' + str(e))
-                __cleanup(creators)
+                # __cleanup(creators)
                 raise
 
         # Must enter either block
@@ -658,7 +619,7 @@ def main(arguments):
             ansible_config = config.get('ansible')
             if ansible_config and vm_dict:
                 if not __apply_ansible_playbooks(ansible_config,
-                                                 os_conn_config, vm_dict,
+                                                 os_creds_dict, vm_dict,
                                                  images_dict, flavors_dict,
                                                  arguments.environment):
                     logger.error("Problem applying ansible playbooks")

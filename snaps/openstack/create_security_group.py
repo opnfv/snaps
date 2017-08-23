@@ -15,7 +15,7 @@
 import logging
 
 import enum
-from neutronclient.common.exceptions import NotFound
+from neutronclient.common.exceptions import NotFound, Conflict
 from snaps.openstack.utils import keystone_utils
 from snaps.openstack.utils import neutron_utils
 
@@ -78,9 +78,13 @@ class OpenStackSecurityGroup:
 
             # Create the custom rules
             for sec_grp_rule_setting in self.sec_grp_settings.rule_settings:
-                custom_rule = neutron_utils.create_security_group_rule(
-                    self.__neutron, sec_grp_rule_setting)
-                self.__rules[sec_grp_rule_setting] = custom_rule
+                try:
+                    custom_rule = neutron_utils.create_security_group_rule(
+                        self.__neutron, sec_grp_rule_setting)
+                    self.__rules[sec_grp_rule_setting] = custom_rule
+                except Conflict as e:
+                    logger.warn('Unable to create rule due to conflict - %s',
+                                e)
 
             # Refresh security group object to reflect the new rules added
             self.__security_group = neutron_utils.get_security_group(
@@ -236,6 +240,7 @@ class SecurityGroupSettings:
                 if isinstance(rule_setting, SecurityGroupRuleSettings):
                     self.rule_settings.append(rule_setting)
                 else:
+                    rule_setting['sec_grp_name'] = self.name
                     self.rule_settings.append(SecurityGroupRuleSettings(
                         **rule_setting))
 
