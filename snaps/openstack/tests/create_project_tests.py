@@ -49,6 +49,7 @@ class ProjectSettingsUnitTests(unittest.TestCase):
         self.assertEqual('Default', settings.domain_name)
         self.assertIsNone(settings.description)
         self.assertTrue(settings.enabled)
+        self.assertEqual(list(), settings.users)
 
     def test_config_with_name_only(self):
         settings = ProjectSettings(**{'name': 'foo'})
@@ -56,23 +57,29 @@ class ProjectSettingsUnitTests(unittest.TestCase):
         self.assertEqual('Default', settings.domain_name)
         self.assertIsNone(settings.description)
         self.assertTrue(settings.enabled)
+        self.assertEqual(list(), settings.users)
 
     def test_all(self):
-        settings = ProjectSettings(name='foo', domain='bar',
-                                   description='foobar', enabled=False)
+        users = ['test1', 'test2']
+        settings = ProjectSettings(
+            name='foo', domain='bar', description='foobar', enabled=False,
+            users=users)
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.domain_name)
         self.assertEqual('foobar', settings.description)
         self.assertFalse(settings.enabled)
+        self.assertEqual(users, settings.users)
 
     def test_config_all(self):
+        users = ['test1', 'test2']
         settings = ProjectSettings(
             **{'name': 'foo', 'domain': 'bar', 'description': 'foobar',
-               'enabled': False})
+               'enabled': False, 'users': users})
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.domain_name)
         self.assertEqual('foobar', settings.description)
         self.assertFalse(settings.enabled)
+        self.assertEqual(users, settings.users)
 
 
 class CreateProjectSuccessTests(OSComponentTestCase):
