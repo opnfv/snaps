@@ -61,8 +61,8 @@ class OpenStackImage:
         if self.__image:
             logger.info('Found image with name - ' + self.image_settings.name)
             return self.__image
-        elif self.image_settings.exists and not self.image_settings.url \
-                and not self.image_settings.image_file:
+        elif (self.image_settings.exists and not self.image_settings.url
+                and not self.image_settings.image_file):
             raise ImageCreationError(
                 'Image with does not exist with name - ' +
                 self.image_settings.name)
@@ -257,8 +257,13 @@ class ImageSettings:
         self.url = kwargs.get('url')
         if not self.url:
             self.url = kwargs.get('download_url')
+        if self.url == 'None':
+            self.url = None
 
         self.image_file = kwargs.get('image_file')
+        if self.image_file == 'None':
+            self.image_file = None
+
         self.extra_properties = kwargs.get('extra_properties')
         self.nic_config_pb_loc = kwargs.get('nic_config_pb_loc')
 
@@ -298,10 +303,6 @@ class ImageSettings:
         if not (self.url or self.image_file) and not self.exists:
             raise ImageSettingsError(
                 'URL or image file must be set or image must already exist')
-
-        if self.url and self.image_file:
-            raise ImageSettingsError(
-                'Please set either URL or image file, not both')
 
         if not self.image_user:
             raise ImageSettingsError('Image user is required')

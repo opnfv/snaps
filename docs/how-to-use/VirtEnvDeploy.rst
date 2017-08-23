@@ -29,13 +29,13 @@ Use launcher.py to deploy and clean up example environments.  These examples are
 
     ::
 
-      python launch.py -e ./complex-network/deploy-complex-network.yaml -d
+      python launch.py -t ./complex-network/deploy-complex-network.yaml -d
 
 #. Clean the deployment.
 
     ::
 
-      python launch.py -e ./complex-network/deploy-complex-network.yaml -c
+      python launch.py -t ./complex-network/deploy-complex-network.yaml -c
 
 #. Customize the deployment by changing the yaml file.
 
