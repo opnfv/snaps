@@ -101,7 +101,8 @@ def get_endpoint(os_creds, service_type, interface='public'):
     auth = get_session_auth(os_creds)
     key_session = keystone_session(os_creds)
     return key_session.get_endpoint(
-        auth=auth, service_type=service_type, interface=interface)
+        auth=auth, service_type=service_type, region_name=os_creds.region_name,
+        interface=interface)
 
 
 def get_project(keystone=None, os_creds=None, project_settings=None,
