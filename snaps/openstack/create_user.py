@@ -109,8 +109,8 @@ class UserSettings:
         :param email: the user's email address (optional)
         :param enabled: denotes whether or not the user is enabled
                         (default True)
-        :param roles: dict where key is the role name and value is a list of
-                      project names
+        :param roles: dict where key is the role's name and value is the name
+                      the project to associate with the role
         """
 
         self.name = kwargs.get('name')
