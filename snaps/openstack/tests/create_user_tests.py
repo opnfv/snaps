@@ -105,7 +105,7 @@ class CreateUserSuccessTests(OSComponentTestCase):
         self.user_settings = UserSettings(
             name=guid + '-name',
             password=guid + '-password',
-            roles={'admin': 'admin'},
+            roles={'admin': self.os_creds.project_name},
             domain_name=self.os_creds.user_domain_name)
 
         self.keystone = keystone_utils.keystone_client(self.os_creds)
