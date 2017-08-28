@@ -29,7 +29,7 @@ from snaps.openstack.utils import heat_utils, neutron_utils
 
 __author__ = 'spisarski'
 
-logger = logging.getLogger('nova_utils_tests')
+logger = logging.getLogger('heat_utils_tests')
 
 
 class HeatSmokeTests(OSComponentTestCase):
@@ -37,7 +37,7 @@ class HeatSmokeTests(OSComponentTestCase):
     Tests to ensure that the heat client can communicate with the cloud
     """
 
-    def test_nova_connect_success(self):
+    def test_heat_connect_success(self):
         """
         Tests to ensure that the proper credentials can connect.
         """
@@ -48,7 +48,7 @@ class HeatSmokeTests(OSComponentTestCase):
         for stack in stacks:
             print stack
 
-    def test_nova_connect_fail(self):
+    def test_heat_connect_fail(self):
         """
         Tests to ensure that the improper credentials cannot connect.
         """
