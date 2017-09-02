@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_7a5b622e",
+        "filename": "snaps/openstack/create_stack.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 847
+      },
+      "writtenOn": "2017-09-02T20:34:32Z",
+      "side": 1,
+      "message": "Steven\nAfter out F2F discussions at meet up and Demo of Stack object in snap-oo library and used by FUNCTEST here is my suggestions.\nPlease add an optional dnssec_key to constructor as many use cases need this. Please refer Metswitch clearwate-heat template for vims which is our use case in OPNFV.\nhttps://github.com/Metaswitch/clearwater-heat\nrefer on link the last section: Clearwater Heat Template.\nSince  I will be using the heat_utility please update and submit-oo asap. This is required to be part of FUNCTEST for us to be able to test.If there is any dependency of this patch on the other two I will review but make sure all needed patches are include to support snap-oo for heat stack create, inspect/check , list, delete a minimum to be used for clearwater deploy and live testing. I will also add Oliver from Orange to review.  Prakash",
+      "revId": "1342eb17df248ec75cc57e9c380a7753fc432194",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3a78ba8e",
+        "filename": "snaps/openstack/tests/create_stack_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 847
+      },
+      "writtenOn": "2017-09-02T20:34:32Z",
+      "side": 1,
+      "message": "Steven\nMay be we besides may need env option to pass dnssec_key value. But you are the best judge make sure the changes needed to pass dnssec_key through stack percolates through all associated utility codes.",
+      "revId": "1342eb17df248ec75cc57e9c380a7753fc432194",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9a6f46c5",
+        "filename": "snaps/openstack/tests/heat/floating_ip_heat_template.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 847
+      },
+      "writtenOn": "2017-09-02T20:34:32Z",
+      "side": 1,
+      "message": "This two vm floaing ip is good for standard vping testing. Whether this applicable to stack creation and stress testing oliver mentioned and Yuyang was asking for opensource traffic generator  in test-wg need to verify. But that\u0027s the reason we need these heat library included in FUNCTEST even if t\u0027s called experimental to allow for Continuous testing in OPNFV. So all changes need not be taken upfront, we can discover and add more features as we progress to OPNFV  E \u0026 F releases to consolidate with real life use cases like vIMS, vCPE, vOLTE etc. to be usable by OPNFV and other upstreams.",
+      "revId": "1342eb17df248ec75cc57e9c380a7753fc432194",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_da68aebc",
+        "filename": "snaps/openstack/tests/heat/test_heat_template.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 847
+      },
+      "writtenOn": "2017-09-02T20:34:32Z",
+      "side": 1,
+      "message": "Are there any possibility to support different heat_template_versions? May be include at-least starting mitaka to Ocata time frames?",
+      "revId": "1342eb17df248ec75cc57e9c380a7753fc432194",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ba632adc",
+        "filename": "snaps/openstack/utils/heat_utils.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 847
+      },
+      "writtenOn": "2017-09-02T20:34:32Z",
+      "side": 1,
+      "message": "YAML Heat or also HOT template formats as they are called.",
+      "revId": "1342eb17df248ec75cc57e9c380a7753fc432194",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1a6336dd",
+        "filename": "snaps/openstack/utils/neutron_utils.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 847
+      },
+      "writtenOn": "2017-09-02T20:34:32Z",
+      "side": 1,
+      "message": "Note in Clearwater vIMS VNF creation, I had to update quota for both security group and scurity rules for different tenannts. See below, if this is taken care in these codes to call. So tenant can be admin or non-admin (like demo, alt_demo) but only admin can set their quota(VIMP to note)\nopenstack quota set --secgroups 100 admin\nopenstack quota set --secgroups 100 demo\nopenstack quota set --secgroups 100 alt_demo\nopenstack quota set --secgroup-rules 100 alt_demo\nopenstack quota set --secgroup-rules 100 demo\nopenstack quota set --secgroup-rules 100 admin",
+      "revId": "1342eb17df248ec75cc57e9c380a7753fc432194",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
