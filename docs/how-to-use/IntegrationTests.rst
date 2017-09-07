@@ -247,8 +247,22 @@ create_stack_tests.py - CreateStackSuccessTests
 | test_create_same_stack                | 2             | Ensures that a Heat stack with the same name cannot be    |
 |                                       |               | created 2x                                                |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_same_stack                | 2             | Ensures that a Heat stack with the same name cannot be    |
-|                                       |               | created 2x                                                |
+| test_retrieve_network_creators        | 2             | Ensures that an OpenStackHeatStack instance can return an |
+|                                       |               | OpenStackNetwork instance configured as deployed          |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_retrieve_vm_inst_creators        | 2             | Ensures that an OpenStackHeatStack instance can return an |
+|                                       |               | OpenStackVmInstance instance configured as deployed       |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+create_stack_tests.py - CreateComplexStackTests
+-----------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Neutron API   | Description                                               |
++=======================================+===============+===========================================================+
+| test_connect_via_ssh_heat_vm          | 2             | Ensures that two OpenStackHeatStack instances can return  |
+|                                       |               | OpenStackVmInstance instances one configured with a       |
+|                                       |               | floating IP and keypair and can be access via SSH         |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
 create_stack_tests.py - CreateStackNegativeTests

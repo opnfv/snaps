@@ -210,11 +210,22 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
         with self.assertRaises(FloatingIpSettingsError):
             FloatingIpSettings(**{'name': 'foo', 'router_name': 'bar'})
 
-    def test_name_port_router_only(self):
+    def test_name_port_router_name_only(self):
         settings = FloatingIpSettings(name='foo', port_name='foo-port',
                                       router_name='bar-router')
         self.assertEqual('foo', settings.name)
         self.assertEqual('foo-port', settings.port_name)
+        self.assertIsNone(settings.port_id)
+        self.assertEqual('bar-router', settings.router_name)
+        self.assertIsNone(settings.subnet_name)
+        self.assertTrue(settings.provisioning)
+
+    def test_name_port_router_id_only(self):
+        settings = FloatingIpSettings(name='foo', port_id='foo-port',
+                                      router_name='bar-router')
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('foo-port', settings.port_id)
+        self.assertIsNone(settings.port_name)
         self.assertEqual('bar-router', settings.router_name)
         self.assertIsNone(settings.subnet_name)
         self.assertTrue(settings.provisioning)
@@ -225,6 +236,7 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
                'router_name': 'bar-router'})
         self.assertEqual('foo', settings.name)
         self.assertEqual('foo-port', settings.port_name)
+        self.assertIsNone(settings.port_id)
         self.assertEqual('bar-router', settings.router_name)
         self.assertIsNone(settings.subnet_name)
         self.assertTrue(settings.provisioning)
@@ -236,6 +248,7 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
                                       provisioning=False)
         self.assertEqual('foo', settings.name)
         self.assertEqual('foo-port', settings.port_name)
+        self.assertIsNone(settings.port_id)
         self.assertEqual('bar-router', settings.router_name)
         self.assertEqual('bar-subnet', settings.subnet_name)
         self.assertFalse(settings.provisioning)
@@ -247,6 +260,7 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
                'provisioning': False})
         self.assertEqual('foo', settings.name)
         self.assertEqual('foo-port', settings.port_name)
+        self.assertIsNone(settings.port_id)
         self.assertEqual('bar-router', settings.router_name)
         self.assertEqual('bar-subnet', settings.subnet_name)
         self.assertFalse(settings.provisioning)
@@ -672,7 +686,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
 
         self.assertEqual(ip_1, inst_creator.get_port_ip(self.port_1_name))
         self.assertTrue(inst_creator.vm_active(block=True))
-        self.assertEqual(vm_inst, inst_creator.get_vm_inst())
+        self.assertEqual(vm_inst.id, inst_creator.get_vm_inst().id)
 
     def test_ssh_client_fip_before_active(self):
         """
@@ -706,7 +720,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
 
         inst_creator.add_security_group(
             self.sec_grp_creator.get_security_group())
-        self.assertEqual(vm_inst, inst_creator.get_vm_inst())
+        self.assertEqual(vm_inst.id, inst_creator.get_vm_inst().id)
 
         self.assertTrue(validate_ssh_client(inst_creator))
 
@@ -744,7 +758,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
 
         inst_creator.add_security_group(
             self.sec_grp_creator.get_security_group())
-        self.assertEqual(vm_inst, inst_creator.get_vm_inst())
+        self.assertEqual(vm_inst.id, inst_creator.get_vm_inst().id)
 
         self.assertTrue(validate_ssh_client(inst_creator))
 
@@ -782,7 +796,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
 
         inst_creator.add_security_group(
             self.sec_grp_creator.get_security_group())
-        self.assertEqual(vm_inst, inst_creator.get_vm_inst())
+        self.assertEqual(vm_inst.id, inst_creator.get_vm_inst().id)
 
         self.assertTrue(validate_ssh_client(inst_creator))
 
@@ -1434,7 +1448,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
 
         vm_inst = self.inst_creator.create(block=True)
 
-        self.assertEqual(vm_inst, self.inst_creator.get_vm_inst())
+        self.assertEqual(vm_inst.id, self.inst_creator.get_vm_inst().id)
 
         # Effectively blocks until VM has been properly activated
         self.assertTrue(self.inst_creator.vm_active(block=True))

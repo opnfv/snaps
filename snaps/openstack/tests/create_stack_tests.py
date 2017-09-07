@@ -31,9 +31,9 @@ import uuid
 
 from snaps.openstack import create_stack
 from snaps.openstack.create_stack import StackSettings, StackSettingsError
-from snaps.openstack.tests import openstack_tests
+from snaps.openstack.tests import openstack_tests, create_instance_tests
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
-from snaps.openstack.utils import heat_utils, neutron_utils
+from snaps.openstack.utils import heat_utils, neutron_utils, nova_utils
 
 __author__ = 'spisarski'
 
@@ -122,7 +122,7 @@ class StackSettingsUnitTests(unittest.TestCase):
 
 class CreateStackSuccessTests(OSIntegrationTestCase):
     """
-    Test for the CreateStack class defined in create_stack.py
+    Tests for the CreateStack class defined in create_stack.py
     """
 
     def setUp(self):
@@ -155,11 +155,14 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
 
         self.network_name = self.guid + '-net'
         self.subnet_name = self.guid + '-subnet'
+        self.vm_inst_name = self.guid + '-inst'
+
         self.env_values = {
             'image_name': self.image_creator.image_settings.name,
             'flavor_name': self.flavor_creator.flavor_settings.name,
             'net_name': self.network_name,
-            'subnet_name': self.subnet_name}
+            'subnet_name': self.subnet_name,
+            'inst_name': self.vm_inst_name}
 
         self.heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'test_heat_template.yaml')
@@ -209,13 +212,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertIsNotNone(retrieved_stack)
         self.assertEqual(created_stack.name, retrieved_stack.name)
         self.assertEqual(created_stack.id, retrieved_stack.id)
-        self.assertIsNotNone(self.stack_creator.get_outputs())
-        self.assertEquals(0, len(self.stack_creator.get_outputs()))
-
-        resources = heat_utils.get_resources(
-            self.heat_cli, self.stack_creator.get_stack())
-        self.assertIsNotNone(resources)
-        self.assertEqual(4, len(resources))
+        self.assertEqual(0, len(self.stack_creator.get_outputs()))
 
     def test_create_stack_template_dict(self):
         """
@@ -240,8 +237,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertIsNotNone(retrieved_stack)
         self.assertEqual(created_stack.name, retrieved_stack.name)
         self.assertEqual(created_stack.id, retrieved_stack.id)
-        self.assertIsNotNone(self.stack_creator.get_outputs())
-        self.assertEquals(0, len(self.stack_creator.get_outputs()))
+        self.assertEqual(0, len(self.stack_creator.get_outputs()))
 
     def test_create_delete_stack(self):
         """
@@ -265,8 +261,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertIsNotNone(retrieved_stack)
         self.assertEqual(created_stack.name, retrieved_stack.name)
         self.assertEqual(created_stack.id, retrieved_stack.id)
-        self.assertIsNotNone(self.stack_creator.get_outputs())
-        self.assertEquals(0, len(self.stack_creator.get_outputs()))
+        self.assertEqual(0, len(self.stack_creator.get_outputs()))
         self.assertEqual(create_stack.STATUS_CREATE_COMPLETE,
                          self.stack_creator.get_status())
 
@@ -309,7 +304,6 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertIsNotNone(retrieved_stack)
         self.assertEqual(created_stack1.name, retrieved_stack.name)
         self.assertEqual(created_stack1.id, retrieved_stack.id)
-        self.assertIsNotNone(self.stack_creator.get_outputs())
         self.assertEqual(0, len(self.stack_creator.get_outputs()))
 
         # Should be retrieving the instance data
@@ -353,6 +347,129 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         subnet_by_id = neutron_utils.get_subnet_by_id(neutron, subnet.id)
         self.assertIsNotNone(subnet_by_id)
         self.assertEqual(subnet_by_name, subnet_by_id)
+
+    def test_retrieve_vm_inst_creators(self):
+        """
+        Tests the creation of an OpenStack stack from Heat template file and
+        the retrieval of the network creator.
+        """
+        stack_settings = StackSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template_path=self.heat_tmplt_path,
+            env_values=self.env_values)
+        self.stack_creator = create_stack.OpenStackHeatStack(self.heat_creds,
+                                                             stack_settings)
+        created_stack = self.stack_creator.create()
+        self.assertIsNotNone(created_stack)
+
+        vm_inst_creators = self.stack_creator.get_vm_inst_creators()
+        self.assertIsNotNone(vm_inst_creators)
+        self.assertEqual(1, len(vm_inst_creators))
+        self.assertEqual(self.vm_inst_name,
+                         vm_inst_creators[0].get_vm_inst().name)
+
+        nova = nova_utils.nova_client(self.admin_os_creds)
+        vm_inst_by_name = nova_utils.get_server(
+            nova, server_name=vm_inst_creators[0].get_vm_inst().name)
+        self.assertEqual(vm_inst_creators[0].get_vm_inst(), vm_inst_by_name)
+        self.assertIsNotNone(nova_utils.get_server_object_by_id(
+            nova, vm_inst_creators[0].get_vm_inst().id))
+
+
+class CreateComplexStackTests(OSIntegrationTestCase):
+    """
+    Tests for the CreateStack class defined in create_stack.py
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateStack object that is responsible for downloading
+        and creating an OS stack file within OpenStack
+        """
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+
+        self.heat_creds = self.admin_os_creds
+        self.heat_creds.project_name = self.admin_os_creds.project_name
+
+        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.stack_creator = None
+
+        self.image_creator = OpenStackImage(
+            self.heat_creds, openstack_tests.cirros_image_settings(
+                name=self.guid + '-image',
+                image_metadata=self.image_metadata))
+        self.image_creator.create()
+
+        self.network_name = self.guid + '-net'
+        self.subnet_name = self.guid + '-subnet'
+        self.flavor1_name = self.guid + '-flavor1'
+        self.flavor2_name = self.guid + '-flavor2'
+        self.vm_inst1_name = self.guid + '-inst1'
+        self.vm_inst2_name = self.guid + '-inst2'
+        self.keypair_name = self.guid + '-kp'
+
+        self.env_values = {
+            'image1_name': self.image_creator.image_settings.name,
+            'image2_name': self.image_creator.image_settings.name,
+            'flavor1_name': self.flavor1_name,
+            'flavor2_name': self.flavor2_name,
+            'net_name': self.network_name,
+            'subnet_name': self.subnet_name,
+            'inst1_name': self.vm_inst1_name,
+            'inst2_name': self.vm_inst2_name,
+            'keypair_name': self.keypair_name}
+
+        self.heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'floating_ip_heat_template.yaml')
+
+    def tearDown(self):
+        """
+        Cleans the stack and downloaded stack file
+        """
+        if self.stack_creator:
+            try:
+                self.stack_creator.clean()
+            except:
+                pass
+
+        if self.image_creator:
+            try:
+                self.image_creator.clean()
+            except:
+                pass
+
+        super(self.__class__, self).__clean__()
+
+    def test_connect_via_ssh_heat_vm(self):
+        """
+        Tests the creation of an OpenStack stack from Heat template file and
+        the retrieval of two VM instance creators and attempt to connect via
+        SSH to the first one with a floating IP.
+        """
+        stack_settings = StackSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template_path=self.heat_tmplt_path,
+            env_values=self.env_values)
+        self.stack_creator = create_stack.OpenStackHeatStack(
+            self.heat_creds, stack_settings,
+            [self.image_creator.image_settings])
+        created_stack = self.stack_creator.create()
+        self.assertIsNotNone(created_stack)
+
+        vm_inst_creators = self.stack_creator.get_vm_inst_creators(
+            heat_keypair_option='private_key')
+        self.assertIsNotNone(vm_inst_creators)
+        self.assertEqual(2, len(vm_inst_creators))
+
+        for vm_inst_creator in vm_inst_creators:
+            if vm_inst_creator.get_vm_inst().name == self.vm_inst1_name:
+                self.assertTrue(
+                    create_instance_tests.validate_ssh_client(vm_inst_creator))
+            else:
+                vm_settings = vm_inst_creator.instance_settings
+                self.assertEqual(0, len(vm_settings.floating_ip_settings))
 
 
 class CreateStackNegativeTests(OSIntegrationTestCase):

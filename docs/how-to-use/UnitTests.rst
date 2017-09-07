@@ -208,13 +208,19 @@ StackDomainObjectTests
 ----------------------
 
 Ensures that all required members are included when constructing a
-Stack domain object
+Stack domain object (for Heat)
 
 ResourceDomainObjectTests
 -------------------------
 
 Ensures that all required members are included when constructing a
-Resource domain object
+Resource domain object (for Heat)
+
+OutputDomainObjectTests
+-----------------------
+
+Ensures that all required members are included when constructing a
+Output domain object (for Heat)
 
 FloatingIpSettingsUnitTests
 ---------------------------

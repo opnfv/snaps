@@ -19,15 +19,18 @@ class Keypair:
     SNAPS domain object for Keypairs. Should contain attributes that
     are shared amongst cloud providers
     """
-    def __init__(self, name, id, public_key):
+    def __init__(self, name, kp_id, public_key, fingerprint=None):
         """
         Constructor
         :param name: the keypair's name
-        :param id: the keypair's id
+        :param kp_id: the keypair's id
+        :param public_key: the keypair's public key
+        :param fingerprint: the keypair's host fingerprint
         """
         self.name = name
-        self.id = id
+        self.id = kp_id
         self.public_key = public_key
+        self.fingerprint = fingerprint
 
     def __eq__(self, other):
         return (self.name == other.name and self.id == other.id and

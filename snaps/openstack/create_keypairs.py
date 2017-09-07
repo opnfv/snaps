@@ -78,7 +78,7 @@ class OpenStackKeypair:
                 self.__keypair = nova_utils.upload_keypair(
                     self.__nova, self.keypair_settings.name,
                     nova_utils.public_key_openssh(keys))
-                nova_utils.save_keys_to_files(
+                file_utils.save_keys_to_files(
                     keys, self.keypair_settings.public_filepath,
                     self.keypair_settings.private_filepath)
 

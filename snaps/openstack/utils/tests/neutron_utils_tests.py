@@ -502,8 +502,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
 
     def test_create_port_null_name(self):
         """
-        Tests the neutron_utils.create_port() function for an Exception when
-        the port name value is None
+        Tests the neutron_utils.create_port() when the port name value is None
         """
         self.network = neutron_utils.create_network(
             self.neutron, self.os_creds, self.net_config.network_settings)
@@ -519,14 +518,16 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.assertTrue(validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
 
-        with self.assertRaises(Exception):
-            self.port = neutron_utils.create_port(
-                self.neutron, self.os_creds,
-                PortSettings(
-                    network_name=self.net_config.network_settings.name,
-                    ip_addrs=[{
-                        'subnet_name': subnet_setting.name,
-                        'ip': ip_1}]))
+        self.port = neutron_utils.create_port(
+            self.neutron, self.os_creds,
+            PortSettings(
+                network_name=self.net_config.network_settings.name,
+                ip_addrs=[{
+                    'subnet_name': subnet_setting.name,
+                    'ip': ip_1}]))
+
+        port = neutron_utils.get_port_by_id(self.neutron, self.port.id)
+        self.assertEqual(self.port, port)
 
     def test_create_port_null_network_object(self):
         """

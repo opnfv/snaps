@@ -17,12 +17,13 @@ import logging
 import yaml
 from heatclient.client import Client
 from heatclient.common.template_format import yaml_loader
+from novaclient.exceptions import NotFound
 from oslo_serialization import jsonutils
 
 from snaps import file_utils
-from snaps.domain.stack import Stack, Resource
+from snaps.domain.stack import Stack, Resource, Output
 
-from snaps.openstack.utils import keystone_utils, neutron_utils
+from snaps.openstack.utils import keystone_utils, neutron_utils, nova_utils
 
 __author__ = 'spisarski'
 
@@ -86,17 +87,6 @@ def get_stack_status(heat_cli, stack_id):
     return heat_cli.stacks.get(stack_id).stack_status
 
 
-def get_stack_outputs(heat_cli, stack_id):
-    """
-    Returns a domain Stack object for a given ID
-    :param heat_cli: the OpenStack heat client
-    :param stack_id: the ID of the heat stack to retrieve
-    :return: the Stack domain object else None
-    """
-    stack = heat_cli.stacks.get(stack_id)
-    return stack.outputs
-
-
 def create_stack(heat_cli, stack_settings):
     """
     Executes an Ansible playbook to the given host
@@ -157,6 +147,29 @@ def get_resources(heat_cli, stack):
         return out
 
 
+def get_outputs(heat_cli, stack):
+    """
+    Returns all of the SNAPS-OO Output domain objects for the defined outputs
+    for given stack
+    :param heat_cli: the OpenStack heat client
+    :param stack: the SNAPS-OO Stack domain object
+    :return: a list
+    """
+    out = list()
+
+    os_stack = heat_cli.stacks.get(stack.id)
+
+    outputs = None
+    if os_stack:
+        outputs = os_stack.outputs
+
+    if outputs:
+        for output in outputs:
+            out.append(Output(**output))
+
+    return out
+
+
 def get_stack_networks(heat_cli, neutron, stack):
     """
     Returns an instance of NetworkSettings for each network owned by this stack
@@ -174,6 +187,31 @@ def get_stack_networks(heat_cli, neutron, stack):
                 neutron, resource.id)
             if network:
                 out.append(network)
+
+    return out
+
+
+def get_stack_servers(heat_cli, nova, stack):
+    """
+    Returns an instance of NetworkSettings for each network owned by this stack
+    :param heat_cli: the OpenStack heat client object
+    :param nova: the OpenStack nova client object
+    :param stack: the SNAPS-OO Stack domain object
+    :return: a list of NetworkSettings
+    """
+
+    out = list()
+    resources = get_resources(heat_cli, stack)
+    for resource in resources:
+        if resource.type == 'OS::Nova::Server':
+            try:
+                server = nova_utils.get_server_object_by_id(
+                    nova, resource.id)
+                if server:
+                    out.append(server)
+            except NotFound:
+                logger.warn(
+                    'VmInst cannot be located with ID %s', resource.id)
 
     return out
 
