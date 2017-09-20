@@ -80,15 +80,15 @@ resources:
   flavor1:
     type: OS::Nova::Flavor
     properties:
-      ram: 4096
-      vcpus: 4
-      disk: 4
+      ram: 1024
+      vcpus: 2
+      disk: 2
   flavor2:
     type: OS::Nova::Flavor
     properties:
-      ram: 4096
-      vcpus: 4
-      disk: 4
+      ram: 1024
+      vcpus: 2
+      disk: 2
 
   network:
     type: OS::Neutron::Net
