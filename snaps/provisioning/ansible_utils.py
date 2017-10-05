@@ -76,14 +76,14 @@ def apply_playbook(playbook_path, hosts_inv, host_user, ssh_priv_key_file_path,
                     'connection', 'module_path', 'forks', 'remote_user',
                     'private_key_file', 'ssh_common_args', 'ssh_extra_args',
                     'become', 'become_method', 'become_user', 'verbosity',
-                    'check'])
+                    'check', 'timeout'])
 
     ansible_opts = options(
         listtags=False, listtasks=False, listhosts=False, syntax=False,
         connection='ssh', module_path=None, forks=100, remote_user=host_user,
         private_key_file=pk_file_path, ssh_common_args=None,
         ssh_extra_args=ssh_extra_args, become=None, become_method=None,
-        become_user=None, verbosity=11111, check=False)
+        become_user=None, verbosity=11111, check=False, timeout=30)
 
     logger.debug('Setting up Ansible Playbook Executor for playbook - ' +
                  playbook_path)
