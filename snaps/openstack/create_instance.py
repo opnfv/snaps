@@ -19,6 +19,7 @@ from neutronclient.common.exceptions import PortNotFoundClient
 from novaclient.exceptions import NotFound
 
 from snaps.openstack.create_network import PortSettings
+from snaps.openstack.openstack_creator import OpenStackComputeObject
 from snaps.openstack.utils import glance_utils
 from snaps.openstack.utils import neutron_utils
 from snaps.openstack.utils import nova_utils
@@ -33,9 +34,9 @@ STATUS_ACTIVE = 'ACTIVE'
 STATUS_DELETED = 'DELETED'
 
 
-class OpenStackVmInstance:
+class OpenStackVmInstance(OpenStackComputeObject):
     """
-    Class responsible for creating a VM instance in OpenStack
+    Class responsible for managing a VM instance in OpenStack
     """
 
     def __init__(self, os_creds, instance_settings, image_settings,
@@ -48,9 +49,8 @@ class OpenStackVmInstance:
         :param keypair_settings: The keypair metadata (Optional)
         :raises Exception
         """
-        self.__os_creds = os_creds
+        super(self.__class__, self).__init__(os_creds)
 
-        self.__nova = None
         self.__neutron = None
 
         self.instance_settings = instance_settings
@@ -65,28 +65,34 @@ class OpenStackVmInstance:
         # Note: this object does not change after the VM becomes active
         self.__vm = None
 
-    def create(self, cleanup=False, block=False):
+    def initialize(self):
         """
-        Creates a VM instance
-        :param cleanup: When true, this object is initialized only via queries,
-                        else objects will be created when the queries return
-                        None. The name of this parameter should be changed to
-                        something like 'readonly' as the same goes with all of
-                        the other creator classes.
+        Loads the existing VMInst, Port, FloatingIps
+        :return: VMInst domain object
+        """
+        super(self.__class__, self).initialize()
+
+        self.__neutron = neutron_utils.neutron_client(self._os_creds)
+
+        self.__ports = self.__query_ports(self.instance_settings.port_settings)
+        self.__lookup_existing_vm_by_name()
+
+    def create(self, block=False):
+        """
+        Creates a VM instance and associated objects unless they already exist
         :param block: Thread will block until instance has either become
                       active, error, or timeout waiting.
                       Additionally, when True, floating IPs will not be applied
                       until VM is active.
-        :return: The VM reference object
+        :return: VMInst domain object
         """
-        self.__nova = nova_utils.nova_client(self.__os_creds)
-        self.__neutron = neutron_utils.neutron_client(self.__os_creds)
+        self.initialize()
 
-        self.__ports = self.__setup_ports(self.instance_settings.port_settings,
-                                          cleanup)
-        self.__lookup_existing_vm_by_name()
-        if not self.__vm and not cleanup:
+        if len(self.__ports) == 0:
+            self.__ports = self.__create_ports(self.instance_settings.port_settings)
+        if not self.__vm:
             self.__create_vm(block)
+
         return self.__vm
 
     def __lookup_existing_vm_by_name(self):
@@ -96,7 +102,7 @@ class OpenStackVmInstance:
         within the project
         """
         server = nova_utils.get_server(
-            self.__nova, vm_inst_settings=self.instance_settings)
+            self._nova, vm_inst_settings=self.instance_settings)
         if server:
             if server.name == self.instance_settings.name:
                 self.__vm = server
@@ -124,9 +130,9 @@ class OpenStackVmInstance:
                       active, error, or timeout waiting. Floating IPs will be
                       assigned after active when block=True
         """
-        glance = glance_utils.glance_client(self.__os_creds)
+        glance = glance_utils.glance_client(self._os_creds)
         self.__vm = nova_utils.create_server(
-            self.__nova, self.__neutron, glance, self.instance_settings,
+            self._nova, self.__neutron, glance, self.instance_settings,
             self.image_settings, self.keypair_settings)
         logger.info('Created instance with name - %s',
                     self.instance_settings.name)
@@ -140,7 +146,7 @@ class OpenStackVmInstance:
         # Create server should do this but found it needed to occur here
         for sec_grp_name in self.instance_settings.security_group_names:
             if self.vm_active(block=True):
-                nova_utils.add_security_group(self.__nova, self.__vm,
+                nova_utils.add_security_group(self._nova, self.__vm,
                                               sec_grp_name)
             else:
                 raise VmInstanceCreationError(
@@ -235,7 +241,7 @@ class OpenStackVmInstance:
             try:
                 logger.info(
                     'Deleting VM instance - ' + self.instance_settings.name)
-                nova_utils.delete_vm_instance(self.__nova, self.__vm)
+                nova_utils.delete_vm_instance(self._nova, self.__vm)
             except Exception as e:
                 logger.error('Error deleting VM - %s', e)
 
@@ -258,12 +264,29 @@ class OpenStackVmInstance:
                     'Unexpected error while checking VM instance status - %s',
                     e)
 
-    def __setup_ports(self, port_settings, cleanup):
+    def __query_ports(self, port_settings):
+        """
+        Returns the previously configured ports or an empty list if none
+        exist
+        :param port_settings: A list of PortSetting objects
+        :return: a list of OpenStack port tuples where the first member is the
+                 port name and the second is the port object
+        """
+        ports = list()
+
+        for port_setting in port_settings:
+            port = neutron_utils.get_port(
+                self.__neutron, port_settings=port_setting)
+            if port:
+                ports.append((port_setting.name, port))
+
+        return ports
+
+    def __create_ports(self, port_settings):
         """
         Returns the previously configured ports or creates them if they do not
         exist
         :param port_settings: A list of PortSetting objects
-        :param cleanup: When true, only perform lookups for OpenStack objects.
         :return: a list of OpenStack port tuples where the first member is the
                  port name and the second is the port object
         """
@@ -273,21 +296,9 @@ class OpenStackVmInstance:
             port = neutron_utils.get_port(
                 self.__neutron, port_settings=port_setting)
             if not port:
-                network = neutron_utils.get_network(
-                    self.__neutron, network_name=port_setting.network_name)
-                net_ports = neutron_utils.get_ports(self.__neutron, network)
-                for net_port in net_ports:
-                    if port_setting.mac_address == net_port.mac_address:
-                        port = net_port
-                        break
-            if port:
-                ports.append((port_setting.name, port))
-            elif not cleanup:
-                # Exception will be raised when port with same name already
-                # exists
-                ports.append(
-                    (port_setting.name, neutron_utils.create_port(
-                        self.__neutron, self.__os_creds, port_setting)))
+                port = neutron_utils.create_port(self.__neutron, self._os_creds, port_setting)
+                if port:
+                    ports.append((port_setting.name, port))
 
         return ports
 
@@ -316,7 +327,7 @@ class OpenStackVmInstance:
                 logger.debug('Attempting to add floating IP to instance')
                 try:
                     nova_utils.add_floating_ip_to_server(
-                        self.__nova, self.__vm, floating_ip, ip)
+                        self._nova, self.__vm, floating_ip, ip)
                     logger.info(
                         'Added floating IP %s to port IP %s on instance %s',
                         floating_ip.ip, ip, self.instance_settings.name)
@@ -341,21 +352,21 @@ class OpenStackVmInstance:
         Returns the OpenStack credentials used to create these objects
         :return: the credentials
         """
-        return self.__os_creds
+        return self._os_creds
 
     def get_vm_inst(self):
         """
         Returns the latest version of this server object from OpenStack
         :return: Server object
         """
-        return nova_utils.get_server_object_by_id(self.__nova, self.__vm.id)
+        return nova_utils.get_server_object_by_id(self._nova, self.__vm.id)
 
     def get_console_output(self):
         """
         Returns the vm console object for parsing logs
         :return: the console output object
         """
-        return nova_utils.get_server_console_output(self.__nova, self.__vm)
+        return nova_utils.get_server_console_output(self._nova, self.__vm)
 
     def get_port_ip(self, port_name, subnet_name=None):
         """
@@ -415,7 +426,7 @@ class OpenStackVmInstance:
         Returns a dictionary of a VMs info as returned by OpenStack
         :return: a dict()
         """
-        return nova_utils.get_server_info(self.__nova, self.__vm)
+        return nova_utils.get_server_info(self._nova, self.__vm)
 
     def config_nics(self):
         """
@@ -490,7 +501,7 @@ class OpenStackVmInstance:
         return ansible_utils.apply_playbook(
             pb_file_loc, [self.get_floating_ip(fip_name=fip_name).ip],
             self.get_image_user(), self.keypair_settings.private_filepath,
-            variables, self.__os_creds.proxy_settings)
+            variables, self._os_creds.proxy_settings)
 
     def get_image_user(self):
         """
@@ -582,7 +593,7 @@ class OpenStackVmInstance:
             else:
                 return False
 
-        status = nova_utils.get_server_status(self.__nova, self.__vm)
+        status = nova_utils.get_server_status(self._nova, self.__vm)
         if not status:
             logger.warning('Cannot find instance with id - ' + self.__vm.id)
             return False
@@ -667,7 +678,7 @@ class OpenStackVmInstance:
                 self.__get_first_provisioning_floating_ip().ip,
                 self.get_image_user(),
                 self.keypair_settings.private_filepath,
-                proxy_settings=self.__os_creds.proxy_settings)
+                proxy_settings=self._os_creds.proxy_settings)
         else:
             logger.warning(
                 'Cannot return an SSH client. No Floating IP configured')
@@ -685,7 +696,7 @@ class OpenStackVmInstance:
             return False
 
         try:
-            nova_utils.add_security_group(self.__nova, self.get_vm_inst(),
+            nova_utils.add_security_group(self._nova, self.get_vm_inst(),
                                           security_group.name)
             return True
         except NotFound as e:
@@ -705,7 +716,7 @@ class OpenStackVmInstance:
             return False
 
         try:
-            nova_utils.remove_security_group(self.__nova, self.get_vm_inst(),
+            nova_utils.remove_security_group(self._nova, self.get_vm_inst(),
                                              security_group)
             return True
         except NotFound as e:

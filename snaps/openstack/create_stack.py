@@ -19,6 +19,7 @@ import time
 from heatclient.exc import HTTPNotFound
 
 from snaps.openstack.create_instance import OpenStackVmInstance
+from snaps.openstack.openstack_creator import OpenStackCloudObject
 from snaps.openstack.utils import nova_utils, settings_utils, glance_utils
 
 from snaps.openstack.create_network import OpenStackNetwork
@@ -36,9 +37,9 @@ STATUS_DELETE_COMPLETE = 'DELETE_COMPLETE'
 STATUS_DELETE_FAILED = 'DELETE_FAILED'
 
 
-class OpenStackHeatStack:
+class OpenStackHeatStack(OpenStackCloudObject, object):
     """
-    Class responsible for creating an heat stack in OpenStack
+    Class responsible for managing a heat stack in OpenStack
     """
 
     def __init__(self, os_creds, stack_settings, image_settings=None,
@@ -55,7 +56,8 @@ class OpenStackHeatStack:
                                  used for spawning this stack
         :return:
         """
-        self.__os_creds = os_creds
+        super(self.__class__, self).__init__(os_creds)
+
         self.stack_settings = stack_settings
 
         if image_settings:
@@ -71,24 +73,30 @@ class OpenStackHeatStack:
         self.__stack = None
         self.__heat_cli = None
 
-    def create(self, cleanup=False):
+    def initialize(self):
         """
-        Creates the heat stack in OpenStack if it does not already exist and
-        returns the domain Stack object
-        :param cleanup: When true, this object is initialized only via queries,
-                        else objects will be created when the queries return
-                        None. The name of this parameter should be changed to
-                        something like 'readonly' as the same goes with all of
-                        the other creator classes.
-        :return: The OpenStack Stack object
+        Loads the existing heat stack
+        :return: The Stack domain object or None
         """
-        self.__heat_cli = heat_utils.heat_client(self.__os_creds)
+        self.__heat_cli = heat_utils.heat_client(self._os_creds)
         self.__stack = heat_utils.get_stack(
             self.__heat_cli, stack_settings=self.stack_settings)
         if self.__stack:
             logger.info('Found stack with name - ' + self.stack_settings.name)
             return self.__stack
-        elif not cleanup:
+
+    def create(self):
+        """
+        Creates the heat stack in OpenStack if it does not already exist and
+        returns the domain Stack object
+        :return: The Stack domain object or None
+        """
+        self.initialize()
+
+        if self.__stack:
+            logger.info('Found stack with name - ' + self.stack_settings.name)
+            return self.__stack
+        else:
             self.__stack = heat_utils.create_stack(self.__heat_cli,
                                                    self.stack_settings)
             logger.info(
@@ -102,10 +110,6 @@ class OpenStackHeatStack:
                 raise StackCreationError(
                     'Stack was not created or activated in the alloted amount '
                     'of time')
-        else:
-            logger.info('Did not create stack due to cleanup mode')
-
-        return self.__stack
 
     def clean(self):
         """
@@ -211,7 +215,7 @@ class OpenStackHeatStack:
         :return: list() of OpenStackNetwork objects
         """
 
-        neutron = neutron_utils.neutron_client(self.__os_creds)
+        neutron = neutron_utils.neutron_client(self._os_creds)
 
         out = list()
         stack_networks = heat_utils.get_stack_networks(
@@ -220,9 +224,9 @@ class OpenStackHeatStack:
         for stack_network in stack_networks:
             net_settings = settings_utils.create_network_settings(
                 neutron, stack_network)
-            net_creator = OpenStackNetwork(self.__os_creds, net_settings)
+            net_creator = OpenStackNetwork(self._os_creds, net_settings)
             out.append(net_creator)
-            net_creator.create(cleanup=True)
+            net_creator.initialize()
 
         return out
 
@@ -234,13 +238,13 @@ class OpenStackHeatStack:
         """
 
         out = list()
-        nova = nova_utils.nova_client(self.__os_creds)
+        nova = nova_utils.nova_client(self._os_creds)
 
         stack_servers = heat_utils.get_stack_servers(
             self.__heat_cli, nova, self.__stack)
 
-        neutron = neutron_utils.neutron_client(self.__os_creds)
-        glance = glance_utils.glance_client(self.__os_creds)
+        neutron = neutron_utils.neutron_client(self._os_creds)
+        glance = glance_utils.glance_client(self._os_creds)
 
         for stack_server in stack_servers:
             vm_inst_settings = settings_utils.create_vm_inst_settings(
@@ -252,10 +256,10 @@ class OpenStackHeatStack:
                 keypair_settings=self.keypair_settings,
                 priv_key_key=heat_keypair_option)
             vm_inst_creator = OpenStackVmInstance(
-                self.__os_creds, vm_inst_settings, image_settings,
+                self._os_creds, vm_inst_settings, image_settings,
                 keypair_settings)
             out.append(vm_inst_creator)
-            vm_inst_creator.create(cleanup=True)
+            vm_inst_creator.initialize()
 
         return out
 

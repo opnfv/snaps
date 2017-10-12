@@ -16,6 +16,7 @@ import logging
 
 from neutronclient.common.exceptions import NotFound
 from snaps.openstack.create_network import PortSettings
+from snaps.openstack.openstack_creator import OpenStackNetworkObject
 from snaps.openstack.utils import neutron_utils, keystone_utils
 
 __author__ = 'spisarski'
@@ -23,9 +24,9 @@ __author__ = 'spisarski'
 logger = logging.getLogger('OpenStackNetwork')
 
 
-class OpenStackRouter:
+class OpenStackRouter(OpenStackNetworkObject):
     """
-    Class responsible for creating a router in OpenStack
+    Class responsible for managing a router in OpenStack
     """
 
     def __init__(self, os_creds, router_settings):
@@ -36,13 +37,12 @@ class OpenStackRouter:
                                 (must be an instance of the RouterSettings
                                 class)
         """
-        self.__os_creds = os_creds
+        super(self.__class__, self).__init__(os_creds)
 
         if not router_settings:
             raise RouterCreationError('router_settings is required')
 
         self.router_settings = router_settings
-        self.__neutron = None
 
         # Attributes instantiated on create()
         self.__router = None
@@ -53,64 +53,84 @@ class OpenStackRouter:
         # interfaces are the value
         self.__ports = list()
 
-    def create(self, cleanup=False):
+    def initialize(self):
         """
-        Responsible for creating the router.
-        :param cleanup: When true, only perform lookups for OpenStack objects.
-        :return: the router object
+        Loads the existing router.
+        :return: the Router domain object
         """
-        self.__neutron = neutron_utils.neutron_client(self.__os_creds)
+        super(self.__class__, self).initialize()
 
-        logger.debug(
-            'Creating Router with name - ' + self.router_settings.name)
-        existing = False
-        router_inst = neutron_utils.get_router(
-            self.__neutron, router_settings=self.router_settings)
-        if router_inst:
-            self.__router = router_inst
-            existing = True
-        else:
-            if not cleanup:
-                self.__router = neutron_utils.create_router(
-                    self.__neutron, self.__os_creds, self.router_settings)
+        self.__router = neutron_utils.get_router(
+            self._neutron, router_settings=self.router_settings)
 
         for internal_subnet_name in self.router_settings.internal_subnets:
             internal_subnet = neutron_utils.get_subnet(
-                self.__neutron, subnet_name=internal_subnet_name)
+                self._neutron, subnet_name=internal_subnet_name)
             if internal_subnet:
                 self.__internal_subnets.append(internal_subnet)
-                if internal_subnet and not cleanup and not existing:
-                    logger.debug('Adding router to subnet...')
-                    router_intf = neutron_utils.add_interface_router(
-                        self.__neutron, self.__router, subnet=internal_subnet)
-                    self.__internal_router_interface = router_intf
             else:
                 raise RouterCreationError(
                     'Subnet not found with name ' + internal_subnet_name)
 
         for port_setting in self.router_settings.port_settings:
             port = neutron_utils.get_port(
-                self.__neutron, port_settings=port_setting)
-            logger.info(
-                'Retrieved port %s for router - %s', port_setting.name,
-                self.router_settings.name)
+                self._neutron, port_settings=port_setting)
             if port:
                 self.__ports.append(port)
 
-            if not port and not cleanup and not existing:
-                port = neutron_utils.create_port(self.__neutron,
-                                                 self.__os_creds, port_setting)
-                if port:
-                    logger.info(
-                        'Created port %s for router - %s', port_setting.name,
-                        self.router_settings.name)
-                    self.__ports.append(port)
-                    neutron_utils.add_interface_router(self.__neutron,
-                                                       self.__router,
-                                                       port=port)
+        return self.__router
+
+    def create(self):
+        """
+        Responsible for creating the router.
+        :return: the Router domain object
+        """
+        self.initialize()
+
+        if not self.__router:
+            self.__router = neutron_utils.create_router(
+                self._neutron, self._os_creds, self.router_settings)
+
+            for internal_subnet_name in self.router_settings.internal_subnets:
+                internal_subnet = neutron_utils.get_subnet(
+                    self._neutron, subnet_name=internal_subnet_name)
+                if internal_subnet:
+                    self.__internal_subnets.append(internal_subnet)
+                    if internal_subnet:
+                        logger.debug('Adding router to subnet...')
+                        router_intf = neutron_utils.add_interface_router(
+                            self._neutron, self.__router,
+                            subnet=internal_subnet)
+                        self.__internal_router_interface = router_intf
                 else:
                     raise RouterCreationError(
-                        'Error creating port with name - ' + port_setting.name)
+                        'Subnet not found with name ' + internal_subnet_name)
+
+            for port_setting in self.router_settings.port_settings:
+                port = neutron_utils.get_port(
+                    self._neutron, port_settings=port_setting)
+                logger.info(
+                    'Retrieved port %s for router - %s', port_setting.name,
+                    self.router_settings.name)
+                if port:
+                    self.__ports.append(port)
+
+                if not port:
+                    port = neutron_utils.create_port(
+                        self._neutron, self._os_creds, port_setting)
+                    if port:
+                        logger.info(
+                            'Created port %s for router - %s',
+                            port_setting.name,
+                            self.router_settings.name)
+                        self.__ports.append(port)
+                        neutron_utils.add_interface_router(self._neutron,
+                                                           self.__router,
+                                                           port=port)
+                    else:
+                        raise RouterCreationError(
+                            'Error creating port with name - '
+                            + port_setting.name)
 
         return self.__router
 
@@ -123,7 +143,7 @@ class OpenStackRouter:
                 'Removing router interface from router %s and port %s',
                 self.router_settings.name, port.name)
             try:
-                neutron_utils.remove_interface_router(self.__neutron,
+                neutron_utils.remove_interface_router(self._neutron,
                                                       self.__router, port=port)
             except NotFound:
                 pass
@@ -134,7 +154,7 @@ class OpenStackRouter:
                 'Removing router interface from router %s and subnet %s',
                 self.router_settings.name, internal_subnet.name)
             try:
-                neutron_utils.remove_interface_router(self.__neutron,
+                neutron_utils.remove_interface_router(self._neutron,
                                                       self.__router,
                                                       subnet=internal_subnet)
             except NotFound:
@@ -144,7 +164,7 @@ class OpenStackRouter:
         if self.__router:
             logger.info('Removing router ' + self.router_settings.name)
             try:
-                neutron_utils.delete_router(self.__neutron, self.__router)
+                neutron_utils.delete_router(self._neutron, self.__router)
             except NotFound:
                 pass
             self.__router = None

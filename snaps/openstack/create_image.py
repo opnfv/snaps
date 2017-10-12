@@ -17,6 +17,7 @@ from glanceclient.exc import HTTPNotFound
 import logging
 import time
 
+from snaps.openstack.openstack_creator import OpenStackCloudObject
 from snaps.openstack.utils import glance_utils
 
 __author__ = 'spisarski'
@@ -28,9 +29,9 @@ POLL_INTERVAL = 3
 STATUS_ACTIVE = 'active'
 
 
-class OpenStackImage:
+class OpenStackImage(OpenStackCloudObject):
     """
-    Class responsible for creating an image in OpenStack
+    Class responsible for managing an image in OpenStack
     """
 
     def __init__(self, os_creds, image_settings):
@@ -40,22 +41,20 @@ class OpenStackImage:
         :param image_settings: The image settings
         :return:
         """
-        self.__os_creds = os_creds
+        super(self.__class__, self).__init__(os_creds)
+
         self.image_settings = image_settings
         self.__image = None
         self.__kernel_image = None
         self.__ramdisk_image = None
         self.__glance = None
 
-    def create(self, cleanup=False):
+    def initialize(self):
         """
-        Creates the image in OpenStack if it does not already exist and returns
-        the domain Image object
-        :param cleanup: Denotes whether or not this is being called for cleanup
-                        or not
-        :return: The OpenStack Image object
+        Loads the existing Image
+        :return: The Image domain object or None
         """
-        self.__glance = glance_utils.glance_client(self.__os_creds)
+        self.__glance = glance_utils.glance_client(self._os_creds)
         self.__image = glance_utils.get_image(
             self.__glance, image_settings=self.image_settings)
         if self.__image:
@@ -66,15 +65,31 @@ class OpenStackImage:
             raise ImageCreationError(
                 'Image with does not exist with name - ' +
                 self.image_settings.name)
-        elif not cleanup:
+
+        if self.image_settings.kernel_image_settings:
+            self.__kernel_image = glance_utils.get_image(
+                self.__glance,
+                image_settings=self.image_settings.kernel_image_settings)
+        if self.image_settings.ramdisk_image_settings:
+            self.__ramdisk_image = glance_utils.get_image(
+                self.__glance,
+                image_settings=self.image_settings.ramdisk_image_settings)
+
+        return self.__image
+
+    def create(self):
+        """
+        Creates the image in OpenStack if it does not already exist and returns
+        the domain Image object
+        :return: The Image domain object or None
+        """
+        self.initialize()
+
+        if not self.__image:
             extra_properties = self.image_settings.extra_properties or dict()
 
             if self.image_settings.kernel_image_settings:
-                self.__kernel_image = glance_utils.get_image(
-                    self.__glance,
-                    image_settings=self.image_settings.kernel_image_settings)
-
-                if not self.__kernel_image and not cleanup:
+                if not self.__kernel_image:
                     logger.info(
                         'Creating associated kernel image with name - %s',
                         self.image_settings.kernel_image_settings.name)
@@ -83,11 +98,7 @@ class OpenStackImage:
                         self.image_settings.kernel_image_settings)
                 extra_properties['kernel_id'] = self.__kernel_image.id
             if self.image_settings.ramdisk_image_settings:
-                self.__ramdisk_image = glance_utils.get_image(
-                    self.__glance,
-                    image_settings=self.image_settings.ramdisk_image_settings)
-
-                if not self.__ramdisk_image and not cleanup:
+                if not self.__ramdisk_image:
                     logger.info(
                         'Creating associated ramdisk image with name - %s',
                         self.image_settings.ramdisk_image_settings.name)

@@ -34,11 +34,16 @@ def create_image(os_creds, image_settings, cleanup=False):
     Creates an image in OpenStack if necessary
     :param os_creds: The OpenStack credentials object
     :param image_settings: The image settings object
-    :param cleanup: Denotes whether or not this is being called for cleanup or not
-    :return: A reference to the image creator object from which the image object can be accessed
+    :param cleanup: Denotes whether or not this is being called for cleanup
+    :return: A reference to the image creator object from which the image
+             object can be accessed
     """
     image_creator = OpenStackImage(os_creds, image_settings)
-    image_creator.create(cleanup)
+
+    if cleanup:
+        image_creator.initialize()
+    else:
+        image_creator.create()
     return image_creator
 
 
@@ -47,18 +52,24 @@ def create_network(os_creds, network_settings, cleanup=False):
     Creates a network on which the CMTSs can attach
     :param os_creds: The OpenStack credentials object
     :param network_settings: The network settings object
-    :param cleanup: Denotes whether or not this is being called for cleanup or not
-    :return: A reference to the network creator objects for each network from which network elements such as the
-             subnet, router, interface router, and network objects can be accessed.
+    :param cleanup: Denotes whether or not this is being called for cleanup
+    :return: A reference to the network creator objects for each network from
+             which network elements such as the subnet, router, interface
+             router, and network objects can be accessed.
     """
     # Check for OS for network existence
     # If exists return network instance data
     # Else, create network and return instance data
 
-    logger.info('Attempting to create network with name - ' + network_settings.name)
+    logger.info('Attempting to create network with name - %s',
+                network_settings.name)
 
     network_creator = OpenStackNetwork(os_creds, network_settings)
-    network_creator.create(cleanup)
+
+    if cleanup:
+        network_creator.initialize()
+    else:
+        network_creator.create()
     logger.info('Created network ')
     return network_creator
 
@@ -68,16 +79,22 @@ def create_router(os_creds, router_settings, cleanup=False):
     Creates a network on which the CMTSs can attach
     :param os_creds: The OpenStack credentials object
     :param router_settings: The RouterSettings instance
-    :param cleanup: Denotes whether or not this is being called for cleanup or not
-    :return: A reference to the network creator objects for each network from which network elements such as the
-             subnet, router, interface router, and network objects can be accessed.
+    :param cleanup: Denotes whether or not this is being called for cleanup
+    :return: A reference to the network creator objects for each network from
+             which network elements such as the subnet, router, interface
+             router, and network objects can be accessed.
     """
     # Check for OS for network existence
     # If exists return network instance data
     # Else, create network and return instance data
-    logger.info('Attempting to create router with name - ' + router_settings.name)
+    logger.info('Attempting to create router with name - %s',
+                router_settings.name)
     router_creator = OpenStackRouter(os_creds, router_settings)
-    router_creator.create(cleanup)
+
+    if cleanup:
+        router_creator.initialize()
+    else:
+        router_creator.create()
     logger.info('Created router ')
     return router_creator
 
@@ -87,30 +104,40 @@ def create_keypair(os_creds, keypair_settings, cleanup=False):
     Creates a keypair that can be applied to an instance
     :param os_creds: The OpenStack credentials object
     :param keypair_settings: The KeypairSettings object
-    :param cleanup: Denotes whether or not this is being called for cleanup or not
+    :param cleanup: Denotes whether or not this is being called for cleanup
     :return: A reference to the keypair creator object
     """
     keypair_creator = OpenStackKeypair(os_creds, keypair_settings)
-    keypair_creator.create(cleanup)
+
+    if cleanup:
+        keypair_creator.initialize()
+    else:
+        keypair_creator.create()
     return keypair_creator
 
 
-def create_vm_instance(os_creds, instance_settings, image_settings, keypair_creator=None, cleanup=False):
+def create_vm_instance(os_creds, instance_settings, image_settings,
+                       keypair_creator=None, init_only=False):
     """
     Creates a VM instance
     :param os_creds: The OpenStack credentials
     :param instance_settings: Instance of VmInstanceSettings
     :param image_settings: The object containing image settings
-    :param keypair_creator: The object responsible for creating the keypair associated with this VM instance. (optional)
-    :param sg_names: The names of the security groups to apply to VM. (optional)
-    :param cleanup: Denotes whether or not this is being called for cleanup or not (default False)
+    :param keypair_creator: The object responsible for creating the keypair
+                            associated with this VM instance. (optional)
+    :param init_only: Denotes whether or not this is being called for
+                      initialization (T) or creation (F) (default False)
     :return: A reference to the VM instance object
     """
     kp_settings = None
     if keypair_creator:
         kp_settings = keypair_creator.keypair_settings
-    vm_creator = OpenStackVmInstance(os_creds, instance_settings, image_settings, kp_settings)
-    vm_creator.create(cleanup=cleanup)
+    vm_creator = OpenStackVmInstance(os_creds, instance_settings,
+                                     image_settings, kp_settings)
+    if init_only:
+        vm_creator.initialize()
+    else:
+        vm_creator.create()
     return vm_creator
 
 
@@ -148,4 +175,3 @@ def create_security_group(os_creds, sec_grp_settings):
     sg_creator = OpenStackSecurityGroup(os_creds, sec_grp_settings)
     sg_creator.create()
     return sg_creator
-

@@ -164,7 +164,11 @@ def __create_instances(os_creds_dict, creator_class, config_class, config,
                     creator = creator_class(
                         __get_creds(os_creds_dict, os_users_dict, inst_config),
                         config_class(**inst_config))
-                    creator.create(cleanup=cleanup)
+
+                    if cleanup:
+                        creator.initialize()
+                    else:
+                        creator.create()
                     out[inst_config['name']] = creator
             logger.info('Created configured %s', config_key)
         except Exception as e:
@@ -211,7 +215,7 @@ def __create_vm_instances(os_creds_dict, os_users_dict, instances_config,
                                 instance_settings,
                                 image_creator.image_settings,
                                 keypair_creator=keypairs_dict[kp_name],
-                                cleanup=cleanup)
+                                init_only=cleanup)
                         else:
                             raise Exception('Image creator instance not found.'
                                             ' Cannot instantiate')
@@ -669,7 +673,6 @@ def main(arguments):
                 logger.error(
                     'Unexpected error deploying environment. Rolling back due'
                     ' to - ' + str(e))
-                # __cleanup(creators)
                 raise
 
         # Must enter either block
@@ -701,8 +704,8 @@ def main(arguments):
 def __cleanup(creators, clean_image=False):
     for creator_dict in reversed(creators):
         for key, creator in creator_dict.items():
-            if (isinstance(creator, OpenStackImage) and clean_image) or \
-                    not isinstance(creator, OpenStackImage):
+            if ((isinstance(creator, OpenStackImage) and clean_image)
+                    or not isinstance(creator, OpenStackImage)):
                 try:
                     creator.clean()
                 except Exception as e:

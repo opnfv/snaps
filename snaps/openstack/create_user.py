@@ -15,6 +15,8 @@
 import logging
 
 from keystoneclient.exceptions import NotFound
+
+from snaps.openstack.openstack_creator import OpenStackIdentityObject
 from snaps.openstack.os_credentials import OSCreds
 from snaps.openstack.utils import keystone_utils
 
@@ -23,9 +25,9 @@ __author__ = 'spisarski'
 logger = logging.getLogger('create_user')
 
 
-class OpenStackUser:
+class OpenStackUser(OpenStackIdentityObject):
     """
-    Class responsible for creating a user in OpenStack
+    Class responsible for managing a user in OpenStack
     """
 
     def __init__(self, os_creds, user_settings):
@@ -35,24 +37,31 @@ class OpenStackUser:
         :param user_settings: The user settings
         :return:
         """
-        self.__os_creds = os_creds
+        super(self.__class__, self).__init__(os_creds)
+
         self.user_settings = user_settings
         self.__user = None
-        self.__keystone = None
+
+    def initialize(self):
+        """
+        Creates the user in OpenStack if it does not already exist
+        :return: The User domain object
+        """
+        super(self.__class__, self).initialize()
+
+        self.__user = keystone_utils.get_user(self._keystone,
+                                              self.user_settings.name)
+        return self.__user
 
     def create(self, cleanup=False):
         """
-        Creates the user in OpenStack if it does not already exist
-        :param cleanup: Denotes whether or not this is being called for cleanup
-        :return: The OpenStack user object
+        Creates a User if one does not already exist
+        :return: The User domain object
         """
-        self.__keystone = keystone_utils.keystone_client(self.__os_creds)
-        self.__user = keystone_utils.get_user(self.__keystone,
-                                              self.user_settings.name)
-        if not self.__user and not cleanup:
-            self.__user = keystone_utils.create_user(self.__keystone,
+        self.initialize()
+        if not self.__user:
+            self.__user = keystone_utils.create_user(self._keystone,
                                                      self.user_settings)
-
         return self.__user
 
     def clean(self):
@@ -62,7 +71,7 @@ class OpenStackUser:
         """
         if self.__user:
             try:
-                keystone_utils.delete_user(self.__keystone, self.__user)
+                keystone_utils.delete_user(self._keystone, self.__user)
             except NotFound:
                 pass
             self.__user = None
@@ -84,16 +93,16 @@ class OpenStackUser:
         return OSCreds(
             username=self.user_settings.name,
             password=self.user_settings.password,
-            auth_url=self.__os_creds.auth_url,
+            auth_url=self._os_creds.auth_url,
             project_name=project_name,
-            identity_api_version=self.__os_creds.identity_api_version,
-            user_domain_name=self.__os_creds.user_domain_name,
-            user_domain_id=self.__os_creds.user_domain_id,
-            project_domain_name=self.__os_creds.project_domain_name,
-            project_domain_id=self.__os_creds.project_domain_id,
-            interface=self.__os_creds.interface,
-            proxy_settings=self.__os_creds.proxy_settings,
-            cacert=self.__os_creds.cacert)
+            identity_api_version=self._os_creds.identity_api_version,
+            user_domain_name=self._os_creds.user_domain_name,
+            user_domain_id=self._os_creds.user_domain_id,
+            project_domain_name=self._os_creds.project_domain_name,
+            project_domain_id=self._os_creds.project_domain_id,
+            interface=self._os_creds.interface,
+            proxy_settings=self._os_creds.proxy_settings,
+            cacert=self._os_creds.cacert)
 
 
 class UserSettings:
