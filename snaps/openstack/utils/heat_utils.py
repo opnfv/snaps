@@ -86,6 +86,14 @@ def get_stack_status(heat_cli, stack_id):
     """
     return heat_cli.stacks.get(stack_id).stack_status
 
+def get_stack_status_reason(heat_cli, stack_id):
+    """
+    Returns the current status of the Heat stack
+    :param heat_cli: the OpenStack heat client
+    :param stack_id: the ID of the heat stack to retrieve
+    :return: reason for stack creation failure
+    """
+    return heat_cli.stacks.get(stack_id).stack_status_reason
 
 def create_stack(heat_cli, stack_settings):
     """
