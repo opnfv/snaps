@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_2d6294d8",
+        "filename": "snaps/openstack/create_stack.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-10-13T13:53:56Z",
+      "side": 1,
+      "message": "self.__stack is not the dict() being returned by the heat client. This object is of type snaps.domain.stack.Stack() so this line will raise an exception. Additionally, please create a or expand test in create_stack_tests.py#CreateStackNegativeTests class that ensures the message on the StackCreationError is what you expect.",
+      "revId": "06a081037c543348307e8850dbad39fb9742006b",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_8daac0d2",
+        "filename": "snaps/openstack/utils/heat_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-10-13T13:53:56Z",
+      "side": 1,
+      "message": "Please create at least one test in heat_utils_tests.py (probably in the class HeatUtilsCreateSimpleStackTests) that exercises this function.",
+      "revId": "06a081037c543348307e8850dbad39fb9742006b",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
