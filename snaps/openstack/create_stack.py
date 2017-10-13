@@ -107,9 +107,14 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
                     self.stack_settings.name)
                 return self.__stack
             else:
+                status = heat_utils.get_stack_status_reason(self.__heat_cli,
+                                                            self.__stack['stack']['id'])
                 raise StackCreationError(
-                    'Stack was not created or activated in the alloted amount '
-                    'of time')
+                    'ERROR: STACK CREATION FAILED: ' + status)
+        else:
+            logger.info('Did not create stack due to cleanup mode')
+
+        return self.__stack
 
     def clean(self):
         """
