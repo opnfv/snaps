@@ -29,6 +29,7 @@ __author__ = 'spisarski'
 
 logger = logging.getLogger('create_stack')
 
+STACK_DELETE_TIMEOUT = 1200
 STACK_COMPLETE_TIMEOUT = 1200
 POLL_INTERVAL = 3
 STATUS_CREATE_FAILED = 'CREATE_FAILED'
@@ -107,9 +108,10 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
                     self.stack_settings.name)
                 return self.__stack
             else:
+                status = heat_utils.get_stack_status_reason(self.__heat_cli,
+                                                            self.__stack.id)
                 raise StackCreationError(
-                    'Stack was not created or activated in the alloted amount '
-                    'of time')
+                    'ERROR: STACK CREATION FAILED: ' + status)
 
     def clean(self):
         """
@@ -192,7 +194,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         return self._stack_status_check(STATUS_CREATE_COMPLETE, block, timeout,
                                         poll_interval, STATUS_CREATE_FAILED)
 
-    def stack_deleted(self, block=False, timeout=None,
+    def stack_deleted(self, block=False, timeout=STACK_DELETE_TIMEOUT,
                       poll_interval=POLL_INTERVAL):
         """
         Returns true when the stack status returns the value of
@@ -203,8 +205,6 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         :param poll_interval: The polling interval in seconds
         :return: T/F
         """
-        if not timeout:
-            timeout = self.stack_settings.stack_create_timeout
         return self._stack_status_check(STATUS_DELETE_COMPLETE, block, timeout,
                                         poll_interval, STATUS_DELETE_FAILED)
 
