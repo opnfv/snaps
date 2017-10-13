@@ -1,0 +1,75 @@
+['stack']['id']##############################################################################
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+##############################################################################
+heat_template_version: 2015-04-30
+
+description: Simple template to deploy a single compute instance
+
+parameters:
+  image_name:
+    type: string
+    label: Image ID
+    description: Image to be used for compute instance
+    default: heat_utils_tests
+  flavor_name:
+    type: string
+    label: Instance Type
+    description: Type of instance (flavor) to be used
+    default: m1.small
+  net_name:
+    type: string
+    label: Test network name
+    description: The name of the stack's network
+    default: test_net
+  subnet_name:
+    type: string
+    label: Test subnet name
+    description: The name of the stack's subnet
+    default: test_subnet
+  inst_name:
+    type: string
+    label: Test VM name
+    description: The name of the spawned vm
+    default: test_vm
+
+resources:
+  private_net:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: net_name }
+
+  private_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      name: { get_param: subnet_name }
+      network_id: { get_resource: private_net_test }
+      cidr: 10.0.0.0/24
+
+  server1_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_net }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet }
+
+  my_instance:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: inst_name }
+      image: { get_param: image_name }
+      flavor: { get_param: flavor_name }
+      networks:
+        - port: { get_resource: server1_port }
