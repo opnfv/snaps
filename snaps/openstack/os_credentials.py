@@ -15,7 +15,7 @@
 from neutronclient.common.utils import str2bool
 import numbers
 from snaps import file_utils
-from snaps.openstack.utils import glance_utils, keystone_utils
+from snaps.openstack.utils import glance_utils, keystone_utils, cinder_utils
 
 __author__ = 'spisarski'
 
@@ -42,6 +42,8 @@ class OSCreds:
                                     clients
         :param heat_api_version: The OpenStack's API version to use for Heat
                                     clients
+        :param volume_api_version: The OpenStack's API version to use
+                                   for Cinder clients
         :param user_domain_id: Used for v3 APIs (default='default')
         :param user_domain_name: Used for v3 APIs (default='Default')
         :param project_domain_id: Used for v3 APIs (default='default')
@@ -84,6 +86,12 @@ class OSCreds:
             self.heat_api_version = 1
         else:
             self.heat_api_version = float(kwargs['heat_api_version'])
+
+        if kwargs.get('volume_api_version') is None:
+            self.volume_api_version = cinder_utils.VERSION_2
+        else:
+            self.volume_api_version = float(
+                kwargs['volume_api_version'])
 
         self.user_domain_id = kwargs.get('user_domain_id', 'default')
 

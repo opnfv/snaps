@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from snaps.domain.creator import CloudObject
-from snaps.openstack.utils import nova_utils, neutron_utils, keystone_utils
+from snaps.openstack.utils import (nova_utils, neutron_utils, keystone_utils,
+                                   cinder_utils)
 
 __author__ = 'spisarski'
 
@@ -102,6 +103,29 @@ class OpenStackIdentityObject(OpenStackCloudObject):
 
     def initialize(self):
         self._keystone = keystone_utils.keystone_client(self._os_creds)
+
+    def create(self):
+        raise NotImplementedError('Do not override abstract method')
+
+    def clean(self):
+        raise NotImplementedError('Do not override abstract method')
+
+
+class OpenStackVolumeObject(OpenStackCloudObject):
+    """
+    Abstract class for all OpenStack compute creators
+    """
+
+    def __init__(self, os_creds):
+        """
+        Constructor
+        :param os_creds: the OpenStack credentials object
+        """
+        super(OpenStackVolumeObject, self).__init__(os_creds)
+        self._cinder = None
+
+    def initialize(self):
+        self._cinder = cinder_utils.cinder_client(self._os_creds)
 
     def create(self):
         raise NotImplementedError('Do not override abstract method')

@@ -32,6 +32,7 @@ from snaps.domain.test.stack_tests import (
 from snaps.domain.test.user_tests import UserDomainObjectTests
 from snaps.domain.test.vm_inst_tests import (
     VmInstDomainObjectTests, FloatingIpDomainObjectTests)
+from snaps.domain.test.volume_tests import QoSSpecDomainObjectTests
 from snaps.openstack.tests.conf.os_credentials_tests import (
     ProxySettingsUnitTests, OSCredsUnitTests)
 from snaps.openstack.tests.create_flavor_tests import (
@@ -54,6 +55,8 @@ from snaps.openstack.tests.create_network_tests import (
 from snaps.openstack.tests.create_project_tests import (
     CreateProjectSuccessTests, ProjectSettingsUnitTests,
     CreateProjectUserTests)
+from snaps.openstack.tests.create_qos_tests import (QoSSettingsUnitTests,
+    CreateQoSTests)
 from snaps.openstack.tests.create_router_tests import (
     CreateRouterSuccessTests, CreateRouterNegativeTests,
     RouterSettingsUnitTests)
@@ -67,6 +70,8 @@ from snaps.openstack.tests.create_user_tests import (
     UserSettingsUnitTests, CreateUserSuccessTests)
 from snaps.openstack.tests.os_source_file_test import (
     OSComponentTestCase, OSIntegrationTestCase)
+from snaps.openstack.utils.tests.cinder_utils_tests import (CinderSmokeTests,
+    CinderUtilsQoSTests)
 from snaps.openstack.utils.tests.glance_utils_tests import (
     GlanceSmokeTests, GlanceUtilsTests)
 from snaps.openstack.utils.tests.heat_utils_tests import (
@@ -164,9 +169,13 @@ def add_unit_tests(suite):
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         StackSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        QoSSpecDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         VmInstDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         FloatingIpDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        QoSSettingsUnitTests))
 
 
 def add_openstack_client_tests(suite, os_creds, ext_net_name,
@@ -207,6 +216,10 @@ def add_openstack_client_tests(suite, os_creds, ext_net_name,
     suite.addTest(
         OSComponentTestCase.parameterize(
             HeatSmokeTests, os_creds=os_creds, ext_net_name=ext_net_name,
+            log_level=log_level))
+    suite.addTest(
+        OSComponentTestCase.parameterize(
+            CinderSmokeTests, os_creds=os_creds, ext_net_name=ext_net_name,
             log_level=log_level))
 
 
@@ -280,6 +293,10 @@ def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True,
         image_metadata=image_metadata))
     suite.addTest(OSComponentTestCase.parameterize(
         HeatUtilsCreateComplexStackTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, log_level=log_level,
+        image_metadata=image_metadata))
+    suite.addTest(OSComponentTestCase.parameterize(
+        CinderUtilsQoSTests, os_creds=os_creds,
         ext_net_name=ext_net_name, log_level=log_level,
         image_metadata=image_metadata))
 
@@ -361,6 +378,11 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
         ext_net_name=ext_net_name, use_keystone=use_keystone,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateQoSTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
 
     # VM Instances
     suite.addTest(OSIntegrationTestCase.parameterize(
@@ -415,13 +437,11 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
             ext_net_name=ext_net_name, use_keystone=use_keystone,
             flavor_metadata=flavor_metadata, image_metadata=image_metadata,
             log_level=log_level))
-        # TODO - uncomment after all OPNFV projects have cut a stable/euphrates
-        # branch as this test was not meant to be exercised until F
-        # suite.addTest(OSIntegrationTestCase.parameterize(
-        #     CreateComplexStackTests, os_creds=os_creds,
-        #     ext_net_name=ext_net_name, use_keystone=use_keystone,
-        #     flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-        #     log_level=log_level))
+        suite.addTest(OSIntegrationTestCase.parameterize(
+            CreateComplexStackTests, os_creds=os_creds,
+            ext_net_name=ext_net_name, use_keystone=use_keystone,
+            flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+            log_level=log_level))
         suite.addTest(OSIntegrationTestCase.parameterize(
             AnsibleProvisioningTests, os_creds=os_creds,
             ext_net_name=ext_net_name, use_keystone=use_keystone,
@@ -509,6 +529,4 @@ def add_openstack_staging_tests(suite, os_creds, ext_net_name,
         ext_net_name=ext_net_name, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
             CreateInstancePubPrivNetTests, os_creds=os_creds,
-            ext_net_name=ext_net_name, use_keystone=use_keystone,
-            flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-            log_level=log_level))
+            ext_net_name=ext_net_name, log_level=log_level))
