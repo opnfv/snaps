@@ -1,0 +1,9 @@
+Verified+1: Steven Pisarski <s.pisarski@cablelabs.com>
+Code-Review+1: Dan Schrimpsher <d.schrimpsher@cablelabs.com>
+Verified+1: jenkins-ci <jenkins-opnfv-ci@opnfv.org>
+Code-Review+2: Steven Pisarski <s.pisarski@cablelabs.com>
+Submitted-by: Steven Pisarski <s.pisarski@cablelabs.com>
+Submitted-at: Mon, 16 Oct 2017 13:40:35 +0000
+Reviewed-on: https://gerrit.opnfv.org/gerrit/44951
+Project: snaps
+Branch: refs/heads/master
