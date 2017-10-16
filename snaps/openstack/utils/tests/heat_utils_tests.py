@@ -371,7 +371,7 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
                              self.image_creator2.image_settings])
                         vm_creator = OpenStackVmInstance(
                             self.os_creds, vm_settings, img_settings)
-                        vm_creator.create(cleanup=False)
+                        vm_creator.initialize()
                         vm_creator.clean()
                         vm_creator.vm_deleted(block=True)
 

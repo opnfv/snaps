@@ -15,6 +15,8 @@
 import logging
 
 from neutronclient.common.exceptions import NotFound
+
+from snaps.openstack.openstack_creator import OpenStackNetworkObject
 from snaps.openstack.utils import keystone_utils, neutron_utils
 
 __author__ = 'spisarski'
@@ -22,9 +24,9 @@ __author__ = 'spisarski'
 logger = logging.getLogger('OpenStackNetwork')
 
 
-class OpenStackNetwork:
+class OpenStackNetwork(OpenStackNetworkObject):
     """
-    Class responsible for creating a network in OpenStack
+    Class responsible for managing a network in OpenStack
     """
 
     def __init__(self, os_creds, network_settings):
@@ -33,56 +35,61 @@ class OpenStackNetwork:
         :param os_creds: The credentials to connect with OpenStack
         :param network_settings: The settings used to create a network
         """
-        self.__os_creds = os_creds
+        super(self.__class__, self).__init__(os_creds)
+
         self.network_settings = network_settings
-        self.__neutron = None
 
         # Attributes instantiated on create()
         self.__network = None
         self.__subnets = list()
 
-    def create(self, cleanup=False):
+    def initialize(self):
+        """
+        Loads the existing OpenStack network/subnet
+        :return: The Network domain object or None
+        """
+        super(self.__class__, self).initialize()
+
+        self.__network = neutron_utils.get_network(
+            self._neutron, network_settings=self.network_settings,
+            project_id=self.network_settings.get_project_id(self._os_creds))
+
+        if self.__network:
+            for subnet_setting in self.network_settings.subnet_settings:
+                sub_inst = neutron_utils.get_subnet(
+                    self._neutron, subnet_settings=subnet_setting)
+                if sub_inst:
+                    self.__subnets.append(sub_inst)
+                    logger.debug(
+                        "Subnet '%s' created successfully" % sub_inst.id)
+
+        return self.__network
+
+    def create(self):
         """
         Responsible for creating not only the network but then a private
         subnet, router, and an interface to the router.
-        :param cleanup: When true, only perform lookups for OpenStack objects.
-        :return: the created network object or None
+        :return: the Network domain object
         """
-        self.__neutron = neutron_utils.neutron_client(self.__os_creds)
+        self.initialize()
 
-        logger.info(
-            'Creating neutron network %s...' % self.network_settings.name)
-        net_inst = neutron_utils.get_network(
-            self.__neutron, network_settings=self.network_settings,
-            project_id=self.network_settings.get_project_id(self.__os_creds))
-        if net_inst:
-            self.__network = net_inst
-        else:
-            if not cleanup:
-                self.__network = neutron_utils.create_network(
-                    self.__neutron, self.__os_creds, self.network_settings)
-            else:
-                logger.info(
-                    'Network does not exist and will not create as in cleanup'
-                    ' mode')
-                return
-        logger.debug(
-            "Network '%s' created successfully" % self.__network.id)
+        if not self.__network:
+            self.__network = neutron_utils.create_network(
+                self._neutron, self._os_creds, self.network_settings)
+            logger.debug(
+                "Network '%s' created successfully" % self.__network.id)
 
-        logger.debug('Creating Subnets....')
         for subnet_setting in self.network_settings.subnet_settings:
             sub_inst = neutron_utils.get_subnet(
-                self.__neutron, subnet_settings=subnet_setting)
+                self._neutron, subnet_settings=subnet_setting)
+            if not sub_inst:
+                sub_inst = neutron_utils.create_subnet(
+                    self._neutron, subnet_setting, self._os_creds,
+                    self.__network)
             if sub_inst:
                 self.__subnets.append(sub_inst)
                 logger.debug(
                     "Subnet '%s' created successfully" % sub_inst.id)
-            else:
-                if not cleanup:
-                    self.__subnets.append(
-                        neutron_utils.create_subnet(
-                            self.__neutron, subnet_setting, self.__os_creds,
-                            self.__network))
 
         return self.__network
 
@@ -94,7 +101,7 @@ class OpenStackNetwork:
             try:
                 logger.info(
                     'Deleting subnet with name ' + subnet.name)
-                neutron_utils.delete_subnet(self.__neutron, subnet)
+                neutron_utils.delete_subnet(self._neutron, subnet)
             except NotFound as e:
                 logger.warning(
                     'Error deleting subnet with message - ' + str(e))
@@ -103,7 +110,7 @@ class OpenStackNetwork:
 
         if self.__network:
             try:
-                neutron_utils.delete_network(self.__neutron, self.__network)
+                neutron_utils.delete_network(self._neutron, self.__network)
             except NotFound:
                 pass
 

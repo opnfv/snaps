@@ -16,6 +16,8 @@ import logging
 
 import enum
 from neutronclient.common.exceptions import NotFound, Conflict
+
+from snaps.openstack.openstack_creator import OpenStackNetworkObject
 from snaps.openstack.utils import keystone_utils
 from snaps.openstack.utils import neutron_utils
 
@@ -24,9 +26,9 @@ __author__ = 'spisarski'
 logger = logging.getLogger('OpenStackSecurityGroup')
 
 
-class OpenStackSecurityGroup:
+class OpenStackSecurityGroup(OpenStackNetworkObject):
     """
-    Class responsible for creating Security Groups
+    Class responsible for managing a Security Group in OpenStack
     """
 
     def __init__(self, os_creds, sec_grp_settings):
@@ -35,10 +37,9 @@ class OpenStackSecurityGroup:
         :param os_creds: The credentials to connect with OpenStack
         :param sec_grp_settings: The settings used to create a security group
         """
-        self.__os_creds = os_creds
+        super(self.__class__, self).__init__(os_creds)
+
         self.sec_grp_settings = sec_grp_settings
-        self.__neutron = None
-        self.__keystone = None
 
         # Attributes instantiated on create()
         self.__security_group = None
@@ -46,29 +47,46 @@ class OpenStackSecurityGroup:
         # dict where the rule settings object is the key
         self.__rules = dict()
 
-    def create(self, cleanup=False):
+    def initialize(self):
         """
-        Responsible for creating the security group.
-        :param cleanup: Denotes whether or not this is being called for cleanup
-        :return: the OpenStack security group object
+        Loads existing security group.
+        :return: the security group domain object
         """
-        self.__neutron = neutron_utils.neutron_client(self.__os_creds)
-        self.__keystone = keystone_utils.keystone_client(self.__os_creds)
-
-        logger.info(
-            'Creating security group %s...' % self.sec_grp_settings.name)
+        super(self.__class__, self).initialize()
 
         self.__security_group = neutron_utils.get_security_group(
-            self.__neutron, sec_grp_settings=self.sec_grp_settings)
-        if not self.__security_group and not cleanup:
-            # Create the security group
+            self._neutron, sec_grp_settings=self.sec_grp_settings)
+        if self.__security_group:
+            # Populate rules
+            existing_rules = neutron_utils.get_rules_by_security_group(
+                self._neutron, self.__security_group)
+
+            for existing_rule in existing_rules:
+                # For Custom Rules
+                rule_setting = self.__get_setting_from_rule(existing_rule)
+                self.__rules[rule_setting] = existing_rule
+
+        return self.__security_group
+
+    def create(self):
+        """
+        Responsible for creating the security group.
+        :return: the security group domain object
+        """
+        self.initialize()
+
+        if not self.__security_group:
+            logger.info(
+                'Creating security group %s...' % self.sec_grp_settings.name)
+
+            keystone = keystone_utils.keystone_client(self._os_creds)
             self.__security_group = neutron_utils.create_security_group(
-                self.__neutron, self.__keystone,
+                self._neutron, keystone,
                 self.sec_grp_settings)
 
             # Get the rules added for free
             auto_rules = neutron_utils.get_rules_by_security_group(
-                self.__neutron, self.__security_group)
+                self._neutron, self.__security_group)
 
             ctr = 0
             for auto_rule in auto_rules:
@@ -80,7 +98,7 @@ class OpenStackSecurityGroup:
             for sec_grp_rule_setting in self.sec_grp_settings.rule_settings:
                 try:
                     custom_rule = neutron_utils.create_security_group_rule(
-                        self.__neutron, sec_grp_rule_setting)
+                        self._neutron, sec_grp_rule_setting)
                     self.__rules[sec_grp_rule_setting] = custom_rule
                 except Conflict as e:
                     logger.warn('Unable to create rule due to conflict - %s',
@@ -88,22 +106,7 @@ class OpenStackSecurityGroup:
 
             # Refresh security group object to reflect the new rules added
             self.__security_group = neutron_utils.get_security_group(
-                self.__neutron, sec_grp_settings=self.sec_grp_settings)
-        else:
-            # Populate rules
-            existing_rules = neutron_utils.get_rules_by_security_group(
-                self.__neutron, self.__security_group)
-
-            for existing_rule in existing_rules:
-                # For Custom Rules
-                rule_setting = self.__get_setting_from_rule(existing_rule)
-                ctr = 0
-                if not rule_setting:
-                    # For Free Rules
-                    rule_setting = self.__generate_rule_setting(existing_rule)
-                    ctr += 1
-
-                self.__rules[rule_setting] = existing_rule
+                self._neutron, sec_grp_settings=self.sec_grp_settings)
 
         return self.__security_group
 
@@ -115,7 +118,7 @@ class OpenStackSecurityGroup:
         :return: the newly instantiated SecurityGroupRuleSettings object
         """
         sec_grp = neutron_utils.get_security_group_by_id(
-            self.__neutron, rule.security_group_id)
+            self._neutron, rule.security_group_id)
 
         setting = SecurityGroupRuleSettings(
             description=rule.description,
@@ -135,7 +138,7 @@ class OpenStackSecurityGroup:
         """
         for setting, rule in self.__rules.items():
             try:
-                neutron_utils.delete_security_group_rule(self.__neutron, rule)
+                neutron_utils.delete_security_group_rule(self._neutron, rule)
             except NotFound as e:
                 logger.warning('Rule not found, cannot delete - ' + str(e))
                 pass
@@ -143,7 +146,7 @@ class OpenStackSecurityGroup:
 
         if self.__security_group:
             try:
-                neutron_utils.delete_security_group(self.__neutron,
+                neutron_utils.delete_security_group(self._neutron,
                                                     self.__security_group)
             except NotFound as e:
                 logger.warning(
@@ -171,7 +174,7 @@ class OpenStackSecurityGroup:
         :param rule_setting: the rule configuration
         """
         rule_setting.sec_grp_name = self.sec_grp_settings.name
-        new_rule = neutron_utils.create_security_group_rule(self.__neutron,
+        new_rule = neutron_utils.create_security_group_rule(self._neutron,
                                                             rule_setting)
         self.__rules[rule_setting] = new_rule
         self.sec_grp_settings.rule_settings.append(rule_setting)
@@ -187,12 +190,12 @@ class OpenStackSecurityGroup:
         if rule_id or rule_setting:
             if rule_id:
                 rule_to_remove = neutron_utils.get_rule_by_id(
-                    self.__neutron, self.__security_group, rule_id)
+                    self._neutron, self.__security_group, rule_id)
             elif rule_setting:
                 rule_to_remove = self.__rules.get(rule_setting)
 
         if rule_to_remove:
-            neutron_utils.delete_security_group_rule(self.__neutron,
+            neutron_utils.delete_security_group_rule(self._neutron,
                                                      rule_to_remove)
             rule_setting = self.__get_setting_from_rule(rule_to_remove)
             if rule_setting:

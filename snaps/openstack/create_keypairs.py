@@ -19,6 +19,7 @@ from neutronclient.common.utils import str2bool
 from novaclient.exceptions import NotFound
 
 from snaps import file_utils
+from snaps.openstack.openstack_creator import OpenStackComputeObject
 from snaps.openstack.utils import nova_utils
 
 __author__ = 'spisarski'
@@ -26,9 +27,9 @@ __author__ = 'spisarski'
 logger = logging.getLogger('OpenStackKeypair')
 
 
-class OpenStackKeypair:
+class OpenStackKeypair(OpenStackComputeObject):
     """
-    Class responsible for creating a keypair in OpenStack
+    Class responsible for managing a keypair in OpenStack
     """
 
     def __init__(self, os_creds, keypair_settings):
@@ -37,38 +38,43 @@ class OpenStackKeypair:
         :param os_creds: The credentials to connect with OpenStack
         :param keypair_settings: The settings used to create a keypair
         """
-        self.__nova = None
-        self.__os_creds = os_creds
+        super(self.__class__, self).__init__(os_creds)
+
         self.keypair_settings = keypair_settings
-        self.__nova = nova_utils.nova_client(os_creds)
         self.__delete_keys_on_clean = True
 
         # Attributes instantiated on create()
         self.__keypair = None
 
-    def create(self, cleanup=False):
+    def initialize(self):
         """
-        Responsible for creating the keypair object.
-        :param cleanup: Denotes whether or not this is being called for cleanup
-                        or not
+        Loads the existing OpenStack Keypair
+        :return: The Keypair domain object or None
         """
-        self.__nova = nova_utils.nova_client(self.__os_creds)
-
-        logger.info('Creating keypair %s...' % self.keypair_settings.name)
+        super(self.__class__, self).initialize()
 
         try:
             self.__keypair = nova_utils.get_keypair_by_name(
-                self.__nova, self.keypair_settings.name)
+                self._nova, self.keypair_settings.name)
+            return self.__keypair
         except Exception as e:
             logger.warn('Cannot load existing keypair - %s', e)
-            return
 
-        if not self.__keypair and not cleanup:
+    def create(self):
+        """
+        Responsible for creating the keypair object.
+        :return: The Keypair domain object or None
+        """
+        self.initialize()
+
+        if not self.__keypair:
+            logger.info('Creating keypair %s...' % self.keypair_settings.name)
+
             if self.keypair_settings.public_filepath and os.path.isfile(
                     self.keypair_settings.public_filepath):
                 logger.info("Uploading existing keypair")
                 self.__keypair = nova_utils.upload_keypair_file(
-                    self.__nova, self.keypair_settings.name,
+                    self._nova, self.keypair_settings.name,
                     self.keypair_settings.public_filepath)
 
                 if self.keypair_settings.delete_on_clean is not None:
@@ -80,7 +86,7 @@ class OpenStackKeypair:
                 logger.info("Creating new keypair")
                 keys = nova_utils.create_keys(self.keypair_settings.key_size)
                 self.__keypair = nova_utils.upload_keypair(
-                    self.__nova, self.keypair_settings.name,
+                    self._nova, self.keypair_settings.name,
                     nova_utils.public_key_openssh(keys))
                 file_utils.save_keys_to_files(
                     keys, self.keypair_settings.public_filepath,
@@ -104,7 +110,7 @@ class OpenStackKeypair:
         """
         if self.__keypair:
             try:
-                nova_utils.delete_keypair(self.__nova, self.__keypair)
+                nova_utils.delete_keypair(self._nova, self.__keypair)
             except NotFound:
                 pass
             self.__keypair = None

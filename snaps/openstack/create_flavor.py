@@ -16,6 +16,7 @@ import logging
 
 from novaclient.exceptions import NotFound
 
+from snaps.openstack.openstack_creator import OpenStackComputeObject
 from snaps.openstack.utils import nova_utils
 
 __author__ = 'spisarski'
@@ -26,7 +27,7 @@ MEM_PAGE_SIZE_ANY = {'hw:mem_page_size': 'any'}
 MEM_PAGE_SIZE_LARGE = {'hw:mem_page_size': 'large'}
 
 
-class OpenStackFlavor:
+class OpenStackFlavor(OpenStackComputeObject):
     """
     Class responsible for creating a user in OpenStack
     """
@@ -38,29 +39,36 @@ class OpenStackFlavor:
         :param flavor_settings: The flavor settings
         :return:
         """
-        self.__os_creds = os_creds
+        super(self.__class__, self).__init__(os_creds)
+
         self.flavor_settings = flavor_settings
         self.__flavor = None
-        self.__nova = None
 
-    def create(self, cleanup=False):
+    def initialize(self):
+        """
+        Loads the existing OpenStack flavor
+        :return: The Flavor domain object or None
+        """
+        super(self.__class__, self).initialize()
+
+        self.__flavor = nova_utils.get_flavor_by_name(
+            self._nova, self.flavor_settings.name)
+        if self.__flavor:
+            logger.info('Found flavor with name - %s',
+                        self.flavor_settings.name)
+        return self.__flavor
+
+    def create(self):
         """
         Creates the image in OpenStack if it does not already exist
-        :param cleanup: Denotes whether or not this is being called for cleanup
-                        or not
         :return: The OpenStack flavor object
         """
-        self.__nova = nova_utils.nova_client(self.__os_creds)
-        self.__flavor = nova_utils.get_flavor_by_name(
-            self.__nova, self.flavor_settings.name)
-        if self.__flavor:
-            logger.info(
-                'Found flavor with name - ' + self.flavor_settings.name)
-        elif not cleanup:
+        self.initialize()
+        if not self.__flavor:
             self.__flavor = nova_utils.create_flavor(
-                self.__nova, self.flavor_settings)
+                self._nova, self.flavor_settings)
             if self.flavor_settings.metadata:
-                nova_utils.set_flavor_keys(self.__nova, self.__flavor,
+                nova_utils.set_flavor_keys(self._nova, self.__flavor,
                                            self.flavor_settings.metadata)
         else:
             logger.info('Did not create flavor due to cleanup mode')
@@ -74,7 +82,7 @@ class OpenStackFlavor:
         """
         if self.__flavor:
             try:
-                nova_utils.delete_flavor(self.__nova, self.__flavor)
+                nova_utils.delete_flavor(self._nova, self.__flavor)
             except NotFound:
                 pass
 

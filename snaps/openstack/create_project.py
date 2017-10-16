@@ -16,6 +16,7 @@ import logging
 
 from keystoneclient.exceptions import NotFound, Conflict
 
+from snaps.openstack.openstack_creator import OpenStackIdentityObject
 from snaps.openstack.utils import keystone_utils, neutron_utils, nova_utils
 
 __author__ = 'spisarski'
@@ -23,9 +24,9 @@ __author__ = 'spisarski'
 logger = logging.getLogger('create_image')
 
 
-class OpenStackProject:
+class OpenStackProject(OpenStackIdentityObject):
     """
-    Class responsible for creating a project/project in OpenStack
+    Class responsible for managing a project/project in OpenStack
     """
 
     def __init__(self, os_creds, project_settings):
@@ -35,38 +36,42 @@ class OpenStackProject:
         :param project_settings: The project's settings
         :return:
         """
-        self.__os_creds = os_creds
+        super(self.__class__, self).__init__(os_creds)
+
         self.project_settings = project_settings
         self.__project = None
         self.__role = None
-        self.__keystone = None
         self.__role_name = self.project_settings.name + '-role'
 
-    def create(self, cleanup=False):
+    def initialize(self):
         """
-        Creates the image in OpenStack if it does not already exist
-        :param cleanup: Denotes whether or not this is being called for cleanup
-        :return: The OpenStack Image object
+        Loads the existing Project object if it exists
+        :return: The Project domain object
         """
-        self.__keystone = keystone_utils.keystone_client(self.__os_creds)
+        super(self.__class__, self).initialize()
+
         self.__project = keystone_utils.get_project(
-            keystone=self.__keystone, project_settings=self.project_settings)
-        if self.__project:
-            logger.info(
-                'Found project with name - ' + self.project_settings.name)
-        elif not cleanup:
+            keystone=self._keystone, project_settings=self.project_settings)
+        return self.__project
+
+    def create(self):
+        """
+        Creates a Project/Tenant in OpenStack if it does not already exist
+        :return: The Project domain object
+        """
+        self.initialize()
+
+        if not self.__project:
             self.__project = keystone_utils.create_project(
-                self.__keystone, self.project_settings)
+                self._keystone, self.project_settings)
             for username in self.project_settings.users:
-                user = keystone_utils.get_user(self.__keystone, username)
+                user = keystone_utils.get_user(self._keystone, username)
                 if user:
                     try:
                         self.assoc_user(user)
                     except Conflict as e:
                         logger.warn('Unable to associate user %s due to %s',
                                     user.name, e)
-        else:
-            logger.info('Did not create image due to cleanup mode')
 
         return self.__project
 
@@ -77,7 +82,7 @@ class OpenStackProject:
         """
         if self.__project:
             # Delete security group 'default' if exists
-            neutron = neutron_utils.neutron_client(self.__os_creds)
+            neutron = neutron_utils.neutron_client(self._os_creds)
             default_sec_grp = neutron_utils.get_security_group(
                 neutron, sec_grp_name='default',
                 project_id=self.__project.id)
@@ -90,23 +95,23 @@ class OpenStackProject:
 
             # Delete Project
             try:
-                keystone_utils.delete_project(self.__keystone, self.__project)
+                keystone_utils.delete_project(self._keystone, self.__project)
             except NotFound:
                 pass
             self.__project = None
 
         if self.__role:
             try:
-                keystone_utils.delete_role(self.__keystone, self.__role)
+                keystone_utils.delete_role(self._keystone, self.__role)
             except NotFound:
                 pass
             self.__project = None
 
         # Final role check in case init was done from an existing instance
         role = keystone_utils.get_role_by_name(
-            self.__keystone, self.__role_name)
+            self._keystone, self.__role_name)
         if role:
-            keystone_utils.delete_role(self.__keystone, role)
+            keystone_utils.delete_role(self._keystone, role)
 
     def get_project(self):
         """
@@ -123,12 +128,12 @@ class OpenStackProject:
         """
         if not self.__role:
             self.__role = keystone_utils.get_role_by_name(
-                self.__keystone, self.__role_name)
+                self._keystone, self.__role_name)
             if not self.__role:
                 self.__role = keystone_utils.create_role(
-                    self.__keystone, self.__role_name)
+                    self._keystone, self.__role_name)
 
-        keystone_utils.grant_user_role_to_project(self.__keystone, self.__role,
+        keystone_utils.grant_user_role_to_project(self._keystone, self.__role,
                                                   user, self.__project)
 
     def get_compute_quotas(self):
@@ -136,7 +141,7 @@ class OpenStackProject:
         Returns the compute quotas as an instance of the ComputeQuotas class
         :return:
         """
-        nova = nova_utils.nova_client(self.__os_creds)
+        nova = nova_utils.nova_client(self._os_creds)
         return nova_utils.get_compute_quotas(nova, self.__project.id)
 
     def get_network_quotas(self):
@@ -144,7 +149,7 @@ class OpenStackProject:
         Returns the network quotas as an instance of the NetworkQuotas class
         :return:
         """
-        neutron = neutron_utils.neutron_client(self.__os_creds)
+        neutron = neutron_utils.neutron_client(self._os_creds)
         return neutron_utils.get_network_quotas(neutron, self.__project.id)
 
     def update_compute_quotas(self, compute_quotas):
@@ -152,7 +157,7 @@ class OpenStackProject:
         Updates the compute quotas for this project
         :param compute_quotas: a ComputeQuotas object.
         """
-        nova = nova_utils.nova_client(self.__os_creds)
+        nova = nova_utils.nova_client(self._os_creds)
         nova_utils.update_quotas(nova, self.__project.id, compute_quotas)
 
     def update_network_quotas(self, network_quotas):
@@ -160,7 +165,7 @@ class OpenStackProject:
         Updates the network quotas for this project
         :param network_quotas: a NetworkQuotas object.
         """
-        neutron = neutron_utils.neutron_client(self.__os_creds)
+        neutron = neutron_utils.neutron_client(self._os_creds)
         neutron_utils.update_quotas(neutron, self.__project.id, network_quotas)
 
 
