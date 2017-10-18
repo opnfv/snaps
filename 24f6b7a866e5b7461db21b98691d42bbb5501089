@@ -2,6 +2,74 @@
   "comments": [
     {
       "key": {
+        "uuid": "9a3d3df0_7b5f230f",
+        "filename": "snaps/openstack/create_stack.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-10-18T21:05:51Z",
+      "side": 1,
+      "message": "Please move the return and nest under the \u0027else\u0027 block. No need to add a return to the end of the method.",
+      "revId": "24f6b7a866e5b7461db21b98691d42bbb5501089",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_3b659be1",
+        "filename": "snaps/openstack/tests/create_stack_tests.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-10-18T21:05:51Z",
+      "side": 1,
+      "message": "not pep8 compliant (although I do hate the 79 character rule). Please wrap imported classes in parentheses. see test_suite_builder.py for a sample.",
+      "revId": "24f6b7a866e5b7461db21b98691d42bbb5501089",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_fb7333af",
+        "filename": "snaps/openstack/tests/create_stack_tests.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 529,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-10-18T21:05:51Z",
+      "side": 1,
+      "message": "create() will not raise a StackCreationError here. With your template, HTTPBadRequest or BadRequest would be thrown here which will not help you out. You will need a template that will timeout on the  which will timeout on the call in OpenStackHeatStack#stack_complete(block\u003dTrue).",
+      "revId": "24f6b7a866e5b7461db21b98691d42bbb5501089",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_1b6ff7c6",
+        "filename": "snaps/openstack/tests/heat/test_heat_negative_template.yaml",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-10-18T21:05:51Z",
+      "side": 1,
+      "message": "Remove this which is the root cause of your parsing problem.",
+      "revId": "24f6b7a866e5b7461db21b98691d42bbb5501089",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_0979762f",
         "filename": "snaps/openstack/utils/heat_utils.py",
         "patchSetId": 4
@@ -13,6 +81,24 @@
       "writtenOn": "2017-10-18T13:24:30Z",
       "side": 1,
       "message": "CI says you either found or introduced a bug here.",
+      "revId": "24f6b7a866e5b7461db21b98691d42bbb5501089",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_db9bcfc7",
+        "filename": "snaps/openstack/utils/heat_utils.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-10-18T21:05:51Z",
+      "side": 1,
+      "message": "No need to change any code here. Just fix your template and this one will go away.",
+      "parentUuid": "9a3d3df0_0979762f",
       "revId": "24f6b7a866e5b7461db21b98691d42bbb5501089",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
