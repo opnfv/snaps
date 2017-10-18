@@ -14,6 +14,65 @@
 # limitations under the License.
 
 
+class VolumeType:
+    """
+    SNAPS domain object for Volume Types. Should contain attributes that
+    are shared amongst cloud providers
+    """
+    def __init__(self, name, volume_type_id, public, encryption, qos_spec):
+        """
+        Constructor
+        :param name: the volume's name
+        :param volume_type_id: the volume type's id
+        :param public: True if public
+        :param encryption: instance of a VolumeTypeEncryption domain object
+        :param qos_spec: instance of a QoSSpec domain object
+        """
+        self.name = name
+        self.id = volume_type_id
+        self.public = public
+        self.encryption = encryption
+        self.qos_spec = qos_spec
+
+    def __eq__(self, other):
+        return (self.name == other.name and self.id == other.id
+                and self.public == other.public
+                and self.encryption == other.encryption
+                and self.qos_spec == other.qos_spec)
+
+
+class VolumeTypeEncryption:
+    """
+    SNAPS domain object for Volume Types. Should contain attributes that
+    are shared amongst cloud providers
+    """
+    def __init__(self, volume_encryption_id, volume_type_id,
+                 control_location, provider, cipher, key_size):
+        """
+        Constructor
+        :param volume_encryption_id: the encryption id
+        :param volume_type_id: the associated volume type's id
+        :param control_location: front-end | back-end
+        :param provider: the encryption provider class
+        :param cipher: the encryption cipher
+        :param key_size: the encryption key size
+        """
+        self.id = volume_encryption_id
+        self.volume_type_id = volume_type_id
+        self.control_location = control_location
+        self.provider = provider
+        self.cipher = cipher
+        self.key_size = key_size
+
+    def __eq__(self, other):
+        return (self.id == other.id
+                and self.volume_type_id == other.volume_type_id
+                and self.control_location == other.control_location
+                and self.provider == other.provider
+                and self.cipher == other.cipher
+                and self.key_size == other.key_size)
+
+
 class QoSSpec:
     """
     SNAPS domain object for Volume Types. Should contain attributes that

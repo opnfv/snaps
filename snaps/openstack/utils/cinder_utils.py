@@ -15,15 +15,15 @@
 import logging
 
 from cinderclient.client import Client
+from cinderclient.exceptions import NotFound
 
-from snaps.domain.volume import QoSSpec
+from snaps.domain.volume import QoSSpec, VolumeType, VolumeTypeEncryption
 from snaps.openstack.utils import keystone_utils
 
 __author__ = 'spisarski'
 
 logger = logging.getLogger('cinder_utils')
 
-VERSION_1 = 1
 VERSION_2 = 2
 VERSION_3 = 3
 
@@ -42,7 +42,172 @@ def cinder_client(os_creds):
                   region_name=os_creds.region_name)
 
 
-def get_qos(cinder, qos_name=None, qos_settings=None):
+def get_volume_type(cinder, volume_type_name=None, volume_type_settings=None):
+    """
+    Returns an OpenStack volume type object for a given name
+    :param cinder: the Cinder client
+    :param volume_type_name: the volume type name to lookup
+    :param volume_type_settings: the volume type settings used for lookups
+    :return: the volume type object or None
+    """
+    if not volume_type_name and not volume_type_settings:
+        return None
+
+    if volume_type_settings:
+        volume_type_name = volume_type_settings.name
+
+    volume_types = cinder.volume_types.list()
+    for vol_type in volume_types:
+        if vol_type.name == volume_type_name:
+            encryption = get_volume_encryption_by_type(cinder, vol_type)
+            return VolumeType(vol_type.name, vol_type.id, vol_type.is_public,
+                              encryption, None)
+
+
+def __get_os_volume_type_by_id(cinder, volume_type_id):
+    """
+    Returns an OpenStack volume type object for a given name
+    :param cinder: the Cinder client
+    :param volume_type_id: the volume_type ID to lookup
+    :return: the SNAPS-OO Domain Volume object or None
+    """
+    try:
+        return cinder.volume_types.get(volume_type_id)
+    except NotFound:
+        logger.info('Volume with ID [%s] does not exist',
+                    volume_type_id)
+
+
+def get_volume_type_by_id(cinder, volume_type_id):
+    """
+    Returns an OpenStack volume type object for a given name
+    :param cinder: the Cinder client
+    :param volume_type_id: the volume_type ID to lookup
+    :return: the SNAPS-OO Domain Volume object or None
+    """
+    os_vol_type = __get_os_volume_type_by_id(cinder, volume_type_id)
+    if os_vol_type:
+        temp_vol_type = VolumeType(os_vol_type.name, os_vol_type.id,
+                                   os_vol_type.is_public, None, None)
+        encryption = get_volume_encryption_by_type(cinder, temp_vol_type)
+
+        qos_spec = None
+        if os_vol_type.qos_specs_id:
+            qos_spec = get_qos_by_id(cinder, os_vol_type.qos_specs_id)
+
+        return VolumeType(os_vol_type.name, os_vol_type.id,
+                          os_vol_type.is_public, encryption, qos_spec)
+
+
+def create_volume_type(cinder, type_settings):
+    """
+    Creates and returns OpenStack volume type object with an external URL
+    :param cinder: the cinder client
+    :param type_settings: the volume type settings object
+    :return: the volume type domain object
+    :raise Exception if using a file and it cannot be found
+    """
+    vol_type = cinder.volume_types.create(
+        type_settings.name, type_settings.description,
+        type_settings.public)
+
+    vol_encryption = None
+    if type_settings.encryption:
+        try:
+            vol_encryption = create_volume_encryption(
+                cinder, vol_type, type_settings.encryption)
+        except Exception as e:
+            logger.warn('Error creating volume encryption - %s', e)
+
+    qos_spec = None
+    if type_settings.qos_spec_name:
+        try:
+            qos_spec = get_qos(cinder, qos_name=type_settings.qos_spec_name)
+            cinder.qos_specs.associate(qos_spec, vol_type.id)
+        except NotFound as e:
+            logger.warn('Unable to locate qos_spec named %s - %s',
+                        type_settings.qos_spec_name, e)
+
+    return VolumeType(vol_type.name, vol_type.id, vol_type.is_public,
+                      vol_encryption, qos_spec)
+
+
+def delete_volume_type(cinder, vol_type):
+    """
+    Deletes an volume from OpenStack
+    :param cinder: the cinder client
+    :param vol_type: the VolumeType domain object
+    """
+    logger.info('Deleting volume named - %s', vol_type.name)
+    cinder.volume_types.delete(vol_type.id)
+
+
+def get_volume_encryption_by_type(cinder, volume_type):
+    """
+    Returns an OpenStack volume type object for a given name
+    :param cinder: the Cinder client
+    :param volume_type: the VolumeType domain object
+    :return: the VolumeEncryption domain object or None
+    """
+    os_vol_type = __get_os_volume_type_by_id(cinder, volume_type.id)
+    encryption = cinder.volume_encryption_types.get(os_vol_type)
+    if hasattr(encryption, 'encryption_id'):
+        cipher = None
+        if hasattr(encryption, 'cipher'):
+            cipher = encryption.cipher
+        key_size = None
+        if hasattr(encryption, 'key_size'):
+            key_size = encryption.key_size
+        return VolumeTypeEncryption(
+            encryption.encryption_id, encryption.volume_type_id,
+            encryption.control_location, encryption.provider, cipher, key_size)
+
+
+def create_volume_encryption(cinder, volume_type, encryption_settings):
+    """
+    Creates and returns OpenStack volume type object with an external URL
+    :param cinder: the cinder client
+    :param volume_type: the VolumeType object to associate the encryption
+    :param encryption_settings: the volume type encryption settings object
+    :return: the VolumeTypeEncryption domain object
+    """
+    specs = {'name': encryption_settings.name,
+             'provider': encryption_settings.provider_class}
+    if encryption_settings.key_size:
+        specs['key_size'] = encryption_settings.key_size
+    if encryption_settings.provider_class:
+        specs['provider_class'] = encryption_settings.provider_class
+    if encryption_settings.control_location:
+        specs['control_location'] = encryption_settings.control_location.value
+    if encryption_settings.cipher:
+        specs['cipher'] = encryption_settings.cipher
+
+    encryption = cinder.volume_encryption_types.create(volume_type.id, specs)
+
+    cipher = None
+    if hasattr(encryption, 'cipher'):
+        cipher = encryption.cipher
+    key_size = None
+    if hasattr(encryption, 'key_size'):
+        key_size = encryption.key_size
+    return VolumeTypeEncryption(
+        encryption.encryption_id, encryption.volume_type_id,
+        encryption.control_location, encryption.provider, cipher, key_size)
+
+
+def delete_volume_type_encryption(cinder, vol_type):
+    """
+    Deletes an volume from OpenStack
+    :param cinder: the cinder client
+    :param vol_type: the associated VolumeType domain object
+    """
+    logger.info('Deleting volume encryption for volume type - %s',
+                vol_type.name)
+    os_vol_type = __get_os_volume_type_by_id(cinder, vol_type.id)
+    cinder.volume_encryption_types.delete(os_vol_type)
+
+
+def __get_os_qos(cinder, qos_name=None, qos_settings=None):
     """
     Returns an OpenStack QoS object for a given name
     :param cinder: the Cinder client
@@ -53,20 +218,27 @@ def get_qos(cinder, qos_name=None, qos_settings=None):
     if not qos_name and not qos_settings:
         return None
 
-    qos_name = qos_name
     if qos_settings:
         qos_name = qos_settings.name
 
     qoss = cinder.qos_specs.list()
     for qos in qoss:
         if qos.name == qos_name:
-            if qos_settings:
-                if qos_settings.consumer.value == qos.consumer:
-                    return QoSSpec(name=qos.name, spec_id=qos.id,
-                                   consumer=qos.consumer)
-            else:
-                return QoSSpec(name=qos.name, spec_id=qos.id,
-                               consumer=qos.consumer)
+            return qos
+
+
+def get_qos(cinder, qos_name=None, qos_settings=None):
+    """
+    Returns an OpenStack QoS object for a given name
+    :param cinder: the Cinder client
+    :param qos_name: the qos name to lookup
+    :param qos_settings: the qos settings used for lookups
+    :return: the qos object or None
+    """
+    os_qos = __get_os_qos(cinder, qos_name, qos_settings)
+    if os_qos:
+        return QoSSpec(name=os_qos.name, spec_id=os_qos.id,
+                       consumer=os_qos.consumer)
 
 
 def get_qos_by_id(cinder, qos_id):
@@ -102,9 +274,3 @@ def delete_qos(cinder, qos):
     """
     logger.info('Deleting QoS named - %s', qos.name)
     cinder.qos_specs.delete(qos.id)
-
-
-class CinderException(Exception):
-    """
-    Exception when calls to the Cinder client cannot be served properly
-    """

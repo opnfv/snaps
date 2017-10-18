@@ -14,7 +14,68 @@
 # limitations under the License.
 
 import unittest
-from snaps.domain.volume import QoSSpec
+from snaps.domain.volume import QoSSpec, VolumeType, VolumeTypeEncryption
+
+
+class VolumeTypeDomainObjectTests(unittest.TestCase):
+    """
+    Tests the construction of the snaps.domain.volume.VolumeType class
+    """
+
+    def test_construction_positional(self):
+        encryption = VolumeTypeEncryption(
+            'id-encrypt1', 'id-vol-type1', 'loc1', 'provider1', 'cipher1', 99)
+        qos_spec = QoSSpec('name', 'id', 'consumer')
+
+        volume_type = VolumeType('name', 'id', True, encryption, qos_spec)
+        self.assertEqual('name', volume_type.name)
+        self.assertEqual('id', volume_type.id)
+        self.assertTrue(volume_type.public)
+        self.assertEqual(encryption, volume_type.encryption)
+        self.assertEqual(qos_spec, volume_type.qos_spec)
+
+    def test_construction_named(self):
+        encryption = VolumeTypeEncryption(
+            'id-encrypt1', 'id-vol-type1', 'loc1', 'provider1', 'cipher1', 99)
+        qos_spec = QoSSpec('name', 'id', 'consumer')
+
+        volume_type = VolumeType(
+            qos_spec=qos_spec, encryption=encryption, volume_type_id='id',
+            name='name', public='true')
+        self.assertEqual('name', volume_type.name)
+        self.assertEqual('id', volume_type.id)
+        self.assertTrue(volume_type.public)
+        self.assertEqual(encryption, volume_type.encryption)
+        self.assertEqual(qos_spec, volume_type.qos_spec)
+
+
+class VolumeTypeEncryptionObjectTests(unittest.TestCase):
+    """
+    Tests the construction of the snaps.domain.volume.VolumeTypeEncryption
+    class
+    """
+
+    def test_construction_positional(self):
+        encryption = VolumeTypeEncryption(
+            'id-encrypt1', 'id-vol-type1', 'loc1', 'provider1', 'cipher1', 99)
+        self.assertEqual('id-encrypt1', encryption.id)
+        self.assertEqual('id-vol-type1', encryption.volume_type_id)
+        self.assertEqual('loc1', encryption.control_location)
+        self.assertEqual('provider1', encryption.provider)
+        self.assertEqual('cipher1', encryption.cipher)
+        self.assertEqual(99, encryption.key_size)
+
+    def test_construction_named(self):
+        encryption = VolumeTypeEncryption(
+            key_size=89, cipher='cipher2', provider='provider2',
+            control_location='loc2', volume_type_id='id-vol-type2',
+            volume_encryption_id='id-encrypt2')
+        self.assertEqual('id-encrypt2', encryption.id)
+        self.assertEqual('id-vol-type2', encryption.volume_type_id)
+        self.assertEqual('loc2', encryption.control_location)
+        self.assertEqual('provider2', encryption.provider)
+        self.assertEqual('cipher2', encryption.cipher)
+        self.assertEqual(89, encryption.key_size)
 
 
 class QoSSpecDomainObjectTests(unittest.TestCase):
