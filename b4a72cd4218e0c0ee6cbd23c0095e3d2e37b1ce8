@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_7b8d637b",
+        "filename": "snaps/openstack/create_stack.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-10-18T21:19:34Z",
+      "side": 1,
+      "message": "The way this test was able to drop into this block is by changing the timeout value to 0; however, the message returned basically says it is creating. Also, I think you will want to add a logger.error() line above the \u0027raise\u0027 to ensure that the message is properly logged...",
+      "revId": "b4a72cd4218e0c0ee6cbd23c0095e3d2e37b1ce8",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
