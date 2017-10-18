@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_0979762f",
+        "filename": "snaps/openstack/utils/heat_utils.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-10-18T13:24:30Z",
+      "side": 1,
+      "message": "CI says you either found or introduced a bug here.",
+      "revId": "24f6b7a866e5b7461db21b98691d42bbb5501089",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
