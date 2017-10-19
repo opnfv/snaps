@@ -496,6 +496,4 @@ def add_openstack_staging_tests(suite, os_creds, ext_net_name,
         ext_net_name=ext_net_name, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
             CreateInstancePubPrivNetTests, os_creds=os_creds,
-            ext_net_name=ext_net_name, use_keystone=use_keystone,
-            flavor_metadata=flavor_metadata, image_metadata=image_metadata,
-            log_level=log_level))
+            ext_net_name=ext_net_name, log_level=log_level))
