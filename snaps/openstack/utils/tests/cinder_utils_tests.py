@@ -15,9 +15,12 @@
 import logging
 import uuid
 
+import time
 from cinderclient.exceptions import NotFound, BadRequest
 
+from snaps.openstack import create_volume
 from snaps.openstack.create_qos import QoSSettings, Consumer
+from snaps.openstack.create_volume import VolumeSettings
 from snaps.openstack.create_volume_type import (
     VolumeTypeSettings, VolumeTypeEncryptionSettings, ControlLocation)
 from snaps.openstack.tests import validation_utils
@@ -55,6 +58,113 @@ class CinderSmokeTests(OSComponentTestCase):
                 username='user', password='pass', auth_url='url',
                 project_name='project'))
             cinder.volumes.list()
+
+
+class CinderUtilsVolumeTests(OSComponentTestCase):
+    """
+    Test for the CreateVolume class defined in create_volume.py
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateVolume object that is responsible for
+        downloading and creating an OS volume file within OpenStack
+        """
+        guid = uuid.uuid4()
+        self.volume_name = self.__class__.__name__ + '-' + str(guid)
+        self.volume = None
+        self.cinder = cinder_utils.cinder_client(self.os_creds)
+
+    def tearDown(self):
+        """
+        Cleans the remote OpenStack objects
+        """
+        if self.volume:
+            try:
+                cinder_utils.delete_volume(self.cinder, self.volume)
+            except NotFound:
+                pass
+
+        self.assertTrue(volume_deleted(self.cinder, self.volume))
+
+    def test_create_simple_volume(self):
+        """
+        Tests the cinder_utils.create_volume()
+        """
+        volume_settings = VolumeSettings(name=self.volume_name)
+        self.volume = cinder_utils.create_volume(
+            self.cinder, volume_settings)
+        self.assertIsNotNone(self.volume)
+        self.assertEqual(self.volume_name, self.volume.name)
+
+        self.assertTrue(volume_active(self.cinder, self.volume))
+
+        volume = cinder_utils.get_volume(
+            self.cinder, volume_settings=volume_settings)
+        self.assertIsNotNone(volume)
+        validation_utils.objects_equivalent(self.volume, volume)
+
+    def test_create_delete_volume(self):
+        """
+        Tests the cinder_utils.create_volume()
+        """
+        volume_settings = VolumeSettings(name=self.volume_name)
+        self.volume = cinder_utils.create_volume(
+            self.cinder, volume_settings)
+        self.assertIsNotNone(self.volume)
+        self.assertEqual(self.volume_name, self.volume.name)
+
+        self.assertTrue(volume_active(self.cinder, self.volume))
+
+        volume = cinder_utils.get_volume(
+            self.cinder, volume_settings=volume_settings)
+        self.assertIsNotNone(volume)
+        validation_utils.objects_equivalent(self.volume, volume)
+
+        cinder_utils.delete_volume(self.cinder, self.volume)
+        self.assertTrue(volume_deleted(self.cinder, self.volume))
+        self.assertIsNone(
+            cinder_utils.get_volume(self.cinder, volume_settings))
+
+
+def volume_active(cinder, volume):
+    """
+    Returns true if volume becomes active
+    :param cinder:
+    :param volume:
+    :return:
+    """
+    end_time = time.time() + create_volume.VOLUME_ACTIVE_TIMEOUT
+    while time.time() < end_time:
+        status = cinder_utils.get_volume_status(cinder, volume)
+        if status == create_volume.STATUS_ACTIVE:
+            return True
+        elif status == create_volume.STATUS_FAILED:
+            return False
+        time.sleep(3)
+
+    return False
+
+
+def volume_deleted(cinder, volume):
+    """
+    Returns true if volume becomes active
+    :param cinder:
+    :param volume:
+    :return:
+    """
+    end_time = time.time() + create_volume.VOLUME_ACTIVE_TIMEOUT
+    while time.time() < end_time:
+        try:
+            status = cinder_utils.get_volume_status(cinder, volume)
+            if status == create_volume.STATUS_DELETED:
+                return True
+        except NotFound:
+            return True
+
+        time.sleep(3)
+
+    return False
 
 
 class CinderUtilsQoSTests(OSComponentTestCase):

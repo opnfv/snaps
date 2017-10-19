@@ -14,6 +14,40 @@
 # limitations under the License.
 
 
+class Volume:
+    """
+    SNAPS domain object for Volumes. Should contain attributes that
+    are shared amongst cloud providers
+    """
+    def __init__(self, name, volume_id, description, size, vol_type,
+                 availability_zone, multi_attach):
+        """
+        Constructor
+        :param name: the volume's name
+        :param volume_id: the volume's id
+        :param description: the volume's description
+        :param size: the volume's size in GB
+        :param vol_type: the volume's type
+        :param availability_zone: the volume's availability zone
+        :param multi_attach: When true, volume can be attached to multiple VMs
+        """
+        self.name = name
+        self.id = volume_id
+        self.description = description
+        self.size = size
+        self.type = vol_type
+        self.availability_zone = availability_zone
+        self.multi_attach = multi_attach
+
+    def __eq__(self, other):
+        return (self.name == other.name and self.id == other.id
+                and self.description == other.description
+                and self.size == other.size
+                and self.type == other.type
+                and self.availability_zone == other.availability_zone
+                and self.multi_attach == other.multi_attach)
+
+
 class VolumeType:
     """
     SNAPS domain object for Volume Types. Should contain attributes that

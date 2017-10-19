@@ -34,7 +34,7 @@ from snaps.domain.test.vm_inst_tests import (
     VmInstDomainObjectTests, FloatingIpDomainObjectTests)
 from snaps.domain.test.volume_tests import (
     QoSSpecDomainObjectTests, VolumeTypeDomainObjectTests,
-    VolumeTypeEncryptionObjectTests)
+    VolumeTypeEncryptionObjectTests, VolumeDomainObjectTests)
 from snaps.openstack.tests.conf.os_credentials_tests import (
     ProxySettingsUnitTests, OSCredsUnitTests)
 from snaps.openstack.tests.create_flavor_tests import (
@@ -70,6 +70,9 @@ from snaps.openstack.tests.create_stack_tests import (
     CreateComplexStackTests)
 from snaps.openstack.tests.create_user_tests import (
     UserSettingsUnitTests, CreateUserSuccessTests)
+from snaps.openstack.tests.create_volume_tests import (
+    VolumeSettingsUnitTests, CreateSimpleVolumeSuccessTests,
+    CreateVolumeWithTypeTests, CreateVolumeWithImageTests)
 from snaps.openstack.tests.create_volume_type_tests import (
     VolumeTypeSettingsUnitTests, CreateSimpleVolumeTypeSuccessTests,
     CreateVolumeTypeComplexTests)
@@ -77,7 +80,8 @@ from snaps.openstack.tests.os_source_file_test import (
     OSComponentTestCase, OSIntegrationTestCase)
 from snaps.openstack.utils.tests.cinder_utils_tests import (
     CinderSmokeTests, CinderUtilsQoSTests, CinderUtilsSimpleVolumeTypeTests,
-    CinderUtilsAddEncryptionTests, CinderUtilsVolumeTypeCompleteTests)
+    CinderUtilsAddEncryptionTests, CinderUtilsVolumeTypeCompleteTests,
+    CinderUtilsVolumeTests)
 from snaps.openstack.utils.tests.glance_utils_tests import (
     GlanceSmokeTests, GlanceUtilsTests)
 from snaps.openstack.utils.tests.heat_utils_tests import (
@@ -179,6 +183,8 @@ def add_unit_tests(suite):
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         VolumeTypeEncryptionObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        VolumeDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         QoSSpecDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         VmInstDomainObjectTests))
@@ -188,6 +194,8 @@ def add_unit_tests(suite):
         QoSSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         VolumeTypeSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        VolumeSettingsUnitTests))
 
 
 def add_openstack_client_tests(suite, os_creds, ext_net_name,
@@ -312,6 +320,10 @@ def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True,
         ext_net_name=ext_net_name, log_level=log_level,
         image_metadata=image_metadata))
     suite.addTest(OSComponentTestCase.parameterize(
+        CinderUtilsVolumeTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, log_level=log_level,
+        image_metadata=image_metadata))
+    suite.addTest(OSComponentTestCase.parameterize(
         CinderUtilsSimpleVolumeTypeTests, os_creds=os_creds,
         ext_net_name=ext_net_name, log_level=log_level,
         image_metadata=image_metadata))
@@ -414,6 +426,21 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
         log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
         CreateVolumeTypeComplexTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateSimpleVolumeSuccessTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateVolumeWithTypeTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateVolumeWithImageTests, os_creds=os_creds,
         ext_net_name=ext_net_name, use_keystone=use_keystone,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))

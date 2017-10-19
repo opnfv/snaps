@@ -56,7 +56,7 @@ class OpenStackVolumeType(OpenStackVolumeObject):
 
         return self.__volume_type
 
-    def create(self, block=False):
+    def create(self):
         """
         Creates the volume in OpenStack if it does not already exist and
         returns the domain Volume object

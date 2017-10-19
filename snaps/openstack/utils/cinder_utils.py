@@ -17,7 +17,8 @@ import logging
 from cinderclient.client import Client
 from cinderclient.exceptions import NotFound
 
-from snaps.domain.volume import QoSSpec, VolumeType, VolumeTypeEncryption
+from snaps.domain.volume import (
+    QoSSpec, VolumeType, VolumeTypeEncryption, Volume)
 from snaps.openstack.utils import keystone_utils
 
 __author__ = 'spisarski'
@@ -40,6 +41,87 @@ def cinder_client(os_creds):
     return Client(version=os_creds.volume_api_version,
                   session=keystone_utils.keystone_session(os_creds),
                   region_name=os_creds.region_name)
+
+
+def get_volume(cinder, volume_name=None, volume_settings=None):
+    """
+    Returns an OpenStack volume object for a given name
+    :param cinder: the Cinder client
+    :param volume_name: the volume name to lookup
+    :param volume_settings: the volume settings used for lookups
+    :return: the volume object or None
+    """
+    if volume_settings:
+        volume_name = volume_settings.name
+
+    volumes = cinder.volumes.list()
+    for volume in volumes:
+        if volume.name == volume_name:
+            return Volume(
+                name=volume.name, volume_id=volume.id,
+                description=volume.description, size=volume.size,
+                vol_type=volume.volume_type,
+                availability_zone=volume.availability_zone,
+                multi_attach=volume.multiattach)
+
+
+def get_volume_by_id(cinder, volume_id):
+    """
+    Returns an OpenStack volume object for a given name
+    :param cinder: the Cinder client
+    :param volume_id: the volume ID to lookup
+    :return: the SNAPS-OO Domain Volume object or None
+    """
+    volume = cinder.volumes.get(volume_id)
+    return Volume(
+        name=volume.name, volume_id=volume.id, description=volume.description,
+        size=volume.size, vol_type=volume.volume_type,
+        availability_zone=volume.availability_zone,
+        multi_attach=volume.multiattach)
+
+
+def get_volume_status(cinder, volume):
+    """
+    Returns a new OpenStack Volume object for a given OpenStack volume object
+    :param cinder: the Cinder client
+    :param volume: the domain Volume object
+    :return: the OpenStack Volume object
+    """
+    os_volume = cinder.volumes.get(volume.id)
+    return os_volume.status
+
+
+def create_volume(cinder, volume_settings):
+    """
+    Creates and returns OpenStack volume object with an external URL
+    :param cinder: the cinder client
+    :param volume_settings: the volume settings object
+    :return: the OpenStack volume object
+    :raise Exception if using a file and it cannot be found
+    """
+    created_volume = cinder.volumes.create(
+        name=volume_settings.name, description=volume_settings.description,
+        size=volume_settings.size, imageRef=volume_settings.image_name,
+        volume_type=volume_settings.type_name,
+        availability_zone=volume_settings.availability_zone,
+        multiattach=volume_settings.multi_attach)
+
+    return Volume(
+        name=created_volume.name, volume_id=created_volume.id,
+        description=created_volume.description,
+        size=created_volume.size, vol_type=created_volume.volume_type,
+        availability_zone=created_volume.availability_zone,
+        multi_attach=created_volume.multiattach)
+
+
+def delete_volume(cinder, volume):
+    """
+    Deletes an volume from OpenStack
+    :param cinder: the cinder client
+    :param volume: the volume to delete
+    """
+    logger.info('Deleting volume named - %s', volume.name)
+    cinder.volumes.delete(volume.id)
 
 
 def get_volume_type(cinder, volume_type_name=None, volume_type_settings=None):
