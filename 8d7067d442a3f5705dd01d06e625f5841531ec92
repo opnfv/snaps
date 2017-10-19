@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_2fa0b542",
+        "filename": "snaps/openstack/utils/heat_utils.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-10-19T13:48:07Z",
+      "side": 1,
+      "message": "pep8 - 2 lines here. I missed that earlier...",
+      "revId": "8d7067d442a3f5705dd01d06e625f5841531ec92",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_0fa5f152",
+        "filename": "snaps/openstack/utils/heat_utils.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-10-19T13:48:07Z",
+      "side": 1,
+      "message": "pep8 - 2 lines here too",
+      "revId": "8d7067d442a3f5705dd01d06e625f5841531ec92",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
