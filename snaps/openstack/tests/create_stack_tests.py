@@ -30,7 +30,8 @@ import unittest
 import uuid
 
 from snaps.openstack import create_stack
-from snaps.openstack.create_stack import StackSettings, StackSettingsError
+from snaps.openstack.create_stack import (
+    StackSettings, StackSettingsError, StackCreationError)
 from snaps.openstack.tests import openstack_tests, create_instance_tests
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import heat_utils, neutron_utils, nova_utils
@@ -213,6 +214,23 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertEqual(created_stack.name, retrieved_stack.name)
         self.assertEqual(created_stack.id, retrieved_stack.id)
         self.assertEqual(0, len(self.stack_creator.get_outputs()))
+
+    def test_create_stack_short_timeout(self):
+        """
+        Tests the creation of an OpenStack stack from Heat template file.
+        """
+        # Create Stack
+        # Set the default stack settings, then set any custom parameters sent
+        # from the app
+        stack_settings = StackSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template_path=self.heat_tmplt_path,
+            env_values=self.env_values, stack_create_timeout=0)
+
+        self.stack_creator = create_stack.OpenStackHeatStack(self.heat_creds,
+                                                             stack_settings)
+        with self.assertRaises(StackCreationError):
+            self.stack_creator.create()
 
     def test_create_stack_template_dict(self):
         """
