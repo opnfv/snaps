@@ -14,7 +14,37 @@
 # limitations under the License.
 
 import unittest
-from snaps.domain.volume import QoSSpec, VolumeType, VolumeTypeEncryption
+from snaps.domain.volume import (
+    QoSSpec, VolumeType, VolumeTypeEncryption, Volume)
+
+
+class VolumeDomainObjectTests(unittest.TestCase):
+    """
+    Tests the construction of the snaps.domain.volume.Volume class
+    """
+
+    def test_construction_positional(self):
+        volume = Volume('name1', 'id1', 'desc_val1', 2, 'type_val1',
+                        'avail_zone1', False)
+        self.assertEqual('name1', volume.name)
+        self.assertEqual('id1', volume.id)
+        self.assertEqual('desc_val1', volume.description)
+        self.assertEqual(2, volume.size)
+        self.assertEqual('type_val1', volume.type)
+        self.assertEqual('avail_zone1', volume.availability_zone)
+        self.assertFalse(volume.multi_attach)
+
+    def test_construction_named(self):
+        volume = Volume(multi_attach=True, availability_zone='avail_zone2',
+                        vol_type='type_val2', size=3, description='desc_val2',
+                        volume_id='id2', name='name2')
+        self.assertEqual('name2', volume.name)
+        self.assertEqual('id2', volume.id)
+        self.assertEqual('desc_val2', volume.description)
+        self.assertEqual(3, volume.size)
+        self.assertEqual('type_val2', volume.type)
+        self.assertEqual('avail_zone2', volume.availability_zone)
+        self.assertTrue(volume.multi_attach)
 
 
 class VolumeTypeDomainObjectTests(unittest.TestCase):
