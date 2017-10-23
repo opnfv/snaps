@@ -424,6 +424,7 @@ class CreateComplexStackTests(OSIntegrationTestCase):
         self.subnet_name = self.guid + '-subnet'
         self.flavor1_name = self.guid + '-flavor1'
         self.flavor2_name = self.guid + '-flavor2'
+        self.sec_grp_name = self.guid + '-sec_grp'
         self.vm_inst1_name = self.guid + '-inst1'
         self.vm_inst2_name = self.guid + '-inst2'
         self.keypair_name = self.guid + '-kp'
@@ -437,7 +438,9 @@ class CreateComplexStackTests(OSIntegrationTestCase):
             'subnet_name': self.subnet_name,
             'inst1_name': self.vm_inst1_name,
             'inst2_name': self.vm_inst2_name,
-            'keypair_name': self.keypair_name}
+            'keypair_name': self.keypair_name,
+            'external_net_name': self.ext_net_name,
+            'security_group_name': self.sec_grp_name}
 
         self.heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'floating_ip_heat_template.yaml')
