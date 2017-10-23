@@ -61,6 +61,11 @@ parameters:
     label: Keypair name
     description: The name of the stack's keypair
     default: keypair_name
+  security_group_name:
+    type: string
+    label: Security Group name
+    description: The name of the stack's security group
+    default: security_group_name
   inst1_name:
     type: string
     label: First VM name
@@ -116,6 +121,19 @@ resources:
       router: { get_resource: management_router }
       subnet: { get_resource: subnet }
 
+  server_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Add security group rules for server
+      name: { get_param: security_group_name }
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+
   floating_ip:
     type: OS::Neutron::FloatingIP
     properties:
@@ -141,6 +159,7 @@ resources:
       image: { get_param: image1_name }
       flavor: { get_resource: flavor1 }
       key_name: {get_resource: keypair}
+      security_groups: [{ get_resource: server_security_group }]
       networks:
         - network: { get_resource: network }
 

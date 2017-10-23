@@ -399,7 +399,7 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
         """
         resources = heat_utils.get_resources(self.heat_client, self.stack)
         self.assertIsNotNone(resources)
-        self.assertEqual(11, len(resources))
+        self.assertEqual(12, len(resources))
 
         options = heat_utils.get_outputs(self.heat_client, self.stack)
         self.assertIsNotNone(options)
