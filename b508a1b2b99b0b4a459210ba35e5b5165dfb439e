@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_f346af22",
+        "filename": "snaps/openstack/tests/create_volume_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-10-24T11:41:28Z",
+      "side": 1,
+      "message": "Then this apidoc is not proper any more. So I am wondering if the patch is the right way to solve this issue.",
+      "range": {
+        "startLine": 306,
+        "startChar": 8,
+        "endLine": 306,
+        "endChar": 74
+      },
+      "revId": "b508a1b2b99b0b4a459210ba35e5b5165dfb439e",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
