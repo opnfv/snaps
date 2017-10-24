@@ -311,5 +311,4 @@ class CreateVolumeWithImageTests(OSIntegrationTestCase):
 
         created_volume = self.volume_creator.create(block=True)
         self.assertIsNotNone(created_volume)
-        self.assertIsNone(created_volume.type)
         self.assertTrue(self.volume_creator.volume_active())
