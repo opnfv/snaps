@@ -28,7 +28,6 @@ import logging
 import unittest
 import uuid
 
-from snaps.openstack import create_volume
 from snaps.openstack.create_volume import (
     VolumeSettings, VolumeSettingsError, OpenStackVolume)
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
@@ -143,10 +142,10 @@ class CreateSimpleVolumeSuccessTests(OSIntegrationTestCase):
 
     def test_create_volume_simple(self):
         """
-        Tests the creation of an OpenStack volume from a URL.
+        Tests the creation of a simple OpenStack volume.
         """
         # Create Volume
-        self.volume_creator = create_volume.OpenStackVolume(
+        self.volume_creator = OpenStackVolume(
             self.os_creds, self.volume_settings)
         created_volume = self.volume_creator.create(block=True)
         self.assertIsNotNone(created_volume)
@@ -164,7 +163,7 @@ class CreateSimpleVolumeSuccessTests(OSIntegrationTestCase):
         clean() does not raise an Exception.
         """
         # Create Volume
-        self.volume_creator = create_volume.OpenStackVolume(
+        self.volume_creator = OpenStackVolume(
             self.os_creds, self.volume_settings)
         created_volume = self.volume_creator.create(block=True)
         self.assertIsNotNone(created_volume)
@@ -203,6 +202,91 @@ class CreateSimpleVolumeSuccessTests(OSIntegrationTestCase):
             self.os_creds, self.volume_settings)
         volume2 = os_volume_2.create(block=True)
         self.assertEqual(volume1, volume2)
+
+
+class CreateSimpleVolumeFailureTests(OSIntegrationTestCase):
+    """
+    Test for the CreateVolume class defined in create_volume.py
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateVolume object that is responsible for
+        downloading and creating an OS volume file within OpenStack
+        """
+        super(self.__class__, self).__start__()
+
+        self.guid = uuid.uuid4()
+        self.cinder = cinder_utils.cinder_client(self.os_creds)
+        self.volume_creator = None
+
+    def tearDown(self):
+        """
+        Cleans the volume and downloaded volume file
+        """
+        if self.volume_creator:
+            self.volume_creator.clean()
+
+        super(self.__class__, self).__clean__()
+
+    def test_create_volume_bad_size(self):
+        """
+        Tests the creation of an OpenStack volume with a negative size to
+        ensure it raises a BadRequest exception.
+        """
+        volume_settings = VolumeSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid), size=-1)
+
+        # Create Volume
+        self.volume_creator = OpenStackVolume(self.os_creds, volume_settings)
+
+        with self.assertRaises(BadRequest):
+            self.volume_creator.create(block=True)
+
+    def test_create_volume_bad_type(self):
+        """
+        Tests the creation of an OpenStack volume with a type that does not
+        exist to ensure it raises a NotFound exception.
+        """
+        volume_settings = VolumeSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid),
+            type_name='foo')
+
+        # Create Volume
+        self.volume_creator = OpenStackVolume(self.os_creds, volume_settings)
+
+        with self.assertRaises(NotFound):
+            self.volume_creator.create(block=True)
+
+    def test_create_volume_bad_image(self):
+        """
+        Tests the creation of an OpenStack volume with an image that does not
+        exist to ensure it raises a BadRequest exception.
+        """
+        volume_settings = VolumeSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid),
+            image_name='foo')
+
+        # Create Volume
+        self.volume_creator = OpenStackVolume(self.os_creds, volume_settings)
+
+        with self.assertRaises(BadRequest):
+            self.volume_creator.create(block=True)
+
+    def test_create_volume_bad_zone(self):
+        """
+        Tests the creation of an OpenStack volume with an availability zone
+        that does not exist to ensure it raises a BadRequest exception.
+        """
+        volume_settings = VolumeSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid),
+            availability_zone='foo')
+
+        # Create Volume
+        self.volume_creator = OpenStackVolume(self.os_creds, volume_settings)
+
+        with self.assertRaises(BadRequest):
+            self.volume_creator.create(block=True)
 
 
 class CreateVolumeWithTypeTests(OSIntegrationTestCase):
@@ -251,7 +335,7 @@ class CreateVolumeWithTypeTests(OSIntegrationTestCase):
             VolumeSettings(name=self.volume_name,
                            type_name=self.volume_type_name))
 
-        created_volume = self.volume_creator.create()
+        created_volume = self.volume_creator.create(block=True)
         self.assertIsNotNone(created_volume)
         self.assertEqual(self.volume_type_name, created_volume.type)
 
@@ -263,6 +347,8 @@ class CreateVolumeWithImageTests(OSIntegrationTestCase):
 
     def setUp(self):
         super(self.__class__, self).__start__()
+
+        self.cinder = cinder_utils.cinder_client(self.os_creds)
 
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.volume_name = guid + '-vol'
@@ -292,7 +378,8 @@ class CreateVolumeWithImageTests(OSIntegrationTestCase):
 
     def test_bad_image_name(self):
         """
-        Expect a NotFound to be raised when the volume type does not exist
+        Tests OpenStackVolume#create() method to ensure a volume is NOT created
+        when associating it to an invalid image name
         """
         self.volume_creator = OpenStackVolume(
             self.os_creds,
@@ -303,7 +390,8 @@ class CreateVolumeWithImageTests(OSIntegrationTestCase):
 
     def test_valid_volume_image(self):
         """
-        Expect a NotFound to be raised when the volume type does not exist
+        Tests OpenStackVolume#create() method to ensure a volume is NOT created
+        when associating it to an invalid image name
         """
         self.volume_creator = OpenStackVolume(
             self.os_creds,
@@ -311,5 +399,11 @@ class CreateVolumeWithImageTests(OSIntegrationTestCase):
 
         created_volume = self.volume_creator.create(block=True)
         self.assertIsNotNone(created_volume)
-        self.assertIsNone(created_volume.type)
+        self.assertEqual(
+            self.volume_creator.volume_settings.name, created_volume.name)
         self.assertTrue(self.volume_creator.volume_active())
+
+        retrieved_volume = cinder_utils.get_volume_by_id(
+            self.cinder, created_volume.id)
+
+        self.assertEqual(created_volume, retrieved_volume)

@@ -29,7 +29,8 @@ VOLUME_ACTIVE_TIMEOUT = 300
 VOLUME_DELETE_TIMEOUT = 60
 POLL_INTERVAL = 3
 STATUS_ACTIVE = 'available'
-STATUS_FAILED = 'failed'
+STATUS_IN_USE = 'in-use'
+STATUS_FAILED = 'error'
 STATUS_DELETED = 'deleted'
 
 
@@ -97,7 +98,7 @@ class OpenStackVolume(OpenStackVolumeObject):
         """
         if self.__volume:
             try:
-                if self.volume_active(block=True):
+                if self.volume_active():
                     cinder_utils.delete_volume(self._cinder, self.__volume)
                 else:
                     logger.warn('Timeout waiting to delete volume %s',
@@ -144,6 +145,14 @@ class OpenStackVolume(OpenStackVolumeObject):
         return self._volume_status_check(STATUS_ACTIVE, block, timeout,
                                          poll_interval)
 
+    def volume_in_use(self):
+        """
+        Returns true when the volume status returns the value of
+        expected_status_code
+        :return: T/F
+        """
+        return self._volume_status_check(STATUS_IN_USE, False, 0, 0)
+
     def volume_deleted(self, block=False, poll_interval=POLL_INTERVAL):
         """
         Returns true when the VM status returns the value of
@@ -179,7 +188,7 @@ class OpenStackVolume(OpenStackVolumeObject):
         if block:
             start = time.time()
         else:
-            start = time.time() - timeout + 10
+            start = time.time() - timeout + 1
 
         while timeout > time.time() - start:
             status = self._status(expected_status_code)

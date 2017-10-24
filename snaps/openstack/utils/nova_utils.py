@@ -16,6 +16,7 @@
 import logging
 
 import os
+import time
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -141,6 +142,27 @@ def get_server(nova, vm_inst_settings=None, server_name=None):
         return __map_os_server_obj_to_vm_inst(server)
 
 
+def get_server_connection(nova, vm_inst_settings=None, server_name=None):
+    """
+    Returns a VmInst object for the first server instance found.
+    :param nova: the Nova client
+    :param vm_inst_settings: the VmInstanceSettings object from which to build
+                             the query if not None
+    :param server_name: the server with this name to return if vm_inst_settings
+                        is not None
+    :return: a snaps.domain.VmInst object or None if not found
+    """
+    search_opts = dict()
+    if vm_inst_settings:
+        search_opts['name'] = vm_inst_settings.name
+    elif server_name:
+        search_opts['name'] = server_name
+
+    servers = nova.servers.list(search_opts=search_opts)
+    for server in servers:
+        return server.links[0]
+
+
 def __map_os_server_obj_to_vm_inst(os_server):
     """
     Returns a VmInst object for an OpenStack Server object
@@ -154,11 +176,15 @@ def __map_os_server_obj_to_vm_inst(os_server):
             if sec_group.get('name'):
                 sec_grp_names.append(sec_group.get('name'))
 
+    volumes = None
+    if hasattr(os_server, 'os-extended-volumes:volumes_attached'):
+        volumes = getattr(os_server, 'os-extended-volumes:volumes_attached')
+
     return VmInst(
         name=os_server.name, inst_id=os_server.id,
         image_id=os_server.image['id'], flavor_id=os_server.flavor['id'],
         networks=os_server.networks, keypair_name=os_server.key_name,
-        sec_grp_names=sec_grp_names)
+        sec_grp_names=sec_grp_names, volume_ids=volumes)
 
 
 def __get_latest_server_os_object(nova, server):
@@ -618,12 +644,67 @@ def update_quotas(nova, project_id, compute_quotas):
     update_values['cores'] = compute_quotas.cores
     update_values['instances'] = compute_quotas.instances
     update_values['injected_files'] = compute_quotas.injected_files
-    update_values['injected_file_content_bytes'] = compute_quotas.injected_file_content_bytes
+    update_values['injected_file_content_bytes'] = (
+        compute_quotas.injected_file_content_bytes)
     update_values['ram'] = compute_quotas.ram
     update_values['fixed_ips'] = compute_quotas.fixed_ips
     update_values['key_pairs'] = compute_quotas.key_pairs
 
     return nova.quotas.update(project_id, **update_values)
+
+
+def attach_volume(nova, server, volume, timeout=None):
+    """
+    Attaches a volume to a server
+    :param nova: the nova client
+    :param server: the VMInst domain object
+    :param volume: the Volume domain object
+    :param timeout: denotes the amount of time to block to determine if the
+                    has been properly attached. When None, do not wait.
+    :return: the value from the nova call
+    """
+    nova.volumes.create_server_volume(server.id, volume.id)
+
+    if timeout:
+        start_time = time.time()
+        while time.time() < start_time + timeout:
+            vm = get_server_object_by_id(nova, server.id)
+            for vol_dict in vm.volume_ids:
+                if volume.id == vol_dict['id']:
+                    return vm
+
+        return None
+    else:
+        return get_server_object_by_id(nova, server.id)
+
+
+def detach_volume(nova, server, volume, timeout=None):
+    """
+    Attaches a volume to a server
+    :param nova: the nova client
+    :param server: the VMInst domain object
+    :param volume: the Volume domain object
+    :param timeout: denotes the amount of time to block to determine if the
+                    has been properly detached. When None, do not wait.
+    :return: the value from the nova call
+    """
+    nova.volumes.delete_server_volume(server.id, volume.id)
+
+    if timeout:
+        start_time = time.time()
+        while time.time() < start_time + timeout:
+            vm = get_server_object_by_id(nova, server.id)
+            found = False
+            for vol_dict in vm.volume_ids:
+                if volume.id == vol_dict['id']:
+                    found = True
+
+            if not found:
+                return vm
+
+        return None
+    else:
+        return get_server_object_by_id(nova, server.id)
 
 
 class NovaException(Exception):

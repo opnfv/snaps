@@ -20,7 +20,7 @@ class VmInst:
     are shared amongst cloud providers
     """
     def __init__(self, name, inst_id, image_id, flavor_id, networks,
-                 keypair_name, sec_grp_names):
+                 keypair_name, sec_grp_names, volume_ids):
         """
         Constructor
         :param name: the image's name
@@ -31,6 +31,7 @@ class VmInst:
                          value is a list of associated IPs
         :param keypair_name: the name of the associated keypair
         :param sec_grp_names: list of security group names
+        :param volume_ids: list of attached volume IDs
         """
         self.name = name
         self.id = inst_id
@@ -39,6 +40,7 @@ class VmInst:
         self.networks = networks
         self.keypair_name = keypair_name
         self.sec_grp_names = sec_grp_names
+        self.volume_ids = volume_ids
 
     def __eq__(self, other):
         return (self.name == other.name and
@@ -47,7 +49,8 @@ class VmInst:
                 self.flavor_id == other.flavor_id and
                 self.networks == other.networks and
                 self.keypair_name == other.keypair_name and
-                self.sec_grp_names == other.sec_grp_names)
+                self.sec_grp_names == other.sec_grp_names and
+                self.volume_ids == other.volume_ids)
 
 
 class FloatingIp:

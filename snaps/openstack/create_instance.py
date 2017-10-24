@@ -20,7 +20,7 @@ from novaclient.exceptions import NotFound
 
 from snaps.openstack.create_network import PortSettings
 from snaps.openstack.openstack_creator import OpenStackComputeObject
-from snaps.openstack.utils import glance_utils
+from snaps.openstack.utils import glance_utils, cinder_utils
 from snaps.openstack.utils import neutron_utils
 from snaps.openstack.utils import nova_utils
 from snaps.provisioning import ansible_utils
@@ -89,7 +89,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
         self.initialize()
 
         if len(self.__ports) == 0:
-            self.__ports = self.__create_ports(self.instance_settings.port_settings)
+            self.__ports = self.__create_ports(
+                self.instance_settings.port_settings)
         if not self.__vm:
             self.__create_vm(block)
 
@@ -154,6 +155,26 @@ class OpenStackVmInstance(OpenStackComputeObject):
                     sec_grp_name +
                     ' to VM that did not activate with name - ' +
                     self.instance_settings.name)
+
+        if self.instance_settings.volume_names:
+            for volume_name in self.instance_settings.volume_names:
+                cinder = cinder_utils.cinder_client(self._os_creds)
+                volume = cinder_utils.get_volume(
+                    cinder, volume_name=volume_name)
+
+                if volume and self.vm_active(block=True):
+                    timeout = 30
+                    vm = nova_utils.attach_volume(
+                        self._nova, self.__vm, volume, timeout)
+
+                    if vm:
+                        self.__vm = vm
+                    else:
+                        logger.warn('Volume [%s] not attached within timeout '
+                                    'of [%s]', volume.name, timeout)
+                else:
+                    logger.warn('Unable to attach volume named [%s]',
+                                volume_name)
 
         self.__apply_floating_ips()
 
@@ -226,9 +247,29 @@ class OpenStackVmInstance(OpenStackComputeObject):
                 logger.error('Error deleting Floating IP - ' + str(e))
         self.__floating_ip_dict = dict()
 
+        # Detach Volume
+        for volume_rec in self.__vm.volume_ids:
+            cinder = cinder_utils.cinder_client(self._os_creds)
+            volume = cinder_utils.get_volume_by_id(cinder, volume_rec['id'])
+            if volume:
+                try:
+                    vm = nova_utils.detach_volume(
+                        self._nova, self.__vm, volume, 30)
+                    if vm:
+                        self.__vm = vm
+                    else:
+                        logger.warn(
+                            'Timeout waiting to detach volume %s', volume.name)
+                except Exception as e:
+                    logger.error('Unexpected error detaching volume %s '
+                                 'with error %s', volume.name, e)
+            else:
+                logger.warn('Unable to detach volume with ID - [%s]',
+                            volume_rec['id'])
+
         # Cleanup ports
         for name, port in self.__ports:
-            logger.info('Deleting Port with ID - %S ' + port.id)
+            logger.info('Deleting Port with ID - %s ', port.id)
             try:
                 neutron_utils.delete_port(self.__neutron, port)
             except PortNotFoundClient as e:
@@ -296,7 +337,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
             port = neutron_utils.get_port(
                 self.__neutron, port_settings=port_setting)
             if not port:
-                port = neutron_utils.create_port(self.__neutron, self._os_creds, port_setting)
+                port = neutron_utils.create_port(
+                    self.__neutron, self._os_creds, port_setting)
                 if port:
                     ports.append((port_setting.name, port))
 
@@ -749,6 +791,8 @@ class VmInstanceSettings:
                                     waiting obtaining an SSH connection to a VM
         :param availability_zone: the name of the compute server on which to
                                   deploy the VM (optional)
+        :param volume_names: a list of the names of the volume to attach
+                             (optional)
         :param userdata: the string contents of any optional cloud-init script
                          to execute after the VM has been activated.
                          This value may also contain a dict who's key value
@@ -797,25 +841,14 @@ class VmInstanceSettings:
                     self.floating_ip_settings.append(FloatingIpSettings(
                         **floating_ip_config['floating_ip']))
 
-        if kwargs.get('vm_boot_timeout'):
-            self.vm_boot_timeout = kwargs['vm_boot_timeout']
-        else:
-            self.vm_boot_timeout = 900
+        self.vm_boot_timeout = kwargs.get('vm_boot_timeout', 900)
+        self.vm_delete_timeout = kwargs.get('vm_delete_timeout', 300)
+        self.ssh_connect_timeout = kwargs.get('ssh_connect_timeout', 180)
+        self.availability_zone = kwargs.get('availability_zone')
+        self.volume_names = kwargs.get('volume_names')
 
-        if kwargs.get('vm_delete_timeout'):
-            self.vm_delete_timeout = kwargs['vm_delete_timeout']
-        else:
-            self.vm_delete_timeout = 300
-
-        if kwargs.get('ssh_connect_timeout'):
-            self.ssh_connect_timeout = kwargs['ssh_connect_timeout']
-        else:
-            self.ssh_connect_timeout = 180
-
-        if kwargs.get('availability_zone'):
-            self.availability_zone = kwargs['availability_zone']
-        else:
-            self.availability_zone = None
+        if self.volume_names and not isinstance(self.volume_names, list):
+            raise VmInstanceSettingsError('volume_names must be a list')
 
         if not self.name or not self.flavor:
             raise VmInstanceSettingsError(

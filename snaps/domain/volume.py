@@ -20,7 +20,7 @@ class Volume:
     are shared amongst cloud providers
     """
     def __init__(self, name, volume_id, description, size, vol_type,
-                 availability_zone, multi_attach):
+                 availability_zone, multi_attach, attachments=list()):
         """
         Constructor
         :param name: the volume's name
@@ -30,6 +30,8 @@ class Volume:
         :param vol_type: the volume's type
         :param availability_zone: the volume's availability zone
         :param multi_attach: When true, volume can be attached to multiple VMs
+        :param attachments: List of dict objects containing the info on where
+                            this volume is attached
         """
         self.name = name
         self.id = volume_id
@@ -38,6 +40,7 @@ class Volume:
         self.type = vol_type
         self.availability_zone = availability_zone
         self.multi_attach = multi_attach
+        self.attachments = attachments
 
     def __eq__(self, other):
         return (self.name == other.name and self.id == other.id

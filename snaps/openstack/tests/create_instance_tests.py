@@ -36,6 +36,7 @@ from snaps.openstack.create_router import OpenStackRouter, RouterSettings
 from snaps.openstack.create_security_group import (
     SecurityGroupSettings, OpenStackSecurityGroup, SecurityGroupRuleSettings,
     Direction, Protocol)
+from snaps.openstack.create_volume import OpenStackVolume, VolumeSettings
 from snaps.openstack.tests import openstack_tests, validation_utils
 from snaps.openstack.tests.os_source_file_test import (
     OSIntegrationTestCase, OSComponentTestCase)
@@ -93,6 +94,7 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
         self.assertEqual(300, settings.vm_delete_timeout)
         self.assertEqual(180, settings.ssh_connect_timeout)
         self.assertIsNone(settings.availability_zone)
+        self.assertIsNone(settings.volume_names)
 
     def test_config_with_name_flavor_port_only(self):
         port_settings = PortSettings(name='foo-port', network_name='bar-net')
@@ -110,20 +112,20 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
         self.assertEqual(300, settings.vm_delete_timeout)
         self.assertEqual(180, settings.ssh_connect_timeout)
         self.assertIsNone(settings.availability_zone)
+        self.assertIsNone(settings.volume_names)
 
     def test_all(self):
         port_settings = PortSettings(name='foo-port', network_name='bar-net')
         fip_settings = FloatingIpSettings(name='foo-fip', port_name='bar-port',
                                           router_name='foo-bar-router')
 
-        settings = VmInstanceSettings(name='foo', flavor='bar',
-                                      port_settings=[port_settings],
-                                      security_group_names=['sec_grp_1'],
-                                      floating_ip_settings=[fip_settings],
-                                      sudo_user='joe', vm_boot_timeout=999,
-                                      vm_delete_timeout=333,
-                                      ssh_connect_timeout=111,
-                                      availability_zone='server name')
+        settings = VmInstanceSettings(
+            name='foo', flavor='bar', port_settings=[port_settings],
+            security_group_names=['sec_grp_1'],
+            floating_ip_settings=[fip_settings], sudo_user='joe',
+            vm_boot_timeout=999, vm_delete_timeout=333,
+            ssh_connect_timeout=111, availability_zone='server name',
+            volume_names=['vol1'])
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.flavor)
         self.assertEqual(1, len(settings.port_settings))
@@ -142,6 +144,7 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
         self.assertEqual(333, settings.vm_delete_timeout)
         self.assertEqual(111, settings.ssh_connect_timeout)
         self.assertEqual('server name', settings.availability_zone)
+        self.assertEqual('vol1', settings.volume_names[0])
 
     def test_config_all(self):
         port_settings = PortSettings(name='foo-port', network_name='bar-net')
@@ -153,7 +156,8 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
                'security_group_names': ['sec_grp_1'],
                'floating_ips': [fip_settings], 'sudo_user': 'joe',
                'vm_boot_timeout': 999, 'vm_delete_timeout': 333,
-               'ssh_connect_timeout': 111, 'availability_zone': 'server name'})
+               'ssh_connect_timeout': 111, 'availability_zone': 'server name',
+               'volume_names': ['vol2']})
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.flavor)
         self.assertEqual(1, len(settings.port_settings))
@@ -171,6 +175,7 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
         self.assertEqual(333, settings.vm_delete_timeout)
         self.assertEqual(111, settings.ssh_connect_timeout)
         self.assertEqual('server name', settings.availability_zone)
+        self.assertEqual('vol2', settings.volume_names[0])
 
 
 class FloatingIpSettingsUnitTests(unittest.TestCase):
@@ -2645,6 +2650,180 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
         # Effectively blocks until VM has been properly activated
         self.assertTrue(check_ping(self.inst_creators[0]))
         self.assertTrue(check_ping(self.inst_creators[1]))
+
+
+class CreateInstanceVolumeTests(OSIntegrationTestCase):
+    """
+    Simple instance creation with an attached volume
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file
+        within OpenStack
+        """
+        super(self.__class__, self).__start__()
+
+        guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.vm_inst_name = guid + '-inst'
+        self.nova = nova_utils.nova_client(self.os_creds)
+        os_image_settings = openstack_tests.cirros_image_settings(
+            name=guid + '-image', image_metadata=self.image_metadata)
+
+        net_config = openstack_tests.get_priv_net_config(
+            net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
+            router_name=guid + '-pub-router', external_net=self.ext_net_name)
+
+        self.volume_settings1 = VolumeSettings(
+            name=self.__class__.__name__ + '-' + str(guid) + '-1')
+        self.volume_settings2 = VolumeSettings(
+            name=self.__class__.__name__ + '-' + str(guid) + '-2')
+
+        # Initialize for tearDown()
+        self.image_creator = None
+        self.flavor_creator = None
+
+        self.network_creator = None
+        self.inst_creator = None
+        self.volume_creator1 = None
+        self.volume_creator2 = None
+
+        try:
+            # Create Image
+            self.image_creator = OpenStackImage(self.os_creds,
+                                                os_image_settings)
+            self.image_creator.create()
+
+            # Create Flavor
+            self.flavor_creator = OpenStackFlavor(
+                self.admin_os_creds,
+                FlavorSettings(name=guid + '-flavor-name', ram=256, disk=1,
+                               vcpus=2, metadata=self.flavor_metadata))
+            self.flavor_creator.create()
+
+            # Create Network
+            self.network_creator = OpenStackNetwork(
+                self.os_creds, net_config.network_settings)
+            self.network_creator.create()
+
+            self.port_settings = PortSettings(
+                name=guid + '-port',
+                network_name=net_config.network_settings.name)
+
+            self.volume_creator1 = OpenStackVolume(
+                self.os_creds, self.volume_settings1)
+            self.volume_creator1.create(block=True)
+
+            self.volume_creator2 = OpenStackVolume(
+                self.os_creds, self.volume_settings2)
+            self.volume_creator2.create(block=True)
+
+        except Exception as e:
+            self.tearDown()
+            raise e
+
+    def tearDown(self):
+        """
+        Cleans the created object
+        """
+        if self.inst_creator:
+            try:
+                self.inst_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning VM instance with message '
+                    '- %s', e)
+
+        if self.flavor_creator:
+            try:
+                self.flavor_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning flavor with message - %s',
+                    e)
+
+        if self.network_creator:
+            try:
+                self.network_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
+
+        if self.volume_creator2:
+            try:
+                self.volume_creator2.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning volume with message - %s',
+                    e)
+
+        if self.volume_creator1:
+            try:
+                self.volume_creator1.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning volume with message - %s',
+                    e)
+
+        if self.image_creator and not self.image_creator.image_settings.exists:
+            try:
+                self.image_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning image with message - %s', e)
+
+        super(self.__class__, self).__clean__()
+
+    def test_create_instance_with_one_volume(self):
+        """
+        Tests the creation of an OpenStack instance with a single volume.
+        """
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings],
+            volume_names=[self.volume_settings1.name])
+
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
+
+        vm_inst = self.inst_creator.create(block=True)
+        self.assertIsNotNone(nova_utils.get_server(
+            self.nova, vm_inst_settings=instance_settings))
+
+        self.assertIsNotNone(vm_inst)
+        self.assertEqual(1, len(vm_inst.volume_ids))
+        self.assertEqual(self.volume_creator1.get_volume().id,
+                         vm_inst.volume_ids[0]['id'])
+
+    def test_create_instance_with_two_volumes(self):
+        """
+        Tests the creation of an OpenStack instance with a single volume.
+        """
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings],
+            volume_names=[self.volume_settings1.name,
+                          self.volume_settings2.name])
+
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
+
+        vm_inst = self.inst_creator.create(block=True)
+        self.assertIsNotNone(nova_utils.get_server(
+            self.nova, vm_inst_settings=instance_settings))
+
+        self.assertIsNotNone(vm_inst)
+        self.assertEqual(2, len(vm_inst.volume_ids))
+        self.assertEqual(self.volume_creator1.get_volume().id,
+                         vm_inst.volume_ids[0]['id'])
+        self.assertEqual(self.volume_creator2.get_volume().id,
+                         vm_inst.volume_ids[1]['id'])
 
 
 def check_dhcp_lease(inst_creator, ip, timeout=160):

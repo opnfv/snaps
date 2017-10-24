@@ -62,7 +62,18 @@ def get_volume(cinder, volume_name=None, volume_settings=None):
                 description=volume.description, size=volume.size,
                 vol_type=volume.volume_type,
                 availability_zone=volume.availability_zone,
-                multi_attach=volume.multiattach)
+                multi_attach=volume.multiattach,
+                attachments=volume.attachments)
+
+
+def __get_os_volume_by_id(cinder, volume_id):
+    """
+    Returns an OpenStack volume object for a given name
+    :param cinder: the Cinder client
+    :param volume_id: the volume ID to lookup
+    :return: the SNAPS-OO Domain Volume object or None
+    """
+    return cinder.volumes.get(volume_id)
 
 
 def get_volume_by_id(cinder, volume_id):
@@ -72,12 +83,12 @@ def get_volume_by_id(cinder, volume_id):
     :param volume_id: the volume ID to lookup
     :return: the SNAPS-OO Domain Volume object or None
     """
-    volume = cinder.volumes.get(volume_id)
+    volume = __get_os_volume_by_id(cinder, volume_id)
     return Volume(
         name=volume.name, volume_id=volume.id, description=volume.description,
         size=volume.size, vol_type=volume.volume_type,
         availability_zone=volume.availability_zone,
-        multi_attach=volume.multiattach)
+        multi_attach=volume.multiattach, attachments=volume.attachments)
 
 
 def get_volume_status(cinder, volume):
@@ -99,7 +110,7 @@ def create_volume(cinder, volume_settings):
     :return: the OpenStack volume object
     :raise Exception if using a file and it cannot be found
     """
-    created_volume = cinder.volumes.create(
+    volume = cinder.volumes.create(
         name=volume_settings.name, description=volume_settings.description,
         size=volume_settings.size, imageRef=volume_settings.image_name,
         volume_type=volume_settings.type_name,
@@ -107,11 +118,11 @@ def create_volume(cinder, volume_settings):
         multiattach=volume_settings.multi_attach)
 
     return Volume(
-        name=created_volume.name, volume_id=created_volume.id,
-        description=created_volume.description,
-        size=created_volume.size, vol_type=created_volume.volume_type,
-        availability_zone=created_volume.availability_zone,
-        multi_attach=created_volume.multiattach)
+        name=volume.name, volume_id=volume.id,
+        description=volume.description,
+        size=volume.size, vol_type=volume.volume_type,
+        availability_zone=volume.availability_zone,
+        multi_attach=volume.multiattach, attachments=volume.attachments)
 
 
 def delete_volume(cinder, volume):
@@ -121,7 +132,7 @@ def delete_volume(cinder, volume):
     :param volume: the volume to delete
     """
     logger.info('Deleting volume named - %s', volume.name)
-    cinder.volumes.delete(volume.id)
+    return cinder.volumes.delete(volume.id)
 
 
 def get_volume_type(cinder, volume_type_name=None, volume_type_settings=None):

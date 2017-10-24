@@ -25,7 +25,7 @@ class VolumeDomainObjectTests(unittest.TestCase):
 
     def test_construction_positional(self):
         volume = Volume('name1', 'id1', 'desc_val1', 2, 'type_val1',
-                        'avail_zone1', False)
+                        'avail_zone1', False, [{'attached_at': 'foo'}])
         self.assertEqual('name1', volume.name)
         self.assertEqual('id1', volume.id)
         self.assertEqual('desc_val1', volume.description)
@@ -33,9 +33,13 @@ class VolumeDomainObjectTests(unittest.TestCase):
         self.assertEqual('type_val1', volume.type)
         self.assertEqual('avail_zone1', volume.availability_zone)
         self.assertFalse(volume.multi_attach)
+        self.assertIsNotNone(volume.attachments)
+        self.assertTrue(isinstance(volume.attachments[0], dict))
+        self.assertEqual(1, len(volume.attachments))
 
     def test_construction_named(self):
-        volume = Volume(multi_attach=True, availability_zone='avail_zone2',
+        volume = Volume(attachments=[{'attached_at': 'foo'}],
+                        multi_attach=True, availability_zone='avail_zone2',
                         vol_type='type_val2', size=3, description='desc_val2',
                         volume_id='id2', name='name2')
         self.assertEqual('name2', volume.name)
@@ -45,6 +49,9 @@ class VolumeDomainObjectTests(unittest.TestCase):
         self.assertEqual('type_val2', volume.type)
         self.assertEqual('avail_zone2', volume.availability_zone)
         self.assertTrue(volume.multi_attach)
+        self.assertIsNotNone(volume.attachments)
+        self.assertTrue(isinstance(volume.attachments[0], dict))
+        self.assertEqual(1, len(volume.attachments))
 
 
 class VolumeTypeDomainObjectTests(unittest.TestCase):

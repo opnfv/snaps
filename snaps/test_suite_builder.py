@@ -48,7 +48,8 @@ from snaps.openstack.tests.create_instance_tests import (
     FloatingIpSettingsUnitTests, InstanceSecurityGroupTests,
     VmInstanceSettingsUnitTests, CreateInstancePortManipulationTests,
     SimpleHealthCheck, CreateInstanceFromThreePartImage,
-    CreateInstanceMockOfflineTests, CreateInstanceTwoNetTests)
+    CreateInstanceMockOfflineTests, CreateInstanceTwoNetTests,
+    CreateInstanceVolumeTests)
 from snaps.openstack.tests.create_keypairs_tests import (
     CreateKeypairsTests, KeypairSettingsUnitTests, CreateKeypairsCleanupTests)
 from snaps.openstack.tests.create_network_tests import (
@@ -72,7 +73,8 @@ from snaps.openstack.tests.create_user_tests import (
     UserSettingsUnitTests, CreateUserSuccessTests)
 from snaps.openstack.tests.create_volume_tests import (
     VolumeSettingsUnitTests, CreateSimpleVolumeSuccessTests,
-    CreateVolumeWithTypeTests, CreateVolumeWithImageTests)
+    CreateVolumeWithTypeTests, CreateVolumeWithImageTests,
+    CreateSimpleVolumeFailureTests)
 from snaps.openstack.tests.create_volume_type_tests import (
     VolumeTypeSettingsUnitTests, CreateSimpleVolumeTypeSuccessTests,
     CreateVolumeTypeComplexTests)
@@ -95,7 +97,7 @@ from snaps.openstack.utils.tests.neutron_utils_tests import (
     NeutronUtilsFloatingIpTests)
 from snaps.openstack.utils.tests.nova_utils_tests import (
     NovaSmokeTests, NovaUtilsKeypairTests, NovaUtilsFlavorTests,
-    NovaUtilsInstanceTests)
+    NovaUtilsInstanceTests, NovaUtilsInstanceVolumeTests)
 from snaps.provisioning.tests.ansible_utils_tests import (
     AnsibleProvisioningTests)
 from snaps.tests.file_utils_tests import FileUtilsTests
@@ -305,6 +307,10 @@ def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True,
         NovaUtilsInstanceTests, os_creds=os_creds, ext_net_name=ext_net_name,
         log_level=log_level, image_metadata=image_metadata))
     suite.addTest(OSComponentTestCase.parameterize(
+        NovaUtilsInstanceVolumeTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, log_level=log_level,
+        image_metadata=image_metadata))
+    suite.addTest(OSComponentTestCase.parameterize(
         CreateFlavorTests, os_creds=os_creds, ext_net_name=ext_net_name,
         log_level=log_level))
     suite.addTest(OSComponentTestCase.parameterize(
@@ -435,6 +441,11 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateSimpleVolumeFailureTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
         CreateVolumeWithTypeTests, os_creds=os_creds,
         ext_net_name=ext_net_name, use_keystone=use_keystone,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
@@ -478,6 +489,11 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
         log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
         CreateInstanceFromThreePartImage, os_creds=os_creds,
+        ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateInstanceVolumeTests, os_creds=os_creds,
         ext_net_name=ext_net_name, use_keystone=use_keystone,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))

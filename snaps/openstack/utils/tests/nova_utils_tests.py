@@ -22,11 +22,14 @@ from snaps import file_utils
 from snaps.openstack import create_instance
 from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
 from snaps.openstack.create_image import OpenStackImage
-from snaps.openstack.create_instance import VmInstanceSettings
+from snaps.openstack.create_instance import (
+    VmInstanceSettings, OpenStackVmInstance)
 from snaps.openstack.create_network import OpenStackNetwork, PortSettings
+from snaps.openstack.create_volume import OpenStackVolume, VolumeSettings
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
-from snaps.openstack.utils import nova_utils, neutron_utils, glance_utils
+from snaps.openstack.utils import (
+    nova_utils, neutron_utils, glance_utils, cinder_utils)
 
 __author__ = 'spisarski'
 
@@ -329,3 +332,142 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
 
         self.assertEqual(self.vm_inst.name, vm_inst.name)
         self.assertEqual(self.vm_inst.id, vm_inst.id)
+
+
+class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
+    """
+    Tests the creation of VM instances via nova_utils.py
+    """
+
+    def setUp(self):
+        """
+        Setup objects required by VM instances
+        :return:
+        """
+
+        guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+
+        self.nova = nova_utils.nova_client(self.os_creds)
+        self.cinder = cinder_utils.cinder_client(self.os_creds)
+
+        self.image_creator = None
+        self.network_creator = None
+        self.flavor_creator = None
+        self.volume_creator = None
+        self.instance_creator = None
+
+        try:
+            image_settings = openstack_tests.cirros_image_settings(
+                name=guid + '-image', image_metadata=self.image_metadata)
+            self.image_creator = OpenStackImage(
+                self.os_creds, image_settings=image_settings)
+            self.image_creator.create()
+
+            network_settings = openstack_tests.get_priv_net_config(
+                guid + '-net', guid + '-subnet').network_settings
+            self.network_creator = OpenStackNetwork(
+                self.os_creds, network_settings)
+            self.network_creator.create()
+
+            self.flavor_creator = OpenStackFlavor(
+                self.os_creds,
+                FlavorSettings(
+                    name=guid + '-flavor-name', ram=256, disk=10, vcpus=1))
+            self.flavor_creator.create()
+
+            # Create Volume
+            volume_settings = VolumeSettings(
+                name=self.__class__.__name__ + '-' + str(guid))
+            self.volume_creator = OpenStackVolume(
+                self.os_creds, volume_settings)
+            self.volume_creator.create(block=True)
+
+            port_settings = PortSettings(
+                name=guid + '-port', network_name=network_settings.name)
+            instance_settings = VmInstanceSettings(
+                name=guid + '-vm_inst',
+                flavor=self.flavor_creator.flavor_settings.name,
+                port_settings=[port_settings])
+            self.instance_creator = OpenStackVmInstance(
+                self.os_creds, instance_settings, image_settings)
+            self.instance_creator.create(block=True)
+        except:
+            self.tearDown()
+            raise
+
+    def tearDown(self):
+        """
+        Cleanup deployed resources
+        :return:
+        """
+        if self.instance_creator:
+            try:
+                self.instance_creator.clean()
+            except:
+                pass
+        if self.volume_creator:
+            try:
+                self.volume_creator.clean()
+            except:
+                pass
+        if self.flavor_creator:
+            try:
+                self.flavor_creator.clean()
+            except:
+                pass
+        if self.network_creator:
+            try:
+                self.network_creator.clean()
+            except:
+                pass
+        if self.image_creator:
+            try:
+                self.image_creator.clean()
+            except:
+                pass
+
+    def test_add_remove_volume(self):
+        """
+        Tests the nova_utils.create_server() method
+        :return:
+        """
+
+        self.assertIsNotNone(self.volume_creator.get_volume())
+        self.assertEqual(0, len(self.volume_creator.get_volume().attachments))
+
+        # Attach volume to VM
+        nova_utils.attach_volume(
+            self.nova, self.instance_creator.get_vm_inst(),
+            self.volume_creator.get_volume())
+
+        time.sleep(10)
+
+        vol_attach = cinder_utils.get_volume_by_id(
+            self.cinder, self.volume_creator.get_volume().id)
+        vm_attach = nova_utils.get_server_object_by_id(
+            self.nova, self.instance_creator.get_vm_inst().id)
+
+        # Detach volume to VM
+        nova_utils.detach_volume(
+            self.nova, self.instance_creator.get_vm_inst(),
+            self.volume_creator.get_volume())
+
+        time.sleep(10)
+
+        vol_detach = cinder_utils.get_volume_by_id(
+            self.cinder, self.volume_creator.get_volume().id)
+        vm_detach = nova_utils.get_server_object_by_id(
+            self.nova, self.instance_creator.get_vm_inst().id)
+
+        # Validate Attachment
+        self.assertIsNotNone(vol_attach)
+        self.assertEqual(self.volume_creator.get_volume().id, vol_attach.id)
+        self.assertEqual(1, len(vol_attach.attachments))
+        self.assertEqual(vm_attach.volume_ids[0]['id'],
+                         vol_attach.attachments[0]['volume_id'])
+
+        # Validate Detachment
+        self.assertIsNotNone(vol_detach)
+        self.assertEqual(self.volume_creator.get_volume().id, vol_detach.id)
+        self.assertEqual(0, len(vol_detach.attachments))
+        self.assertEqual(0, len(vm_detach.volume_ids))
