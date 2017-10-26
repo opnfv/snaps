@@ -1,0 +1,44 @@
+---
+admin_user: admin
+admin_pass: ChangeMe
+admin_proj: admin
+auth_url: http://10.197.103.31:5000/
+proxy_host:
+proxy_port:
+id_api_version: 3
+
+ext_net: public1
+
+username: test_user
+pass: test_user
+proj: example-volume
+
+flavor_name: example.m1.small
+flavor_ram: 2048
+flavor_disk: 10
+flavor_cpus: 1
+
+qos_name: example_qos
+vol_type_name: example-vol-type
+vol_type_encryption_name: example_vol-type-encryption
+volume_name: example-volume
+
+image_name: example-image
+image_format: qcow2
+image_url: http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
+image_file:
+image_user: cirros
+
+net_name: example-net
+subnet_name: example-subnet
+cidr: 10.0.8.0/24
+router_name: example-router
+
+kp_name: example-kp
+kp_pub_path: ~/tmp/example-kp.pub
+kp_priv_path: ~/tmp/example-kp
+
+sg_name: example-sg
+
+port_name: example-port
+inst_name: example-inst

@@ -3,9 +3,10 @@ Try an example
 
 Use launcher.py to deploy and clean up example environments.  These examples are described in YAML files.
 
-#. Add your OpenStack connection information to the deploy-complex-network.yaml.
+#. Add your OpenStack connection information.
 
-    Edit <path to repo>/examples/complex-network/deploy-complex-network.yaml
+    Edit <path to repo>/examples/inst-w-volume/deploy-env.yaml with your OpenStack
+    credentials and authorization URL
 
    -  openstack: the top level tag that denotes configuration for the OpenStack components
 
@@ -16,8 +17,7 @@ Use launcher.py to deploy and clean up example environments.  These examples are
    -  auth\_url: - the URL to the OpenStack APIs (required)
    -  project\_name: - the name of the OpenStack project for the user
       (required)
-   -  http\_proxy: - the {{ host }}:{{ port }} of the proxy server the
-      HTTPPhotoman01(optional)
+   -  http\_proxy: - the {{ host }}:{{ port }} of the proxy server (optional)
 
 #. Go to the examples directory.
 
@@ -29,13 +29,13 @@ Use launcher.py to deploy and clean up example environments.  These examples are
 
     ::
 
-      python launch.py -t ./complex-network/deploy-complex-network.yaml -d
+      python launch.py -t ./inst-w-volume/deploy-vm-with-volume.yaml -e ./inst-w-volume/deploy-env.yaml -d
 
 #. Clean the deployment.
 
     ::
 
-      python launch.py -t ./complex-network/deploy-complex-network.yaml -c
+      python launch.py -t ./complex-network/deploy-complex-network.yaml -e ./inst-w-volume/deploy-env.yaml -c
 
 #. Customize the deployment by changing the yaml file.
 
@@ -123,7 +123,57 @@ Use launcher.py to deploy and clean up example environments.  These examples are
           -  is\_public: denotes whether or not the flavor is public (default = True)
           -  metadata: freeform dict() for special metadata (optional)
 
+   -  qos_specs: the QoS Specs to create
+
+       -  qos_spec: a QoS Spec to create (admin user credentials required)
+
+          -  os\_creds\_name: the connection name (default = 'default'
+             required or use "os\_user" below instead)
+          -  name: the name (required)
+          -  consumer: enumerations: 'front-end', 'back-end', 'both' (required)
+          -  specs: dict of custom values (optional)
+
+   -  volume_types: the Volume Type to create
+
+       -  volume_type: a Volume Type to create (admin user credentials required)
+
+          -  os\_creds\_name: the connection name (default = 'default'
+             required or use "os\_user" below instead)
+          -  name: the name (required)
+          -  description: the description (optional)
+          -  qos_spec_name: the name of the associate QoS Spec (optional)
+          -  public: visibility (default - False)
+          -  encryption: the encryption settings (optional)
+
+             -  name: the name (required)
+             -  provider_class: the provider class (required i.e. LuksEncryptor)
+             -  control_location: enumerations: 'front-end', 'back-end' (required)
+             -  cipher: the encryption algorithm/mode to use (optional)
+             -  key_size: the size of the encryption key, in bits (optional)
+
+   -  volumes: the Volume to create
+
+       -  volume: a Volume to create
+
+          -  os\_creds\_name: the connection name (default = 'default'
+             required or use "os\_user" below instead)
+          -  os\_user: the connection from a new user defined in template
+             (required or use "os\_creds\_name" above
+
+              - name: the user's name (required)
+              - project\_name: the project name to use
+
+          -  name: the name (required)
+          -  description: the description (optional)
+          -  size: the volume size in GB (default = 1)
+          -  image_name: the image name to leverage (optional)
+          -  type_name: the volume type name to associate (optional)
+          -  availability_zone: the zone name on which to deploy (optional)
+          -  multi_attach: when true, volume can be attached to more than one VM
+             (default = False)
+
    -  images: describes each image to create
+
        -  image:
 
           -  os\_creds\_name: the connection name (default = 'default'
