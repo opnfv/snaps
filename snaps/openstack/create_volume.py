@@ -233,7 +233,7 @@ class VolumeSettings:
         """
         Constructor
         :param name: the volume's name (required)
-        :param description: the volume's name (required)
+        :param description: the volume's name (optional)
         :param size: the volume's size in GB (default 1)
         :param image_name: when a glance image is used for the image source
                            (optional)

@@ -330,7 +330,7 @@ class StackSettings:
                          template_path attribute is None)
         :param template_path: the location of the heat template file (required
                               if template attribute is None)
-        :param env_values: k/v pairs of strings for substitution of template
+        :param env_values: dict() of strings for substitution of template
                            default values (optional)
         """
 

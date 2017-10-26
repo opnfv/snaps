@@ -51,10 +51,8 @@ class OSCreds:
         :param interface: Used to specify the endpoint type for keystone as
                           public, admin, internal
         :param proxy_settings: instance of os_credentials.ProxySettings class
-        :param cacert: Default to be True for http, or the certification file
-                       is specified for https verification, or set to be False
-                       to disable server certificate verification without cert
-                       file
+        :param cacert: True for https or the certification file for https
+                       verification (default=False)
         :param region_name: the region (optional default = None)
         """
         self.username = kwargs.get('username')
@@ -200,7 +198,6 @@ class ProxySettings:
         :param port: the HTTP proxy port
         :param https_host: the HTTPS proxy host (defaults to host)
         :param https_port: the HTTPS proxy port (defaults to port)
-        :param port: the HTTP proxy port
         :param ssh_proxy_cmd: the SSH proxy command string (optional)
         """
         self.host = kwargs.get('host')

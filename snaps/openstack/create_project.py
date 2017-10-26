@@ -184,8 +184,8 @@ class ProjectSettings:
                                       (default = 'Default').
                                       Field is used for v3 clients
         :param description: the description (optional)
-        :param users: list of users to associat project to (optional)
-        :param enabled: denotes whether or not the user is enabled
+        :param users: list of users to associate project to (optional)
+        :param enabled: denotes whether or not the project is enabled
                         (default True)
         """
 

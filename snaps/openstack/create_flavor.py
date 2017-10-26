@@ -104,9 +104,6 @@ class FlavorSettings:
     def __init__(self, **kwargs):
         """
         Constructor
-        :param config: dict() object containing the configuration settings
-                       using the attribute names below as each member's the
-                       key and overrides any of the other parameters.
         :param name: the flavor's name (required)
         :param flavor_id: the string ID (default 'auto')
         :param ram: the required RAM in MB (required)

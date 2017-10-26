@@ -222,6 +222,54 @@ OutputDomainObjectTests
 Ensures that all required members are included when constructing a
 Output domain object (for Heat)
 
+VolumeSettingsUnitTests
+-----------------------
+
+Ensures that all required members are included when constructing a
+VolumeSettings object
+
+VolumeDomainObjectTests
+-----------------------
+
+Ensures that all required members are included when constructing a
+Volume domain object (for Cinder)
+
+VolumeTypeSettingsUnitTests
+---------------------------
+
+Ensures that all required members are included when constructing a
+VolumeTypeSettings object
+
+VolumeTypeDomainObjectTests
+---------------------------
+
+Ensures that all required members are included when constructing a
+VolumeType domain object (for Cinder)
+
+VolumeTypeEncryptionObjectTests
+-------------------------------
+
+Ensures that all required members are included when constructing a
+VolumeTypeEncryption domain object (for Cinder)
+
+QoSSettingsUnitTests
+--------------------
+
+Ensures that all required members are included when constructing a
+QoSSettings object
+
+QoSSpecDomainObjectTests
+------------------------
+
+Ensures that all required members are included when constructing a
+QoSSpec domain object (for Cinder)
+
+VolumeDomainObjectTests
+-----------------------
+
+Ensures that all required members are included when constructing a
+Volume domain object (for Cinder)
+
 FloatingIpSettingsUnitTests
 ---------------------------
 

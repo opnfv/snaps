@@ -155,7 +155,7 @@ class NetworkSettings:
                          (default False).
         :param network_type: the type of network (i.e. vlan|flat).
         :param physical_network: the name of the physical network
-                                 (this is required when network_type is 'flat')
+                                 (required when network_type is 'flat')
         :param segmentation_id: the id of the segmentation
                                  (this is required when network_type is 'vlan')
         :param subnets or subnet_settings: List of SubnetSettings objects.
@@ -270,22 +270,23 @@ class SubnetSettings:
     def __init__(self, **kwargs):
         """
         Constructor - all parameters are optional except cidr (subnet mask)
-        :param cidr: The CIDR. REQUIRED if config parameter is None
-        :param ip_version: The IP version, which is 4 or 6.
-        :param name: The subnet name.
+        :param name: The subnet name (required)
+        :param cidr: The CIDR (required)
+        :param ip_version: The IP version, which is 4 or 6 (required)
         :param project_name: The name of the project who owns the network.
                              Only administrative users can specify a project ID
                              other than their own. You cannot change this value
-                             through authorization policies.
-        :param start: The start address for the allocation pools.
-        :param end: The end address for the allocation pools.
-        :param gateway_ip: The gateway IP address.
+                             through authorization policies (optional)
+        :param start: The start address for the allocation pools (optional)
+        :param end: The end address for the allocation pools (optional)
+        :param gateway_ip: The gateway IP address (optional)
         :param enable_dhcp: Set to true if DHCP is enabled and false if DHCP is
-                            disabled.
+                            disabled (optional)
         :param dns_nameservers: A list of DNS name servers for the subnet.
                                 Specify each name server as an IP address
                                 and separate multiple entries with a space.
-                                For example [8.8.8.7 8.8.8.8].
+                                For example [8.8.8.7 8.8.8.8]
+                                (default '8.8.8.8')
         :param host_routes: A list of host route dictionaries for the subnet.
                             For example:
                                 "host_routes":[
@@ -298,12 +299,12 @@ class SubnetSettings:
                                         "nexthop":"192.168.0.1"
                                     }
                                 ]
-        :param destination: The destination for static route
-        :param nexthop: The next hop for the destination.
+        :param destination: The destination for static route (optional)
+        :param nexthop: The next hop for the destination (optional)
         :param ipv6_ra_mode: A valid value is dhcpv6-stateful,
-                             dhcpv6-stateless, or slaac.
+                             dhcpv6-stateless, or slaac (optional)
         :param ipv6_address_mode: A valid value is dhcpv6-stateful,
-                                  dhcpv6-stateless, or slaac.
+                                  dhcpv6-stateless, or slaac (optional)
         :raise: SubnetSettingsError when config does not have or cidr values
                 are None
         """
@@ -406,34 +407,35 @@ class PortSettings:
         :param network_name: The name of the network on which to create the
                              port (required).
         :param admin_state_up: A boolean value denoting the administrative
-                               status of the port. True = up / False = down
+                               status of the port (default = True)
         :param project_name: The name of the project who owns the network.
                              Only administrative users can specify a project ID
                              other than their own. You cannot change this value
-                             through authorization policies.
+                             through authorization policies (optional)
         :param mac_address: The MAC address. If you specify an address that is
                             not valid, a Bad Request (400) status code is
                             returned. If you do not specify a MAC address,
                             OpenStack Networking tries to allocate one. If a
                             failure occurs, a Service Unavailable (503) status
-                            code is returned.
+                            code is returned (optional)
         :param ip_addrs: A list of dict objects where each contains two keys
                          'subnet_name' and 'ip' values which will get mapped to
                          self.fixed_ips. These values will be directly
-                         translated into the fixed_ips dict
+                         translated into the fixed_ips dict (optional)
         :param fixed_ips: A dict where the key is the subnet IDs and value is
-                          the IP address to assign to the port
+                          the IP address to assign to the port (optional and
+                          recommended to configure via ip_addrs instead)
         :param security_groups: One or more security group IDs.
         :param allowed_address_pairs: A dictionary containing a set of zero or
                                       more allowed address pairs. An address
                                       pair contains an IP address and MAC
-                                      address.
-        :param opt_value: The extra DHCP option value.
-        :param opt_name: The extra DHCP option name.
+                                      address (optional)
+        :param opt_value: The extra DHCP option value (optional)
+        :param opt_name: The extra DHCP option name (optional)
         :param device_owner: The ID of the entity that uses this port.
-                             For example, a DHCP agent.
+                             For example, a DHCP agent (optional)
         :param device_id: The ID of the device that uses this port.
-                          For example, a virtual server.
+                          For example, a virtual server (optional)
         :return:
         """
         if 'port' in kwargs:

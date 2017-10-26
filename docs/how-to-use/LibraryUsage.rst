@@ -30,15 +30,16 @@ attributes are listed below:
 -  auth\_url
 -  project\_name (aka. tenant\_name)
 -  identity\_api\_version (for obtaining Keystone authorization token.
-   Versions 2.0 & v3 only validated.)
--  image\_api\_version (Glance version 1 & 2 only validated)
+   default = 2, Versions 2.0 & v3 only validated.)
+-  image\_api\_version (default = 2, Glance version 1 & 2 only validated)
 -  network\_api\_version (Neutron version 2 currently only validated)
 -  compute\_api\_version (Nova version 2 currently only validated)
 -  heat\_api\_version (Heat version 1 currently only validated)
+-  volume\_api\_version (default = 2, Heat versions 2 & 3 currently only validated)
 -  user\_domain\_id (default='default')
--  user\_domain\_name (default='default')
+-  user\_domain\_name (default='Default')
 -  project\_domain\_id (default='default')
--  project\_domain\_name (default='default')
+-  project\_domain\_name (default='Default')
 -  interface (default='admin', used to specify the endpoint type for keystone: public, admin, internal)
 -  cacert (default=False, expected values T|F to denote server certificate verification, else value contains the path to an HTTPS certificate)
 -  region_name (The region name default=None)
@@ -88,6 +89,8 @@ Create User
       -  email - the user's email address (optional)
       -  enabled - flag to determine whether or not the user should be
          enabled (default=True)
+      -  roles - dict where key is the role's name and value is the name
+         the project to associate with the role (optional)
 
 .. code:: python
 
@@ -114,7 +117,7 @@ Create Project
       -  name - the project name (required)
       -  domain - the project's domain (default='default')
       -  description - the project's description (optional)
-      -  enables - flag to determine whether or not the project should
+      -  enabled - flag to determine whether or not the project should
          be enabled (default=True)
 
 
@@ -148,6 +151,7 @@ Create Flavor
          if backend supports QoS extension (default=1.0)
       -  is\_public - flag that denotes whether or not other projects
          can access image (default=True)
+      -  metadata - freeform dict() for special metadata (optional)
 
 .. code:: python
 
@@ -172,14 +176,19 @@ Create Image
       -  image\_user - the default image user generally used by
          OpenStackVMInstance class for obtaining an SSH connection
          (required)
-      -  img\_format - the image's format (i.e. qcow2) (required)
+      -  img\_format or format - the image's format (i.e. qcow2) (required)
       -  url - the download URL to obtain the image file (this or
          image\_file must be configured, not both)
       -  image\_file - the location of the file to be sourced from the
          local filesystem (this or url must be configured, not both)
+      -  extra\_properties - dict() object containing extra parameters to
+         pass when loading the image (i.e. ids of kernel and initramfs images)
       -  nic\_config\_pb\_loc - the location of the ansible playbook
          that can configure additional NICs. Floating IPs are required
-         to perform this operation. (optional)
+         to perform this operation. (optional and deprecated)
+      -  kernel\_image\_settings - the image settings for a kernel image (optional)
+      -  ramdisk\_image\_settings - the image settings for a ramdisk image (optional)
+      -  public - image will be created with public visibility when True (default = False)
 
 
 .. code:: python
@@ -209,6 +218,10 @@ Create Keypair
          file is to be written or currently resides (optional but highly
          recommended to leverage or the private key will be lost
          forever)
+      -  key\_size - The number of bytes for the key size when it needs to
+         be generated (value must be >=512, default = 1024)
+      -  delete\_on\_clean - when True, the key files will be deleted when
+         OpenStackKeypair#clean() is called (default = False)
 
 .. code:: python
 
@@ -242,6 +255,8 @@ Create Network
       -  network\_type - the type of network (i.e. vlan\|vxlan\|flat)
       -  physical\_network - the name of the physical network (required
          when network\_type is 'flat')
+      -  segmentation\_id - the id of the segmentation (required
+         when network\_type is 'vlan')
       -  subnet\_settings (list of optional
          snaps.openstack.create\_network.SubnetSettings objects)
 
@@ -360,20 +375,30 @@ Create Router
          custom ports to internal subnets (similar to internal\_subnets
          with more control)
 
-         -  name
-         -  network\_name
-         -  admin\_state\_up
+         -  name - the port's display name
+         -  network\_name - the name of the network on which to create the port
+         -  admin\_state\_up - A boolean value denoting the administrative
+            status of the port (default = True)
          -  project\_name - the name of the project (optional - can only
             be set by admin users)
-         -  mac\_address
-         -  ip\_addrs
-         -  fixed\_ips
-         -  security\_groups
-         -  allowed\_address\_pairs
-         -  opt\_value
-         -  opt\_name
-         -  device\_owner
-         -  device\_id
+         -  mac\_address - the port's MAC address to set (optional and
+            recommended not to set this configuration value)
+         -  ip\_addrs - list of dict() objects containing two keys 'subnet_name'
+            and 'ip' where the value of the 'ip' entry is the expected IP
+            address assigned. This value gets mapped to the fixed\_ips
+            attribute (optional)
+         -  fixed\_ips - dict() where the key is the subnet ID and value is the
+            associated IP address to assign to the port (optional)
+         -  security\_groups - list of security group IDs (not tested)
+         -  allowed\_address\_pairs - A dictionary containing a set of zero or
+            more allowed address pairs. An address pair contains an IP address
+            and MAC address (optional)
+         -  opt\_value - the extra DHCP option value (optional)
+         -  opt\_name - the extra DHCP option name (optional)
+         -  device\_owner - The ID of the entity that uses this port.
+            For example, a DHCP agent (optional)
+         -  device\_id - The ID of the device that uses this port.
+            For example, a virtual server (optional)
 
 .. code:: python
 
@@ -388,6 +413,118 @@ Create Router
 
     # Cleanup
     router_creator.clean()
+
+Create QoS Spec
+---------------
+
+-  Volume Type - snaps.openstack.create\_qos.OpenStackQoS
+
+   -  snaps.openstack.create\_qos.QoSSettings
+
+      -  name - the volume type's name (required)
+      -  consumer - the qos's consumer type of the enum type Consumer (required)
+      -  specs - freeform dict() to be added as 'specs' (optional)
+
+.. code:: python
+
+    from snaps.openstack.create_qos import QoSSettings, OpenStackQoS
+
+    qos_settings = QoSSettings(name='stack-name', consumer=Consumer.front-end)
+    qos_creator = OpenStackQoS(os_creds, vol_type_settings)
+    qos_creator.create()
+
+    # Perform logic
+    ...
+
+    # Cleanup
+    qos_creator.clean()
+
+Create Volume Type
+------------------
+
+-  Volume Type - snaps.openstack.create\_volume\_type.OpenStackVolumeType
+
+   -  snaps.openstack.create\_volume\_type.VolumeTypeSettings
+
+      -  name - the volume type's name (required)
+      -  description - the volume type's description (optional)
+      -  encryption - instance or config for VolumeTypeEncryptionSettings (optional)
+      -  qos\_spec\_name - name of the QoS Spec to associate (optional)
+      -  public - instance or config for VolumeTypeEncryptionSettings (optional)
+
+.. code:: python
+
+    from snaps.openstack.create_volume_type import VolumeTypeSettings, OpenStackVolumeType
+
+    vol_type_settings = VolumeTypeSettings(name='stack-name')
+    vol_type_creator = OpenStackHeatStack(os_creds, vol_type_settings)
+    vol_type_creator.create()
+
+    # Perform logic
+    ...
+
+    # Cleanup
+    vol_type_creator.clean()
+
+Create Volume
+-------------
+
+-  Volume - snaps.openstack.create\_volume.OpenStackVolume
+
+   -  snaps.openstack.create\_volume.VolumeSettings
+
+      -  name - the volume type's name (required)
+      -  description - the volume type's description (optional)
+      -  size - size of volume in GB (default = 1)
+      -  image_name - when a glance image is used for the image source (optional)
+      -  type\_name - the associated volume's type name (optional)
+      -  availability\_zone - the name of the compute server on which to
+         deploy the volume (optional)
+      -  multi_attach - when true, volume can be attached to more than one
+         server (default = False)
+
+.. code:: python
+
+    from snaps.openstack.create\_volume import VolumeSettings, OpenStackVolume
+
+    vol_settings = VolumeSettings(name='stack-name')
+    vol_creator = OpenStackVolume(os_creds, vol_settings)
+    vol_creator.create()
+
+    # Perform logic
+    ...
+
+    # Cleanup
+    vol_type_creator.clean()
+
+Create Heat Stack
+-----------------
+
+-  Heat Stack - snaps.openstack.create\_stack.OpenStackHeatStack
+
+   -  snaps.openstack.create\_stack.StackSettings
+
+      -  name - the stack's name (required)
+      -  template - the heat template in dict() format (required when
+         template_path is None)
+      -  template\_path - the location of the heat template file (required
+         when template is None)
+      -  env\_values - dict() of strings for substitution of template
+         default values (optional)
+
+.. code:: python
+
+    from snaps.openstack.create_stack import StackSettings, OpenStackHeatStack
+
+    stack_settings = StackSettings(name='stack-name', template_path='/tmp/template.yaml')
+    stack_creator = OpenStackHeatStack(os_creds, stack_settings)
+    stack_creator.create()
+
+    # Perform logic
+    ...
+
+    # Cleanup
+    stack_creator.clean()
 
 Create VM Instance
 ------------------
@@ -503,7 +640,12 @@ an example of this pattern as this is the only API where SNAPS is
 supporting more than one version)
 
 -  snaps.openstack.utils.keystone\_utils - for calls to the Keystone
-   APIs
+   APIs (support for versions 2 & 3)
 -  snaps.openstack.utils.glance\_utils - for calls to the Glance APIs
+   (support for versions 1 & 2)
 -  snaps.openstack.utils.neutron\_utils - for calls to the Neutron APIs
--  snaps.openstack.utils.nova\_utils - for calls to the Nova APIs
+   (version 2)
+-  snaps.openstack.utils.nova\_utils - for calls to the Nova APIs (version 2)
+-  snaps.openstack.utils.heat\_utils - for calls to the Heat APIs (version 1)
+-  snaps.openstack.utils.cinder\_utils - for calls to the Cinder APIs
+   (support for versions 2 & 3)

@@ -229,6 +229,133 @@ create_router_tests.py - CreateRouterNegativeTests
 |                                        |               | create a router to an external network that does not exist|
 +----------------------------------------+---------------+-----------------------------------------------------------+
 
+create_qos_tests.py - CreateQoSTests
+------------------------------------
+
++----------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                              |  Cinder API   | Description                                               |
++========================================+===============+===========================================================+
+| test_create_qos                        | 2 & 3         | Tests the creation of a QoS Spec with the class           |
+|                                        |               | OpenStackQoS                                              |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_delete_qos                 | 2 & 3         | Tests the creation of a QoS Spec with the class           |
+|                                        |               | OpenStackQoS, its deletion with cinder_utils.py the       |
+|                                        |               | the attempts to use the clean() method to ensure an       |
+|                                        |               | exception is not called                                   |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_same_qos                   | 2 & 3         | Tests the creation of a QoS Spec with the class           |
+|                                        |               | OpenStackQoS then instantiates another OpenStackQoS       |
+|                                        |               | object with the same configuration to ensure the second   |
+|                                        |               | instance returns the ID of the original                   |
++----------------------------------------+---------------+-----------------------------------------------------------+
+
+create_volume_type_tests.py - CreateSimpleVolumeTypeSuccessTests
+----------------------------------------------------------------
+
++----------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                              |  Cinder API   | Description                                               |
++========================================+===============+===========================================================+
+| test_create_volume_type                | 2 & 3         | Tests the creation of a Volume Type with the class        |
+|                                        |               | OpenStackVolumeType                                       |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_delete_volume_type         | 2 & 3         | Tests the creation of a Volume Type with the class        |
+|                                        |               | OpenStackVolumeType, its deletion with cinder_utils.py,   |
+|                                        |               | then attempts to use the clean() method to ensure an      |
+|                                        |               | exception is not raised                                   |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_same_volume_type           | 2 & 3         | Tests the creation of a Volume Type with the class        |
+|                                        |               | OpenStackVolumeType then instantiates another             |
+|                                        |               | OpenStackVolumeType object with the same configuration to |
+|                                        |               | ensure the second instance returns the ID of the original |
++----------------------------------------+---------------+-----------------------------------------------------------+
+
+create_volume_type_tests.py - CreateSimpleVolumeTypeComplexTests
+----------------------------------------------------------------
+
++-----------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                               |  Cinder API   | Description                                               |
++=========================================+===============+===========================================================+
+| test_volume_type_with_qos               | 2 & 3         | Tests the creation of a Volume Type with the class        |
+|                                         |               | OpenStackVolumeType with a QoSSpec                        |
++-----------------------------------------+---------------+-----------------------------------------------------------+
+| test_volume_type_with_encryption        | 2 & 3         | Tests the creation of a Volume Type with the class        |
+|                                         |               | OpenStackVolumeType with encryption                       |
++-----------------------------------------+---------------+-----------------------------------------------------------+
+| test_volume_type_with_qos_and_encryption| 2 & 3         | Tests the creation of a Volume Type with the class        |
+|                                         |               | OpenStackVolumeType with encryption and QoS Spec          |
++-----------------------------------------+---------------+-----------------------------------------------------------+
+
+create_volume_tests.py - CreateSimpleVolumeSuccessTests
+-------------------------------------------------------
+
++----------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                              |  Cinder API   | Description                                               |
++========================================+===============+===========================================================+
+| test_create_volume_simple              | 2 & 3         | Tests the creation of a Volume Type with the class        |
+|                                        |               | OpenStackVolume                                           |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_delete_volume              | 2 & 3         | Tests the creation of a Volume with the class             |
+|                                        |               | OpenStackVolume, its deletion with cinder_utils.py, then  |
+|                                        |               | attempts to use the clean() method to ensure an           |
+|                                        |               | exception is not raised                                   |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_same_volume                | 2 & 3         | Tests the creation of a Volume with the class             |
+|                                        |               | OpenStackVolume then instantiates another                 |
+|                                        |               | OpenStackVolume object with the same configuration to     |
+|                                        |               | ensure the second instance returns the ID of the original |
++----------------------------------------+---------------+-----------------------------------------------------------+
+
+create_volume_tests.py - CreateSimpleVolumeFailureTests
+-------------------------------------------------------
+
++----------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                              |  Cinder API   | Description                                               |
++========================================+===============+===========================================================+
+| test_create_volume_bad_size            | 2 & 3         | Tests to ensure that attempting to create a volume with a |
+|                                        |               | size of -1 raises a BadRequest exception                  |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_volume_bad_type            | 2 & 3         | Tests to ensure that attempting to create a volume with a |
+|                                        |               | type that does not exist raises a NotFound exception      |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_volume_bad_image           | 2 & 3         | Tests to ensure that attempting to create a volume with an|
+|                                        |               | image that does not exist raises a BadRequest exception   |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_volume_bad_zone            | 2 & 3         | Tests to ensure that attempting to create a volume with an|
+|                                        |               | invalid availability zone raises a BadRequest exception   |
++----------------------------------------+---------------+-----------------------------------------------------------+
+
+create_volume_tests.py - CreateVolumeWithTypeTests
+--------------------------------------------------
+
++----------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                              |  Cinder API   | Description                                               |
++========================================+===============+===========================================================+
+| test_bad_volume_type                   | 2 & 3         | Tests to ensure the creation of a Volume with the         |
+|                                        |               | OpenStackVolume#create() method raises a NotFound         |
+|                                        |               | exception when attempting to apply a VolumeType that does |
+|                                        |               | not exist                                                 |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_valid_volume_type                 | 2 & 3         | Tests to ensure the creation of a Volume with the         |
+|                                        |               | OpenStackVolume#create() method properly creates the      |
+|                                        |               | volume when associating with a valid VolumeType           |
++----------------------------------------+---------------+-----------------------------------------------------------+
+
+create_volume_tests.py - CreateVolumeWithImageTests
+---------------------------------------------------
+
++----------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                              |  Cinder API   | Description                                               |
++========================================+===============+===========================================================+
+| test_bad_image_name                    | 2 & 3         | Tests to ensure the creation of a Volume with the         |
+|                                        |               | OpenStackVolume#create() method raises a BadRequest       |
+|                                        |               | exception when attempting to apply an image that does not |
+|                                        |               | exist                                                     |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_valid_volume_image                | 2 & 3         | Tests to ensure the creation of a Volume with the         |
+|                                        |               | OpenStackVolume#create() method properly creates the      |
+|                                        |               | volume when associating with a valid image                |
++----------------------------------------+---------------+-----------------------------------------------------------+
+
 create_stack_tests.py - CreateStackSuccessTests
 -----------------------------------------------
 
@@ -408,6 +535,19 @@ create_instance_tests.py - InstanceSecurityGroupTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | test_add_same_security_group          | Nova 2        | Ensures that a VM instance does not add a security group  |
 |                                       | Neutron 2     | that has already been added to the instance               |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+create_instance_tests.py - CreateInstanceVolumeTests
+----------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | API Versions  | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_instance_with_one_volume  | Nova 2        | Ensures that a VM instance can have one volume attached   |
+|                                       | Cinder 2 & 3  | to it                                                     |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_instance_with_two_volumes | Nova 2        | Ensures that a VM instance can have two volumes attached  |
+|                                       | Cinder 2 & 3  | to it                                                     |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
 ansible_utils_tests.py - AnsibleProvisioningTests

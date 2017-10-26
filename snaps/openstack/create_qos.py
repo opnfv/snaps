@@ -112,7 +112,8 @@ class QoSSettings:
         """
         Constructor
         :param name: the qos's name (required)
-        :param consumer: the qos's consumer type (required)
+        :param consumer: the qos's consumer type of the enum type Consumer
+                         (required)
         :param specs: dict of key/values
         """
 

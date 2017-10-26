@@ -242,7 +242,7 @@ class ImageSettings:
         Constructor
         :param name: the image's name (required)
         :param image_user: the image's default sudo user (required)
-        :param format or img_format: the image type (required)
+        :param format or img_format: the image format type (required)
         :param url or download_url: the image download location (requires url
                                     or img_file)
         :param image_file: the image file location (requires url or img_file)
@@ -253,7 +253,7 @@ class ImageSettings:
         :param nic_config_pb_loc: the file location to the Ansible Playbook
                                   that can configure multiple NICs
         :param kernel_image_settings: the settings for a kernel image
-        :param ramdisk_image_settings: the settings for a kernel image
+        :param ramdisk_image_settings: the settings for a ramdisk image
         :param exists: When True, an image with the given name must exist
         :param public: When True, an image will be created with public
                        visibility

@@ -222,11 +222,12 @@ class SecurityGroupSettings:
 
     def __init__(self, **kwargs):
         """
-        Constructor - all parameters are optional
-        :param name: The keypair name.
-        :param description: The security group's description
+        Constructor
+        :param name: The security group's name (required)
+        :param description: The security group's description (optional)
         :param project_name: The name of the project under which the security
                              group will be created
+        :param rule_settings: a list of SecurityGroupRuleSettings objects
         :return:
         """
         self.name = kwargs.get('name')
@@ -345,17 +346,11 @@ class SecurityGroupRuleSettings:
         :param port_range_min: The minimum port number in the range that is
                                matched by the security group rule. When the
                                protocol is TCP or UDP, this value must be <=
-                               port_range_max. When the protocol is ICMP, this
-                               value must be an ICMP type.
+                               port_range_max.
         :param port_range_max: The maximum port number in the range that is
                                matched by the security group rule. When the
                                protocol is TCP or UDP, this value must be <=
-                               port_range_max. When the protocol is ICMP, this
-                               value must be an ICMP type.
-        :param sec_grp_rule: The OpenStack rule object to a security group rule
-                             object to associate
-                             (note: Cannot be set using the config object nor
-                             can I see any real uses for this parameter)
+                               port_range_max.
         :param remote_ip_prefix: The remote IP prefix to associate with this
                                  metering rule packet (optional)
 

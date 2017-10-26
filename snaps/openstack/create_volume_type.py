@@ -104,8 +104,8 @@ class VolumeTypeSettings:
         :param description: the volume's name (optional)
         :param encryption: VolumeTypeEncryptionSettings (optional)
         :param qos_spec_name: name of the QoS Spec to associate (optional)
-        :param public: When True, an image will be created with public
-                       visibility (default - False)
+        :param public: volume visibility where True denotes global
+                       (default - False)
 
         TODO - Implement project_access parameter that will associate this
         VolumeType to a list of project names

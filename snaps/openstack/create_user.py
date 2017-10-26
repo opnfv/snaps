@@ -118,13 +118,13 @@ class UserSettings:
         :param name: the user's name (required)
         :param password: the user's password (required)
         :param project_name: the user's primary project name (optional)
-        :param domain_name: the user's domain name (default='default'). For v3
+        :param domain_name: the user's domain name (default='Default'). For v3
                             APIs
         :param email: the user's email address (optional)
         :param enabled: denotes whether or not the user is enabled
                         (default True)
         :param roles: dict where key is the role's name and value is the name
-                      the project to associate with the role
+                      of the project to associate with the role (optional)
         """
 
         self.name = kwargs.get('name')

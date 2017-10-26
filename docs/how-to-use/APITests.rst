@@ -34,6 +34,12 @@ nova_utils_tests.py - NovaSmokeTests
 Ensures that a Nova client can be obtained as well as the proper
 exceptions thrown with the wrong credentials.
 
+cinder_utils_tests.py - CinderSmokeTests
+----------------------------------------
+
+Ensures that a Cinder client can be obtained as well as the proper
+exceptions thrown with the wrong credentials.
+
 heat_utils_tests.py - HeatSmokeTests
 ------------------------------------
 
@@ -256,6 +262,95 @@ neutron_utils_tests.py - NeutronUtilsFloatingIpTests
 | test_floating_ips                     | 2             | Ensures that a floating IP can be created                 |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+cinder_utils_tests.py - CinderUtilsQoSTests
+-------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             |  Cinder API   | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_qos_both                  | 2 & 3         | Ensures that a QoS Spec can be created with a Consumer    |
+|                                       |               | value of 'both'                                           |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_qos_front                 | 2 & 3         | Ensures that a QoS Spec can be created with a Consumer    |
+|                                       |               | value of 'front-end'                                      |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_qos_back                  | 2 & 3         | Ensures that a QoS Spec can be created with a Consumer    |
+|                                       |               | value of 'back-end'                                       |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_delete_qos                | 2 & 3         | Ensures that a QoS Spec can be created and deleted        |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+cinder_utils_tests.py - CinderUtilsSimpleVolumeTypeTests
+--------------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             |  Cinder API   | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_simple_volume_type        | 2 & 3         | Tests the creation of a simple volume type with the       |
+|                                       |               | function cinder_utils#create_volume_type()                |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_delete_volume_type        | 2 & 3         | Tests the creation of a simple volume type with the       |
+|                                       |               | function cinder_utils#create_volume_type() then deletes   |
+|                                       |               | with the function cinder_utils#delete_volume_type()       |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+cinder_utils_tests.py - CinderUtilsAddEncryptionTests
+-----------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             |  Cinder API   | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_simple_encryption         | 2 & 3         | Tests the creation of a simple volume type encryption     |
+|                                       |               | with the function cinder_utils#create_volume_encryption() |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_delete_encryption         | 2 & 3         | Tests the creation of a simple volume type encryption     |
+|                                       |               | with the function cinder_utils#create_volume_encryption() |
+|                                       |               | then deletes with the function                            |
+|                                       |               | cinder_utils#delete_volume_type_encryption()              |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_with_all_attrs            | 2 & 3         | Tests the creation of a simple volume type encryption     |
+|                                       |               | with the function cinder_utils#create_volume_encryption() |
+|                                       |               | where all configuration attributes have been set          |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_bad_key_size              | 2 & 3         | Tests to ensure that the function                         |
+|                                       |               | cinder_utils#create_volume_encryption() raises a          |
+|                                       |               | BadRequest exception when the key_size attribute is -1    |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+cinder_utils_tests.py - CinderUtilsVolumeTypeCompleteTests
+----------------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             |  Cinder API   | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_with_encryption           | 2 & 3         | Tests the creation of a volume type with encryption       |
+|                                       |               | with the function cinder_utils#create_volume_type()       |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_with_qos                  | 2 & 3         | Tests the creation of a volume type with a QoS Spec       |
+|                                       |               | with the function cinder_utils#create_volume_type()       |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_with_invalid_qos          | 2 & 3         | Tests the creation of a volume type with an invalid QoS   |
+|                                       |               | Spec with the function cinder_utils#create_volume_type()  |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_with_qos_and_encryption   | 2 & 3         | Tests the creation of a volume type with a QoS Spec and   |
+|                                       |               | encryption with the function                              |
+|                                       |               | cinder_utils#create_volume_type()                         |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+cinder_utils_tests.py - CinderUtilsVolumeTests
+----------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             |  Cinder API   | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_simple_volume             | 2 & 3         | Tests the creation of a simple volume with the function   |
+|                                       |               | cinder_utils#create_volume()                              |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_delete_volume             | 2 & 3         | Tests the creation of a volume with the function          |
+|                                       |               | cinder_utils#create_volume() then deletion with the       |
+|                                       |               | function cinder_utils#delete_volume()                     |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 nova_utils_tests.py - NovaUtilsKeypairTests
 -------------------------------------------
 
@@ -293,6 +388,16 @@ nova_utils_tests.py - NovaUtilsInstanceTests
 +=======================================+===============+===========================================================+
 | test_create_instance                  | 2             | Ensures that a VM instance can be properly created via    |
 |                                       |               | nova_utils.create_server()                                |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+nova_utils_tests.py - NovaUtilsInstanceVolumeTests
+--------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Nova API      | Description                                               |
++=======================================+===============+===========================================================+
+| test_add_remove_volume                | 2             | Ensures that a VM instance can properly attach and detach |
+|                                       |               | a volume using the nova interface                         |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
 create_flavor_tests.py - CreateFlavorTests
