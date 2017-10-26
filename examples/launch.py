@@ -33,10 +33,14 @@ from snaps.openstack.create_keypairs import KeypairSettings, OpenStackKeypair
 from snaps.openstack.create_network import (
     PortSettings, NetworkSettings, OpenStackNetwork)
 from snaps.openstack.create_project import OpenStackProject, ProjectSettings
+from snaps.openstack.create_qos import QoSSettings, OpenStackQoS
 from snaps.openstack.create_router import RouterSettings, OpenStackRouter
 from snaps.openstack.create_security_group import (
     OpenStackSecurityGroup, SecurityGroupSettings)
 from snaps.openstack.create_user import OpenStackUser, UserSettings
+from snaps.openstack.create_volume import OpenStackVolume, VolumeSettings
+from snaps.openstack.create_volume_type import (
+    OpenStackVolumeType, VolumeTypeSettings)
 from snaps.openstack.os_credentials import OSCreds, ProxySettings
 from snaps.openstack.utils import deploy_utils
 from snaps.provisioning import ansible_utils
@@ -126,7 +130,8 @@ def __get_os_credentials(os_conn_config):
     if proxy_settings:
         config['proxy_settings'] = proxy_settings
     else:
-        del config['proxy_settings']
+        if config.get('proxy_settings'):
+            del config['proxy_settings']
 
     return OSCreds(**config)
 
@@ -631,6 +636,25 @@ def main(arguments):
                     os_creds_dict, OpenStackFlavor, FlavorSettings,
                     os_config.get('flavors'), 'flavor', clean, users_dict)
                 creators.append(flavors_dict)
+
+                # Create QoS specs
+                qos_dict = __create_instances(
+                    os_creds_dict, OpenStackQoS, QoSSettings,
+                    os_config.get('qos_specs'), 'qos_spec', clean, users_dict)
+                creators.append(qos_dict)
+
+                # Create volume types
+                vol_type_dict = __create_instances(
+                    os_creds_dict, OpenStackVolumeType, VolumeTypeSettings,
+                    os_config.get('volume_types'), 'volume_type', clean,
+                    users_dict)
+                creators.append(vol_type_dict)
+
+                # Create volume types
+                vol_dict = __create_instances(
+                    os_creds_dict, OpenStackVolume, VolumeSettings,
+                    os_config.get('volumes'), 'volume', clean, users_dict)
+                creators.append(vol_dict)
 
                 # Create images
                 images_dict = __create_instances(

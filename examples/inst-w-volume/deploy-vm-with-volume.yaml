@@ -1,0 +1,141 @@
+# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+openstack:
+  connections:
+    # Note - when http_proxy is set, you must also configure ssh for proxy tunneling on your host.
+    - connection:
+        name: admin-creds
+        username: {{ admin_user }}
+        project_name: {{ admin_proj }}
+        password: {{ admin_pass }}
+        auth_url: {{ auth_url }}
+        identity_api_version: {{ id_api_version }}
+  projects:
+    - project:
+        os_creds_name: admin-creds
+        name: {{ proj }}
+        description: Project for Orchestrators
+        users:
+          - {{ username }}
+          - {{ admin_user }}
+  users:
+    - user:
+        os_creds_name: admin-creds
+        name: {{ username }}
+        password: {{ pass }}
+        project_name: {{ proj }}
+        roles: {admin: {{ proj }}}
+  flavors:
+    - flavor:
+        os_creds_name: admin-creds
+        name: {{ flavor_name }}
+        ram: {{ flavor_ram }}
+        disk: {{ flavor_disk }}
+        vcpus: {{ flavor_cpus }}
+  qos_specs:
+    - qos_spec:
+        os_creds_name: admin-creds
+        name: {{ qos_name }}
+        consumer: both
+  volume_types:
+    - volume_type:
+        os_creds_name: admin-creds
+        name: {{ vol_type_name }}
+        encryption:
+          name: {{ vol_type_encryption_name }}
+          provider_class: LuksEncryptor
+          control_location: front-end
+  volumes:
+    - volume:
+        os_user:
+          name: {{ username }}
+          project_name: {{ proj }}
+        name: {{ volume_name }}
+        size: 10
+  images:
+    - image:
+        os_creds_name: admin-creds
+        name: {{ image_name }}
+        format: {{ image_format }}
+        image_user: {{ image_user }}
+        download_url: {{ image_url }}
+        image_file: {{ image_file }}
+        public: True
+  networks:
+    - network:
+        os_user:
+          name: {{ username }}
+          project_name: {{ proj }}
+        name: {{ net_name }}
+        project_name: {{ proj }}
+        subnets:
+          - subnet:
+              name: {{ subnet_name }}
+              project_name: {{ proj }}
+              cidr: {{ cidr }}
+              dns_nameservers: [8.8.8.8]
+  routers:
+    - router:
+        os_user:
+          name: {{ username }}
+          project_name: {{ proj }}
+        name: {{ router_name }}
+        external_gateway: {{ ext_net }}
+        internal_subnets:
+          - {{ subnet_name }}
+  keypairs:
+    - keypair:
+        os_user:
+          name: {{ username }}
+          project_name: {{ proj }}
+        name: {{ kp_name }}
+        public_filepath: {{ kp_pub_path }}
+        private_filepath: {{ kp_priv_path }}
+        delete_on_clean: True
+  security_groups:
+    - security_group:
+        os_user:
+          name: {{ username }}
+          project_name: {{ proj }}
+        name: {{ sg_name }}
+        rules:
+          - direction: ingress
+            protocol: icmp
+          - direction: ingress
+            protocol: tcp
+            port_range_min: 22
+            port_range_max: 22
+  instances:
+    - instance:
+        os_user:
+          name: {{ username }}
+          project_name: {{ proj }}
+        name: {{ inst_name }}
+        flavor: {{ flavor_name }}
+        imageName: {{ image_name }}
+        keypair_name: {{ kp_name }}
+        security_group_names: [{{ sg_name }}]
+        volume_names:
+          - {{ volume_name }}
+        ports:
+          - port:
+              name: {{ port_name_prfx }}-1a
+              network_name: {{ net_name }}
+        floating_ips:
+          - floating_ip:
+              name: fip1
+              port_name: {{ port_name }}
+              router_name: {{ router_name }}
