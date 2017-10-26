@@ -1,0 +1,10 @@
+Verified+1: jenkins-ci <jenkins-opnfv-ci@opnfv.org>
+Code-Review+1: Linda Wang <wangwulin@huawei.com>
+Code-Review+1: Taseer Ahmed <taseer94@gmail.com>
+Code-Review+1: Jose Lausuch <jalausuch@suse.com>
+Code-Review+2: Steven Pisarski <s.pisarski@cablelabs.com>
+Submitted-by: Steven Pisarski <s.pisarski@cablelabs.com>
+Submitted-at: Thu, 26 Oct 2017 14:10:58 +0000
+Reviewed-on: https://gerrit.opnfv.org/gerrit/46187
+Project: snaps
+Branch: refs/heads/master
