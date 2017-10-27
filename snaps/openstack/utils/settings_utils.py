@@ -20,6 +20,7 @@ from snaps.openstack.create_instance import (
 from snaps.openstack.create_keypairs import KeypairSettings
 from snaps.openstack.create_network import (
     PortSettings, SubnetSettings, NetworkSettings)
+from snaps.openstack.create_volume import VolumeSettings
 from snaps.openstack.utils import (
     neutron_utils, nova_utils, heat_utils, glance_utils)
 
@@ -61,6 +62,19 @@ def create_subnet_settings(neutron, network):
         kwargs['ipv6_address_mode'] = subnet.ipv6_address_mode
         out.append(SubnetSettings(**kwargs))
     return out
+
+
+def create_volume_settings(volume):
+    """
+    Returns a VolumeSettings object
+    :param volume: a SNAPS-OO Volume object
+    """
+
+    return VolumeSettings(
+        name=volume.name, description=volume.description,
+        size=volume.size, type_name=volume.type,
+        availability_zone=volume.availability_zone,
+        multi_attach=volume.multi_attach)
 
 
 def create_vm_inst_settings(nova, neutron, server):

@@ -1,0 +1,51 @@
+##############################################################################
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+##############################################################################
+heat_template_version: 2015-04-30
+
+description: Simple template to deploy a single volume with encryption
+
+parameters:
+  volume_name:
+    type: string
+    label: Volume name
+    description: The name of the volume
+    default: test-vol-name
+  volume_type_name:
+    type: string
+    label: Volume Type name
+    description: The name of the volume type
+    default: test-vol-type-name
+
+resources:
+  volume_type:
+      type: OS::Cinder::VolumeType
+      properties:
+        name: { get_param: volume_type_name }
+
+  encryption_vol_type:
+    type: OS::Cinder::EncryptedVolumeType
+    properties:
+      provider: nova.volume.encryptors.luks.LuksEncryptor
+      control_location: front-end
+      volume_type: { get_resource: volume_type }
+
+  volume:
+    type: OS::Cinder::Volume
+    properties:
+      name: { get_param: volume_name }
+      size: 1
+      volume_type: { get_resource: encryption_vol_type }

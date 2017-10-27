@@ -13,9 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import unittest
+
 import os
 import uuid
 
+from snaps.domain.volume import Volume
 from snaps.openstack import (
     create_image, create_network, create_router, create_flavor,
     create_keypairs, create_instance)
@@ -339,3 +342,21 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
         self.assertIsNotNone(derived_image_settings)
         self.assertEqual(self.image_creator.image_settings.name,
                          derived_image_settings.name)
+
+
+class SettingsUtilsVolumeTests(unittest.TestCase):
+    """
+    Exercises the settings_utils.py functions around volumes
+    """
+
+    def test_vol_settings_from_vol(self):
+        volume = Volume(
+            name='vol-name', volume_id='vol-id', description='desc', size=99,
+            vol_type='vol-type', availability_zone='zone1', multi_attach=True)
+        settings = settings_utils.create_volume_settings(volume)
+        self.assertEqual(volume.name, settings.name)
+        self.assertEqual(volume.description, settings.description)
+        self.assertEqual(volume.size, settings.size)
+        self.assertEqual(volume.type, settings.type_name)
+        self.assertEqual(volume.availability_zone, settings.availability_zone)
+        self.assertEqual(volume.multi_attach, settings.multi_attach)

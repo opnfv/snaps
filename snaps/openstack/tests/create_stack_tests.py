@@ -394,7 +394,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             nova, vm_inst_creators[0].get_vm_inst().id))
 
 
-class CreateComplexStackTests(OSIntegrationTestCase):
+class CreateStackFloatingIpTests(OSIntegrationTestCase):
     """
     Tests for the CreateStack class defined in create_stack.py
     """
@@ -491,6 +491,76 @@ class CreateComplexStackTests(OSIntegrationTestCase):
             else:
                 vm_settings = vm_inst_creator.instance_settings
                 self.assertEqual(0, len(vm_settings.floating_ip_settings))
+
+
+class CreateStackVolumeTests(OSIntegrationTestCase):
+    """
+    Tests for the CreateStack class defined in create_stack.py
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateStack object that is responsible for downloading
+        and creating an OS stack file within OpenStack
+        """
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+
+        self.heat_creds = self.admin_os_creds
+        self.heat_creds.project_name = self.admin_os_creds.project_name
+
+        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.stack_creator = None
+
+        self.volume_name = self.guid + '-volume'
+        self.volume_type_name = self.guid + '-volume-type'
+
+        self.env_values = {
+            'volume_name': self.volume_name,
+            'volume_type_name': self.volume_type_name}
+
+        self.heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'volume_heat_template.yaml')
+
+    def tearDown(self):
+        """
+        Cleans the stack and downloaded stack file
+        """
+        if self.stack_creator:
+            try:
+                self.stack_creator.clean()
+            except:
+                pass
+
+        super(self.__class__, self).__clean__()
+
+    def test_retrieve_volume_creator(self):
+        """
+        Tests the creation of an OpenStack stack from Heat template file and
+        the retrieval of an OpenStackVolume, OpenStackVolumeType, and
+        OpenStackQoS creator/state machine instances
+        """
+        stack_settings = StackSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template_path=self.heat_tmplt_path,
+            env_values=self.env_values)
+        self.stack_creator = create_stack.OpenStackHeatStack(
+            self.heat_creds, stack_settings)
+        created_stack = self.stack_creator.create()
+        self.assertIsNotNone(created_stack)
+
+        volume_creators = self.stack_creator.get_volume_creators()
+        self.assertEqual(1, len(volume_creators))
+
+        creator = volume_creators[0]
+        self.assertEqual(self.volume_name, creator.volume_settings.name)
+        self.assertEqual(self.volume_name, creator.get_volume().name)
+        self.assertEqual(self.volume_type_name,
+                         creator.volume_settings.type_name)
+        self.assertEqual(self.volume_type_name, creator.get_volume().type)
+        self.assertEqual(1, creator.volume_settings.size)
+        self.assertEqual(1, creator.get_volume().size)
 
 
 class CreateStackNegativeTests(OSIntegrationTestCase):

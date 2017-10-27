@@ -23,7 +23,8 @@ from oslo_serialization import jsonutils
 from snaps import file_utils
 from snaps.domain.stack import Stack, Resource, Output
 
-from snaps.openstack.utils import keystone_utils, neutron_utils, nova_utils
+from snaps.openstack.utils import keystone_utils, neutron_utils, nova_utils, \
+    cinder_utils
 
 __author__ = 'spisarski'
 
@@ -140,11 +141,12 @@ def __get_os_resources(heat_cli, stack):
     return heat_cli.resources.list(stack.id)
 
 
-def get_resources(heat_cli, stack):
+def get_resources(heat_cli, stack, res_type=None):
     """
     Returns all of the OpenStack resource objects for a given stack
     :param heat_cli: the OpenStack heat client
     :param stack: the SNAPS-OO Stack domain object
+    :param res_type: the type name to filter
     :return: a list
     """
     os_resources = __get_os_resources(heat_cli, stack)
@@ -152,8 +154,11 @@ def get_resources(heat_cli, stack):
     if os_resources:
         out = list()
         for os_resource in os_resources:
-            out.append(Resource(resource_type=os_resource.resource_type,
-                                resource_id=os_resource.physical_resource_id))
+            if ((res_type and os_resource.resource_type == res_type)
+                    or not res_type):
+                out.append(Resource(
+                    resource_type=os_resource.resource_type,
+                    resource_id=os_resource.physical_resource_id))
         return out
 
 
@@ -190,13 +195,12 @@ def get_stack_networks(heat_cli, neutron, stack):
     """
 
     out = list()
-    resources = get_resources(heat_cli, stack)
+    resources = get_resources(heat_cli, stack, 'OS::Neutron::Net')
     for resource in resources:
-        if resource.type == 'OS::Neutron::Net':
-            network = neutron_utils.get_network_by_id(
-                neutron, resource.id)
-            if network:
-                out.append(network)
+        network = neutron_utils.get_network_by_id(
+            neutron, resource.id)
+        if network:
+            out.append(network)
 
     return out
 
@@ -211,17 +215,36 @@ def get_stack_servers(heat_cli, nova, stack):
     """
 
     out = list()
-    resources = get_resources(heat_cli, stack)
+    resources = get_resources(heat_cli, stack, 'OS::Nova::Server')
     for resource in resources:
-        if resource.type == 'OS::Nova::Server':
-            try:
-                server = nova_utils.get_server_object_by_id(
-                    nova, resource.id)
-                if server:
-                    out.append(server)
-            except NotFound:
-                logger.warn(
-                    'VmInst cannot be located with ID %s', resource.id)
+        try:
+            server = nova_utils.get_server_object_by_id(nova, resource.id)
+            if server:
+                out.append(server)
+        except NotFound:
+            logger.warn('VmInst cannot be located with ID %s', resource.id)
+
+    return out
+
+
+def get_stack_volumes(heat_cli, cinder, stack):
+    """
+    Returns an instance of NetworkSettings for each network owned by this stack
+    :param heat_cli: the OpenStack heat client object
+    :param cinder: the OpenStack cinder client object
+    :param stack: the SNAPS-OO Stack domain object
+    :return: a list of NetworkSettings
+    """
+
+    out = list()
+    resources = get_resources(heat_cli, stack, 'OS::Cinder::Volume')
+    for resource in resources:
+        try:
+            server = cinder_utils.get_volume_by_id(cinder, resource.id)
+            if server:
+                out.append(server)
+        except NotFound:
+            logger.warn('VmInst cannot be located with ID %s', resource.id)
 
     return out
 
