@@ -68,7 +68,7 @@ from snaps.openstack.tests.create_security_group_tests import (
     SecurityGroupSettingsUnitTests)
 from snaps.openstack.tests.create_stack_tests import (
     StackSettingsUnitTests, CreateStackSuccessTests, CreateStackNegativeTests,
-    CreateComplexStackTests)
+    CreateStackFloatingIpTests, CreateStackVolumeTests)
 from snaps.openstack.tests.create_user_tests import (
     UserSettingsUnitTests, CreateUserSuccessTests)
 from snaps.openstack.tests.create_volume_tests import (
@@ -88,7 +88,7 @@ from snaps.openstack.utils.tests.glance_utils_tests import (
     GlanceSmokeTests, GlanceUtilsTests)
 from snaps.openstack.utils.tests.heat_utils_tests import (
     HeatSmokeTests, HeatUtilsCreateSimpleStackTests,
-    HeatUtilsCreateComplexStackTests)
+    HeatUtilsCreateComplexStackTests, HeatUtilsVolumeTests)
 from snaps.openstack.utils.tests.keystone_utils_tests import (
     KeystoneSmokeTests, KeystoneUtilsTests)
 from snaps.openstack.utils.tests.neutron_utils_tests import (
@@ -98,6 +98,8 @@ from snaps.openstack.utils.tests.neutron_utils_tests import (
 from snaps.openstack.utils.tests.nova_utils_tests import (
     NovaSmokeTests, NovaUtilsKeypairTests, NovaUtilsFlavorTests,
     NovaUtilsInstanceTests, NovaUtilsInstanceVolumeTests)
+from snaps.openstack.utils.tests.settings_utils_tests import (
+    SettingsUtilsVolumeTests)
 from snaps.provisioning.tests.ansible_utils_tests import (
     AnsibleProvisioningTests)
 from snaps.tests.file_utils_tests import FileUtilsTests
@@ -198,6 +200,8 @@ def add_unit_tests(suite):
         VolumeTypeSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         VolumeSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        SettingsUtilsVolumeTests))
 
 
 def add_openstack_client_tests(suite, os_creds, ext_net_name,
@@ -319,6 +323,10 @@ def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True,
         image_metadata=image_metadata))
     suite.addTest(OSComponentTestCase.parameterize(
         HeatUtilsCreateComplexStackTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, log_level=log_level,
+        image_metadata=image_metadata))
+    suite.addTest(OSComponentTestCase.parameterize(
+        HeatUtilsVolumeTests, os_creds=os_creds,
         ext_net_name=ext_net_name, log_level=log_level,
         image_metadata=image_metadata))
     suite.addTest(OSComponentTestCase.parameterize(
@@ -503,6 +511,11 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateStackVolumeTests, os_creds=os_creds, ext_net_name=ext_net_name,
+        use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
         CreateStackNegativeTests, os_creds=os_creds, ext_net_name=ext_net_name,
         use_keystone=use_keystone,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
@@ -515,7 +528,7 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
             flavor_metadata=flavor_metadata, image_metadata=image_metadata,
             log_level=log_level))
         suite.addTest(OSIntegrationTestCase.parameterize(
-            CreateComplexStackTests, os_creds=os_creds,
+            CreateStackFloatingIpTests, os_creds=os_creds,
             ext_net_name=ext_net_name, use_keystone=use_keystone,
             flavor_metadata=flavor_metadata, image_metadata=image_metadata,
             log_level=log_level))

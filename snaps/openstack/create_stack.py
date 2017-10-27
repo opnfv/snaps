@@ -19,8 +19,11 @@ import time
 from heatclient.exc import HTTPNotFound
 
 from snaps.openstack.create_instance import OpenStackVmInstance
+from snaps.openstack.create_volume import OpenStackVolume
+from snaps.openstack.create_volume_type import OpenStackVolumeType
 from snaps.openstack.openstack_creator import OpenStackCloudObject
-from snaps.openstack.utils import nova_utils, settings_utils, glance_utils
+from snaps.openstack.utils import (
+    nova_utils, settings_utils, glance_utils, cinder_utils)
 
 from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.utils import heat_utils, neutron_utils
@@ -95,25 +98,22 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         self.initialize()
 
         if self.__stack:
-            logger.info('Found stack with name - ' + self.stack_settings.name)
+            logger.info('Found stack with name - %s', self.stack_settings.name)
             return self.__stack
         else:
             self.__stack = heat_utils.create_stack(self.__heat_cli,
                                                    self.stack_settings)
             logger.info(
-                'Created stack with name - ' + self.stack_settings.name)
+                'Created stack with name - %s', self.stack_settings.name)
             if self.__stack and self.stack_complete(block=True):
-                logger.info(
-                    'Stack is now active with name - ' +
-                    self.stack_settings.name)
+                logger.info('Stack is now active with name - %s',
+                            self.stack_settings.name)
                 return self.__stack
             else:
                 status = heat_utils.get_stack_status_reason(self.__heat_cli,
                                                             self.__stack.id)
-                logger.error(
-                    'ERROR: STACK CREATION FAILED: ' + status)
-                raise StackCreationError(
-                    'Failure while creating stack')
+                logger.error('ERROR: STACK CREATION FAILED: %s', status)
+                raise StackCreationError('Failure while creating stack')
 
     def clean(self):
         """
@@ -122,7 +122,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         """
         if self.__stack:
             try:
-                logger.info('Deleting stack - %s' + self.__stack.name)
+                logger.info('Deleting stack - %s', self.__stack.name)
                 heat_utils.delete_stack(self.__heat_cli, self.__stack)
 
                 try:
@@ -262,6 +262,59 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
                 keypair_settings)
             out.append(vm_inst_creator)
             vm_inst_creator.initialize()
+
+        return out
+
+    def get_volume_creators(self):
+        """
+        Returns a list of Volume creator objects as configured by the heat
+        template
+        :return: list() of OpenStackVolume objects
+        """
+
+        out = list()
+        cinder = cinder_utils.cinder_client(self._os_creds)
+
+        volumes = heat_utils.get_stack_volumes(
+            self.__heat_cli, cinder, self.__stack)
+
+        for volume in volumes:
+            settings = settings_utils.create_volume_settings(volume)
+            creator = OpenStackVolume(self._os_creds, settings)
+            out.append(creator)
+
+            try:
+                creator.initialize()
+            except Exception as e:
+                logger.error(
+                    'Unexpected error initializing volume creator - %s', e)
+
+        return out
+
+    def get_volume_type_creators(self):
+        """
+        Returns a list of VolumeType creator objects as configured by the heat
+        template
+        :return: list() of OpenStackVolumeType objects
+        """
+
+        out = list()
+        cinder = cinder_utils.cinder_client(self._os_creds)
+
+        vol_types = heat_utils.get_stack_volume_types(
+            self.__heat_cli, cinder, self.__stack)
+
+        for volume in vol_types:
+            settings = settings_utils.create_volume_type_settings(volume)
+            creator = OpenStackVolumeType(self._os_creds, settings)
+            out.append(creator)
+
+            try:
+                creator.initialize()
+            except Exception as e:
+                logger.error(
+                    'Unexpected error initializing volume type creator - %s',
+                    e)
 
         return out
 

@@ -13,14 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import unittest
+
 import os
 import uuid
 
+from snaps.domain.volume import (
+    Volume, VolumeType, VolumeTypeEncryption, QoSSpec)
 from snaps.openstack import (
     create_image, create_network, create_router, create_flavor,
     create_keypairs, create_instance)
 from snaps.openstack.create_network import (
     NetworkSettings, OpenStackNetwork, SubnetSettings)
+from snaps.openstack.create_qos import Consumer
 from snaps.openstack.create_security_group import (
     SecurityGroupRuleSettings,  Direction, Protocol, OpenStackSecurityGroup,
     SecurityGroupSettings)
@@ -339,3 +344,45 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
         self.assertIsNotNone(derived_image_settings)
         self.assertEqual(self.image_creator.image_settings.name,
                          derived_image_settings.name)
+
+
+class SettingsUtilsVolumeTests(unittest.TestCase):
+    """
+    Exercises the settings_utils.py functions around volumes
+    """
+
+    def test_vol_settings_from_vol(self):
+        volume = Volume(
+            name='vol-name', volume_id='vol-id', description='desc', size=99,
+            vol_type='vol-type', availability_zone='zone1', multi_attach=True)
+        settings = settings_utils.create_volume_settings(volume)
+        self.assertEqual(volume.name, settings.name)
+        self.assertEqual(volume.description, settings.description)
+        self.assertEqual(volume.size, settings.size)
+        self.assertEqual(volume.type, settings.type_name)
+        self.assertEqual(volume.availability_zone, settings.availability_zone)
+        self.assertEqual(volume.multi_attach, settings.multi_attach)
+
+    def test_vol_type_settings_from_vol(self):
+        encryption = VolumeTypeEncryption(
+            volume_encryption_id='vol-encrypt-id', volume_type_id='vol-typ-id',
+            control_location='front-end', provider='FooClass', cipher='1',
+            key_size=1)
+        qos_spec = QoSSpec(name='qos-spec-name', spec_id='qos-spec-id',
+                           consumer=Consumer.back_end)
+        volume_type = VolumeType(
+            name='vol-type-name', volume_type_id='vol-type-id', public=True,
+            encryption=encryption, qos_spec=qos_spec)
+
+        settings = settings_utils.create_volume_type_settings(volume_type)
+        self.assertEqual(volume_type.name, settings.name)
+        self.assertEqual(volume_type.public, settings.public)
+
+        encrypt_settings = settings.encryption
+        self.assertIsNotNone(encrypt_settings)
+        self.assertEqual(encryption.control_location,
+                         encrypt_settings.control_location.value)
+        self.assertEqual(encryption.cipher, encrypt_settings.cipher)
+        self.assertEqual(encryption.key_size, encrypt_settings.key_size)
+
+        self.assertEqual(qos_spec.name, settings.qos_spec_name)
