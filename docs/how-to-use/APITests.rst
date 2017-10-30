@@ -447,6 +447,21 @@ heat_utils_tests.py - HeatUtilsCreateComplexStackTests
 |                                       |               | by Heat                                                   |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+heat_utils_tests.py - HeatUtilsVolumeTests
+------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Heat API      | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_vol_with_stack            | 1             | Tests ability of the function                             |
+|                                       |               | heat_utils.get_stack_volumes() to return the correct      |
+|                                       |               | Volume domain objects deployed with Heat                  |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_vol_types_with_stack      | 1             | Tests ability of the function                             |
+|                                       |               | heat_utils.get_stack_volumes_types() to return the correct|
+|                                       |               | VolumeType domain objects deployed with Heat              |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 settings_utils_tests.py - SettingsUtilsNetworkingTests
 ------------------------------------------------------
 

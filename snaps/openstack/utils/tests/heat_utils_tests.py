@@ -27,7 +27,8 @@ from snaps.openstack.create_stack import StackSettings
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import (
-    heat_utils, neutron_utils, nova_utils, settings_utils, glance_utils)
+    heat_utils, neutron_utils, nova_utils, settings_utils, glance_utils,
+    cinder_utils)
 
 __author__ = 'spisarski'
 
@@ -460,3 +461,120 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
             priv_key_key='private_key')
         self.assertIsNotNone(keypair2_settings)
         self.assertEqual(self.keypair_name, keypair2_settings.name)
+
+
+class HeatUtilsVolumeTests(OSComponentTestCase):
+    """
+    Test Heat volume functionality
+    """
+
+    def setUp(self):
+        """
+        Instantiates OpenStack instances that cannot be spawned by Heat
+        """
+        guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        stack_name = guid + '-stack'
+        self.volume_name = guid + '-vol'
+        self.volume_type_name = guid + '-vol-type'
+
+        env_values = {
+            'volume_name': self.volume_name,
+            'volume_type_name': self.volume_type_name}
+
+        heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'volume_heat_template.yaml')
+        self.stack_settings = StackSettings(
+            name=stack_name, template_path=heat_tmplt_path,
+            env_values=env_values)
+        self.stack = None
+        self.heat_client = heat_utils.heat_client(self.os_creds)
+        self.cinder = cinder_utils.cinder_client(self.os_creds)
+
+    def tearDown(self):
+        """
+        Cleans the image and downloaded image file
+        """
+        if self.stack:
+            try:
+                heat_utils.delete_stack(self.heat_client, self.stack)
+            except:
+                pass
+
+    def test_create_vol_with_stack(self):
+        """
+        Tests the creation of an OpenStack volume with Heat.
+        """
+        self.stack = heat_utils.create_stack(
+            self.heat_client, self.stack_settings)
+
+        # Wait until stack deployment has completed
+        end_time = time.time() + create_stack.STACK_COMPLETE_TIMEOUT
+        is_active = False
+        while time.time() < end_time:
+            status = heat_utils.get_stack_status(self.heat_client,
+                                                 self.stack.id)
+            if status == create_stack.STATUS_CREATE_COMPLETE:
+                is_active = True
+                break
+            elif status == create_stack.STATUS_CREATE_FAILED:
+                is_active = False
+                break
+
+            time.sleep(3)
+
+        self.assertTrue(is_active)
+
+        volumes = heat_utils.get_stack_volumes(
+            self.heat_client, self.cinder, self.stack)
+
+        self.assertEqual(1, len(volumes))
+
+        volume = volumes[0]
+        self.assertEqual(self.volume_name, volume.name)
+        self.assertEqual(self.volume_type_name, volume.type)
+        self.assertEqual(1, volume.size)
+        self.assertEqual(False, volume.multi_attach)
+
+    def test_create_vol_types_with_stack(self):
+        """
+        Tests the creation of an OpenStack volume with Heat.
+        """
+        self.stack = heat_utils.create_stack(
+            self.heat_client, self.stack_settings)
+
+        # Wait until stack deployment has completed
+        end_time = time.time() + create_stack.STACK_COMPLETE_TIMEOUT
+        is_active = False
+        while time.time() < end_time:
+            status = heat_utils.get_stack_status(self.heat_client,
+                                                 self.stack.id)
+            if status == create_stack.STATUS_CREATE_COMPLETE:
+                is_active = True
+                break
+            elif status == create_stack.STATUS_CREATE_FAILED:
+                is_active = False
+                break
+
+            time.sleep(3)
+
+        self.assertTrue(is_active)
+
+        volume_types = heat_utils.get_stack_volume_types(
+            self.heat_client, self.cinder, self.stack)
+
+        self.assertEqual(1, len(volume_types))
+
+        volume_type = volume_types[0]
+
+        self.assertEqual(self.volume_type_name, volume_type.name)
+        self.assertTrue(volume_type.public)
+        self.assertIsNone(volume_type.qos_spec)
+
+        encryption = volume_type.encryption
+        self.assertIsNotNone(encryption)
+        self.assertIsNone(encryption.cipher)
+        self.assertEqual('front-end', encryption.control_location)
+        self.assertIsNone(encryption.key_size)
+        self.assertEqual(u'nova.volume.encryptors.luks.LuksEncryptor',
+                         encryption.provider)
+        self.assertEqual(volume_type.id, encryption.volume_type_id)

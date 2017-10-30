@@ -20,6 +20,9 @@ from snaps.openstack.create_instance import (
 from snaps.openstack.create_keypairs import KeypairSettings
 from snaps.openstack.create_network import (
     PortSettings, SubnetSettings, NetworkSettings)
+from snaps.openstack.create_volume import VolumeSettings
+from snaps.openstack.create_volume_type import (
+    VolumeTypeSettings, VolumeTypeEncryptionSettings, ControlLocation)
 from snaps.openstack.utils import (
     neutron_utils, nova_utils, heat_utils, glance_utils)
 
@@ -61,6 +64,49 @@ def create_subnet_settings(neutron, network):
         kwargs['ipv6_address_mode'] = subnet.ipv6_address_mode
         out.append(SubnetSettings(**kwargs))
     return out
+
+
+def create_volume_settings(volume):
+    """
+    Returns a VolumeSettings object
+    :param volume: a SNAPS-OO Volume object
+    """
+
+    return VolumeSettings(
+        name=volume.name, description=volume.description,
+        size=volume.size, type_name=volume.type,
+        availability_zone=volume.availability_zone,
+        multi_attach=volume.multi_attach)
+
+
+def create_volume_type_settings(volume_type):
+    """
+    Returns a VolumeTypeSettings object
+    :param volume_type: a SNAPS-OO VolumeType object
+    """
+
+    control = None
+    if volume_type.encryption:
+        if (volume_type.encryption.control_location
+                == ControlLocation.front_end.value):
+            control = ControlLocation.front_end
+        else:
+            control = ControlLocation.back_end
+
+    encrypt_settings = VolumeTypeEncryptionSettings(
+        name=volume_type.encryption.__class__,
+        provider_class=volume_type.encryption.provider,
+        control_location=control,
+        cipher=volume_type.encryption.cipher,
+        key_size=volume_type.encryption.key_size)
+
+    qos_spec_name = None
+    if volume_type.qos_spec:
+        qos_spec_name = volume_type.qos_spec.name
+
+    return VolumeTypeSettings(
+        name=volume_type.name, encryption=encrypt_settings,
+        qos_spec_name=qos_spec_name, public=volume_type.public)
 
 
 def create_vm_inst_settings(nova, neutron, server):
