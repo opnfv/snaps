@@ -367,7 +367,7 @@ def grant_user_role_to_project(keystone, role, user, project):
     """
 
     os_role = get_role_by_id(keystone, role.id)
-    logger.info('Granting role %s to project %s', role.name, project)
+    logger.info('Granting role %s to project %s', role.name, project.name)
     if keystone.version == V2_VERSION_STR:
         keystone.roles.add_user_role(user, os_role, tenant=project)
     else:

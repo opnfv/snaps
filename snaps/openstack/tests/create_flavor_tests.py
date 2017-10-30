@@ -399,7 +399,7 @@ def validate_flavor(nova, flavor_settings, flavor):
             equals = False
             break
 
-    swap = str()
+    swap = None
     if flavor_settings.swap != 0:
         swap = flavor_settings.swap
 

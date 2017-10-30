@@ -396,6 +396,17 @@ create_stack_tests.py - CreateStackVolumeTests
 |                                       |               | deploying                                                 |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_stack_tests.py - CreateStackFlavorTests
+----------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             |   Heat API    | Description                                               |
++=======================================+===============+===========================================================+
+| test_retrieve_flavor_creator          | 1             | Ensures that an OpenStackHeatStack instance can return a  |
+|                                       |               | OpenStackFlavor instance that it was responsible for      |
+|                                       |               | deploying                                                 |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_stack_tests.py - CreateStackKeypairTests
 -----------------------------------------------
 

@@ -473,6 +473,17 @@ heat_utils_tests.py - HeatUtilsKeypairTests
 |                                       |               | Keypair domain objects deployed with Heat                 |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+heat_utils_tests.py - HeatUtilsFlavorTests
+------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Heat API      | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_flavor_with_stack         | 1             | Tests ability of the function                             |
+|                                       |               | heat_utils.get_stack_flavors() to return the correct      |
+|                                       |               | Flavor domain objects deployed with Heat                  |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 settings_utils_tests.py - SettingsUtilsNetworkingTests
 ------------------------------------------------------
 

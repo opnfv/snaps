@@ -23,7 +23,7 @@ class Flavor:
         """
         Constructor
         :param name: the flavor's name
-        :param flavor_id: the flavor's id
+        :param flavor_id or id: the flavor's id
         :param ram: the flavor's RAM in MB
         :param disk: the flavor's disk size in GB
         :param vcpus: the flavor's number of virtual CPUs
@@ -33,11 +33,16 @@ class Flavor:
         :param is_public: denotes if flavor can be used by other projects
         """
         self.name = kwargs.get('name')
-        self.id = kwargs.get('id')
+        self.id = kwargs.get('flavor_id', kwargs.get('id'))
         self.ram = kwargs.get('ram')
         self.disk = kwargs.get('disk')
         self.vcpus = kwargs.get('vcpus')
         self.ephemeral = kwargs.get('ephemeral')
-        self.swap = kwargs.get('swap')
+
+        if kwargs.get('swap'):
+            self.swap = int(kwargs.get('swap'))
+        else:
+            self.swap = None
+
         self.rxtx_factor = kwargs.get('rxtx_factor')
         self.is_public = kwargs.get('is_public')

@@ -294,11 +294,16 @@ VmInstDomainObjectTests
 Ensures that all required members are included when constructing a
 VmInst domain object
 
-SettingsUtilsVolumeTests
-------------------------
+SettingsUtilsUnitTests
+----------------------
 
 Ensures that the settings_utils.py#create_volume_settings() function properly
 maps a snaps.domain.Volume object correctly to a
 snaps.openstack.create_volume.VolumeSettings object as well as a
 snaps.domain.VolumeType object to a
 snaps.openstack.create_volume.VolumeSettings object
+
+
+Ensures that the settings_utils.py#create_flavor_settings() function properly
+maps a snaps.domain.Flavor object correctly to a
+snaps.openstack.create_flavor.FlavorSettings object
