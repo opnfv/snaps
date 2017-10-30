@@ -589,6 +589,68 @@ class CreateStackVolumeTests(OSIntegrationTestCase):
         self.assertEqual(volume_type.id, encryption.volume_type_id)
 
 
+class CreateStackFlavorTests(OSIntegrationTestCase):
+    """
+    Tests for the CreateStack class defined in create_stack.py
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateStack object that is responsible for downloading
+        and creating an OS stack file within OpenStack
+        """
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+
+        self.heat_creds = self.admin_os_creds
+        self.heat_creds.project_name = self.admin_os_creds.project_name
+
+        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.stack_creator = None
+
+        self.heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'flavor_heat_template.yaml')
+
+        stack_settings = StackSettings(
+            name=self.guid + '-stack',
+            template_path=self.heat_tmplt_path)
+        self.stack_creator = create_stack.OpenStackHeatStack(
+            self.heat_creds, stack_settings)
+        self.created_stack = self.stack_creator.create()
+        self.assertIsNotNone(self.created_stack)
+
+    def tearDown(self):
+        """
+        Cleans the stack and downloaded stack file
+        """
+        if self.stack_creator:
+            try:
+                self.stack_creator.clean()
+            except:
+                pass
+
+        super(self.__class__, self).__clean__()
+
+    def test_retrieve_flavor_creator(self):
+        """
+        Tests the creation of an OpenStack stack from Heat template file and
+        the retrieval of an OpenStackVolume creator/state machine instance
+        """
+        flavor_creators = self.stack_creator.get_flavor_creators()
+        self.assertEqual(1, len(flavor_creators))
+
+        creator = flavor_creators[0]
+        self.assertTrue(creator.get_flavor().name.startswith(self.guid))
+        self.assertEqual(1024, creator.get_flavor().ram)
+        self.assertEqual(200, creator.get_flavor().disk)
+        self.assertEqual(8, creator.get_flavor().vcpus)
+        self.assertEqual(0, creator.get_flavor().ephemeral)
+        self.assertIsNone(creator.get_flavor().swap)
+        self.assertEqual(1.0, creator.get_flavor().rxtx_factor)
+        self.assertTrue(creator.get_flavor().is_public)
+
+
 class CreateStackNegativeTests(OSIntegrationTestCase):
     """
     Negative test cases for the CreateStack class

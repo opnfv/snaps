@@ -578,3 +578,74 @@ class HeatUtilsVolumeTests(OSComponentTestCase):
         self.assertEqual(u'nova.volume.encryptors.luks.LuksEncryptor',
                          encryption.provider)
         self.assertEqual(volume_type.id, encryption.volume_type_id)
+
+
+class HeatUtilsFlavorTests(OSComponentTestCase):
+    """
+    Test Heat volume functionality
+    """
+
+    def setUp(self):
+        """
+        Instantiates OpenStack instances that cannot be spawned by Heat
+        """
+        guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.name_prefix = guid
+        stack_name = guid + '-stack'
+
+        heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'flavor_heat_template.yaml')
+        self.stack_settings = StackSettings(
+            name=stack_name, template_path=heat_tmplt_path)
+        self.stack = None
+        self.heat_client = heat_utils.heat_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds)
+
+    def tearDown(self):
+        """
+        Cleans the image and downloaded image file
+        """
+        if self.stack:
+            try:
+                heat_utils.delete_stack(self.heat_client, self.stack)
+            except:
+                pass
+
+    def test_create_flavor_with_stack(self):
+        """
+        Tests the creation of an OpenStack volume with Heat.
+        """
+        self.stack = heat_utils.create_stack(
+            self.heat_client, self.stack_settings)
+
+        # Wait until stack deployment has completed
+        end_time = time.time() + create_stack.STACK_COMPLETE_TIMEOUT
+        is_active = False
+        while time.time() < end_time:
+            status = heat_utils.get_stack_status(self.heat_client,
+                                                 self.stack.id)
+            if status == create_stack.STATUS_CREATE_COMPLETE:
+                is_active = True
+                break
+            elif status == create_stack.STATUS_CREATE_FAILED:
+                is_active = False
+                break
+
+            time.sleep(3)
+
+        self.assertTrue(is_active)
+
+        flavors = heat_utils.get_stack_flavors(
+            self.heat_client, self.nova, self.stack)
+
+        self.assertEqual(1, len(flavors))
+
+        flavor = flavors[0]
+        self.assertTrue(flavor.name.startswith(self.name_prefix))
+        self.assertEqual(1024, flavor.ram)
+        self.assertEqual(200, flavor.disk)
+        self.assertEqual(8, flavor.vcpus)
+        self.assertEqual(0, flavor.ephemeral)
+        self.assertIsNone(flavor.swap)
+        self.assertEqual(1.0, flavor.rxtx_factor)
+        self.assertTrue(flavor.is_public)

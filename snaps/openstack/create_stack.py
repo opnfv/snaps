@@ -18,6 +18,7 @@ import time
 
 from heatclient.exc import HTTPNotFound
 
+from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_instance import OpenStackVmInstance
 from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.create_volume_type import OpenStackVolumeType
@@ -315,6 +316,32 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
                 logger.error(
                     'Unexpected error initializing volume type creator - %s',
                     e)
+
+        return out
+
+    def get_flavor_creators(self):
+        """
+        Returns a list of Flavor creator objects as configured by the heat
+        template
+        :return: list() of OpenStackFlavor objects
+        """
+
+        out = list()
+        nova = nova_utils.nova_client(self._os_creds)
+
+        flavors = heat_utils.get_stack_flavors(
+            self.__heat_cli, nova, self.__stack)
+
+        for flavor in flavors:
+            settings = settings_utils.create_flavor_settings(flavor)
+            creator = OpenStackFlavor(self._os_creds, settings)
+            out.append(creator)
+
+            try:
+                creator.initialize()
+            except Exception as e:
+                logger.error(
+                    'Unexpected error initializing volume creator - %s', e)
 
         return out
 

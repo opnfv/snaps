@@ -271,6 +271,29 @@ def get_stack_volume_types(heat_cli, cinder, stack):
     return out
 
 
+def get_stack_flavors(heat_cli, nova, stack):
+    """
+    Returns an instance of Flavor SNAPS domain object for each flavor created
+    by this stack
+    :param heat_cli: the OpenStack heat client object
+    :param nova: the OpenStack cinder client object
+    :param stack: the SNAPS-OO Stack domain object
+    :return: a list of Volume domain objects
+    """
+
+    out = list()
+    resources = get_resources(heat_cli, stack, 'OS::Nova::Flavor')
+    for resource in resources:
+        try:
+            flavor = nova_utils.get_flavor_by_id(nova, resource.id)
+            if flavor:
+                out.append(flavor)
+        except NotFound:
+            logger.warn('Flavor cannot be located with ID %s', resource.id)
+
+    return out
+
+
 def parse_heat_template_str(tmpl_str):
     """
     Takes a heat template string, performs some simple validation and returns a

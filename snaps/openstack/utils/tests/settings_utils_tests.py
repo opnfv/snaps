@@ -18,6 +18,7 @@ import unittest
 import os
 import uuid
 
+from snaps.domain.flavor import Flavor
 from snaps.domain.volume import (
     Volume, VolumeType, VolumeTypeEncryption, QoSSpec)
 from snaps.openstack import (
@@ -346,7 +347,7 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
                          derived_image_settings.name)
 
 
-class SettingsUtilsVolumeTests(unittest.TestCase):
+class SettingsUtilsUnitTests(unittest.TestCase):
     """
     Exercises the settings_utils.py functions around volumes
     """
@@ -386,3 +387,18 @@ class SettingsUtilsVolumeTests(unittest.TestCase):
         self.assertEqual(encryption.key_size, encrypt_settings.key_size)
 
         self.assertEqual(qos_spec.name, settings.qos_spec_name)
+
+    def test_flavor_settings_from_flavor(self):
+        flavor = Flavor(
+            name='flavor-name', flavor_id='flavor-id', ram=99, disk=101,
+            vcpus=9, ephemeral=3, swap=5, rxtx_factor=7, is_public=False)
+        settings = settings_utils.create_flavor_settings(flavor)
+        self.assertEqual(flavor.name, settings.name)
+        self.assertEqual(flavor.id, settings.flavor_id)
+        self.assertEqual(flavor.ram, settings.ram)
+        self.assertEqual(flavor.disk, settings.disk)
+        self.assertEqual(flavor.vcpus, settings.vcpus)
+        self.assertEqual(flavor.ephemeral, settings.ephemeral)
+        self.assertEqual(flavor.swap, settings.swap)
+        self.assertEqual(flavor.rxtx_factor, settings.rxtx_factor)
+        self.assertEqual(flavor.is_public, settings.is_public)
