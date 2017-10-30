@@ -419,6 +419,18 @@ def get_keypair_by_name(nova, name):
     return None
 
 
+def get_keypair_by_id(nova, kp_id):
+    """
+    Returns a list of all available keypairs
+    :param nova: the Nova client
+    :param kp_id: the ID of the keypair to return
+    :return: the keypair object
+    """
+    keypair = nova.keypairs.get(kp_id)
+    return Keypair(name=keypair.name, kp_id=keypair.id,
+                   public_key=keypair.public_key)
+
+
 def delete_keypair(nova, key):
     """
     Deletes a keypair object from OpenStack

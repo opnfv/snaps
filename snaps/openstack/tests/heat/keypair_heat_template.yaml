@@ -1,0 +1,39 @@
+##############################################################################
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+##############################################################################
+heat_template_version: 2015-04-30
+
+description: >
+  Test template that simply deploys a keypair with a generated key
+
+parameters:
+  keypair_name:
+    type: string
+    label: Keypair name
+    description: The name of the stack's keypair
+    default: keypair_name
+
+resources:
+  keypair:
+    type: OS::Nova::KeyPair
+    properties:
+      name: { get_param: keypair_name }
+      save_private_key: True
+
+outputs:
+  private_key:
+    description: "SSH Private Key"
+    value: { get_attr: [ keypair, private_key ]}

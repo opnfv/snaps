@@ -495,7 +495,7 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
 
 class CreateStackVolumeTests(OSIntegrationTestCase):
     """
-    Tests for the CreateStack class defined in create_stack.py
+    Tests for the CreateStack class as they pertain to volumes
     """
 
     def setUp(self):
@@ -587,6 +587,80 @@ class CreateStackVolumeTests(OSIntegrationTestCase):
         self.assertEqual(u'nova.volume.encryptors.luks.LuksEncryptor',
                          encryption.provider)
         self.assertEqual(volume_type.id, encryption.volume_type_id)
+
+
+class CreateStackKeypairTests(OSIntegrationTestCase):
+    """
+    Tests for the CreateStack class as they pertain to keypairs
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateStack object that is responsible for downloading
+        and creating an OS stack file within OpenStack
+        """
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+
+        self.heat_creds = self.admin_os_creds
+        self.heat_creds.project_name = self.admin_os_creds.project_name
+
+        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.nova = nova_utils.nova_client(self.heat_creds)
+        self.stack_creator = None
+
+        self.keypair_name = self.guid + '-kp'
+
+        self.env_values = {
+            'keypair_name': self.keypair_name}
+
+        self.heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'keypair_heat_template.yaml')
+
+        stack_settings = StackSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template_path=self.heat_tmplt_path,
+            env_values=self.env_values)
+        self.stack_creator = create_stack.OpenStackHeatStack(
+            self.heat_creds, stack_settings)
+        self.created_stack = self.stack_creator.create()
+        self.assertIsNotNone(self.created_stack)
+
+    def tearDown(self):
+        """
+        Cleans the stack and downloaded stack file
+        """
+        if self.stack_creator:
+            try:
+                self.stack_creator.clean()
+            except:
+                pass
+
+        super(self.__class__, self).__clean__()
+
+    def test_retrieve_keypair_creator(self):
+        """
+        Tests the creation of an OpenStack stack from Heat template file and
+        the retrieval of an OpenStackKeypair creator/state machine instance
+        """
+        kp_creators = self.stack_creator.get_keypair_creators('private_key')
+        self.assertEqual(1, len(kp_creators))
+
+        creator = kp_creators[0]
+
+        self.assertEqual(self.keypair_name, creator.get_keypair().name)
+        self.assertIsNotNone(creator.keypair_settings.private_filepath)
+
+        private_file_contents = file_utils.read_file(
+            creator.keypair_settings.private_filepath)
+        self.assertTrue(private_file_contents.startswith(
+            '-----BEGIN RSA PRIVATE KEY-----'))
+
+        keypair = nova_utils.get_keypair_by_id(
+            self.nova, creator.get_keypair().id)
+        self.assertIsNotNone(keypair)
+        self.assertEqual(creator.get_keypair(), keypair)
 
 
 class CreateStackNegativeTests(OSIntegrationTestCase):

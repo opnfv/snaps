@@ -109,6 +109,32 @@ def create_volume_type_settings(volume_type):
         qos_spec_name=qos_spec_name, public=volume_type.public)
 
 
+def create_keypair_settings(heat_cli, stack, keypair, pk_output_key):
+    """
+    Instantiates a KeypairSettings object from a Keypair domain objects
+    :param heat_cli: the heat client
+    :param stack: the Stack domain object
+    :param keypair: the Keypair SNAPS domain object
+    :param pk_output_key: the key to the heat template's outputs for retrieval
+                          of the private key file
+    :return: a KeypairSettings object
+    """
+    if pk_output_key:
+        outputs = heat_utils.get_outputs(heat_cli, stack)
+        for output in outputs:
+            if output.key == pk_output_key:
+                # Save to file
+                guid = uuid.uuid4()
+                key_file = file_utils.save_string_to_file(
+                    output.value, str(guid), 0o400)
+
+                # Use outputs, file and resources for the KeypairSettings
+                return KeypairSettings(
+                    name=keypair.name, private_filepath=key_file.name)
+
+    return KeypairSettings(name=keypair.name)
+
+
 def create_vm_inst_settings(nova, neutron, server):
     """
     Returns a NetworkSettings object

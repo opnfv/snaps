@@ -19,6 +19,7 @@ import time
 from heatclient.exc import HTTPNotFound
 
 from snaps.openstack.create_instance import OpenStackVmInstance
+from snaps.openstack.create_keypairs import OpenStackKeypair
 from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.create_volume_type import OpenStackVolumeType
 from snaps.openstack.openstack_creator import OpenStackCloudObject
@@ -307,6 +308,34 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         for volume in vol_types:
             settings = settings_utils.create_volume_type_settings(volume)
             creator = OpenStackVolumeType(self._os_creds, settings)
+            out.append(creator)
+
+            try:
+                creator.initialize()
+            except Exception as e:
+                logger.error(
+                    'Unexpected error initializing volume type creator - %s',
+                    e)
+
+        return out
+
+    def get_keypair_creators(self, outputs_pk_key=None):
+        """
+        Returns a list of keypair creator objects as configured by the heat
+        template
+        :return: list() of OpenStackKeypair objects
+        """
+
+        out = list()
+        nova = nova_utils.nova_client(self._os_creds)
+
+        keypairs = heat_utils.get_stack_keypairs(
+            self.__heat_cli, nova, self.__stack)
+
+        for keypair in keypairs:
+            settings = settings_utils.create_keypair_settings(
+                self.__heat_cli, self.__stack, keypair, outputs_pk_key)
+            creator = OpenStackKeypair(self._os_creds, settings)
             out.append(creator)
 
             try:

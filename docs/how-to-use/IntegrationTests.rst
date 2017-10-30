@@ -396,6 +396,17 @@ create_stack_tests.py - CreateStackVolumeTests
 |                                       |               | deploying                                                 |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_stack_tests.py - CreateStackKeypairTests
+-----------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             |   Heat API    | Description                                               |
++=======================================+===============+===========================================================+
+| test_retrieve_keypair_creator         | 1             | Ensures that an OpenStackHeatStack instance can return a  |
+|                                       |               | OpenStackKeypair instance that it was responsible for     |
+|                                       |               | deploying                                                 |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_stack_tests.py - CreateComplexStackTests
 -----------------------------------------------
 

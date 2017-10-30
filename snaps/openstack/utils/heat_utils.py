@@ -227,9 +227,31 @@ def get_stack_servers(heat_cli, nova, stack):
     return out
 
 
+def get_stack_keypairs(heat_cli, nova, stack):
+    """
+    Returns a list of Keypair domain objects associated with a Stack
+    :param heat_cli: the OpenStack heat client object
+    :param nova: the OpenStack nova client object
+    :param stack: the SNAPS-OO Stack domain object
+    :return: a list of VMInst domain objects
+    """
+
+    out = list()
+    resources = get_resources(heat_cli, stack, 'OS::Nova::KeyPair')
+    for resource in resources:
+        try:
+            keypair = nova_utils.get_keypair_by_id(nova, resource.id)
+            if keypair:
+                out.append(keypair)
+        except NotFound:
+            logger.warn('Keypair cannot be located with ID %s', resource.id)
+
+    return out
+
+
 def get_stack_volumes(heat_cli, cinder, stack):
     """
-    Returns an instance of NetworkSettings for each network owned by this stack
+    Returns an instance of Volume domain objects created by this stack
     :param heat_cli: the OpenStack heat client object
     :param cinder: the OpenStack cinder client object
     :param stack: the SNAPS-OO Stack domain object
@@ -251,7 +273,7 @@ def get_stack_volumes(heat_cli, cinder, stack):
 
 def get_stack_volume_types(heat_cli, cinder, stack):
     """
-    Returns an instance of NetworkSettings for each network owned by this stack
+    Returns an instance of VolumeType domain objects created by this stack
     :param heat_cli: the OpenStack heat client object
     :param cinder: the OpenStack cinder client object
     :param stack: the SNAPS-OO Stack domain object
