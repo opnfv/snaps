@@ -307,3 +307,5 @@ snaps.openstack.create_volume.VolumeSettings object
 Ensures that the settings_utils.py#create_flavor_settings() function properly
 maps a snaps.domain.Flavor object correctly to a
 snaps.openstack.create_flavor.FlavorSettings object
+        - openstack-ansible-linters
+
