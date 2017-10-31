@@ -69,4 +69,12 @@ The "pip" command below needs to be executed as root, if you are not using a vir
    sudo pip install -e <path to repo>/snaps/
    (note: on CentOS 7 and Ubuntu 14.04 you may have to try the previous command several times)
 
+SNAPS is now hosted on the Python Package Manager (PyPI).
+
+::
+
+   pip install snaps
+
+This will install the stable Euphrates version.
+
 The install should now be complete and you can start using the SNAPS-OO libraries.
