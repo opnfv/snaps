@@ -12,13 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import time
 
 import pkg_resources
 from heatclient.exc import HTTPBadRequest
 from snaps import file_utils
 from snaps.openstack.create_flavor import OpenStackFlavor, FlavorSettings
-from snaps.openstack.create_image import OpenStackImage
+from snaps.openstack.create_image import OpenStackImage, ImageSettings
 
 try:
     from urllib.request import URLError
@@ -31,7 +32,7 @@ import uuid
 
 from snaps.openstack import create_stack
 from snaps.openstack.create_stack import (
-    StackSettings, StackSettingsError, StackCreationError)
+    StackSettings, StackSettingsError, StackCreationError, StackError)
 from snaps.openstack.tests import openstack_tests, create_instance_tests
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import heat_utils, neutron_utils, nova_utils
@@ -123,14 +124,11 @@ class StackSettingsUnitTests(unittest.TestCase):
 
 class CreateStackSuccessTests(OSIntegrationTestCase):
     """
-    Tests for the CreateStack class defined in create_stack.py
+    Tests for the OpenStackHeatStack class defined in create_stack.py
     """
 
     def setUp(self):
-        """
-        Instantiates the CreateStack object that is responsible for downloading
-        and creating an OS stack file within OpenStack
-        """
+
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
@@ -396,14 +394,12 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
 
 class CreateStackFloatingIpTests(OSIntegrationTestCase):
     """
-    Tests for the CreateStack class defined in create_stack.py
+    Tests to ensure that floating IPs can be accessed via an
+    OpenStackVmInstance object obtained from the OpenStackHeatStack instance
     """
 
     def setUp(self):
-        """
-        Instantiates the CreateStack object that is responsible for downloading
-        and creating an OS stack file within OpenStack
-        """
+
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
@@ -495,14 +491,12 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
 
 class CreateStackVolumeTests(OSIntegrationTestCase):
     """
-    Tests for the CreateStack class as they pertain to volumes
+    Tests to ensure that floating IPs can be accessed via an
+    OpenStackVolume object obtained from the OpenStackHeatStack instance
     """
 
     def setUp(self):
-        """
-        Instantiates the CreateStack object that is responsible for downloading
-        and creating an OS stack file within OpenStack
-        """
+
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
@@ -591,14 +585,12 @@ class CreateStackVolumeTests(OSIntegrationTestCase):
 
 class CreateStackFlavorTests(OSIntegrationTestCase):
     """
-    Tests for the CreateStack class defined in create_stack.py
+    Tests to ensure that floating IPs can be accessed via an
+    OpenStackFlavor object obtained from the OpenStackHeatStack instance
     """
 
     def setUp(self):
-        """
-        Instantiates the CreateStack object that is responsible for downloading
-        and creating an OS stack file within OpenStack
-        """
+
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
@@ -653,14 +645,12 @@ class CreateStackFlavorTests(OSIntegrationTestCase):
 
 class CreateStackKeypairTests(OSIntegrationTestCase):
     """
-    Tests for the CreateStack class as they pertain to keypairs
+    Tests to ensure that floating IPs can be accessed via an
+    OpenStackKeypair object obtained from the OpenStackHeatStack instance
     """
 
     def setUp(self):
-        """
-        Instantiates the CreateStack object that is responsible for downloading
-        and creating an OS stack file within OpenStack
-        """
+
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
@@ -727,10 +717,12 @@ class CreateStackKeypairTests(OSIntegrationTestCase):
 
 class CreateStackNegativeTests(OSIntegrationTestCase):
     """
-    Negative test cases for the CreateStack class
+    Negative test cases for the OpenStackHeatStack class with poor
+    configuration
     """
 
     def setUp(self):
+
         super(self.__class__, self).__start__()
 
         self.heat_creds = self.admin_os_creds
@@ -767,3 +759,111 @@ class CreateStackNegativeTests(OSIntegrationTestCase):
                                                              stack_settings)
         with self.assertRaises(IOError):
             self.stack_creator.create()
+
+
+class CreateStackFailureTests(OSIntegrationTestCase):
+    """
+    Tests for the OpenStackHeatStack class defined in create_stack.py for
+    when failures occur. Failures are being triggered by allocating 1 million
+    CPUs.
+    """
+
+    def setUp(self):
+
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+
+        self.heat_creds = self.admin_os_creds
+        self.heat_creds.project_name = self.admin_os_creds.project_name
+
+        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.stack_creator = None
+
+        self.tmp_file = file_utils.save_string_to_file(
+            ' ', str(uuid.uuid4()) + '-bad-image')
+        self.image_creator = OpenStackImage(
+            self.heat_creds, ImageSettings(
+                name=self.guid + 'image', image_file=self.tmp_file.name,
+                image_user='foo', img_format='qcow2'))
+        self.image_creator.create()
+
+        # Create Flavor
+        self.flavor_creator = OpenStackFlavor(
+            self.admin_os_creds,
+            FlavorSettings(name=self.guid + '-flavor-name', ram=256, disk=10,
+                           vcpus=1000000))
+        self.flavor_creator.create()
+
+        self.network_name = self.guid + '-net'
+        self.subnet_name = self.guid + '-subnet'
+        self.vm_inst_name = self.guid + '-inst'
+
+        self.env_values = {
+            'image_name': self.image_creator.image_settings.name,
+            'flavor_name': self.flavor_creator.flavor_settings.name,
+            'net_name': self.network_name,
+            'subnet_name': self.subnet_name,
+            'inst_name': self.vm_inst_name}
+
+        self.heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'test_heat_template.yaml')
+
+    def tearDown(self):
+        """
+        Cleans the stack and downloaded stack file
+        """
+        if self.stack_creator:
+            try:
+                self.stack_creator.clean()
+            except:
+                pass
+
+        if self.image_creator:
+            try:
+                self.image_creator.clean()
+            except:
+                pass
+
+        if self.flavor_creator:
+            try:
+                self.flavor_creator.clean()
+            except:
+                pass
+
+        if self.tmp_file:
+            try:
+                os.remove(self.tmp_file.name)
+            except:
+                pass
+
+        super(self.__class__, self).__clean__()
+
+    def test_stack_failure(self):
+        """
+        Tests the creation of an OpenStack stack from Heat template file that
+        should always fail due to too many CPU cores
+        """
+        # Create Stack
+        # Set the default stack settings, then set any custom parameters sent
+        # from the app
+        stack_settings = StackSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template_path=self.heat_tmplt_path,
+            env_values=self.env_values)
+        self.stack_creator = create_stack.OpenStackHeatStack(self.heat_creds,
+                                                             stack_settings)
+
+        with self.assertRaises(StackError):
+            try:
+                self.stack_creator.create()
+            except StackError:
+                resources = heat_utils.get_resources(
+                    self.heat_cli, self.stack_creator.get_stack())
+
+                found = False
+                for resource in resources:
+                    if resource.status == create_stack.STATUS_CREATE_COMPLETE:
+                        found = True
+                self.assertTrue(found)
+                raise

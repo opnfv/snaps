@@ -362,22 +362,22 @@ create_stack_tests.py - CreateStackSuccessTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             |   Heat API    | Description                                               |
 +=======================================+===============+===========================================================+
-| test_create_stack_template_file       | 1             | Ensures that a Heat stack can be created with a file-based|
+| test_create_stack_template_file       | 1-3           | Ensures that a Heat stack can be created with a file-based|
 |                                       |               | Heat template file                                        |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_stack_template_dict       | 1             | Ensures that a Heat stack can be created with a dictionary|
+| test_create_stack_template_dict       | 1-3           | Ensures that a Heat stack can be created with a dictionary|
 |                                       |               | Heat template                                             |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_delete_stack              | 1             | Ensures that a Heat stack can be created and deleted      |
+| test_create_delete_stack              | 1-3           | Ensures that a Heat stack can be created and deleted      |
 |                                       |               | while having clean() called 2x without an exception       |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_same_stack                | 1             | Ensures that a Heat stack with the same name cannot be    |
+| test_create_same_stack                | 1-3           | Ensures that a Heat stack with the same name cannot be    |
 |                                       |               | created 2x                                                |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_retrieve_network_creators        | 1             | Ensures that an OpenStackHeatStack instance can return an |
+| test_retrieve_network_creators        | 1-3           | Ensures that an OpenStackHeatStack instance can return an |
 |                                       |               | OpenStackNetwork instance configured as deployed          |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_retrieve_vm_inst_creators        | 1             | Ensures that an OpenStackHeatStack instance can return an |
+| test_retrieve_vm_inst_creators        | 1-3           | Ensures that an OpenStackHeatStack instance can return an |
 |                                       |               | OpenStackVmInstance instance configured as deployed       |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
@@ -387,11 +387,11 @@ create_stack_tests.py - CreateStackVolumeTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             |   Heat API    | Description                                               |
 +=======================================+===============+===========================================================+
-| test_retrieve_volume_creator          | 1             | Ensures that an OpenStackHeatStack instance can return a  |
+| test_retrieve_volume_creator          | 1-3           | Ensures that an OpenStackHeatStack instance can return a  |
 |                                       |               | OpenStackVolume instance that it was responsible for      |
 |                                       |               | deploying                                                 |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_retrieve_volume_type_creator     | 1             | Ensures that an OpenStackHeatStack instance can return a  |
+| test_retrieve_volume_type_creator     | 1-3           | Ensures that an OpenStackHeatStack instance can return a  |
 |                                       |               | OpenStackVolumeType instance that it was responsible for  |
 |                                       |               | deploying                                                 |
 +---------------------------------------+---------------+-----------------------------------------------------------+
@@ -402,7 +402,7 @@ create_stack_tests.py - CreateStackFlavorTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             |   Heat API    | Description                                               |
 +=======================================+===============+===========================================================+
-| test_retrieve_flavor_creator          | 1             | Ensures that an OpenStackHeatStack instance can return a  |
+| test_retrieve_flavor_creator          | 1-3           | Ensures that an OpenStackHeatStack instance can return a  |
 |                                       |               | OpenStackFlavor instance that it was responsible for      |
 |                                       |               | deploying                                                 |
 +---------------------------------------+---------------+-----------------------------------------------------------+
@@ -413,7 +413,7 @@ create_stack_tests.py - CreateStackKeypairTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             |   Heat API    | Description                                               |
 +=======================================+===============+===========================================================+
-| test_retrieve_keypair_creator         | 1             | Ensures that an OpenStackHeatStack instance can return a  |
+| test_retrieve_keypair_creator         | 1-3           | Ensures that an OpenStackHeatStack instance can return a  |
 |                                       |               | OpenStackKeypair instance that it was responsible for     |
 |                                       |               | deploying                                                 |
 +---------------------------------------+---------------+-----------------------------------------------------------+
@@ -424,7 +424,7 @@ create_stack_tests.py - CreateComplexStackTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             |   Heat API    | Description                                               |
 +=======================================+===============+===========================================================+
-| test_connect_via_ssh_heat_vm          | 1             | Ensures that two OpenStackHeatStack instances can return  |
+| test_connect_via_ssh_heat_vm          | 1-3           | Ensures that two OpenStackHeatStack instances can return  |
 |                                       |               | OpenStackVmInstance instances one configured with a       |
 |                                       |               | floating IP and keypair and can be access via SSH         |
 +---------------------------------------+---------------+-----------------------------------------------------------+
@@ -435,11 +435,21 @@ create_stack_tests.py - CreateStackNegativeTests
 +----------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                              |   Heat API    | Description                                               |
 +========================================+===============+===========================================================+
-| test_missing_dependencies              | 1             | Ensures that a Heat template fails to deploy when expected|
+| test_missing_dependencies              | 1-3           | Ensures that a Heat template fails to deploy when expected|
 |                                        |               | dependencies are missing                                  |
 +----------------------------------------+---------------+-----------------------------------------------------------+
-| test_bad_stack_file                    | 1             | Ensures that a Heat template fails to deploy when the Heat|
+| test_bad_stack_file                    | 1-3           | Ensures that a Heat template fails to deploy when the Heat|
 |                                        |               | template file does not exist                              |
++----------------------------------------+---------------+-----------------------------------------------------------+
+
+create_stack_tests.py - CreateStackFailureTests
+-----------------------------------------------
+
++----------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                              |   Heat API    | Description                                               |
++========================================+===============+===========================================================+
+| test_stack_failure                     | 1-3           | Ensures that a Heat template fails to deploy when expected|
+|                                        |               | dependencies are missing                                  |
 +----------------------------------------+---------------+-----------------------------------------------------------+
 
 create_instance_tests.py - CreateInstanceSimpleTests

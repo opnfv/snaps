@@ -39,14 +39,22 @@ class ResourceDomainObjectTests(unittest.TestCase):
     """
 
     def test_construction_positional(self):
-        resource = Resource('foo', 'bar')
+        resource = Resource('res_name', 'foo', 'bar', 'status', 'reason')
+        self.assertEqual('res_name', resource.name)
         self.assertEqual('foo', resource.type)
         self.assertEqual('bar', resource.id)
+        self.assertEqual('status', resource.status)
+        self.assertEqual('reason', resource.status_reason)
 
     def test_construction_named(self):
-        resource = Resource(resource_id='bar', resource_type='foo')
+        resource = Resource(
+            status_reason=None, status=None, resource_id='bar',
+            resource_type='foo', name='res_name')
+        self.assertEqual('res_name', resource.name)
         self.assertEqual('foo', resource.type)
         self.assertEqual('bar', resource.id)
+        self.assertIsNone(resource.status)
+        self.assertIsNone(resource.status_reason)
 
 
 class OutputDomainObjectTests(unittest.TestCase):
