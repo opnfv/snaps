@@ -150,8 +150,6 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
         Instantiates the CreateImage object that is responsible for downloading
         and creating an OS image file within OpenStack
         """
-        # super(self.__class__, self).__start__()
-
         self.nova = nova_utils.nova_client(self.os_creds)
         self.glance = glance_utils.glance_client(self.os_creds)
         self.neutron = neutron_utils.neutron_client(self.os_creds)

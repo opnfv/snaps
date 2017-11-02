@@ -48,6 +48,7 @@ class Subnet:
         """
         self.name = kwargs.get('name')
         self.id = kwargs.get('id')
+        self.network_id = kwargs.get('network_id')
         self.cidr = kwargs.get('cidr')
         self.ip_version = kwargs.get('ip_version')
         self.gateway_ip = kwargs.get('gateway_ip')
@@ -71,6 +72,7 @@ class Subnet:
     def __eq__(self, other):
         return (self.name == other.name and
                 self.id == other.id and
+                self.network_id == other.network_id and
                 self.cidr == other.cidr and
                 self.ip_version == other.ip_version and
                 self.gateway_ip == other.gateway_ip and
@@ -134,20 +136,46 @@ class Router:
         Constructor
         :param name: the router's name
         :param id: the router's id
+        :param status: the router's status
+        :param tenant_id: the router's project/tenant ID
+        :param admin_state_up: Router is up when True
+        :param external_gateway_info: dict() for populating external_network_id
+                                      and external_fixed_ips
+                   external_network_id: ID of the external network to route
+                                        in dict under key 'external_fixed_ips'
+                   external_fixed_ips: List IP addresses associated with the
+                                       external_network_id found in dict under
+                                       key 'network_id'
+        :param port_subnets: list of tuples where #1 is the Port domain object
+                             and #2 is a list of associated Subnet domain
+                             objects
         """
         self.name = kwargs.get('name')
         self.id = kwargs.get('id')
         self.status = kwargs.get('status')
         self.tenant_id = kwargs.get('tenant_id')
         self.admin_state_up = kwargs.get('admin_state_up')
-        self.external_gateway_info = kwargs.get('external_gateway_info')
+        self.port_subnets = kwargs.get('port_subnets')
+
+        if (kwargs.get('external_gateway_info') and
+                isinstance(kwargs.get('external_gateway_info'), dict) and
+                kwargs.get('external_gateway_info').get('external_fixed_ips')):
+            gateway_info = kwargs.get('external_gateway_info')
+
+            self.external_network_id = gateway_info.get('network_id')
+            self.external_fixed_ips = gateway_info.get('external_fixed_ips')
+        else:
+            self.external_fixed_ips = kwargs.get('external_fixed_ips', None)
+            self.external_network_id = kwargs.get('external_network_id', None)
 
     def __eq__(self, other):
         return (self.name == other.name and self.id == other.id and
                 self.status == other.status and
                 self.tenant_id == other.tenant_id and
                 self.admin_state_up == other.admin_state_up and
-                self.external_gateway_info == other.external_gateway_info)
+                self.external_network_id == other.external_network_id and
+                self.external_fixed_ips == other.external_fixed_ips and
+                self.port_subnets == other.port_subnets)
 
 
 class InterfaceRouter:

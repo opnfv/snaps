@@ -21,6 +21,7 @@ from heatclient.exc import HTTPNotFound
 from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_instance import OpenStackVmInstance
 from snaps.openstack.create_keypairs import OpenStackKeypair
+from snaps.openstack.create_router import OpenStackRouter
 from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.create_volume_type import OpenStackVolumeType
 from snaps.openstack.openstack_creator import OpenStackCloudObject
@@ -231,6 +232,28 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
             net_creator = OpenStackNetwork(self._os_creds, net_settings)
             out.append(net_creator)
             net_creator.initialize()
+
+        return out
+
+    def get_router_creators(self):
+        """
+        Returns a list of router creator objects as configured by the heat
+        template
+        :return: list() of OpenStackRouter objects
+        """
+
+        neutron = neutron_utils.neutron_client(self._os_creds)
+
+        out = list()
+        stack_routers = heat_utils.get_stack_routers(
+            self.__heat_cli, neutron, self.__stack)
+
+        for routers in stack_routers:
+            settings = settings_utils.create_router_settings(
+                neutron, routers)
+            creator = OpenStackRouter(self._os_creds, settings)
+            out.append(creator)
+            creator.initialize()
 
         return out
 

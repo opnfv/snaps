@@ -493,6 +493,80 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
                 self.assertEqual(0, len(vm_settings.floating_ip_settings))
 
 
+class CreateStackRouterTests(OSIntegrationTestCase):
+    """
+    Tests for the CreateStack class defined in create_stack.py where the
+    target is a Network, Subnet, and Router
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateStack object that is responsible for downloading
+        and creating an OS stack file within OpenStack
+        """
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+
+        self.heat_creds = self.admin_os_creds
+        self.heat_creds.project_name = self.admin_os_creds.project_name
+
+        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.stack_creator = None
+
+        self.net_name = self.guid + '-net'
+        self.subnet_name = self.guid + '-subnet'
+        self.router_name = self.guid + '-router'
+
+        self.env_values = {
+            'net_name': self.net_name,
+            'subnet_name': self.subnet_name,
+            'router_name': self.router_name,
+            'external_net_name': self.ext_net_name}
+
+        self.heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'router_heat_template.yaml')
+
+        stack_settings = StackSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template_path=self.heat_tmplt_path,
+            env_values=self.env_values)
+        self.stack_creator = create_stack.OpenStackHeatStack(
+            self.heat_creds, stack_settings)
+        self.created_stack = self.stack_creator.create()
+        self.assertIsNotNone(self.created_stack)
+
+    def tearDown(self):
+        """
+        Cleans the stack and downloaded stack file
+        """
+        if self.stack_creator:
+            try:
+                self.stack_creator.clean()
+            except:
+                pass
+
+        super(self.__class__, self).__clean__()
+
+    def test_retrieve_router_creator(self):
+        """
+        Tests the creation of an OpenStack stack from Heat template file and
+        the retrieval of an OpenStackRouter creator/state machine instance
+        """
+        router_creators = self.stack_creator.get_router_creators()
+        self.assertEqual(1, len(router_creators))
+
+        creator = router_creators[0]
+        self.assertEqual(self.router_name, creator.router_settings.name)
+
+        router = creator.get_router()
+
+        ext_net = neutron_utils.get_network(
+            self.neutron, network_name=self.ext_net_name)
+        self.assertEqual(ext_net.id, router.external_network_id)
+
+
 class CreateStackVolumeTests(OSIntegrationTestCase):
     """
     Tests for the CreateStack class as they pertain to volumes

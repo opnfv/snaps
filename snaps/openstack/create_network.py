@@ -422,9 +422,6 @@ class PortSettings:
                          'subnet_name' and 'ip' values which will get mapped to
                          self.fixed_ips. These values will be directly
                          translated into the fixed_ips dict (optional)
-        :param fixed_ips: A dict where the key is the subnet IDs and value is
-                          the IP address to assign to the port (optional and
-                          recommended to configure via ip_addrs instead)
         :param security_groups: One or more security group IDs.
         :param allowed_address_pairs: A dictionary containing a set of zero or
                                       more allowed address pairs. An address
@@ -441,8 +438,6 @@ class PortSettings:
         if 'port' in kwargs:
             kwargs = kwargs['port']
 
-        self.network = None
-
         self.name = kwargs.get('name')
         self.network_name = kwargs.get('network_name')
 
@@ -454,7 +449,6 @@ class PortSettings:
         self.project_name = kwargs.get('project_name')
         self.mac_address = kwargs.get('mac_address')
         self.ip_addrs = kwargs.get('ip_addrs')
-        self.fixed_ips = kwargs.get('fixed_ips')
         self.security_groups = kwargs.get('security_groups')
         self.allowed_address_pairs = kwargs.get('allowed_address_pairs')
         self.opt_value = kwargs.get('opt_value')
@@ -466,25 +460,28 @@ class PortSettings:
             raise PortSettingsError(
                 'The attribute network_name is required')
 
-    def __set_fixed_ips(self, neutron):
+    def __get_fixed_ips(self, neutron):
         """
         Sets the self.fixed_ips value
         :param neutron: the Neutron client
         :return: None
         """
-        if not self.fixed_ips and self.ip_addrs:
-            self.fixed_ips = list()
+
+        fixed_ips = list()
+        if self.ip_addrs:
 
             for ip_addr_dict in self.ip_addrs:
                 subnet = neutron_utils.get_subnet(
                     neutron, subnet_name=ip_addr_dict['subnet_name'])
                 if subnet and 'ip' in ip_addr_dict:
-                    self.fixed_ips.append({'ip_address': ip_addr_dict['ip'],
-                                           'subnet_id': subnet.id})
+                    fixed_ips.append({'ip_address': ip_addr_dict['ip'],
+                                      'subnet_id': subnet.id})
                 else:
                     raise PortSettingsError(
                         'Invalid port configuration, subnet does not exist '
                         'with name - ' + ip_addr_dict['subnet_name'])
+
+        return fixed_ips
 
     def dict_for_neutron(self, neutron, os_creds):
         """
@@ -497,7 +494,6 @@ class PortSettings:
         :param os_creds: the OpenStack credentials
         :return: the dictionary object
         """
-        self.__set_fixed_ips(neutron)
 
         out = dict()
 
@@ -509,14 +505,13 @@ class PortSettings:
             if project:
                 project_id = project.id
 
-        if not self.network:
-            self.network = neutron_utils.get_network(
-                neutron, network_name=self.network_name, project_id=project_id)
-        if not self.network:
+        network = neutron_utils.get_network(
+            neutron, network_name=self.network_name, project_id=project_id)
+        if not network:
             raise PortSettingsError(
                 'Cannot locate network with name - ' + self.network_name)
 
-        out['network_id'] = self.network.id
+        out['network_id'] = network.id
 
         if self.admin_state_up is not None:
             out['admin_state_up'] = self.admin_state_up
@@ -531,8 +526,11 @@ class PortSettings:
                     self.project_name)
         if self.mac_address:
             out['mac_address'] = self.mac_address
-        if self.fixed_ips and len(self.fixed_ips) > 0:
-            out['fixed_ips'] = self.fixed_ips
+
+        fixed_ips = self.__get_fixed_ips(neutron)
+        if fixed_ips and len(fixed_ips) > 0:
+            out['fixed_ips'] = fixed_ips
+
         if self.security_groups:
             out['security_groups'] = self.security_groups
         if self.allowed_address_pairs and len(self.allowed_address_pairs) > 0:
@@ -554,7 +552,7 @@ class PortSettings:
                 self.project_name == other.project_name and
                 self.mac_address == other.mac_address and
                 self.ip_addrs == other.ip_addrs and
-                self.fixed_ips == other.fixed_ips and
+                # self.fixed_ips == other.fixed_ips and
                 self.security_groups == other.security_groups and
                 self.allowed_address_pairs == other.allowed_address_pairs and
                 self.opt_value == other.opt_value and

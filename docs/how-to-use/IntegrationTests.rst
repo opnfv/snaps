@@ -396,6 +396,28 @@ create_stack_tests.py - CreateStackVolumeTests
 |                                       |               | deploying                                                 |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_stack_tests.py - CreateStackFloatingIpTests
+--------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             |   Heat API    | Description                                               |
++=======================================+===============+===========================================================+
+| test_connect_via_ssh_heat_vm          | 1             | Ensures that an OpenStackHeatStack instance can create a  |
+|                                       |               | VM with a floating IP that can be accessed via            |
+|                                       |               | OpenStackVmInstance                                       |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+create_stack_tests.py - CreateStackRouterTests
+----------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             |   Heat API    | Description                                               |
++=======================================+===============+===========================================================+
+| test_retrieve_router_creator          | 1             | Ensures that an OpenStackHeatStack instance can return a  |
+|                                       |               | OpenStackRouter instance that it was responsible for      |
+|                                       |               | deploying                                                 |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_stack_tests.py - CreateStackFlavorTests
 ----------------------------------------------
 

@@ -213,7 +213,8 @@ class RouterDomainObjectTests(unittest.TestCase):
         self.assertEqual('hello', router.status)
         self.assertEqual('1234', router.tenant_id)
         self.assertEqual('yes', router.admin_state_up)
-        self.assertEqual('no', router.external_gateway_info)
+        self.assertIsNone(router.external_fixed_ips)
+        self.assertIsNone(router.external_network_id)
 
     def test_construction_named(self):
         router = Router(
@@ -224,7 +225,38 @@ class RouterDomainObjectTests(unittest.TestCase):
         self.assertEqual('hello', router.status)
         self.assertEqual('1234', router.tenant_id)
         self.assertEqual('yes', router.admin_state_up)
-        self.assertEqual('no', router.external_gateway_info)
+        self.assertIsNone(router.external_fixed_ips)
+        self.assertIsNone(router.external_network_id)
+
+    def test_ext_gateway_named(self):
+        ext_gateway = {'network_id': '123',
+                       'external_fixed_ips': ['456', '789']}
+        router = Router(
+            external_fixed_ips=['456', '789'], external_network_id='123',
+            admin_state_up='yes', tenant_id='1234', status='hello', id='id',
+            name='name')
+        self.assertEqual('name', router.name)
+        self.assertEqual('id', router.id)
+        self.assertEqual('hello', router.status)
+        self.assertEqual('1234', router.tenant_id)
+        self.assertEqual('yes', router.admin_state_up)
+        self.assertEqual(['456', '789'], router.external_fixed_ips)
+        self.assertEqual('123', router.external_network_id)
+
+
+    def test_ext_net_ips_named(self):
+        ext_gateway = {'network_id': '123',
+                       'external_fixed_ips': ['456', '789']}
+        router = Router(
+            external_gateway_info=ext_gateway, admin_state_up='yes',
+            tenant_id='1234', status='hello', id='id', name='name')
+        self.assertEqual('name', router.name)
+        self.assertEqual('id', router.id)
+        self.assertEqual('hello', router.status)
+        self.assertEqual('1234', router.tenant_id)
+        self.assertEqual('yes', router.admin_state_up)
+        self.assertEqual(['456', '789'], router.external_fixed_ips)
+        self.assertEqual('123', router.external_network_id)
 
 
 class InterfaceRouterDomainObjectTests(unittest.TestCase):

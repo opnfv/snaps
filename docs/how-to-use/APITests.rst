@@ -429,9 +429,9 @@ heat_utils_tests.py - HeatUtilsCreateSimpleStackTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             | Heat API      | Description                                               |
 +=======================================+===============+===========================================================+
-| test_create_stack                     | 1             | Tests the heat_utils.create_stack() with a test template  |
+| test_create_stack                     | 1-3           | Tests the heat_utils.create_stack() with a test template  |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_stack_x2                  | 1             | Tests the heat_utils.create_stack() with a test template  |
+| test_create_stack_x2                  | 1-3           | Tests the heat_utils.create_stack() with a test template  |
 |                                       |               | and attempts to deploy a second time w/o actually         |
 |                                       |               | deploying any objects                                     |
 +---------------------------------------+---------------+-----------------------------------------------------------+
@@ -442,9 +442,20 @@ heat_utils_tests.py - HeatUtilsCreateComplexStackTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             | Heat API      | Description                                               |
 +=======================================+===============+===========================================================+
-| test_get_settings_from_stack          | 1             | Tests the heat_utils functions that are responsible for   |
+| test_get_settings_from_stack          | 1-3           | Tests the heat_utils functions that are responsible for   |
 |                                       |               | reverse engineering settings objects of the types deployed|
 |                                       |               | by Heat                                                   |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+heat_utils_tests.py - HeatUtilsRouterTests
+------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Heat API      | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_router_with_stack         | 1-3           | Tests ability of the function                             |
+|                                       |               | heat_utils.get_stack_routers() to return the correct      |
+|                                       |               | OpenStackRouter instance                                  |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
 heat_utils_tests.py - HeatUtilsVolumeTests
@@ -453,11 +464,11 @@ heat_utils_tests.py - HeatUtilsVolumeTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             | Heat API      | Description                                               |
 +=======================================+===============+===========================================================+
-| test_create_vol_with_stack            | 1             | Tests ability of the function                             |
+| test_create_vol_with_stack            | 1-3           | Tests ability of the function                             |
 |                                       |               | heat_utils.create_stack() to return the correct           |
 |                                       |               | Volume domain objects deployed with Heat                  |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_vol_types_with_stack      | 1             | Tests ability of the function                             |
+| test_create_vol_types_with_stack      | 1-3           | Tests ability of the function                             |
 |                                       |               | heat_utils.get_stack_volumes_types() to return the correct|
 |                                       |               | VolumeType domain objects deployed with Heat              |
 +---------------------------------------+---------------+-----------------------------------------------------------+
@@ -468,7 +479,7 @@ heat_utils_tests.py - HeatUtilsKeypairTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             | Heat API      | Description                                               |
 +=======================================+===============+===========================================================+
-| test_create_keypair_with_stack        | 1             | Tests ability of the function                             |
+| test_create_keypair_with_stack        | 1-3           | Tests ability of the function                             |
 |                                       |               | heat_utils.create_stack() to return the correct           |
 |                                       |               | Keypair domain objects deployed with Heat                 |
 +---------------------------------------+---------------+-----------------------------------------------------------+
@@ -479,7 +490,7 @@ heat_utils_tests.py - HeatUtilsFlavorTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             | Heat API      | Description                                               |
 +=======================================+===============+===========================================================+
-| test_create_flavor_with_stack         | 1             | Tests ability of the function                             |
+| test_create_flavor_with_stack         | 1-3           | Tests ability of the function                             |
 |                                       |               | heat_utils.get_stack_flavors() to return the correct      |
 |                                       |               | Flavor domain objects deployed with Heat                  |
 +---------------------------------------+---------------+-----------------------------------------------------------+

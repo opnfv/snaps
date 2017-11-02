@@ -132,6 +132,8 @@ class OpenStackRouter(OpenStackNetworkObject):
                             'Error creating port with name - '
                             + port_setting.name)
 
+        self.__router = neutron_utils.get_router_by_id(
+            self._neutron, self.__router.id)
         return self.__router
 
     def clean(self):
@@ -206,8 +208,6 @@ class RouterSettings:
         :param external_gateway: Name of the external network to which to route
         :param admin_state_up: The administrative status of the router.
                                True = up / False = down (default True)
-        :param external_fixed_ips: Dictionary containing the IP address
-                                   parameters.
         :param internal_subnets: List of subnet names to which to connect this
                                  router for Floating IP purposes
         :param port_settings: List of PortSettings objects
@@ -217,9 +217,8 @@ class RouterSettings:
         self.project_name = kwargs.get('project_name')
         self.external_gateway = kwargs.get('external_gateway')
 
-        self.admin_state_up = kwargs.get('admin_state_up')
+        self.admin_state_up = kwargs.get('admin_state_up', True)
         self.enable_snat = kwargs.get('enable_snat')
-        self.external_fixed_ips = kwargs.get('external_fixed_ips')
         if kwargs.get('internal_subnets'):
             self.internal_subnets = kwargs['internal_subnets']
         else:

@@ -405,6 +405,85 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
         self.assertEqual(self.keypair_name, keypair2_settings.name)
 
 
+class HeatUtilsRouterTests(OSComponentTestCase):
+    """
+    Test Heat volume functionality
+    """
+
+    def setUp(self):
+        """
+        Instantiates OpenStack instances that cannot be spawned by Heat
+        """
+        guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        stack_name = guid + '-stack'
+
+        self.net_name = guid + '-net'
+        self.subnet_name = guid + '-subnet'
+        self.router_name = guid + '-router'
+
+        env_values = {
+            'net_name': self.net_name,
+            'subnet_name': self.subnet_name,
+            'router_name': self.router_name,
+            'external_net_name': self.ext_net_name}
+
+        heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'router_heat_template.yaml')
+        self.stack_settings = StackSettings(
+            name=stack_name, template_path=heat_tmplt_path,
+            env_values=env_values)
+        self.stack = None
+        self.heat_client = heat_utils.heat_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(self.os_creds)
+
+    def tearDown(self):
+        """
+        Cleans the image and downloaded image file
+        """
+        if self.stack:
+            try:
+                heat_utils.delete_stack(self.heat_client, self.stack)
+            except:
+                pass
+
+    def test_create_router_with_stack(self):
+        """
+        Tests the creation of an OpenStack router with Heat and the retrieval
+        of the Router Domain objects from heat_utils#get_stack_routers().
+        """
+        self.stack = heat_utils.create_stack(
+            self.heat_client, self.stack_settings)
+
+        # Wait until stack deployment has completed
+        end_time = time.time() + create_stack.STACK_COMPLETE_TIMEOUT
+        is_active = False
+        while time.time() < end_time:
+            status = heat_utils.get_stack_status(self.heat_client,
+                                                 self.stack.id)
+            if status == create_stack.STATUS_CREATE_COMPLETE:
+                is_active = True
+                break
+            elif status == create_stack.STATUS_CREATE_FAILED:
+                is_active = False
+                break
+
+            time.sleep(3)
+
+        self.assertTrue(is_active)
+
+        routers = heat_utils.get_stack_routers(
+            self.heat_client, self.neutron, self.stack)
+
+        self.assertEqual(1, len(routers))
+
+        router = routers[0]
+        self.assertEqual(self.router_name, router.name)
+
+        ext_net = neutron_utils.get_network(
+            self.neutron, network_name=self.ext_net_name)
+        self.assertEqual(ext_net.id, router.external_network_id)
+
+
 class HeatUtilsVolumeTests(OSComponentTestCase):
     """
     Test Heat volume functionality
