@@ -212,14 +212,15 @@ def __create_vm_instances(os_creds_dict, os_users_dict, instances_config,
                         if image_creator:
                             instance_settings = VmInstanceSettings(
                                 **instance_config['instance'])
-                            kp_name = conf.get('keypair_name')
+                            kp_creator = keypairs_dict.get(
+                                conf.get('keypair_name'))
                             vm_dict[conf[
                                 'name']] = deploy_utils.create_vm_instance(
                                 __get_creds(
                                     os_creds_dict, os_users_dict, conf),
                                 instance_settings,
                                 image_creator.image_settings,
-                                keypair_creator=keypairs_dict[kp_name],
+                                keypair_creator=kp_creator,
                                 init_only=cleanup)
                         else:
                             raise Exception('Image creator instance not found.'
