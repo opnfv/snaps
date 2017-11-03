@@ -467,7 +467,7 @@ def create_security_group(neutron, keystone, sec_grp_settings):
                 sec_grp_settings.name)
     os_group = neutron.create_security_group(
         sec_grp_settings.dict_for_neutron(keystone))
-    return SecurityGroup(**os_group['security_group'])
+    return __map_os_security_group(neutron, os_group['security_group'])
 
 
 def delete_security_group(neutron, sec_grp):
@@ -511,7 +511,20 @@ def get_security_group(neutron, sec_grp_settings=None, sec_grp_name=None,
 
     groups = neutron.list_security_groups(**sec_grp_filter)
     for group in groups['security_groups']:
-        return SecurityGroup(**group)
+        return __map_os_security_group(neutron, group)
+
+
+def __map_os_security_group(neutron, os_sec_grp):
+    """
+    Creates a SecurityGroup SNAPS domain object from an OpenStack Security
+    Group dict
+    :param neutron: the neutron client for performing rule lookups
+    :param os_sec_grp: the OpenStack Security Group dict object
+    :return: a SecurityGroup object
+    """
+    os_sec_grp['rules'] = get_rules_by_security_group_id(
+        neutron, os_sec_grp['id'])
+    return SecurityGroup(**os_sec_grp)
 
 
 def get_security_group_by_id(neutron, sec_grp_id):
@@ -526,7 +539,7 @@ def get_security_group_by_id(neutron, sec_grp_id):
     groups = neutron.list_security_groups(**{'id': sec_grp_id})
     for group in groups['security_groups']:
         if group['id'] == sec_grp_id:
-            return SecurityGroup(**group)
+            return __map_os_security_group(neutron, group)
     return None
 
 
@@ -561,13 +574,22 @@ def get_rules_by_security_group(neutron, sec_grp):
     :param neutron: the client
     :param sec_grp: a list of SNAPS SecurityGroupRule domain objects
     """
+    return get_rules_by_security_group_id(neutron, sec_grp.id)
+
+
+def get_rules_by_security_group_id(neutron, sec_grp_id):
+    """
+    Retrieves all of the rules for a given security group
+    :param neutron: the client
+    :param sec_grp_id: the ID of the associated security group
+    """
     logger.info('Retrieving security group rules associate with the '
-                'security group - %s', sec_grp.name)
+                'security group with ID - %s', sec_grp_id)
     out = list()
     rules = neutron.list_security_group_rules(
-        **{'security_group_id': sec_grp.id})
+        **{'security_group_id': sec_grp_id})
     for rule in rules['security_group_rules']:
-        if rule['security_group_id'] == sec_grp.id:
+        if rule['security_group_id'] == sec_grp_id:
             out.append(SecurityGroupRule(**rule))
     return out
 

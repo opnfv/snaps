@@ -21,6 +21,8 @@ from snaps.openstack.create_instance import (
 from snaps.openstack.create_keypairs import KeypairSettings
 from snaps.openstack.create_network import (
     PortSettings, SubnetSettings, NetworkSettings)
+from snaps.openstack.create_security_group import SecurityGroupSettings, \
+    SecurityGroupRuleSettings
 from snaps.openstack.create_volume import VolumeSettings
 from snaps.openstack.create_volume_type import (
     VolumeTypeSettings, VolumeTypeEncryptionSettings, ControlLocation)
@@ -38,6 +40,30 @@ def create_network_settings(neutron, network):
     return NetworkSettings(
         name=network.name, network_type=network.type,
         subnet_settings=create_subnet_settings(neutron, network))
+
+
+def create_security_group_settings(neutron, security_group):
+    """
+    Returns a NetworkSettings object
+    :param neutron: the neutron client
+    :param security_group: a SNAPS-OO SecurityGroup domain object
+    :return:
+    """
+    rules = neutron_utils.get_rules_by_security_group(neutron, security_group)
+
+    rule_settings = list()
+    for rule in rules:
+        rule_settings.append(SecurityGroupRuleSettings(
+            sec_grp_name=security_group.name, description=rule.description,
+            direction=rule.direction, ethertype=rule.ethertype,
+            port_range_min=rule.port_range_min,
+            port_range_max=rule.port_range_max, protocol=rule.protocol,
+            remote_group_id=rule.remote_group_id,
+            remote_ip_prefix=rule.remote_ip_prefix))
+
+    return SecurityGroupSettings(
+        name=security_group.name, description=security_group.description,
+        rule_settings=rule_settings)
 
 
 def create_subnet_settings(neutron, network):

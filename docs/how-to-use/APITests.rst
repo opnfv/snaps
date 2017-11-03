@@ -469,8 +469,19 @@ heat_utils_tests.py - HeatUtilsKeypairTests
 | Test Name                             | Heat API      | Description                                               |
 +=======================================+===============+===========================================================+
 | test_create_keypair_with_stack        | 1             | Tests ability of the function                             |
-|                                       |               | heat_utils.create_stack() to return the correct           |
+|                                       |               | heat_utils.get_stack_keypairs() to return the correct     |
 |                                       |               | Keypair domain objects deployed with Heat                 |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+heat_utils_tests.py - HeatUtilsSecurityGroupTests
+-------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Heat API      | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_security_group_with_stack | 1-3           | Tests ability of the function                             |
+|                                       |               | heat_utils.get_stack_security_groups() to return the      |
+|                                       |               | correct SecurityGroup domain objects deployed with Heat   |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
 heat_utils_tests.py - HeatUtilsFlavorTests

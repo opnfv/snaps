@@ -725,6 +725,100 @@ class CreateStackKeypairTests(OSIntegrationTestCase):
         self.assertEqual(creator.get_keypair(), keypair)
 
 
+class CreateStackSecurityGroupTests(OSIntegrationTestCase):
+    """
+    Tests for the OpenStackHeatStack class to ensure it returns an
+    OpenStackSecurityGroup object
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateStack object that is responsible for downloading
+        and creating an OS stack file within OpenStack
+        """
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+
+        self.heat_creds = self.admin_os_creds
+        self.heat_creds.project_name = self.admin_os_creds.project_name
+
+        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.nova = nova_utils.nova_client(self.heat_creds)
+        self.stack_creator = None
+
+        self.security_group_name = self.guid + '-sec-grp'
+
+        self.env_values = {
+            'security_group_name': self.security_group_name}
+
+        self.heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'security_group_heat_template.yaml')
+
+        stack_settings = StackSettings(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template_path=self.heat_tmplt_path,
+            env_values=self.env_values)
+        self.stack_creator = create_stack.OpenStackHeatStack(
+            self.heat_creds, stack_settings)
+        self.created_stack = self.stack_creator.create()
+        self.assertIsNotNone(self.created_stack)
+
+    def tearDown(self):
+        """
+        Cleans the stack and downloaded stack file
+        """
+        if self.stack_creator:
+            try:
+                self.stack_creator.clean()
+            except:
+                pass
+
+        super(self.__class__, self).__clean__()
+
+    def test_retrieve_security_group_creator(self):
+        """
+        Tests the creation of an OpenStack stack from Heat template file and
+        the retrieval of an OpenStackSecurityGroup creator/state machine
+        instance
+        """
+        sec_grp_creators = self.stack_creator.get_security_group_creators()
+        self.assertEqual(1, len(sec_grp_creators))
+
+        creator = sec_grp_creators[0]
+        sec_grp = creator.get_security_group()
+
+        self.assertEqual(self.security_group_name, sec_grp.name)
+        self.assertEqual('Test description', sec_grp.description)
+        self.assertEqual(2, len(sec_grp.rules))
+
+        has_ssh_rule = False
+        has_icmp_rule = False
+
+        for rule in sec_grp.rules:
+            if (rule.security_group_id == sec_grp.id
+                    and rule.direction == 'egress'
+                    and rule.ethertype == 'IPv4'
+                    and rule.port_range_min == 22
+                    and rule.port_range_max == 22
+                    and rule.protocol == 'tcp'
+                    and rule.remote_group_id is None
+                    and rule.remote_ip_prefix == '0.0.0.0/0'):
+                has_ssh_rule = True
+            if (rule.security_group_id == sec_grp.id
+                    and rule.direction == 'ingress'
+                    and rule.ethertype == 'IPv4'
+                    and rule.port_range_min is None
+                    and rule.port_range_max is None
+                    and rule.protocol == 'icmp'
+                    and rule.remote_group_id is None
+                    and rule.remote_ip_prefix == '0.0.0.0/0'):
+                has_icmp_rule = True
+
+        self.assertTrue(has_ssh_rule)
+        self.assertTrue(has_icmp_rule)
+
+
 class CreateStackNegativeTests(OSIntegrationTestCase):
     """
     Negative test cases for the CreateStack class
