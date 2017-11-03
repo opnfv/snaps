@@ -206,15 +206,29 @@ class SecurityGroup:
         Constructor
         :param name: the security group's name
         :param id: the security group's id
+        :param description: the security group's description
+        :param project_id: the security group's project_id
+        :param rules: list of SecurityGroupRule objects associated to this
         """
         self.name = kwargs.get('name')
         self.id = kwargs.get('id')
         self.description = kwargs.get('description')
         self.project_id = kwargs.get('project_id', kwargs.get('tenant_id'))
 
+        self.rules = list()
+        if kwargs.get('rules') and isinstance(kwargs.get('rules'), list):
+            for rule in kwargs.get('rules'):
+                if isinstance(rule, SecurityGroupRule):
+                    self.rules.append(rule)
+                else:
+                    self.rules.append(SecurityGroupRule(**rule))
+
     def __eq__(self, other):
-        return (self.name == other.name and self.id == other.id and
-                self.project_id == other.project_id)
+        return (self.name == other.name and
+                self.id == other.id and
+                self.description == other.description and
+                self.project_id == other.project_id and
+                self.rules == other.rules)
 
 
 class SecurityGroupRule:
@@ -226,7 +240,7 @@ class SecurityGroupRule:
         """
         Constructor
         :param id: the security group rule's id
-        :param sec_grp_id: the ID of the associated security group
+        :param security_group_id: the ID of the associated security group
         :param description: the security group rule's description
         :param direction: the security group rule's direction
         :param ethertype: the security group rule's ethertype

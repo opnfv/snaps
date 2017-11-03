@@ -69,7 +69,8 @@ from snaps.openstack.tests.create_security_group_tests import (
 from snaps.openstack.tests.create_stack_tests import (
     StackSettingsUnitTests, CreateStackSuccessTests, CreateStackNegativeTests,
     CreateStackFlavorTests, CreateStackFloatingIpTests,
-    CreateStackKeypairTests, CreateStackVolumeTests)
+    CreateStackKeypairTests, CreateStackVolumeTests,
+    CreateStackSecurityGroupTests)
 from snaps.openstack.tests.create_user_tests import (
     UserSettingsUnitTests, CreateUserSuccessTests)
 from snaps.openstack.tests.create_volume_tests import (
@@ -90,7 +91,7 @@ from snaps.openstack.utils.tests.glance_utils_tests import (
 from snaps.openstack.utils.tests.heat_utils_tests import (
     HeatSmokeTests, HeatUtilsCreateSimpleStackTests,
     HeatUtilsCreateComplexStackTests, HeatUtilsFlavorTests,
-    HeatUtilsKeypairTests, HeatUtilsVolumeTests)
+    HeatUtilsKeypairTests, HeatUtilsVolumeTests, HeatUtilsSecurityGroupTests)
 from snaps.openstack.utils.tests.keystone_utils_tests import (
     KeystoneSmokeTests, KeystoneUtilsTests)
 from snaps.openstack.utils.tests.neutron_utils_tests import (
@@ -340,6 +341,10 @@ def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True,
         ext_net_name=ext_net_name, log_level=log_level,
         image_metadata=image_metadata))
     suite.addTest(OSComponentTestCase.parameterize(
+        HeatUtilsSecurityGroupTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, log_level=log_level,
+        image_metadata=image_metadata))
+    suite.addTest(OSComponentTestCase.parameterize(
         CinderUtilsQoSTests, os_creds=os_creds,
         ext_net_name=ext_net_name, log_level=log_level,
         image_metadata=image_metadata))
@@ -533,6 +538,11 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
     suite.addTest(OSIntegrationTestCase.parameterize(
         CreateStackKeypairTests, os_creds=os_creds, ext_net_name=ext_net_name,
         use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateStackSecurityGroupTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, use_keystone=use_keystone,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(

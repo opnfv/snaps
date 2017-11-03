@@ -116,7 +116,7 @@ class HeatUtilsCreateSimpleStackTests(OSComponentTestCase):
 
     def tearDown(self):
         """
-        Cleans the image and downloaded image file
+        Cleans the stack and image
         """
         if self.stack1:
             try:
@@ -279,7 +279,7 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
 
     def tearDown(self):
         """
-        Cleans the image and downloaded image file
+        Cleans the stack and image
         """
         if self.stack:
             try:
@@ -513,7 +513,7 @@ class HeatUtilsVolumeTests(OSComponentTestCase):
 
     def tearDown(self):
         """
-        Cleans the image and downloaded image file
+        Cleans the stack
         """
         if self.stack:
             try:
@@ -592,7 +592,7 @@ class HeatUtilsFlavorTests(OSComponentTestCase):
 
     def tearDown(self):
         """
-        Cleans the image and downloaded image file
+        Cleans the stack
         """
         if self.stack:
             try:
@@ -638,8 +638,7 @@ class HeatUtilsKeypairTests(OSComponentTestCase):
         stack_name = guid + '-stack'
         self.keypair_name = guid + '-kp'
 
-        env_values = {
-            'keypair_name': self.keypair_name}
+        env_values = {'keypair_name': self.keypair_name}
 
         heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'keypair_heat_template.yaml')
@@ -652,7 +651,7 @@ class HeatUtilsKeypairTests(OSComponentTestCase):
 
     def tearDown(self):
         """
-        Cleans the image and downloaded image file
+        Cleans the stack
         """
         if self.stack:
             try:
@@ -687,6 +686,82 @@ class HeatUtilsKeypairTests(OSComponentTestCase):
         self.assertIsNotNone(keypair)
 
         self.assertEqual(self.keypair_name, keypair.name)
+
+
+class HeatUtilsSecurityGroupTests(OSComponentTestCase):
+    """
+    Test Heat volume functionality
+    """
+
+    def setUp(self):
+        """
+        Instantiates OpenStack instances that cannot be spawned by Heat
+        """
+        guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        stack_name = guid + '-stack'
+        self.sec_grp_name = guid + '-sec-grp'
+
+        env_values = {'security_group_name': self.sec_grp_name}
+
+        heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'security_group_heat_template.yaml')
+        self.stack_settings = StackSettings(
+            name=stack_name, template_path=heat_tmplt_path,
+            env_values=env_values)
+        self.stack = None
+        self.heat_client = heat_utils.heat_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(self.os_creds)
+
+    def tearDown(self):
+        """
+        Cleans the stack
+        """
+        if self.stack:
+            try:
+                heat_utils.delete_stack(self.heat_client, self.stack)
+            except:
+                pass
+
+    def test_create_security_group_with_stack(self):
+        """
+        Tests the creation of an OpenStack SecurityGroup with Heat.
+        """
+        self.stack = heat_utils.create_stack(
+            self.heat_client, self.stack_settings)
+        self.assertTrue(stack_active(self.heat_client, self.stack))
+
+        sec_grp = heat_utils.get_stack_security_groups(
+            self.heat_client, self.neutron, self.stack)[0]
+
+        self.assertEqual(self.sec_grp_name, sec_grp.name)
+        self.assertEqual('Test description', sec_grp.description)
+        self.assertEqual(2, len(sec_grp.rules))
+
+        has_ssh_rule = False
+        has_icmp_rule = False
+
+        for rule in sec_grp.rules:
+            if (rule.security_group_id == sec_grp.id
+                    and rule.direction == 'egress'
+                    and rule.ethertype == 'IPv4'
+                    and rule.port_range_min == 22
+                    and rule.port_range_max == 22
+                    and rule.protocol == 'tcp'
+                    and rule.remote_group_id is None
+                    and rule.remote_ip_prefix == '0.0.0.0/0'):
+                has_ssh_rule = True
+            if (rule.security_group_id == sec_grp.id
+                    and rule.direction == 'ingress'
+                    and rule.ethertype == 'IPv4'
+                    and rule.port_range_min is None
+                    and rule.port_range_max is None
+                    and rule.protocol == 'icmp'
+                    and rule.remote_group_id is None
+                    and rule.remote_ip_prefix == '0.0.0.0/0'):
+                has_icmp_rule = True
+
+        self.assertTrue(has_ssh_rule)
+        self.assertTrue(has_icmp_rule)
 
 
 def stack_active(heat_cli, stack):

@@ -66,6 +66,9 @@ class OpenStackSecurityGroup(OpenStackNetworkObject):
                 rule_setting = self.__get_setting_from_rule(existing_rule)
                 self.__rules[rule_setting] = existing_rule
 
+            self.__security_group = neutron_utils.get_security_group_by_id(
+                self._neutron, self.__security_group.id)
+
         return self.__security_group
 
     def create(self):

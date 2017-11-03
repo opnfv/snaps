@@ -440,6 +440,17 @@ create_stack_tests.py - CreateStackKeypairTests
 |                                       |               | deploying                                                 |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_stack_tests.py - CreateStackSecurityGroupTests
+-----------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             |   Heat API    | Description                                               |
++=======================================+===============+===========================================================+
+| test_retrieve_security_group_creator  | 1-3           | Ensures that an OpenStackHeatStack instance can return a  |
+|                                       |               | OpenStackSecurityGroup instance that it was responsible   |
+|                                       |               | for deploying                                             |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_stack_tests.py - CreateComplexStackTests
 -----------------------------------------------
 

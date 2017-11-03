@@ -21,6 +21,7 @@ from heatclient.exc import HTTPNotFound
 from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_instance import OpenStackVmInstance
 from snaps.openstack.create_keypairs import OpenStackKeypair
+from snaps.openstack.create_security_group import OpenStackSecurityGroup
 from snaps.openstack.create_router import OpenStackRouter
 from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.create_volume_type import OpenStackVolumeType
@@ -232,6 +233,28 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
             net_creator = OpenStackNetwork(self._os_creds, net_settings)
             out.append(net_creator)
             net_creator.initialize()
+
+        return out
+
+    def get_security_group_creators(self):
+        """
+        Returns a list of security group creator objects as configured by the
+        heat template
+        :return: list() of OpenStackNetwork objects
+        """
+
+        neutron = neutron_utils.neutron_client(self._os_creds)
+
+        out = list()
+        stack_security_groups = heat_utils.get_stack_security_groups(
+            self.__heat_cli, neutron, self.__stack)
+
+        for stack_security_group in stack_security_groups:
+            settings = settings_utils.create_security_group_settings(
+                neutron, stack_security_group)
+            creator = OpenStackSecurityGroup(self._os_creds, settings)
+            out.append(creator)
+            creator.initialize()
 
         return out
 

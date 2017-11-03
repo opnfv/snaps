@@ -226,6 +226,26 @@ def get_stack_routers(heat_cli, neutron, stack):
     return out
 
 
+def get_stack_security_groups(heat_cli, neutron, stack):
+    """
+    Returns a list of SecurityGroup domain objects deployed by this stack
+    :param heat_cli: the OpenStack heat client object
+    :param neutron: the OpenStack neutron client object
+    :param stack: the SNAPS-OO Stack domain object
+    :return: a list of SecurityGroup objects
+    """
+
+    out = list()
+    resources = get_resources(heat_cli, stack, 'OS::Neutron::SecurityGroup')
+    for resource in resources:
+        security_group = neutron_utils.get_security_group_by_id(
+            neutron, resource.id)
+        if security_group:
+            out.append(security_group)
+
+    return out
+
+
 def get_stack_servers(heat_cli, nova, stack):
     """
     Returns a list of VMInst domain objects associated with a Stack

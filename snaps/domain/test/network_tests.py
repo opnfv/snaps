@@ -286,11 +286,32 @@ class SecurityGroupDomainObjectTests(unittest.TestCase):
     def test_construction_proj_id_kwargs(self):
         sec_grp = SecurityGroup(
             **{'name': 'name', 'id': 'id', 'project_id': 'foo',
-               'description': 'test desc'})
+               'description': 'test desc',
+               'rules': [
+                    {'id': 'id', 'security_group_id': 'grp_id',
+                     'description': 'desc', 'direction': 'dir',
+                     'ethertype': 'eType', 'port_range_min': '10.0.0.100',
+                     'port_range_max': '10.0.0.200', 'protocol': 'proto',
+                     'remote_group_id': 'group_id',
+                     'remote_ip_prefix': 'ip_prefix'}
+               ]})
         self.assertEqual('name', sec_grp.name)
         self.assertEqual('id', sec_grp.id)
         self.assertEqual('test desc', sec_grp.description)
         self.assertEqual('foo', sec_grp.project_id)
+
+        self.assertEqual(1, len(sec_grp.rules))
+        rule = sec_grp.rules[0]
+        self.assertEqual('id', rule.id)
+        self.assertEqual('grp_id', rule.security_group_id)
+        self.assertEqual('desc', rule.description)
+        self.assertEqual('dir', rule.direction)
+        self.assertEqual('eType', rule.ethertype)
+        self.assertEqual('10.0.0.100', rule.port_range_min)
+        self.assertEqual('10.0.0.200', rule.port_range_max)
+        self.assertEqual('proto', rule.protocol)
+        self.assertEqual('group_id', rule.remote_group_id)
+        self.assertEqual('ip_prefix', rule.remote_ip_prefix)
 
     def test_construction_tenant_id_kwargs(self):
         sec_grp = SecurityGroup(
@@ -300,14 +321,36 @@ class SecurityGroupDomainObjectTests(unittest.TestCase):
         self.assertEqual('id', sec_grp.id)
         self.assertEqual('foo', sec_grp.project_id)
         self.assertIsNone(sec_grp.description)
+        self.assertEqual(0, len(sec_grp.rules))
 
     def test_construction_named(self):
+        rules = [SecurityGroupRule(
+            **{'id': 'id', 'security_group_id': 'grp_id',
+               'description': 'desc', 'direction': 'dir',
+               'ethertype': 'eType', 'port_range_min': '10.0.0.100',
+               'port_range_max': '10.0.0.200', 'protocol': 'proto',
+               'remote_group_id': 'group_id',
+               'remote_ip_prefix': 'ip_prefix'}
+        )]
         sec_grp = SecurityGroup(description='test desc', tenant_id='foo',
-                                id='id', name='name')
+                                id='id', name='name', rules=rules)
         self.assertEqual('name', sec_grp.name)
         self.assertEqual('id', sec_grp.id)
         self.assertEqual('test desc', sec_grp.description)
         self.assertEqual('foo', sec_grp.project_id)
+
+        self.assertEqual(1, len(sec_grp.rules))
+        rule = sec_grp.rules[0]
+        self.assertEqual('id', rule.id)
+        self.assertEqual('grp_id', rule.security_group_id)
+        self.assertEqual('desc', rule.description)
+        self.assertEqual('dir', rule.direction)
+        self.assertEqual('eType', rule.ethertype)
+        self.assertEqual('10.0.0.100', rule.port_range_min)
+        self.assertEqual('10.0.0.200', rule.port_range_max)
+        self.assertEqual('proto', rule.protocol)
+        self.assertEqual('group_id', rule.remote_group_id)
+        self.assertEqual('ip_prefix', rule.remote_ip_prefix)
 
 
 class SecurityGroupRuleDomainObjectTests(unittest.TestCase):
