@@ -37,14 +37,21 @@ class Resource:
     """
     SNAPS domain object for a resource created by a heat template
     """
-    def __init__(self, resource_type, resource_id):
+    def __init__(self, name, resource_type, resource_id, status,
+                 status_reason):
         """
         Constructor
-        :param resource_type: the type
+        :param name: the resource's name
+        :param resource_type: the resource's type
         :param resource_id: the ID attached to the resource of the given type
+        :param status: the resource's status code
+        :param status_reason: the resource's status code reason
         """
+        self.name = name
         self.type = resource_type
         self.id = resource_id
+        self.status = status
+        self.status_reason = status_reason
 
 
 class Output:

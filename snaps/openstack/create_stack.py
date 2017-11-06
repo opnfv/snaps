@@ -448,6 +448,18 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
             return False
 
         if fail_status and status == fail_status:
+            resources = heat_utils.get_resources(self.__heat_cli, self.__stack)
+            logger.error('Stack %s failed', self.__stack.name)
+            for resource in resources:
+                if resource.status != STATUS_CREATE_COMPLETE:
+                    logger.error(
+                        'Resource: [%s] status: [%s] reason: [%s]',
+                        resource.name, resource.status, resource.status_reason)
+                else:
+                    logger.debug(
+                        'Resource: [%s] status: [%s] reason: [%s]',
+                        resource.name, resource.status, resource.status_reason)
+
             raise StackError('Stack had an error')
         logger.debug('Stack status is - ' + status)
         return status == expected_status_code

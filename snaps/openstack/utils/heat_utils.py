@@ -23,8 +23,8 @@ from oslo_serialization import jsonutils
 from snaps import file_utils
 from snaps.domain.stack import Stack, Resource, Output
 
-from snaps.openstack.utils import keystone_utils, neutron_utils, nova_utils, \
-    cinder_utils
+from snaps.openstack.utils import (
+    keystone_utils, neutron_utils, nova_utils, cinder_utils)
 
 __author__ = 'spisarski'
 
@@ -155,10 +155,13 @@ def get_resources(heat_cli, stack, res_type=None):
         out = list()
         for os_resource in os_resources:
             if ((res_type and os_resource.resource_type == res_type)
-                    or not res_type):
+                or not res_type):
                 out.append(Resource(
+                    name=os_resource.resource_name,
                     resource_type=os_resource.resource_type,
-                    resource_id=os_resource.physical_resource_id))
+                    resource_id=os_resource.physical_resource_id,
+                    status=os_resource.resource_status,
+                    status_reason=os_resource.resource_status_reason))
         return out
 
 
