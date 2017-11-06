@@ -21,6 +21,7 @@ from snaps.openstack.create_instance import (
 from snaps.openstack.create_keypairs import KeypairSettings
 from snaps.openstack.create_network import (
     PortSettings, SubnetSettings, NetworkSettings)
+from snaps.openstack.create_router import RouterSettings
 from snaps.openstack.create_volume import VolumeSettings
 from snaps.openstack.create_volume_type import (
     VolumeTypeSettings, VolumeTypeEncryptionSettings, ControlLocation)
@@ -65,6 +66,60 @@ def create_subnet_settings(neutron, network):
         kwargs['ipv6_address_mode'] = subnet.ipv6_address_mode
         out.append(SubnetSettings(**kwargs))
     return out
+
+
+def create_router_settings(neutron, router):
+    """
+    Returns a RouterSettings object
+    :param neutron: the neutron client
+    :param router: a SNAPS-OO Router domain object
+    :return:
+    """
+    ext_net_name = None
+
+    if router.external_network_id:
+        network = neutron_utils.get_network_by_id(
+            neutron, router.external_network_id)
+        if network:
+            ext_net_name = network.name
+
+    ports_tuple_list = list()
+    if router.port_subnets:
+        for port, subnets in router.port_subnets:
+            network = neutron_utils.get_network_by_id(
+                neutron, port.network_id)
+
+            ip_addrs = list()
+            if network and router.external_fixed_ips:
+                for ext_fixed_ips in router.external_fixed_ips:
+                    for subnet in subnets:
+                        if ext_fixed_ips['subnet_id'] == subnet.id:
+                            ip_addrs.append(ext_fixed_ips['ip_address'])
+            else:
+                for ip in port.ips:
+                    ip_addrs.append(ip)
+
+            ip_list = list()
+            if len(ip_addrs) > 0:
+                for ip_addr in ip_addrs:
+                    if isinstance(ip_addr, dict):
+                        ip_list.append(ip_addr['ip_address'])
+                    else:
+                        ip_list.append(ip_addr)
+
+            ports_tuple_list.append((network, ip_list))
+
+    port_settings = __create_port_settings(neutron, ports_tuple_list)
+
+    filtered_settings = list()
+    for port_setting in port_settings:
+        if port_setting.network_name != ext_net_name:
+            filtered_settings.append(port_setting)
+
+    return RouterSettings(
+        name=router.name, external_gateway=ext_net_name,
+        admin_state_up=router.admin_state_up,
+        port_settings=filtered_settings)
 
 
 def create_volume_settings(volume):
@@ -162,8 +217,15 @@ def create_vm_inst_settings(nova, neutron, server):
     kwargs = dict()
     kwargs['name'] = server.name
     kwargs['flavor'] = flavor_name
+
+    net_tuples = list()
+    for net_name, ips in server.networks.items():
+        network = neutron_utils.get_network(neutron, network_name=net_name)
+        if network:
+            net_tuples.append((network, ips))
+
     kwargs['port_settings'] = __create_port_settings(
-        neutron, server.networks)
+        neutron, net_tuples)
     kwargs['security_group_names'] = server.sec_grp_names
     kwargs['floating_ip_settings'] = __create_floatingip_settings(
         neutron, kwargs['port_settings'])
@@ -175,24 +237,32 @@ def __create_port_settings(neutron, networks):
     """
     Returns a list of port settings based on the networks parameter
     :param neutron: the neutron client
-    :param networks: a dict where the key is the network name and the value
-                     is a list of IP addresses
+    :param networks: a list of tuples where #1 is the SNAPS Network domain
+                     object and #2 is a list of IP addresses
     :return:
     """
     out = list()
 
-    for net_name, ips in networks.items():
-        network = neutron_utils.get_network(neutron, network_name=net_name)
+    for network, ips in networks:
         ports = neutron_utils.get_ports(neutron, network, ips)
         for port in ports:
-            kwargs = dict()
-            if port.name:
-                kwargs['name'] = port.name
-            kwargs['network_name'] = network.name
-            kwargs['mac_address'] = port.mac_address
-            kwargs['allowed_address_pairs'] = port.allowed_address_pairs
-            kwargs['admin_state_up'] = port.admin_state_up
-            out.append(PortSettings(**kwargs))
+            if port.device_owner != 'network:dhcp':
+                ip_addrs = list()
+                for ip_dict in port.ips:
+                    subnet = neutron_utils.get_subnet_by_id(
+                        neutron, ip_dict['subnet_id'])
+                    ip_addrs.append({'subnet_name': subnet.name,
+                                     'ip': ip_dict['ip_address']})
+
+                kwargs = dict()
+                if port.name:
+                    kwargs['name'] = port.name
+                kwargs['network_name'] = network.name
+                kwargs['mac_address'] = port.mac_address
+                kwargs['allowed_address_pairs'] = port.allowed_address_pairs
+                kwargs['admin_state_up'] = port.admin_state_up
+                kwargs['ip_addrs'] = ip_addrs
+                out.append(PortSettings(**kwargs))
 
     return out
 

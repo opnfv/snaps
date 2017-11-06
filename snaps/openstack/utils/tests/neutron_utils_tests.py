@@ -352,7 +352,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         ext_net = neutron_utils.get_network(
             self.neutron, network_name=self.ext_net_name)
         self.assertEqual(
-            self.router.external_gateway_info['network_id'], ext_net.id)
+            self.router.external_network_id, ext_net.id)
 
     def test_create_router_empty_name(self):
         """

@@ -197,10 +197,28 @@ def get_stack_networks(heat_cli, neutron, stack):
     out = list()
     resources = get_resources(heat_cli, stack, 'OS::Neutron::Net')
     for resource in resources:
-        network = neutron_utils.get_network_by_id(
-            neutron, resource.id)
+        network = neutron_utils.get_network_by_id(neutron, resource.id)
         if network:
             out.append(network)
+
+    return out
+
+
+def get_stack_routers(heat_cli, neutron, stack):
+    """
+    Returns a list of Network domain objects deployed by this stack
+    :param heat_cli: the OpenStack heat client object
+    :param neutron: the OpenStack neutron client object
+    :param stack: the SNAPS-OO Stack domain object
+    :return: a list of Network objects
+    """
+
+    out = list()
+    resources = get_resources(heat_cli, stack, 'OS::Neutron::Router')
+    for resource in resources:
+        router = neutron_utils.get_router_by_id(neutron, resource.id)
+        if router:
+            out.append(router)
 
     return out
 

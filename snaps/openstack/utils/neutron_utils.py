@@ -231,7 +231,7 @@ def create_router(neutron, os_creds, router_settings):
         json_body = router_settings.dict_for_neutron(neutron, os_creds)
         logger.info('Creating router with name - ' + router_settings.name)
         os_router = neutron.create_router(json_body)
-        return Router(**os_router['router'])
+        return __map_router(neutron, os_router['router'])
     else:
         logger.error("Failed to create router.")
         raise NeutronException('Failed to create router')
@@ -257,7 +257,7 @@ def get_router_by_id(neutron, router_id):
     """
     router = neutron.show_router(router_id)
     if router:
-        return Router(**router['router'])
+        return __map_router(neutron, router['router'])
 
 
 def get_router(neutron, router_settings=None, router_name=None):
@@ -281,9 +281,38 @@ def get_router(neutron, router_settings=None, router_name=None):
         return None
 
     routers = neutron.list_routers(**router_filter)
+
     for routerInst in routers['routers']:
-        return Router(**routerInst)
+        return __map_router(neutron, routerInst)
+
     return None
+
+
+def __map_router(neutron, os_router):
+    """
+    Takes an OpenStack router instance and maps it to a SNAPS Router domain
+    object
+    :param neutron: the neutron client
+    :param os_router: the OpenStack Router object
+    :return:
+    """
+    device_ports = neutron.list_ports(
+        **{'device_id': os_router['id']})['ports']
+    port_subnets = list()
+
+    # Order by create date
+    sorted_ports = sorted(device_ports, key=lambda dev_port: dev_port['created_at'])
+
+    for port in sorted_ports:
+        subnets = list()
+        for fixed_ip in port['fixed_ips']:
+            subnet = get_subnet_by_id(neutron, fixed_ip['subnet_id'])
+            if subnet and subnet.network_id == port['network_id']:
+                subnets.append(subnet)
+        port_subnets.append((Port(**port), subnets))
+
+    os_router['port_subnets'] = port_subnets
+    return Router(**os_router)
 
 
 def add_interface_router(neutron, router, subnet=None, port=None):

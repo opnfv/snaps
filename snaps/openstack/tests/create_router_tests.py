@@ -23,7 +23,7 @@ from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_router import (
     RouterSettings, RouterSettingsError)
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
-from snaps.openstack.utils import neutron_utils
+from snaps.openstack.utils import neutron_utils, settings_utils
 
 __author__ = 'mmakati'
 
@@ -51,9 +51,8 @@ class RouterSettingsUnitTests(unittest.TestCase):
         self.assertEqual('foo', settings.name)
         self.assertIsNone(settings.project_name)
         self.assertIsNone(settings.external_gateway)
-        self.assertIsNone(settings.admin_state_up)
+        self.assertTrue(settings.admin_state_up)
         self.assertIsNone(settings.enable_snat)
-        self.assertIsNone(settings.external_fixed_ips)
         self.assertIsNotNone(settings.internal_subnets)
         self.assertTrue(isinstance(settings.internal_subnets, list))
         self.assertEqual(0, len(settings.internal_subnets))
@@ -66,9 +65,8 @@ class RouterSettingsUnitTests(unittest.TestCase):
         self.assertEqual('foo', settings.name)
         self.assertIsNone(settings.project_name)
         self.assertIsNone(settings.external_gateway)
-        self.assertIsNone(settings.admin_state_up)
+        self.assertTrue(settings.admin_state_up)
         self.assertIsNone(settings.enable_snat)
-        self.assertIsNone(settings.external_fixed_ips)
         self.assertIsNotNone(settings.internal_subnets)
         self.assertTrue(isinstance(settings.internal_subnets, list))
         self.assertEqual(0, len(settings.internal_subnets))
@@ -80,14 +78,13 @@ class RouterSettingsUnitTests(unittest.TestCase):
         port_settings = PortSettings(name='foo', network_name='bar')
         settings = RouterSettings(
             name='foo', project_name='bar', external_gateway='foo_gateway',
-            admin_state_up=True, enable_snat=False, external_fixed_ips=['ip1'],
+            admin_state_up=True, enable_snat=False,
             internal_subnets=['10.0.0.1/24'], interfaces=[port_settings])
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.project_name)
         self.assertEqual('foo_gateway', settings.external_gateway)
         self.assertTrue(settings.admin_state_up)
         self.assertFalse(settings.enable_snat)
-        self.assertEqual(['ip1'], settings.external_fixed_ips)
         self.assertIsNotNone(settings.internal_subnets)
         self.assertTrue(isinstance(settings.internal_subnets, list))
         self.assertEqual(1, len(settings.internal_subnets))
@@ -98,8 +95,7 @@ class RouterSettingsUnitTests(unittest.TestCase):
         settings = RouterSettings(
             **{'name': 'foo', 'project_name': 'bar',
                'external_gateway': 'foo_gateway', 'admin_state_up': True,
-               'enable_snat': False, 'external_fixed_ips': ['ip1'],
-               'internal_subnets': ['10.0.0.1/24'],
+               'enable_snat': False, 'internal_subnets': ['10.0.0.1/24'],
                'interfaces':
                    [{'port': {'name': 'foo-port',
                               'network_name': 'bar-net'}}]})
@@ -108,7 +104,6 @@ class RouterSettingsUnitTests(unittest.TestCase):
         self.assertEqual('foo_gateway', settings.external_gateway)
         self.assertTrue(settings.admin_state_up)
         self.assertFalse(settings.enable_snat)
-        self.assertEqual(['ip1'], settings.external_fixed_ips)
         self.assertIsNotNone(settings.internal_subnets)
         self.assertTrue(isinstance(settings.internal_subnets, list))
         self.assertEqual(1, len(settings.internal_subnets))
@@ -166,8 +161,9 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
                                           router_settings=router_settings)
         self.assertIsNotNone(router)
 
-        self.assertTrue(verify_router_attributes(
-            router, self.router_creator, ext_gateway=self.ext_net_name))
+        self.assertEqual(self.router_creator.get_router(), router)
+
+        self.check_router_recreation(router, router_settings)
 
     def test_create_router_admin_user_to_new_project(self):
         """
@@ -186,8 +182,9 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
                                           router_settings=router_settings)
         self.assertIsNotNone(router)
 
-        self.assertTrue(verify_router_attributes(
-            router, self.router_creator, ext_gateway=self.ext_net_name))
+        self.assertEqual(self.router_creator.get_router(), router)
+
+        self.check_router_recreation(router, router_settings)
 
     def test_create_router_new_user_to_admin_project(self):
         """
@@ -206,8 +203,9 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
                                           router_settings=router_settings)
         self.assertIsNotNone(router)
 
-        self.assertTrue(verify_router_attributes(
-            router, self.router_creator, ext_gateway=self.ext_net_name))
+        self.assertEqual(self.router_creator.get_router(), router)
+
+        self.check_router_recreation(router, router_settings)
 
     def test_create_delete_router(self):
         """
@@ -249,26 +247,28 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
                                           router_settings=router_settings)
         self.assertIsNotNone(router)
 
-        self.assertTrue(verify_router_attributes(router, self.router_creator,
-                                                 admin_state=False))
+        self.assertEqual(self.router_creator.get_router(), router)
+
+        self.check_router_recreation(router, router_settings)
 
     def test_create_router_admin_state_True(self):
         """
         Test creation of a basic router with admin state Up.
         """
-        router_settings = RouterSettings(name=self.guid + '-pub-router',
-                                         admin_state_up=True)
+        router_settings = RouterSettings(
+            name=self.guid + '-pub-router', admin_state_up=True)
 
-        self.router_creator = create_router.OpenStackRouter(self.os_creds,
-                                                            router_settings)
+        self.router_creator = create_router.OpenStackRouter(
+            self.os_creds, router_settings)
         self.router_creator.create()
 
-        router = neutron_utils.get_router(self.neutron,
-                                          router_settings=router_settings)
+        router = neutron_utils.get_router(
+            self.neutron, router_settings=router_settings)
         self.assertIsNotNone(router)
 
-        self.assertTrue(verify_router_attributes(router, self.router_creator,
-                                                 admin_state=True))
+        self.assertEqual(self.router_creator.get_router(), router)
+
+        self.check_router_recreation(router, router_settings)
 
     def test_create_router_private_network(self):
         """
@@ -321,10 +321,10 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
                                                             router_settings)
         self.router_creator.create()
 
-        router = neutron_utils.get_router(self.neutron,
-                                          router_settings=router_settings)
+        router = neutron_utils.get_router(
+            self.neutron, router_settings=router_settings)
 
-        self.assertTrue(verify_router_attributes(router, self.router_creator))
+        self.assertEqual(router, self.router_creator.get_router())
 
         # Instantiate second identical creator to ensure a second router
         # has not been created
@@ -332,6 +332,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
             self.os_creds, router_settings)
         router2 = router_creator2.create()
         self.assertIsNotNone(self.router_creator.get_router(), router2)
+
+        self.check_router_recreation(router2, router_settings)
 
     def test_create_router_external_network(self):
         """
@@ -360,15 +362,52 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         router_settings = RouterSettings(
             name=self.guid + '-pub-router', external_gateway=self.ext_net_name,
             port_settings=port_settings)
-        self.router_creator = create_router.OpenStackRouter(self.os_creds,
-                                                            router_settings)
+        self.router_creator = create_router.OpenStackRouter(
+            self.os_creds, router_settings)
         self.router_creator.create()
 
-        router = neutron_utils.get_router(self.neutron,
-                                          router_settings=router_settings)
+        router = neutron_utils.get_router(
+            self.neutron, router_settings=router_settings)
 
-        self.assertTrue(verify_router_attributes(
-            router, self.router_creator, ext_gateway=self.ext_net_name))
+        self.assertEquals(router, self.router_creator.get_router())
+
+        self.check_router_recreation(router, router_settings)
+
+    def check_router_recreation(self, router, orig_settings):
+        """
+        Validates the derived RouterSettings with the original
+        :param router: the Router domain object to test
+        :param orig_settings: the original RouterSettings object that was
+                              responsible for creating the router
+        :return: the derived RouterSettings object
+        """
+        derived_settings = settings_utils.create_router_settings(
+            self.neutron, router)
+        self.assertIsNotNone(derived_settings)
+        self.assertEqual(
+            orig_settings.enable_snat, derived_settings.enable_snat)
+        self.assertEqual(orig_settings.external_gateway,
+                         derived_settings.external_gateway)
+        self.assertEqual(orig_settings.name, derived_settings.name)
+        self.assertEqual(orig_settings.internal_subnets,
+                         derived_settings.internal_subnets)
+
+        if orig_settings.external_gateway:
+            self.assertEqual(len(orig_settings.port_settings),
+                             len(derived_settings.port_settings))
+        else:
+            self.assertEqual(len(orig_settings.port_settings),
+                             len(derived_settings.port_settings))
+
+        if len(orig_settings.port_settings) > 0:
+            self.assertEqual(orig_settings.port_settings[0].name,
+                             derived_settings.port_settings[0].name)
+
+        if len(orig_settings.port_settings) > 1:
+            self.assertEqual(orig_settings.port_settings[1].name,
+                             derived_settings.port_settings[1].name)
+
+        return derived_settings
 
 
 class CreateRouterNegativeTests(OSIntegrationTestCase):
@@ -415,42 +454,3 @@ class CreateRouterNegativeTests(OSIntegrationTestCase):
             self.router_creator = create_router.OpenStackRouter(
                 self.os_creds, router_settings)
             self.router_creator.create()
-
-
-def verify_router_attributes(router_operational, router_creator,
-                             admin_state=True, ext_gateway=None):
-    """
-    Helper function to validate the attributes of router created with the one
-    operational
-    :param router_operational: Operational Router object returned from neutron
-                               utils of type snaps.domain.Router
-    :param router_creator: router_creator object returned from creating a
-                           router in the router test functions
-    :param admin_state: True if router is expected to be Up, else False
-    :param ext_gateway: None if router is not connected to external gateway
-    :return:
-    """
-
-    router = router_creator.get_router()
-
-    if not router_operational:
-        return False
-    elif not router_creator:
-        return False
-    elif not (router_operational.name == router_creator.router_settings.name):
-        return False
-    elif not (router_operational.id == router.id):
-        return False
-    elif not (router_operational.status == router.status):
-        return False
-    elif not (router_operational.tenant_id == router.tenant_id):
-        return False
-    elif not (admin_state == router_operational.admin_state_up):
-        return False
-    elif (ext_gateway is None) and \
-            (router_operational.external_gateway_info is not None):
-        return False
-    elif ext_gateway is not None:
-        if router_operational.external_gateway_info is None:
-            return False
-    return True

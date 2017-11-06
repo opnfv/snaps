@@ -248,7 +248,6 @@ class PortSettingsUnitTests(unittest.TestCase):
         self.assertIsNone(settings.project_name)
         self.assertIsNone(settings.mac_address)
         self.assertIsNone(settings.ip_addrs)
-        self.assertIsNone(settings.fixed_ips)
         self.assertIsNone(settings.security_groups)
         self.assertIsNone(settings.allowed_address_pairs)
         self.assertIsNone(settings.opt_value)
@@ -264,7 +263,6 @@ class PortSettingsUnitTests(unittest.TestCase):
         self.assertIsNone(settings.project_name)
         self.assertIsNone(settings.mac_address)
         self.assertIsNone(settings.ip_addrs)
-        self.assertIsNone(settings.fixed_ips)
         self.assertIsNone(settings.security_groups)
         self.assertIsNone(settings.allowed_address_pairs)
         self.assertIsNone(settings.opt_value)
@@ -274,14 +272,12 @@ class PortSettingsUnitTests(unittest.TestCase):
 
     def test_all(self):
         ip_addrs = [{'subnet_name', 'foo-sub', 'ip', '10.0.0.10'}]
-        fixed_ips = {'sub_id', '10.0.0.10'}
         allowed_address_pairs = {'10.0.0.101', '1234.5678'}
 
         settings = PortSettings(name='foo', network_name='bar',
                                 admin_state_up=False,
                                 project_name='foo-project',
                                 mac_address='1234', ip_addrs=ip_addrs,
-                                fixed_ips=fixed_ips,
                                 security_groups=['foo_grp_id'],
                                 allowed_address_pairs=allowed_address_pairs,
                                 opt_value='opt value', opt_name='opt name',
@@ -293,7 +289,6 @@ class PortSettingsUnitTests(unittest.TestCase):
         self.assertEqual('foo-project', settings.project_name)
         self.assertEqual('1234', settings.mac_address)
         self.assertEqual(ip_addrs, settings.ip_addrs)
-        self.assertEqual(fixed_ips, settings.fixed_ips)
         self.assertEqual(1, len(settings.security_groups))
         self.assertEqual('foo_grp_id', settings.security_groups[0])
         self.assertEqual(allowed_address_pairs, settings.allowed_address_pairs)
@@ -304,25 +299,21 @@ class PortSettingsUnitTests(unittest.TestCase):
 
     def test_config_all(self):
         ip_addrs = [{'subnet_name', 'foo-sub', 'ip', '10.0.0.10'}]
-        fixed_ips = {'sub_id', '10.0.0.10'}
         allowed_address_pairs = {'10.0.0.101', '1234.5678'}
 
         settings = PortSettings(
             **{'name': 'foo', 'network_name': 'bar', 'admin_state_up': False,
                'project_name': 'foo-project', 'mac_address': '1234',
-               'ip_addrs': ip_addrs,
-               'fixed_ips': fixed_ips, 'security_groups': ['foo_grp_id'],
+               'ip_addrs': ip_addrs, 'security_groups': ['foo_grp_id'],
                'allowed_address_pairs': allowed_address_pairs,
-               'opt_value': 'opt value',
-               'opt_name': 'opt name', 'device_owner': 'owner',
-               'device_id': 'device number'})
+               'opt_value': 'opt value', 'opt_name': 'opt name',
+               'device_owner': 'owner', 'device_id': 'device number'})
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.network_name)
         self.assertFalse(settings.admin_state_up)
         self.assertEqual('foo-project', settings.project_name)
         self.assertEqual('1234', settings.mac_address)
         self.assertEqual(ip_addrs, settings.ip_addrs)
-        self.assertEqual(fixed_ips, settings.fixed_ips)
         self.assertEqual(1, len(settings.security_groups))
         self.assertEqual('foo_grp_id', settings.security_groups[0])
         self.assertEqual(allowed_address_pairs, settings.allowed_address_pairs)

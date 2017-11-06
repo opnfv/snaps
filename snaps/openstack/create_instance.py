@@ -225,10 +225,9 @@ class OpenStackVmInstance(OpenStackComputeObject):
         """
         router = neutron_utils.get_router(
             self.__neutron, router_name=router_name)
-        if router and router.external_gateway_info:
+        if router and router.external_network_id:
             network = neutron_utils.get_network_by_id(
-                self.__neutron,
-                router.external_gateway_info['network_id'])
+                self.__neutron, router.external_network_id)
             if network:
                 return network.name
         return None
