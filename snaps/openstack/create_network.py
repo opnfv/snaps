@@ -14,7 +14,8 @@
 # limitations under the License.
 import logging
 
-from neutronclient.common.exceptions import NotFound
+import enum
+from neutronclient.common.exceptions import NetworkNotFoundClient
 
 from snaps.openstack.openstack_creator import OpenStackNetworkObject
 from snaps.openstack.utils import keystone_utils, neutron_utils
@@ -41,7 +42,6 @@ class OpenStackNetwork(OpenStackNetworkObject):
 
         # Attributes instantiated on create()
         self.__network = None
-        self.__subnets = list()
 
     def initialize(self):
         """
@@ -53,15 +53,6 @@ class OpenStackNetwork(OpenStackNetworkObject):
         self.__network = neutron_utils.get_network(
             self._neutron, network_settings=self.network_settings,
             project_id=self.network_settings.get_project_id(self._os_creds))
-
-        if self.__network:
-            for subnet_setting in self.network_settings.subnet_settings:
-                sub_inst = neutron_utils.get_subnet(
-                    self._neutron, subnet_settings=subnet_setting)
-                if sub_inst:
-                    self.__subnets.append(sub_inst)
-                    logger.debug(
-                        "Subnet '%s' created successfully" % sub_inst.id)
 
         return self.__network
 
@@ -77,19 +68,7 @@ class OpenStackNetwork(OpenStackNetworkObject):
             self.__network = neutron_utils.create_network(
                 self._neutron, self._os_creds, self.network_settings)
             logger.debug(
-                "Network '%s' created successfully" % self.__network.id)
-
-        for subnet_setting in self.network_settings.subnet_settings:
-            sub_inst = neutron_utils.get_subnet(
-                self._neutron, subnet_settings=subnet_setting)
-            if not sub_inst:
-                sub_inst = neutron_utils.create_subnet(
-                    self._neutron, subnet_setting, self._os_creds,
-                    self.__network)
-            if sub_inst:
-                self.__subnets.append(sub_inst)
-                logger.debug(
-                    "Subnet '%s' created successfully" % sub_inst.id)
+                'Network [%s] created successfully' % self.__network.id)
 
         return self.__network
 
@@ -97,23 +76,11 @@ class OpenStackNetwork(OpenStackNetworkObject):
         """
         Removes and deletes all items created in reverse order.
         """
-        for subnet in self.__subnets:
-            try:
-                logger.info(
-                    'Deleting subnet with name ' + subnet.name)
-                neutron_utils.delete_subnet(self._neutron, subnet)
-            except NotFound as e:
-                logger.warning(
-                    'Error deleting subnet with message - ' + str(e))
-                pass
-        self.__subnets = list()
-
         if self.__network:
             try:
                 neutron_utils.delete_network(self._neutron, self.__network)
-            except NotFound:
+            except NetworkNotFoundClient:
                 pass
-
             self.__network = None
 
     def get_network(self):
@@ -122,13 +89,6 @@ class OpenStackNetwork(OpenStackNetworkObject):
         :return: the OpenStack network object
         """
         return self.__network
-
-    def get_subnets(self):
-        """
-        Returns the OpenStack subnet objects
-        :return:
-        """
-        return self.__subnets
 
 
 class NetworkSettings:
@@ -189,7 +149,7 @@ class NetworkSettings:
         self.subnet_settings = list()
         subnet_settings = kwargs.get('subnets')
         if not subnet_settings:
-            subnet_settings = kwargs.get('subnet_settings')
+            subnet_settings = kwargs.get('subnet_settings', list())
         if subnet_settings:
             for subnet_config in subnet_settings:
                 if isinstance(subnet_config, SubnetSettings):
@@ -262,6 +222,15 @@ class NetworkSettingsError(Exception):
     """
 
 
+class IPv6Mode(enum.Enum):
+    """
+    A rule's direction
+    """
+    slaac = 'slaac'
+    stateful = 'dhcpv6-stateful'
+    stateless = 'dhcpv6-stateless'
+
+
 class SubnetSettings:
     """
     Class representing a subnet configuration
@@ -301,10 +270,10 @@ class SubnetSettings:
                                 ]
         :param destination: The destination for static route (optional)
         :param nexthop: The next hop for the destination (optional)
-        :param ipv6_ra_mode: A valid value is dhcpv6-stateful,
-                             dhcpv6-stateless, or slaac (optional)
-        :param ipv6_address_mode: A valid value is dhcpv6-stateful,
-                                  dhcpv6-stateless, or slaac (optional)
+        :param ipv6_ra_mode: an instance of the IPv6Mode enum
+                             (optional when enable_dhcp is True)
+        :param ipv6_address_mode: an instance of the IPv6Mode enum
+                                  (optional when enable_dhcp is True)
         :raise: SubnetSettingsError when config does not have or cidr values
                 are None
         """
@@ -322,16 +291,19 @@ class SubnetSettings:
         self.gateway_ip = kwargs.get('gateway_ip')
         self.enable_dhcp = kwargs.get('enable_dhcp')
 
-        if kwargs.get('dns_nameservers'):
+        if 'dns_nameservers' in kwargs:
             self.dns_nameservers = kwargs.get('dns_nameservers')
         else:
-            self.dns_nameservers = ['8.8.8.8']
+            if self.ip_version == 4:
+                self.dns_nameservers = ['8.8.8.8']
+            else:
+                self.dns_nameservers = list()
 
         self.host_routes = kwargs.get('host_routes')
         self.destination = kwargs.get('destination')
         self.nexthop = kwargs.get('nexthop')
-        self.ipv6_ra_mode = kwargs.get('ipv6_ra_mode')
-        self.ipv6_address_mode = kwargs.get('ipv6_address_mode')
+        self.ipv6_ra_mode = map_mode(kwargs.get('ipv6_ra_mode'))
+        self.ipv6_address_mode = map_mode(kwargs.get('ipv6_address_mode'))
 
         if not self.name or not self.cidr:
             raise SubnetSettingsError('Name and cidr required for subnets')
@@ -383,10 +355,38 @@ class SubnetSettings:
         if self.nexthop:
             out['nexthop'] = self.nexthop
         if self.ipv6_ra_mode:
-            out['ipv6_ra_mode'] = self.ipv6_ra_mode
+            out['ipv6_ra_mode'] = self.ipv6_ra_mode.value
         if self.ipv6_address_mode:
-            out['ipv6_address_mode'] = self.ipv6_address_mode
+            out['ipv6_address_mode'] = self.ipv6_address_mode.value
         return out
+
+
+def map_mode(mode):
+    """
+    Takes a the direction value maps it to the Direction enum. When None return
+    None
+    :param mode: the mode value
+    :return: the IPv6Mode enum object
+    :raise: SubnetSettingsError if value is invalid
+    """
+    if not mode:
+        return None
+    if isinstance(mode, IPv6Mode):
+        return mode
+    else:
+        mode_str = str(mode)
+        if mode_str == 'slaac':
+            return IPv6Mode.slaac
+        elif mode_str == 'dhcpv6-stateful':
+            return IPv6Mode.stateful
+        elif mode_str == 'stateful':
+            return IPv6Mode.stateful
+        elif mode_str == 'dhcpv6-stateless':
+            return IPv6Mode.stateless
+        elif mode_str == 'stateless':
+            return IPv6Mode.stateless
+        else:
+            raise SubnetSettingsError('Invalid mode - ' + mode_str)
 
 
 class SubnetSettingsError(Exception):

@@ -22,6 +22,13 @@ class Network:
     def __init__(self, **kwargs):
         """
         Constructor
+        :param name: the network's name
+        :param id: the network's ID
+        :param admin_state_up: T/F - network is up when True
+        :param shared: T/F - network can be shared amongst other project's
+        :param external: T/F - network is deemed to be external
+        :param type: vlan, vxlan, flat, etc.
+        :param subnets: list of Subnet objects
         """
         self.name = kwargs.get('name')
         self.id = kwargs.get('id')
@@ -29,12 +36,15 @@ class Network:
         self.shared = kwargs.get('shared')
         self.external = kwargs.get('router:external', kwargs.get('external'))
         self.type = kwargs.get('provider:network_type', kwargs.get('type'))
+        self.subnets = kwargs.get('subnets', list())
 
     def __eq__(self, other):
         return (self.name == other.name and self.id == other.id and
                 self.admin_state_up == other.admin_state_up and
                 self.shared == other.shared and
-                self.external == other.external and self.type == other.type)
+                self.external == other.external and
+                self.type == other.type and
+                self.subnets == other.subnets)
 
 
 class Subnet:
@@ -45,6 +55,19 @@ class Subnet:
     def __init__(self, **kwargs):
         """
         Constructor
+        :param name: the network's name
+        :param id: the subnet's ID
+        :param network_id: the network's ID
+        :param cidr: the CIDR
+        :param ip_version: the IP version
+        :param gateway_ip: the IP of the gateway
+        :param enable_dhcp: T/F if DHCP is enabled
+        :param dns_nameservers: list of DNS server IPs
+        :param host_routes: routes as returned in a dict by Neutron
+        :param ipv6_ra_mode: IPv6 RA Mode
+        :param ipv6_address_mode: IPv6 Address Mode
+        :param start: start IP address pool
+        :param end: end IP address pool
         """
         self.name = kwargs.get('name')
         self.id = kwargs.get('id')

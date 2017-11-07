@@ -14,6 +14,8 @@
 # limitations under the License.
 import uuid
 
+from neutronclient.common.exceptions import NotFound, BadRequest
+
 from snaps.openstack import create_router
 from snaps.openstack.create_network import NetworkSettings, SubnetSettings, \
     PortSettings
@@ -102,7 +104,7 @@ class NeutronUtilsNetworkTests(OSComponentTestCase):
 
     def test_create_network(self):
         """
-        Tests the neutron_utils.create_neutron_net() function
+        Tests the neutron_utils.create_network() function
         """
         self.network = neutron_utils.create_network(
             self.neutron, self.os_creds, self.net_config.network_settings)
@@ -110,10 +112,12 @@ class NeutronUtilsNetworkTests(OSComponentTestCase):
                          self.network.name)
         self.assertTrue(validate_network(
             self.neutron, self.net_config.network_settings.name, True))
+        self.assertEqual(len(self.net_config.network_settings.subnet_settings),
+                         len(self.network.subnets))
 
     def test_create_network_empty_name(self):
         """
-        Tests the neutron_utils.create_neutron_net() function with an empty
+        Tests the neutron_utils.create_network() function with an empty
         network name
         """
         with self.assertRaises(Exception):
@@ -123,7 +127,7 @@ class NeutronUtilsNetworkTests(OSComponentTestCase):
 
     def test_create_network_null_name(self):
         """
-        Tests the neutron_utils.create_neutron_net() function when the network
+        Tests the neutron_utils.create_network() function when the network
         name is None
         """
         with self.assertRaises(Exception):
@@ -142,7 +146,6 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
         self.port_name = str(guid) + '-port'
         self.neutron = neutron_utils.neutron_client(self.os_creds)
         self.network = None
-        self.subnet = None
         self.net_config = openstack_tests.get_pub_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
             external_net=self.ext_net_name)
@@ -151,11 +154,6 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
         """
         Cleans the remote OpenStack objects
         """
-        if self.subnet:
-            try:
-                neutron_utils.delete_subnet(self.neutron, self.subnet)
-            except:
-                pass
         if self.network:
             try:
                 neutron_utils.delete_network(self.neutron, self.network)
@@ -164,7 +162,7 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
 
     def test_create_subnet(self):
         """
-        Tests the neutron_utils.create_neutron_net() function
+        Tests the neutron_utils.create_network() function
         """
         self.network = neutron_utils.create_network(
             self.neutron, self.os_creds, self.net_config.network_settings)
@@ -174,20 +172,18 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
             self.neutron, self.net_config.network_settings.name, True))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
-        self.subnet = neutron_utils.create_subnet(
-            self.neutron, subnet_setting, self.os_creds, network=self.network)
         self.assertTrue(validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
 
         subnet_query1 = neutron_utils.get_subnet(
             self.neutron, subnet_name=subnet_setting.name)
-        self.assertEqual(self.subnet, subnet_query1)
+        self.assertEqual(self.network.subnets[0], subnet_query1)
 
         subnet_query2 = neutron_utils.get_subnets_by_network(self.neutron,
                                                              self.network)
         self.assertIsNotNone(subnet_query2)
         self.assertEqual(1, len(subnet_query2))
-        self.assertEqual(self.subnet, subnet_query2[0])
+        self.assertEqual(self.network.subnets[0], subnet_query2[0])
 
     def test_create_subnet_null_name(self):
         """
@@ -206,7 +202,7 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
 
     def test_create_subnet_empty_name(self):
         """
-        Tests the neutron_utils.create_neutron_net() function with an empty
+        Tests the neutron_utils.create_network() function with an empty
         name
         """
         self.network = neutron_utils.create_network(
@@ -217,8 +213,6 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
             self.neutron, self.net_config.network_settings.name, True))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
-        self.subnet = neutron_utils.create_subnet(
-            self.neutron, subnet_setting, self.os_creds, network=self.network)
         self.assertTrue(validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
         self.assertFalse(validate_subnet(
@@ -226,49 +220,265 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
 
         subnet_query1 = neutron_utils.get_subnet(
             self.neutron, subnet_name=subnet_setting.name)
-        self.assertEqual(self.subnet, subnet_query1)
+        self.assertEqual(self.network.subnets[0], subnet_query1)
 
         subnet_query2 = neutron_utils.get_subnets_by_network(self.neutron,
                                                              self.network)
         self.assertIsNotNone(subnet_query2)
         self.assertEqual(1, len(subnet_query2))
-        self.assertEqual(self.subnet, subnet_query2[0])
+        self.assertEqual(self.network.subnets[0], subnet_query2[0])
 
     def test_create_subnet_null_cidr(self):
         """
         Tests the neutron_utils.create_neutron_subnet() function for an
         Exception when the subnet CIDR value is None
         """
-        self.network = neutron_utils.create_network(
-            self.neutron, self.os_creds, self.net_config.network_settings)
-        self.assertEqual(self.net_config.network_settings.name,
-                         self.network.name)
-        self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
-
+        self.net_config.network_settings.subnet_settings[0].cidr = None
         with self.assertRaises(Exception):
-            sub_sets = SubnetSettings(
-                cidr=None, name=self.net_config.subnet_name)
-            neutron_utils.create_subnet(
-                self.neutron, sub_sets, self.os_creds, network=self.network)
+            self.network = neutron_utils.create_network(
+                self.neutron, self.os_creds, self.net_config.network_settings)
 
     def test_create_subnet_empty_cidr(self):
         """
         Tests the neutron_utils.create_neutron_subnet() function for an
         Exception when the subnet CIDR value is empty
         """
-        self.network = neutron_utils.create_network(
-            self.neutron, self.os_creds, self.net_config.network_settings)
-        self.assertEqual(self.net_config.network_settings.name,
-                         self.network.name)
-        self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
-
+        self.net_config.network_settings.subnet_settings[0].cidr = ''
         with self.assertRaises(Exception):
-            sub_sets = SubnetSettings(
-                cidr='', name=self.net_config.subnet_name)
-            neutron_utils.create_subnet(self.neutron, sub_sets, self.os_creds,
-                                        network=self.network)
+            self.network = neutron_utils.create_network(
+                self.neutron, self.os_creds, self.net_config.network_settings)
+
+
+class NeutronUtilsIPv6Tests(OSComponentTestCase):
+    """
+    Test for creating IPv6 networks with subnets via neutron_utils.py
+    """
+
+    def setUp(self):
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.network = None
+
+    def tearDown(self):
+        """
+        Cleans the remote OpenStack objects
+        """
+        if self.network:
+            try:
+                neutron_utils.delete_network(self.neutron, self.network)
+            except:
+                pass
+
+    def test_create_network_slaac(self):
+        """
+        Tests the neutron_utils.create_network() with an IPv6 subnet where DHCP
+        is True and IPv6 modes are slaac
+        """
+        sub_setting = SubnetSettings(
+            name=self.guid + '-subnet', cidr='1:1:0:0:0:0:0:0/64',
+            ip_version=6, dns_nameservers=['2620:0:ccc:0:0:0:0:2'],
+            gateway_ip='1:1:0:0:0:0:0:1', start='1:1::ff', end='1:1::ffff',
+            enable_dhcp=True, ipv6_ra_mode='slaac', ipv6_address_mode='slaac')
+        self.network_settings = NetworkSettings(
+            name=self.guid + '-net', subnet_settings=[sub_setting])
+
+        self.network = neutron_utils.create_network(
+            self.neutron, self.os_creds, self.network_settings)
+        self.assertEqual(self.network_settings.name, self.network.name)
+
+        subnet_settings = self.network_settings.subnet_settings[0]
+        self.assertEqual(1, len(self.network.subnets))
+        subnet = self.network.subnets[0]
+
+        self.assertEqual(self.network.id, subnet.network_id)
+        self.assertEqual(subnet_settings.name, subnet.name)
+        self.assertEqual(subnet_settings.start, subnet.start)
+        self.assertEqual(subnet_settings.end, subnet.end)
+        self.assertEqual('1:1::/64', subnet.cidr)
+        self.assertEqual(6, subnet.ip_version)
+        self.assertEqual(1, len(subnet.dns_nameservers))
+        self.assertEqual(
+            sub_setting.dns_nameservers[0], subnet.dns_nameservers[0])
+        self.assertTrue(subnet.enable_dhcp)
+        self.assertEqual(
+            subnet_settings.ipv6_ra_mode.value, subnet.ipv6_ra_mode)
+        self.assertEqual(
+            subnet_settings.ipv6_address_mode.value, subnet.ipv6_address_mode)
+
+    def test_create_network_stateful(self):
+        """
+        Tests the neutron_utils.create_network() with an IPv6 subnet where DHCP
+        is True and IPv6 modes are stateful
+        """
+        sub_setting = SubnetSettings(
+            name=self.guid + '-subnet', cidr='1:1:0:0:0:0:0:0/64',
+            ip_version=6, dns_nameservers=['2620:0:ccc:0:0:0:0:2'],
+            gateway_ip='1:1:0:0:0:0:0:1', start='1:1::ff', end='1:1::ffff',
+            enable_dhcp=True, ipv6_ra_mode='dhcpv6-stateful',
+            ipv6_address_mode='dhcpv6-stateful')
+        self.network_settings = NetworkSettings(
+            name=self.guid + '-net', subnet_settings=[sub_setting])
+
+        self.network = neutron_utils.create_network(
+            self.neutron, self.os_creds, self.network_settings)
+
+        self.assertEqual(self.network_settings.name, self.network.name)
+
+        subnet_settings = self.network_settings.subnet_settings[0]
+        self.assertEqual(1, len(self.network.subnets))
+        subnet = self.network.subnets[0]
+
+        self.assertEqual(self.network.id, subnet.network_id)
+        self.assertEqual(subnet_settings.name, subnet.name)
+        self.assertEqual(subnet_settings.start, subnet.start)
+        self.assertEqual(subnet_settings.end, subnet.end)
+        self.assertEqual('1:1::/64', subnet.cidr)
+        self.assertEqual(6, subnet.ip_version)
+        self.assertEqual(1, len(subnet.dns_nameservers))
+        self.assertEqual(
+            sub_setting.dns_nameservers[0], subnet.dns_nameservers[0])
+        self.assertTrue(subnet.enable_dhcp)
+        self.assertEqual(
+            subnet_settings.ipv6_ra_mode.value, subnet.ipv6_ra_mode)
+        self.assertEqual(
+            subnet_settings.ipv6_address_mode.value, subnet.ipv6_address_mode)
+
+    def test_create_network_stateless(self):
+        """
+        Tests the neutron_utils.create_network() when DHCP is enabled and
+        the RA and address modes are both 'slaac'
+        """
+        sub_setting = SubnetSettings(
+            name=self.guid + '-subnet', cidr='1:1:0:0:0:0:0:0/64',
+            ip_version=6, dns_nameservers=['2620:0:ccc:0:0:0:0:2'],
+            gateway_ip='1:1:0:0:0:0:0:1', start='1:1::ff', end='1:1::ffff',
+            enable_dhcp=True, ipv6_ra_mode='dhcpv6-stateless',
+            ipv6_address_mode='dhcpv6-stateless')
+        self.network_settings = NetworkSettings(
+            name=self.guid + '-net', subnet_settings=[sub_setting])
+
+        self.network = neutron_utils.create_network(
+            self.neutron, self.os_creds, self.network_settings)
+
+        self.assertEqual(self.network_settings.name, self.network.name)
+
+        subnet_settings = self.network_settings.subnet_settings[0]
+        self.assertEqual(1, len(self.network.subnets))
+        subnet = self.network.subnets[0]
+
+        self.assertEqual(self.network.id, subnet.network_id)
+        self.assertEqual(subnet_settings.name, subnet.name)
+        self.assertEqual(subnet_settings.start, subnet.start)
+        self.assertEqual(subnet_settings.end, subnet.end)
+        self.assertEqual('1:1::/64', subnet.cidr)
+        self.assertEqual(6, subnet.ip_version)
+        self.assertEqual(1, len(subnet.dns_nameservers))
+        self.assertEqual(
+            sub_setting.dns_nameservers[0], subnet.dns_nameservers[0])
+        self.assertTrue(subnet.enable_dhcp)
+        self.assertEqual(
+            subnet_settings.ipv6_ra_mode.value, subnet.ipv6_ra_mode)
+        self.assertEqual(
+            subnet_settings.ipv6_address_mode.value, subnet.ipv6_address_mode)
+
+    def test_create_network_no_dhcp_slaac(self):
+        """
+        Tests the neutron_utils.create_network() for a BadRequest when
+        DHCP is not enabled and the RA and address modes are both 'slaac'
+        """
+        sub_setting = SubnetSettings(
+            name=self.guid + '-subnet', cidr='1:1:0:0:0:0:0:0/64',
+            ip_version=6, dns_nameservers=['2620:0:ccc:0:0:0:0:2'],
+            gateway_ip='1:1:0:0:0:0:0:1', start='1:1::ff', end='1:1::ffff',
+            enable_dhcp=False, ipv6_ra_mode='slaac', ipv6_address_mode='slaac')
+        self.network_settings = NetworkSettings(
+            name=self.guid + '-net', subnet_settings=[sub_setting])
+
+        with self.assertRaises(BadRequest):
+            self.network = neutron_utils.create_network(
+                self.neutron, self.os_creds, self.network_settings)
+
+    def test_create_network_invalid_start_ip(self):
+        """
+        Tests the neutron_utils.create_network() that contains one IPv6 subnet
+        with an invalid start IP to ensure Neutron assigns it the smallest IP
+        possible
+        """
+        sub_setting = SubnetSettings(
+            name=self.guid + '-subnet', cidr='1:1::/48', ip_version=6,
+            start='foo')
+        self.network_settings = NetworkSettings(
+            name=self.guid + '-net', subnet_settings=[sub_setting])
+
+        self.network = neutron_utils.create_network(
+            self.neutron, self.os_creds, self.network_settings)
+
+        self.assertEqual('1:1::2', self.network.subnets[0].start)
+        self.assertEqual(
+            '1:1:0:ffff:ffff:ffff:ffff:ffff', self.network.subnets[0].end)
+
+    def test_create_network_invalid_end_ip(self):
+        """
+        Tests the neutron_utils.create_network() that contains one IPv6 subnet
+        with an invalid end IP to ensure Neutron assigns it the largest IP
+        possible
+        """
+        sub_setting = SubnetSettings(
+            name=self.guid + '-subnet', cidr='1:1::/48', ip_version=6,
+            end='bar')
+        self.network_settings = NetworkSettings(
+            name=self.guid + '-net', subnet_settings=[sub_setting])
+
+        self.network = neutron_utils.create_network(
+            self.neutron, self.os_creds, self.network_settings)
+
+        self.assertEqual('1:1::2', self.network.subnets[0].start)
+        self.assertEqual(
+            '1:1:0:ffff:ffff:ffff:ffff:ffff', self.network.subnets[0].end)
+
+    def test_create_network_with_bad_cidr(self):
+        """
+        Tests the neutron_utils.create_network() for a BadRequest when
+        the subnet CIDR is invalid
+        """
+        sub_setting = SubnetSettings(
+            name=self.guid + '-subnet', cidr='1:1:1:/48', ip_version=6)
+        self.network_settings = NetworkSettings(
+            name=self.guid + '-net', subnet_settings=[sub_setting])
+
+        with self.assertRaises(BadRequest):
+            self.network = neutron_utils.create_network(
+                self.neutron, self.os_creds, self.network_settings)
+
+    def test_create_network_invalid_gateway_ip(self):
+        """
+        Tests the neutron_utils.create_network() for a BadRequest when
+        the subnet gateway IP is invalid
+        """
+        sub_setting = SubnetSettings(
+            name=self.guid + '-subnet', cidr='1:1::/48', ip_version=6,
+            gateway_ip='1:2::1')
+        self.network_settings = NetworkSettings(
+            name=self.guid + '-net', subnet_settings=[sub_setting])
+
+        with self.assertRaises(BadRequest):
+            self.network = neutron_utils.create_network(
+                self.neutron, self.os_creds, self.network_settings)
+
+    def test_create_network_with_bad_dns(self):
+        """
+        Tests the neutron_utils.create_network() for a BadRequest when
+        the DNS IP is invalid
+        """
+        sub_setting = SubnetSettings(
+            name=self.guid + '-subnet', cidr='1:1::/48', ip_version=6,
+            dns_nameservers=['foo'])
+        self.network_settings = NetworkSettings(
+            name=self.guid + '-net', subnet_settings=[sub_setting])
+
+        with self.assertRaises(BadRequest):
+            self.network = neutron_utils.create_network(
+                    self.neutron, self.os_creds, self.network_settings)
 
 
 class NeutronUtilsRouterTests(OSComponentTestCase):
@@ -281,7 +491,6 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.port_name = str(guid) + '-port'
         self.neutron = neutron_utils.neutron_client(self.os_creds)
         self.network = None
-        self.subnet = None
         self.port = None
         self.router = None
         self.interface_router = None
@@ -294,8 +503,8 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         Cleans the remote OpenStack objects
         """
         if self.interface_router:
-            neutron_utils.remove_interface_router(self.neutron, self.router,
-                                                  self.subnet)
+            neutron_utils.remove_interface_router(
+                self.neutron, self.router, self.network.subnets[0])
 
         if self.router:
             try:
@@ -310,22 +519,12 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
             except:
                 pass
 
-        if self.subnet:
-            try:
-                neutron_utils.delete_subnet(self.neutron, self.subnet)
-            except:
-                pass
-
         if self.network:
-            try:
-                neutron_utils.delete_network(self.neutron, self.network)
-            except:
-                pass
+            neutron_utils.delete_network(self.neutron, self.network)
 
     def test_create_router_simple(self):
         """
-        Tests the neutron_utils.create_neutron_net() function when an external
-        gateway is requested
+        Tests the neutron_utils.create_router()
         """
         self.router = neutron_utils.create_router(
             self.neutron, self.os_creds, self.net_config.router_settings)
@@ -334,8 +533,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
 
     def test_create_router_with_public_interface(self):
         """
-        Tests the neutron_utils.create_neutron_net() function when an external
-        gateway is requested
+        Tests the neutron_utils.create_router() function with a pubic interface
         """
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
         self.net_config = openstack_tests.OSNetworkConfig(
@@ -351,30 +549,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
 
         ext_net = neutron_utils.get_network(
             self.neutron, network_name=self.ext_net_name)
-        self.assertEqual(
-            self.router.external_network_id, ext_net.id)
-
-    def test_create_router_empty_name(self):
-        """
-        Tests the neutron_utils.create_neutron_net() function
-        """
-        with self.assertRaises(Exception):
-            this_router_settings = create_router.RouterSettings(name='')
-            self.router = neutron_utils.create_router(self.neutron,
-                                                      self.os_creds,
-                                                      this_router_settings)
-
-    def test_create_router_null_name(self):
-        """
-        Tests the neutron_utils.create_neutron_subnet() function when the
-        subnet CIDR value is None
-        """
-        with self.assertRaises(Exception):
-            this_router_settings = create_router.RouterSettings()
-            self.router = neutron_utils.create_router(self.neutron,
-                                                      self.os_creds,
-                                                      this_router_settings)
-            validate_router(self.neutron, None, True)
+        self.assertEqual(self.router.external_network_id, ext_net.id)
 
     def test_add_interface_router(self):
         """
@@ -388,9 +563,6 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
             self.neutron, self.net_config.network_settings.name, True))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
-        self.subnet = neutron_utils.create_subnet(
-            self.neutron, subnet_setting,
-            self.os_creds, self.network)
         self.assertTrue(validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
 
@@ -400,9 +572,9 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
                         True)
 
         self.interface_router = neutron_utils.add_interface_router(
-            self.neutron, self.router, self.subnet)
+            self.neutron, self.router, self.network.subnets[0])
         validate_interface_router(self.interface_router, self.router,
-                                  self.subnet)
+                                  self.network.subnets[0])
 
     def test_add_interface_router_null_router(self):
         """
@@ -417,15 +589,12 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
             self.neutron, self.net_config.network_settings.name, True))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
-        self.subnet = neutron_utils.create_subnet(
-            self.neutron, subnet_setting,
-            self.os_creds, self.network)
         self.assertTrue(validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
 
         with self.assertRaises(NeutronException):
             self.interface_router = neutron_utils.add_interface_router(
-                self.neutron, self.router, self.subnet)
+                self.neutron, self.router, self.network.subnets[0])
 
     def test_add_interface_router_null_subnet(self):
         """
@@ -446,7 +615,31 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
 
         with self.assertRaises(NeutronException):
             self.interface_router = neutron_utils.add_interface_router(
-                self.neutron, self.router, self.subnet)
+                self.neutron, self.router, None)
+
+    def test_add_interface_router_missing_subnet(self):
+        """
+        Tests the neutron_utils.add_interface_router() function for an
+        Exception when the subnet object has been deleted
+        """
+        self.network = neutron_utils.create_network(
+            self.neutron, self.os_creds, self.net_config.network_settings)
+        self.assertEqual(self.net_config.network_settings.name,
+                         self.network.name)
+        self.assertTrue(validate_network(
+            self.neutron, self.net_config.network_settings.name, True))
+
+        self.router = neutron_utils.create_router(
+            self.neutron, self.os_creds, self.net_config.router_settings)
+        validate_router(self.neutron, self.net_config.router_settings.name,
+                        True)
+
+        for subnet in self.network.subnets:
+            neutron_utils.delete_subnet(self.neutron, subnet)
+
+        with self.assertRaises(NotFound):
+            self.interface_router = neutron_utils.add_interface_router(
+                self.neutron, self.router, self.network.subnets[0])
 
     def test_create_port(self):
         """
@@ -460,8 +653,6 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
             self.neutron, self.net_config.network_settings.name, True))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
-        self.subnet = neutron_utils.create_subnet(
-            self.neutron, subnet_setting, self.os_creds, self.network)
         self.assertTrue(validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
 
@@ -486,8 +677,6 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
             self.neutron, self.net_config.network_settings.name, True))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
-        self.subnet = neutron_utils.create_subnet(
-            self.neutron, subnet_setting, self.os_creds, self.network)
         self.assertTrue(validate_subnet(self.neutron, subnet_setting.name,
                                         subnet_setting.cidr, True))
 
@@ -512,9 +701,6 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
             self.neutron, self.net_config.network_settings.name, True))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
-        self.subnet = neutron_utils.create_subnet(
-            self.neutron, subnet_setting,
-            self.os_creds, self.network)
         self.assertTrue(validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
 
@@ -559,9 +745,6 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
             self.neutron, self.net_config.network_settings.name, True))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
-        self.subnet = neutron_utils.create_subnet(
-            self.neutron, subnet_setting,
-            self.os_creds, self.network)
         self.assertTrue(validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
 
@@ -588,8 +771,6 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
             self.neutron, self.net_config.network_settings.name, True))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
-        self.subnet = neutron_utils.create_subnet(
-            self.neutron, subnet_setting, self.os_creds, self.network)
         self.assertTrue(validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
 
@@ -616,8 +797,6 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
             self.neutron, self.net_config.network_settings.name, True))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
-        self.subnet = neutron_utils.create_subnet(
-            self.neutron, subnet_setting, self.os_creds, self.network)
         self.assertTrue(validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
 

@@ -163,20 +163,61 @@ neutron_utils_tests.py - NeutronUtilsSubnetTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             | Neutron API   | Description                                               |
 +=======================================+===============+===========================================================+
-| test_create_subnet                    | 2             | Ensures neutron_utils.create_subnet() can properly create |
+| test_create_subnet                    | 2             | Ensures neutron_utils.create_network() can properly create|
 |                                       |               | an OpenStack subnet object                                |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_subnet_null_name          | 2             | Ensures neutron_utils.create_subnet() raises an exception |
+| test_create_subnet_null_name          | 2             | Ensures neutron_utils.create_network() raises an exception|
 |                                       |               | when the subnet name is None                              |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_subnet_empty_name         | 2             | Ensures neutron_utils.create_subnet() raises an exception |
+| test_create_subnet_empty_name         | 2             | Ensures neutron_utils.create_network() raises an exception|
 |                                       |               | when the subnet name is an empty string                   |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_subnet_null_cidr          | 2             | Ensures neutron_utils.create_subnet() raises an exception |
+| test_create_subnet_null_cidr          | 2             | Ensures neutron_utils.create_network() raises an exception|
 |                                       |               | when the subnet CIDR is None                              |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_subnet_empty_cidr         | 2             | Ensures neutron_utils.create_subnet() raises an exception |
+| test_create_subnet_empty_cidr         | 2             | Ensures neutron_utils.create_network() raises an exception|
 |                                       |               | when the subnet CIDR is an empty string                   |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+neutron_utils_tests.py - NeutronUtilsIPv6Tests
+----------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Neutron API   | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_network_slaac             | 2             | Ensures neutron_utils.create_network() can properly create|
+|                                       |               | an OpenStack network with an IPv6 subnet when DHCP is True|
+|                                       |               | and modes are 'slaac'                                     |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_network_stateful          | 2             | Ensures neutron_utils.create_network() can properly create|
+|                                       |               | an OpenStack network with an IPv6 subnet when DHCP is True|
+|                                       |               | and modes are 'stateful'                                  |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_network_stateless         | 2             | Ensures neutron_utils.create_network() can properly create|
+|                                       |               | an OpenStack network with an IPv6 subnet when DHCP is True|
+|                                       |               | and modes are 'stateless'                                 |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_network_no_dhcp_slaac     | 2             | Ensures neutron_utils.create_network() raises a BadRequest|
+|                                       |               | exception when deploying the network with an IPv6 subnet  |
+|                                       |               | when DHCP is False and modes are 'slaac'                  |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_network_invalid_start_ip  | 2             | Ensures neutron_utils.create_network() sets the start IP  |
+|                                       |               | address to the minimum value when the start configuration |
+|                                       |               | parameter is some garbage value                           |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_network_invalid_end_ip    | 2             | Ensures neutron_utils.create_network() sets the end IP    |
+|                                       |               | address to the maximum value when the end configuration   |
+|                                       |               | parameter is some garbage value                           |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_network_with_bad_cidr     | 2             | Ensures neutron_utils.create_network() raises a BadRequest|
+|                                       |               | exception when the IPv6 CIDR is incorrect                 |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_network_invalid_gateway_ip| 2             | Ensures neutron_utils.create_network() raises a BadRequest|
+|                                       |               | exception when the IPv6 gateway IP does not match the CIDR|
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_network_with_bad_dns      | 2             | Ensures neutron_utils.create_network() raises a BadRequest|
+|                                       |               | exception when the IPv6 DNS IP address is not a valid IPv6|
+|                                       |               | address                                                   |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
 neutron_utils_tests.py - NeutronUtilsRouterTests
@@ -192,12 +233,6 @@ neutron_utils_tests.py - NeutronUtilsRouterTests
 | face                                  |               | an OpenStack router object with an interface to the       |
 |                                       |               | external network                                          |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_router_empty_name         | 2             | Ensures neutron_utils.create_router() raises an exception |
-|                                       |               | when the name is an empty string                          |
-+---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_router_null_name          | 2             | Ensures neutron_utils.create_router() raises an exception |
-|                                       |               | when the name is None                                     |
-+---------------------------------------+---------------+-----------------------------------------------------------+
 | test_add_interface_router             | 2             | Ensures neutron_utils.add_interface_router() properly adds|
 |                                       |               | an interface to another subnet                            |
 +---------------------------------------+---------------+-----------------------------------------------------------+
@@ -206,6 +241,9 @@ neutron_utils_tests.py - NeutronUtilsRouterTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | test_add_interface_router_null_subnet | 2             | Ensures neutron_utils.add_interface_router() raises an    |
 |                                       |               | exception when the subnet object is None                  |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_add_interface_router_missing_sub | 2             | Ensures neutron_utils.add_interface_router() raises an    |
+| net                                   |               | exception when the subnet object had been deleted         |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | test_create_port                      | 2             | Ensures neutron_utils.create_port() can properly create an|
 |                                       |               | OpenStack port object                                     |
