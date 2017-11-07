@@ -53,15 +53,33 @@ def create_network(neutron, os_creds, network_settings):
     :param network_settings: A dictionary containing the network configuration
                              and is responsible for creating the network
                             request JSON body
-    :return: a SNAPS-OO Network domain object
+    :return: a SNAPS-OO Network domain object if found else None
     """
-    if neutron and network_settings:
-        logger.info('Creating network with name ' + network_settings.name)
-        json_body = network_settings.dict_for_neutron(os_creds)
-        os_network = neutron.create_network(body=json_body)
-        return Network(**os_network['network'])
-    else:
-        raise NeutronException('Failded to create network')
+    logger.info('Creating network with name ' + network_settings.name)
+    json_body = network_settings.dict_for_neutron(os_creds)
+    os_network = neutron.create_network(body=json_body)
+
+    if os_network:
+        network = get_network_by_id(neutron, os_network['network']['id'])
+
+        subnets = list()
+        for subnet_settings in network_settings.subnet_settings:
+            try:
+                subnets.append(
+                    create_subnet(neutron, subnet_settings, os_creds, network))
+            except:
+                logger.error(
+                    'Unexpected error creating subnet [%s]  for network [%s]',
+                    subnet_settings.name, network.name)
+
+                for subnet in subnets:
+                    delete_subnet(neutron, subnet)
+
+                delete_network(neutron, network)
+
+                raise
+
+        return get_network_by_id(neutron, network.id)
 
 
 def delete_network(neutron, network):
@@ -71,6 +89,14 @@ def delete_network(neutron, network):
     :param network: a SNAPS-OO Network domain object
     """
     if neutron and network:
+        if network.subnets:
+            for subnet in network.subnets:
+                logger.info('Deleting subnet with name ' + subnet.name)
+                try:
+                    delete_subnet(neutron, subnet)
+                except NotFound:
+                    pass
+
         logger.info('Deleting network with name ' + network.name)
         neutron.delete_network(network.id)
 
@@ -100,12 +126,13 @@ def get_network(neutron, network_settings=None, network_name=None,
     networks = neutron.list_networks(**net_filter)
     for network, netInsts in networks.items():
         for inst in netInsts:
-            return Network(**inst)
+            return __map_network(neutron, inst)
 
 
-def get_network_by_id(neutron, network_id):
+def __get_os_network_by_id(neutron, network_id):
     """
-    Returns the network object (dictionary) with the given ID else None
+    Returns the OpenStack network object (dictionary) with the given ID else
+    None
     :param neutron: the client
     :param network_id: the id of the network to retrieve
     :return: a SNAPS-OO Network domain object
@@ -113,18 +140,42 @@ def get_network_by_id(neutron, network_id):
     networks = neutron.list_networks(**{'id': network_id})
     for network in networks['networks']:
         if network['id'] == network_id:
-            return Network(**network)
+            return network
 
 
-def create_subnet(neutron, subnet_settings, os_creds, network=None):
+def get_network_by_id(neutron, network_id):
+    """
+    Returns the SNAPS Network domain object for the given ID else None
+    :param neutron: the client
+    :param network_id: the id of the network to retrieve
+    :return: a SNAPS-OO Network domain object
+    """
+    os_network = __get_os_network_by_id(neutron, network_id)
+    if os_network:
+        return __map_network(neutron, os_network)
+
+
+def __map_network(neutron, os_network):
+    """
+    Returns the network object (dictionary) with the given ID else None
+    :param neutron: the client
+    :param os_network: the OpenStack Network dict
+    :return: a SNAPS-OO Network domain object
+    """
+    subnets = get_subnets_by_network_id(neutron, os_network['id'])
+    os_network['subnets'] = subnets
+    return Network(**os_network)
+
+
+def create_subnet(neutron, subnet_settings, os_creds, network):
     """
     Creates a network subnet for OpenStack
     :param neutron: the client
-    :param network: the network object
     :param subnet_settings: A dictionary containing the subnet configuration
                             and is responsible for creating the subnet request
                             JSON body
     :param os_creds: the OpenStack credentials
+    :param network: the network object
     :return: a SNAPS-OO Subnet domain object
     """
     if neutron and network and subnet_settings:
@@ -207,9 +258,19 @@ def get_subnets_by_network(neutron, network):
     :param network: the SNAPS-OO Network domain object
     :return: a list of Subnet objects
     """
+    return get_subnets_by_network_id(neutron, network.id)
+
+
+def get_subnets_by_network_id(neutron, network_id):
+    """
+    Returns a list of SNAPS-OO Subnet domain objects
+    :param neutron: the OpenStack neutron client
+    :param network_id: the subnet's ID
+    :return: a list of Subnet objects
+    """
     out = list()
 
-    os_subnets = neutron.list_subnets(network_id=network.id)
+    os_subnets = neutron.list_subnets(network_id=network_id)
 
     for os_subnet in os_subnets['subnets']:
         out.append(Subnet(**os_subnet))
@@ -301,7 +362,8 @@ def __map_router(neutron, os_router):
     port_subnets = list()
 
     # Order by create date
-    sorted_ports = sorted(device_ports, key=lambda dev_port: dev_port['created_at'])
+    sorted_ports = sorted(
+        device_ports, key=lambda dev_port: dev_port['created_at'])
 
     for port in sorted_ports:
         subnets = list()
@@ -649,7 +711,7 @@ def get_external_networks(neutron):
     out = list()
     for network in neutron.list_networks(
             **{'router:external': True})['networks']:
-        out.append(Network(**network))
+        out.append(__map_network(neutron, network))
     return out
 
 

@@ -16,14 +16,12 @@ import unittest
 import uuid
 
 from snaps.openstack import create_router
-from snaps.openstack.create_network import (OpenStackNetwork, NetworkSettings,
-                                            SubnetSettings, PortSettings,
-                                            NetworkSettingsError,
-                                            SubnetSettingsError,
-                                            PortSettingsError)
+from snaps.openstack.create_network import (
+    OpenStackNetwork, NetworkSettings, SubnetSettings, PortSettings,
+    NetworkSettingsError, SubnetSettingsError, PortSettingsError, IPv6Mode)
 from snaps.openstack.tests import openstack_tests
-from snaps.openstack.tests.os_source_file_test import (OSIntegrationTestCase,
-                                                       OSComponentTestCase)
+from snaps.openstack.tests.os_source_file_test import (
+    OSIntegrationTestCase, OSComponentTestCase)
 from snaps.openstack.utils import neutron_utils
 from snaps.openstack.utils.tests import neutron_utils_tests
 
@@ -161,7 +159,7 @@ class SubnetSettingsUnitTests(unittest.TestCase):
         self.assertIsNone(settings.ipv6_ra_mode)
         self.assertIsNone(settings.ipv6_address_mode)
 
-    def test_all(self):
+    def test_all_string_enums(self):
         host_routes = {'destination': '0.0.0.0/0', 'nexthop': '123.456.78.9'}
         settings = SubnetSettings(name='foo', cidr='10.0.0.0/24', ip_version=6,
                                   project_name='bar-project',
@@ -187,8 +185,37 @@ class SubnetSettingsUnitTests(unittest.TestCase):
         self.assertEqual(host_routes, settings.host_routes[0])
         self.assertEqual('dest', settings.destination)
         self.assertEqual('hop', settings.nexthop)
-        self.assertEqual('dhcpv6-stateful', settings.ipv6_ra_mode)
-        self.assertEqual('slaac', settings.ipv6_address_mode)
+        self.assertEqual(IPv6Mode.stateful, settings.ipv6_ra_mode)
+        self.assertEqual(IPv6Mode.slaac, settings.ipv6_address_mode)
+
+    def test_all_type_enums(self):
+        host_routes = {'destination': '0.0.0.0/0', 'nexthop': '123.456.78.9'}
+        settings = SubnetSettings(name='foo', cidr='10.0.0.0/24', ip_version=6,
+                                  project_name='bar-project',
+                                  start='10.0.0.2', end='10.0.0.101',
+                                  gateway_ip='10.0.0.1', enable_dhcp=False,
+                                  dns_nameservers=['8.8.8.8'],
+                                  host_routes=[host_routes],
+                                  destination='dest',
+                                  nexthop='hop',
+                                  ipv6_ra_mode=IPv6Mode.stateful,
+                                  ipv6_address_mode=IPv6Mode.slaac)
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('10.0.0.0/24', settings.cidr)
+        self.assertEqual(6, settings.ip_version)
+        self.assertEqual('bar-project', settings.project_name)
+        self.assertEqual('10.0.0.2', settings.start)
+        self.assertEqual('10.0.0.101', settings.end)
+        self.assertEqual('10.0.0.1', settings.gateway_ip)
+        self.assertEqual(False, settings.enable_dhcp)
+        self.assertEqual(1, len(settings.dns_nameservers))
+        self.assertEqual('8.8.8.8', settings.dns_nameservers[0])
+        self.assertEqual(1, len(settings.host_routes))
+        self.assertEqual(host_routes, settings.host_routes[0])
+        self.assertEqual('dest', settings.destination)
+        self.assertEqual('hop', settings.nexthop)
+        self.assertEqual(IPv6Mode.stateful, settings.ipv6_ra_mode)
+        self.assertEqual(IPv6Mode.slaac, settings.ipv6_address_mode)
 
     def test_config_all(self):
         host_routes = {'destination': '0.0.0.0/0', 'nexthop': '123.456.78.9'}
@@ -199,7 +226,7 @@ class SubnetSettingsUnitTests(unittest.TestCase):
                'gateway_ip': '10.0.0.1', 'enable_dhcp': False,
                'dns_nameservers': ['8.8.8.8'], 'host_routes': [host_routes],
                'destination': 'dest', 'nexthop': 'hop',
-               'ipv6_ra_mode': 'dhcpv6-stateful',
+               'ipv6_ra_mode': 'dhcpv6-stateless',
                'ipv6_address_mode': 'slaac'})
         self.assertEqual('foo', settings.name)
         self.assertEqual('10.0.0.0/24', settings.cidr)
@@ -215,8 +242,8 @@ class SubnetSettingsUnitTests(unittest.TestCase):
         self.assertEqual(host_routes, settings.host_routes[0])
         self.assertEqual('dest', settings.destination)
         self.assertEqual('hop', settings.nexthop)
-        self.assertEqual('dhcpv6-stateful', settings.ipv6_ra_mode)
-        self.assertEqual('slaac', settings.ipv6_address_mode)
+        self.assertEqual(IPv6Mode.stateless, settings.ipv6_ra_mode)
+        self.assertEqual(IPv6Mode.slaac, settings.ipv6_address_mode)
 
 
 class PortSettingsUnitTests(unittest.TestCase):
@@ -325,7 +352,7 @@ class PortSettingsUnitTests(unittest.TestCase):
 
 class CreateNetworkSuccessTests(OSIntegrationTestCase):
     """
-    Test for the CreateNework class defined in create_nework.py
+    Test for the CreateNetwork class defined in create_nework.py
     """
 
     def setUp(self):
@@ -344,7 +371,6 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         # Initialize for cleanup
         self.net_creator = None
         self.router_creator = None
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
 
     def tearDown(self):
         """
@@ -362,7 +388,7 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         """
         Tests the creation of an OpenStack network without a router.
         """
-        # Create Nework
+        # Create Network
         self.net_creator = OpenStackNetwork(self.os_creds,
                                             self.net_config.network_settings)
         self.net_creator.create()
@@ -381,7 +407,7 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         """
         Tests the creation of an OpenStack network, it's deletion, then cleanup
         """
-        # Create Nework
+        # Create Network
         self.net_creator = OpenStackNetwork(self.os_creds,
                                             self.net_config.network_settings)
         self.net_creator.create()
@@ -429,14 +455,14 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         neutron_utils_tests.validate_interface_router(
             self.router_creator.get_internal_router_interface(),
             self.router_creator.get_router(),
-            self.net_creator.get_subnets()[0])
+            self.net_creator.get_network().subnets[0])
 
     def test_create_networks_same_name(self):
         """
         Tests the creation of an OpenStack network and ensures that the
         OpenStackNetwork object will not create a second.
         """
-        # Create Nework
+        # Create Network
         self.net_creator = OpenStackNetwork(self.os_creds,
                                             self.net_config.network_settings)
         self.net_creator.create()
@@ -509,9 +535,108 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
             self.router_creator.get_router().id, retrieved_router.id)
 
 
+class CreateNetworkIPv6Tests(OSIntegrationTestCase):
+    """
+    Test for the CreateNetwork class defined in create_nework.py when 
+    """
+
+    def setUp(self):
+        """
+        Sets up object for test
+        """
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.neutron = neutron_utils.neutron_client(self.os_creds)
+
+        # Initialize for cleanup
+        self.net_creator = None
+
+    def tearDown(self):
+        """
+        Cleans the network
+        """
+        if self.net_creator:
+            self.net_creator.clean()
+
+        super(self.__class__, self).__clean__()
+
+    def test_create_network_one_ipv6_subnet(self):
+        """
+        Tests the creation of an OpenStack network without a router.
+        """
+        # Create Network
+        subnet_settings = SubnetSettings(
+            name=self.guid + '-subnet', cidr='1:1:0:0:0:0:0:0/64',
+            ip_version=6)
+        network_settings = NetworkSettings(
+            name=self.guid + '-net', subnet_settings=[subnet_settings])
+
+        self.net_creator = OpenStackNetwork(self.os_creds, network_settings)
+        self.net_creator.create()
+
+        # Validate network was created
+        self.assertTrue(neutron_utils_tests.validate_network(
+            self.neutron, self.net_creator.network_settings.name, True))
+
+        network = self.net_creator.get_network()
+        self.assertEqual(1, len(network.subnets))
+        subnet = network.subnets[0]
+
+        self.assertEqual(network.id, subnet.network_id)
+        self.assertEqual(subnet_settings.name, subnet.name)
+        self.assertEqual('1:1::/64', subnet.cidr)
+        self.assertEqual(6, subnet.ip_version)
+        self.assertEqual(0, len(subnet.dns_nameservers))
+
+    def test_create_network_ipv4_ipv6_subnet(self):
+        """
+        Tests the creation of an OpenStack network without a router.
+        """
+        # Create Network
+        subnet4_settings = SubnetSettings(
+            name=self.guid + '-subnet4', cidr='10.0.1.0/24', ip_version=4)
+        subnet6_settings = SubnetSettings(
+            name=self.guid + '-subnet6', cidr='1:1:0:0:0:0:0:0/64',
+            ip_version=6)
+
+        network_settings = NetworkSettings(
+            name=self.guid + '-net',
+            subnet_settings=[subnet4_settings, subnet6_settings])
+
+        self.net_creator = OpenStackNetwork(self.os_creds, network_settings)
+        self.net_creator.create()
+
+        # Validate network was created
+        network = self.net_creator.get_network()
+        self.assertEqual(2, len(network.subnets))
+
+        subnet4 = None
+        subnet6 = None
+        for subnet in network.subnets:
+            if subnet.name == subnet4_settings.name:
+                subnet4 = subnet
+            if subnet.name == subnet6_settings.name:
+                subnet6 = subnet
+
+        # Validate IPv4 subnet
+        self.assertEqual(network.id, subnet4.network_id)
+        self.assertEqual(subnet4_settings.name, subnet4.name)
+        self.assertEqual(subnet4_settings.cidr, subnet4.cidr)
+        self.assertEqual(4, subnet4.ip_version)
+        self.assertEqual(1, len(subnet4.dns_nameservers))
+
+        # Validate IPv6 subnet
+        self.assertEqual(network.id, subnet6.network_id)
+        self.assertEqual(subnet6_settings.name, subnet6.name)
+        self.assertEqual('1:1::/64', subnet6.cidr)
+        self.assertEqual(6, subnet6.ip_version)
+        self.assertEqual(0, len(subnet6.dns_nameservers))
+
+
 class CreateNetworkTypeTests(OSComponentTestCase):
     """
-    Test for the CreateNework class defined in create_nework.py for testing
+    Test for the CreateNetwork class defined in create_nework.py for testing
     creating networks of different types
     """
 
@@ -527,7 +652,6 @@ class CreateNetworkTypeTests(OSComponentTestCase):
 
         # Initialize for cleanup
         self.net_creator = None
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
 
     def tearDown(self):
         """

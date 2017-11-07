@@ -25,39 +25,48 @@ class NetworkObjectTests(unittest.TestCase):
     """
 
     def test_construction_kwargs_1(self):
+        subnet = Subnet(
+            **{'name': 'foo', 'id': 'bar', 'network_id': 'foo-bar'})
         network = Network(
             **{'name': 'foo', 'id': 'bar', 'provider:network_type': 'flat',
                'admin_state_up': False, 'shared': True,
-               'router:external': False})
+               'router:external': False, 'subnets': [subnet]})
         self.assertEqual('foo', network.name)
         self.assertEqual('bar', network.id)
         self.assertEqual('flat', network.type)
         self.assertFalse(network.admin_state_up)
         self.assertFalse(network.external)
         self.assertTrue(network.shared)
+        self.assertEqual([subnet], network.subnets)
 
     def test_construction_kwargs_2(self):
+        subnet = Subnet(
+            **{'name': 'foo', 'id': 'bar', 'network_id': 'foo-bar'})
         network = Network(
             **{'name': 'foo', 'id': 'bar', 'type': 'flat',
-               'admin_state_up': False, 'shared': True,
-               'external': False})
+               'admin_state_up': False, 'shared': True, 'external': False,
+               'subnets': [subnet]})
         self.assertEqual('foo', network.name)
         self.assertEqual('bar', network.id)
         self.assertEqual('flat', network.type)
         self.assertFalse(network.admin_state_up)
         self.assertFalse(network.external)
         self.assertTrue(network.shared)
+        self.assertEqual([subnet], network.subnets)
 
     def test_construction_named(self):
+        subnet = Subnet(
+            **{'name': 'foo', 'id': 'bar', 'network_id': 'foo-bar'})
         network = Network(
             name='foo', id='bar', type='flat', admin_state_up=False,
-            shared=True, external=False)
+            shared=True, external=False, subnets=[subnet])
         self.assertEqual('foo', network.name)
         self.assertEqual('bar', network.id)
         self.assertEqual('flat', network.type)
         self.assertFalse(network.admin_state_up)
         self.assertFalse(network.external)
         self.assertTrue(network.shared)
+        self.assertEqual([subnet], network.subnets)
 
 
 class SubnetObjectTests(unittest.TestCase):
@@ -229,8 +238,6 @@ class RouterDomainObjectTests(unittest.TestCase):
         self.assertIsNone(router.external_network_id)
 
     def test_ext_gateway_named(self):
-        ext_gateway = {'network_id': '123',
-                       'external_fixed_ips': ['456', '789']}
         router = Router(
             external_fixed_ips=['456', '789'], external_network_id='123',
             admin_state_up='yes', tenant_id='1234', status='hello', id='id',
@@ -242,7 +249,6 @@ class RouterDomainObjectTests(unittest.TestCase):
         self.assertEqual('yes', router.admin_state_up)
         self.assertEqual(['456', '789'], router.external_fixed_ips)
         self.assertEqual('123', router.external_network_id)
-
 
     def test_ext_net_ips_named(self):
         ext_gateway = {'network_id': '123',

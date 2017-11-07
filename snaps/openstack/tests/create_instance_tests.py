@@ -21,6 +21,7 @@ import uuid
 
 import os
 from neutronclient.common.exceptions import InvalidIpForSubnetClient
+from novaclient.exceptions import BadRequest
 
 from snaps import file_utils
 from snaps.openstack import create_network, create_router
@@ -31,7 +32,7 @@ from snaps.openstack.create_instance import (
     VmInstanceSettingsError, FloatingIpSettingsError)
 from snaps.openstack.create_keypairs import OpenStackKeypair, KeypairSettings
 from snaps.openstack.create_network import (
-    OpenStackNetwork, PortSettings, NetworkSettings)
+    OpenStackNetwork, PortSettings, NetworkSettings, SubnetSettings)
 from snaps.openstack.create_router import OpenStackRouter, RouterSettings
 from snaps.openstack.create_security_group import (
     SecurityGroupSettings, OpenStackSecurityGroup, SecurityGroupRuleSettings,
@@ -614,12 +615,6 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
                     'Unexpected exception cleaning keypair with message - %s',
                     e)
 
-        if os.path.isfile(self.keypair_pub_filepath):
-            os.remove(self.keypair_pub_filepath)
-
-        if os.path.isfile(self.keypair_priv_filepath):
-            os.remove(self.keypair_priv_filepath)
-
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
@@ -687,7 +682,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             self.image_creator.image_settings,
             keypair_settings=self.keypair_creator.keypair_settings)
         self.inst_creators.append(inst_creator)
-        vm_inst = inst_creator.create()
+        vm_inst = inst_creator.create(block=True)
 
         self.assertEqual(ip_1, inst_creator.get_port_ip(self.port_1_name))
         self.assertTrue(inst_creator.vm_active(block=True))
@@ -706,6 +701,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings],
+            security_group_names=[self.sec_grp_creator.sec_grp_settings.name],
             floating_ip_settings=[FloatingIpSettings(
                 name=self.floating_ip_name, port_name=self.port_1_name,
                 router_name=self.pub_net_config.router_settings.name)])
@@ -723,8 +719,6 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         ip = inst_creator.get_port_ip(port_settings.name)
         self.assertTrue(check_dhcp_lease(inst_creator, ip))
 
-        inst_creator.add_security_group(
-            self.sec_grp_creator.get_security_group())
         self.assertEqual(vm_inst.id, inst_creator.get_vm_inst().id)
 
         self.assertTrue(validate_ssh_client(inst_creator))
@@ -742,6 +736,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings],
+            security_group_names=[self.sec_grp_creator.sec_grp_settings.name],
             floating_ip_settings=[FloatingIpSettings(
                 name=self.floating_ip_name, port_name=self.port_1_name,
                 router_name=self.pub_net_config.router_settings.name)])
@@ -761,8 +756,6 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         ip = inst_creator.get_port_ip(port_settings.name)
         self.assertTrue(check_dhcp_lease(inst_creator, ip))
 
-        inst_creator.add_security_group(
-            self.sec_grp_creator.get_security_group())
         self.assertEqual(vm_inst.id, inst_creator.get_vm_inst().id)
 
         self.assertTrue(validate_ssh_client(inst_creator))
@@ -780,6 +773,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings],
+            security_group_names=[self.sec_grp_creator.sec_grp_settings.name],
             floating_ip_settings=[FloatingIpSettings(
                 name=self.floating_ip_name, port_name=self.port_1_name,
                 router_name=self.pub_net_config.router_settings.name)])
@@ -799,8 +793,6 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         ip = inst_creator.get_port_ip(port_settings.name)
         self.assertTrue(check_dhcp_lease(inst_creator, ip))
 
-        inst_creator.add_security_group(
-            self.sec_grp_creator.get_security_group())
         self.assertEqual(vm_inst.id, inst_creator.get_vm_inst().id)
 
         self.assertTrue(validate_ssh_client(inst_creator))
@@ -811,6 +803,230 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             keypair_settings=self.keypair_creator.keypair_settings)
         inst_creator2.create()
         self.assertTrue(validate_ssh_client(inst_creator2))
+
+
+class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
+    """
+    Test for the CreateInstance class with a single NIC/Port with Floating IPs
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file within OpenStack
+        """
+        super(self.__class__, self).__start__()
+
+        self.nova = nova_utils.nova_client(self.os_creds)
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.keypair_priv_filepath = 'tmp/' + self.guid
+        self.keypair_pub_filepath = self.keypair_priv_filepath + '.pub'
+        self.keypair_name = self.guid + '-kp'
+        self.vm_inst_name = self.guid + '-inst'
+        self.port1_name = self.guid + 'port1'
+        self.port2_name = self.guid + 'port2'
+
+        # Initialize for tearDown()
+        self.image_creator = None
+        self.network_creator = None
+        self.router_creator = None
+        self.flavor_creator = None
+        self.keypair_creator = None
+        self.sec_grp_creator = None
+        self.inst_creator = None
+
+        os_image_settings = openstack_tests.cirros_image_settings(
+            name=self.guid + '-image', image_metadata=self.image_metadata)
+        try:
+            self.image_creator = OpenStackImage(
+                self.os_creds, os_image_settings)
+            self.image_creator.create()
+
+            self.flavor_creator = OpenStackFlavor(
+                self.admin_os_creds,
+                FlavorSettings(
+                    name=self.guid + '-flavor-name', ram=256, disk=10, vcpus=2,
+                    metadata=self.flavor_metadata))
+            self.flavor_creator.create()
+
+            self.keypair_creator = OpenStackKeypair(
+                self.os_creds, KeypairSettings(
+                    name=self.keypair_name,
+                    public_filepath=self.keypair_pub_filepath,
+                    private_filepath=self.keypair_priv_filepath))
+            self.keypair_creator.create()
+
+            sec_grp_name = self.guid + '-sec-grp'
+            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
+                                              direction=Direction.ingress,
+                                              protocol=Protocol.icmp)
+            rule2 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
+                                              direction=Direction.ingress,
+                                              protocol=Protocol.tcp,
+                                              port_range_min=22,
+                                              port_range_max=22)
+            self.sec_grp_creator = OpenStackSecurityGroup(
+                self.os_creds,
+                SecurityGroupSettings(name=sec_grp_name,
+                                      rule_settings=[rule1, rule2]))
+            self.sec_grp_creator.create()
+        except Exception as e:
+            self.tearDown()
+            raise e
+
+    def tearDown(self):
+        """
+        Cleans the created object
+        """
+        if self.inst_creator:
+            try:
+                self.inst_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning VM instance with message '
+                    '- %s', e)
+
+        if self.keypair_creator:
+            try:
+                self.keypair_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning keypair with message - %s',
+                    e)
+
+        if self.flavor_creator:
+            try:
+                self.flavor_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning flavor with message - %s',
+                    e)
+
+        if self.sec_grp_creator:
+            try:
+                self.sec_grp_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning security group with message'
+                    ' - %s', e)
+
+        if self.router_creator:
+            try:
+                self.router_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning router with message - %s',
+                    e)
+
+        if self.network_creator:
+            try:
+                self.network_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
+
+        if self.image_creator and not self.image_creator.image_settings.exists:
+            try:
+                self.image_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning image with message - %s', e)
+
+        super(self.__class__, self).__clean__()
+
+    def test_v4fip_v6overlay(self):
+        """
+        Tests the ability to assign an IPv4 floating IP to an IPv6 overlay
+        network when the external network does not have an IPv6 subnet.
+        """
+        subnet_settings = SubnetSettings(
+            name=self.guid + '-subnet', cidr='1:1:0:0:0:0:0:0/64',
+            ip_version=6)
+        network_settings = NetworkSettings(
+            name=self.guid + '-net', subnet_settings=[subnet_settings])
+        router_settings = RouterSettings(
+            name=self.guid + '-router', external_gateway=self.ext_net_name,
+            internal_subnets=[subnet_settings.name])
+
+        # Create Network
+        self.network_creator = OpenStackNetwork(
+            self.os_creds, network_settings)
+        self.network_creator.create()
+
+        # Create Router
+        self.router_creator = OpenStackRouter(
+            self.os_creds, router_settings)
+        self.router_creator.create()
+
+        port_settings = PortSettings(
+            name=self.port1_name, network_name=network_settings.name)
+
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings],
+            security_group_names=[self.sec_grp_creator.sec_grp_settings.name],
+            floating_ip_settings=[FloatingIpSettings(
+                name='fip1', port_name=self.port1_name,
+                router_name=router_settings.name)])
+
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings,
+            keypair_settings=self.keypair_creator.keypair_settings)
+
+        with self.assertRaises(BadRequest):
+            self.inst_creator.create(block=True)
+
+    def test_fip_v4and6_overlay(self):
+        """
+        Tests the ability to assign an IPv4 floating IP to an IPv6 overlay
+        network when the external network does not have an IPv6 subnet.
+        """
+        subnet4_settings = SubnetSettings(
+            name=self.guid + '-subnet4', cidr='10.0.1.0/24',
+            ip_version=4)
+        subnet6_settings = SubnetSettings(
+            name=self.guid + '-subnet6', cidr='1:1:0:0:0:0:0:0/64',
+            ip_version=6)
+        network_settings = NetworkSettings(
+            name=self.guid + '-net',
+            subnet_settings=[subnet4_settings, subnet6_settings])
+        router_settings = RouterSettings(
+            name=self.guid + '-router', external_gateway=self.ext_net_name,
+            internal_subnets=[subnet4_settings.name])
+
+        # Create Network
+        self.network_creator = OpenStackNetwork(
+            self.os_creds, network_settings)
+        self.network_creator.create()
+
+        # Create Router
+        self.router_creator = OpenStackRouter(
+            self.os_creds, router_settings)
+        self.router_creator.create()
+
+        port_settings = PortSettings(
+            name=self.port1_name, network_name=network_settings.name)
+
+        instance_settings = VmInstanceSettings(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings],
+            security_group_names=[self.sec_grp_creator.sec_grp_settings.name],
+            floating_ip_settings=[FloatingIpSettings(
+                name='fip1', port_name=self.port1_name,
+                router_name=router_settings.name)])
+
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings,
+            keypair_settings=self.keypair_creator.keypair_settings)
+
+        self.inst_creator.create(block=True)
+        ssh_client = self.inst_creator.ssh_client()
+        self.assertIsNotNone(ssh_client)
 
 
 class CreateInstancePortManipulationTests(OSIntegrationTestCase):
@@ -1368,12 +1584,6 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
                     'Unexpected exception cleaning keypair with message - %s',
                     e)
 
-        if os.path.isfile(self.keypair_pub_filepath):
-            os.remove(self.keypair_pub_filepath)
-
-        if os.path.isfile(self.keypair_priv_filepath):
-            os.remove(self.keypair_priv_filepath)
-
         if self.flavor_creator:
             try:
                 self.flavor_creator.clean()
@@ -1442,6 +1652,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=ports_settings,
+            security_group_names=[self.sec_grp_creator.sec_grp_settings.name],
             floating_ip_settings=[FloatingIpSettings(
                 name=self.floating_ip_name, port_name=self.port_1_name,
                 router_name=self.pub_net_config.router_settings.name)])
@@ -1460,10 +1671,6 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
 
         ip = self.inst_creator.get_port_ip(ports_settings[0].name)
         self.assertTrue(check_dhcp_lease(self.inst_creator, ip))
-
-        # Add security group to VM
-        self.inst_creator.add_security_group(
-            self.sec_grp_creator.get_security_group())
 
         # Effectively blocks until VM's ssh port has been opened
         self.assertTrue(self.inst_creator.vm_ssh_active(block=True))

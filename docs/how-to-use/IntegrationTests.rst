@@ -185,6 +185,18 @@ create_network_tests.py - CreateNetworkSuccessTests
 |                                       |               | 'admin' project ID                                        |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_network_tests.py - CreateNetworkIPv6Tests
+------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Neutron API   | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_network_one_ipv6_subnet   | 2             | Ensures that a network can be created with an IPv6 subnet |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_network_ipv4_ipv6_subnet  | 2             | Ensures that a network can be created with an IPv4 and    |
+|                                       |               | IPv6 subnet                                               |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_router_tests.py - CreateRouterSuccessTests
 -------------------------------------------------
 
@@ -585,14 +597,28 @@ create_instance_tests.py - CreateInstanceFromThreePartImage
 |                                                     | Neutron 2     | delete it when using a 3-part image                       |
 +-----------------------------------------------------+---------------+-----------------------------------------------------------+
 
-create_instance_tests.py - CreateInstancePubPrivNetTests
---------------------------------------------------------
+create_instance_tests.py - CreateInstancePubPrivNetTests (Staging)
+------------------------------------------------------------------
 
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             | API Versions  | Description                                               |
 +=======================================+===============+===========================================================+
 | test_dual_ports_dhcp                  | Nova 2        | Ensures that a VM with two ports/NICs can have its second |
 |                                       | Neutron 2     | NIC configured via SSH/Ansible after startup              |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
+create_instance_tests.py - CreateInstanceIPv6NetworkTests (Staging)
+-------------------------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | API Versions  | Description                                               |
++=======================================+===============+===========================================================+
+| test_v4fip_v6overlay                  | Nova 2        | Expects a BadRequest exception to be raised when          |
+|                                       | Neutron 2     | attempting to add an IPv4 floating IP to a VM with an IPv6|
+|                                       |               | port                                                      |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_fip_v4and6_overlay               | Nova 2        | Connects to a VM via a floating IP joined to a port that  |
+|                                       | Neutron 2     | has been confiured with both IPv4 and IPv6 addresses      |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
 create_instance_tests.py - InstanceSecurityGroupTests

@@ -16,7 +16,7 @@ import logging
 import time
 
 from neutronclient.common.exceptions import PortNotFoundClient
-from novaclient.exceptions import NotFound
+from novaclient.exceptions import NotFound, BadRequest
 
 from snaps.openstack.create_network import PortSettings
 from snaps.openstack.openstack_creator import OpenStackComputeObject
@@ -373,6 +373,9 @@ class OpenStackVmInstance(OpenStackComputeObject):
                         'Added floating IP %s to port IP %s on instance %s',
                         floating_ip.ip, ip, self.instance_settings.name)
                     return
+                except BadRequest as bre:
+                    logger.error('Cannot add floating IP [%s]', bre)
+                    raise
                 except Exception as e:
                     logger.debug(
                         'Retry adding floating IP to instance. Last attempt '
