@@ -18,6 +18,7 @@ import unittest
 
 from snaps.openstack.os_credentials import (
     OSCredsError, OSCreds, ProxySettings, ProxySettingsError)
+from snaps.openstack.utils import cinder_utils
 
 __author__ = 'spisarski'
 
@@ -147,6 +148,8 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual(2, os_creds.image_api_version)
         self.assertEqual(2, os_creds.compute_api_version)
         self.assertEqual(1, os_creds.heat_api_version)
+        self.assertEqual(cinder_utils.VERSION_2, os_creds.volume_api_version)
+        self.assertEqual(1, os_creds.magnum_api_version)
         self.assertEqual('default', os_creds.user_domain_id)
         self.assertEqual('Default', os_creds.user_domain_name)
         self.assertEqual('default', os_creds.project_domain_id)
@@ -168,6 +171,8 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual(2, os_creds.image_api_version)
         self.assertEqual(2, os_creds.compute_api_version)
         self.assertEqual(1, os_creds.heat_api_version)
+        self.assertEqual(cinder_utils.VERSION_2, os_creds.volume_api_version)
+        self.assertEqual(1, os_creds.magnum_api_version)
         self.assertEqual('default', os_creds.user_domain_id)
         self.assertEqual('Default', os_creds.user_domain_name)
         self.assertEqual('default', os_creds.project_domain_id)
@@ -183,6 +188,7 @@ class OSCredsUnitTests(unittest.TestCase):
                'auth_url': 'http://foo.bar:5000/v2', 'project_name': 'hello',
                'identity_api_version': '5', 'image_api_version': '6',
                'compute_api_version': '7', 'heat_api_version': '8.0',
+               'volume_api_version': '9.5', 'magnum_api_version': '10.6',
                'cacert': 'true', 'region_name': 'test_region'})
         self.assertEqual('foo', os_creds.username)
         self.assertEqual('bar', os_creds.password)
@@ -192,6 +198,8 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual(6, os_creds.image_api_version)
         self.assertEqual(7, os_creds.compute_api_version)
         self.assertEqual(8.0, os_creds.heat_api_version)
+        self.assertEqual(9.5, os_creds.volume_api_version)
+        self.assertEqual(10.6, os_creds.magnum_api_version)
         self.assertEqual('default', os_creds.user_domain_id)
         self.assertEqual('Default', os_creds.user_domain_name)
         self.assertEqual('default', os_creds.project_domain_id)
@@ -207,6 +215,7 @@ class OSCredsUnitTests(unittest.TestCase):
                'auth_url': 'http://foo.bar:5000/v2', 'project_name': 'hello',
                'identity_api_version': 5, 'image_api_version': 6,
                'compute_api_version': 7, 'heat_api_version': 8.0,
+               'volume_api_version': 9.5, 'magnum_api_version': 10.6,
                'cacert': True, 'region_name': 'test_region'})
         self.assertEqual('foo', os_creds.username)
         self.assertEqual('bar', os_creds.password)
@@ -216,6 +225,8 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual(6, os_creds.image_api_version)
         self.assertEqual(7, os_creds.compute_api_version)
         self.assertEqual(8.0, os_creds.heat_api_version)
+        self.assertEqual(9.5, os_creds.volume_api_version)
+        self.assertEqual(10.6, os_creds.magnum_api_version)
         self.assertEqual('default', os_creds.user_domain_id)
         self.assertEqual('Default', os_creds.user_domain_name)
         self.assertEqual('default', os_creds.project_domain_id)
@@ -238,6 +249,8 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual(2, os_creds.image_api_version)
         self.assertEqual(2, os_creds.compute_api_version)
         self.assertEqual(1, os_creds.heat_api_version)
+        self.assertEqual(cinder_utils.VERSION_2, os_creds.volume_api_version)
+        self.assertEqual(1, os_creds.magnum_api_version)
         self.assertEqual('default', os_creds.user_domain_id)
         self.assertEqual('Default', os_creds.user_domain_name)
         self.assertEqual('default', os_creds.project_domain_id)
@@ -266,6 +279,8 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual(2, os_creds.image_api_version)
         self.assertEqual(2, os_creds.compute_api_version)
         self.assertEqual(1, os_creds.heat_api_version)
+        self.assertEqual(cinder_utils.VERSION_2, os_creds.volume_api_version)
+        self.assertEqual(1, os_creds.magnum_api_version)
         self.assertEqual('domain1', os_creds.user_domain_id)
         self.assertEqual('domain2', os_creds.user_domain_name)
         self.assertEqual('domain3', os_creds.project_domain_id)
@@ -291,6 +306,8 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual(2, os_creds.image_api_version)
         self.assertEqual(2, os_creds.compute_api_version)
         self.assertEqual(1, os_creds.heat_api_version)
+        self.assertEqual(cinder_utils.VERSION_2, os_creds.volume_api_version)
+        self.assertEqual(1, os_creds.magnum_api_version)
         self.assertEqual('domain1', os_creds.user_domain_id)
         self.assertEqual('domain2', os_creds.user_domain_name)
         self.assertEqual('domain3', os_creds.project_domain_id)
@@ -315,6 +332,8 @@ class OSCredsUnitTests(unittest.TestCase):
         self.assertEqual(2, os_creds.image_api_version)
         self.assertEqual(2, os_creds.compute_api_version)
         self.assertEqual(1, os_creds.heat_api_version)
+        self.assertEqual(cinder_utils.VERSION_2, os_creds.volume_api_version)
+        self.assertEqual(1, os_creds.magnum_api_version)
         self.assertEqual('default', os_creds.user_domain_id)
         self.assertEqual('Default', os_creds.user_domain_name)
         self.assertEqual('default', os_creds.project_domain_id)

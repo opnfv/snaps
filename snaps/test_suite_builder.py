@@ -103,6 +103,8 @@ from snaps.openstack.utils.tests.nova_utils_tests import (
     NovaUtilsInstanceTests, NovaUtilsInstanceVolumeTests)
 from snaps.openstack.utils.tests.settings_utils_tests import (
     SettingsUtilsUnitTests)
+from snaps.openstack.utils.tests.magnum_utils_tests import (
+    MagnumSmokeTests)
 from snaps.provisioning.tests.ansible_utils_tests import (
     AnsibleProvisioningTests)
 from snaps.tests.file_utils_tests import FileUtilsTests
@@ -638,14 +640,17 @@ def add_openstack_staging_tests(suite, os_creds, ext_net_name,
     :return: None as the tests will be adding to the 'suite' parameter object
     """
     suite.addTest(OSComponentTestCase.parameterize(
-        CreateNetworkTypeTests, os_creds=os_creds, ext_net_name=ext_net_name,
-        log_level=log_level))
+        CreateNetworkTypeTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, log_level=log_level))
     suite.addTest(OSComponentTestCase.parameterize(
         CreateInstanceMockOfflineTests, os_creds=os_creds,
         ext_net_name=ext_net_name, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
-            CreateInstancePubPrivNetTests, os_creds=os_creds,
-            ext_net_name=ext_net_name, log_level=log_level))
+        CreateInstancePubPrivNetTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, log_level=log_level))
     suite.addTest(OSComponentTestCase.parameterize(
         HeatUtilsVolumeTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        MagnumSmokeTests, os_creds=os_creds,
         ext_net_name=ext_net_name, log_level=log_level))
