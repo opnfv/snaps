@@ -329,10 +329,6 @@ def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True,
         ext_net_name=ext_net_name, log_level=log_level,
         image_metadata=image_metadata))
     suite.addTest(OSComponentTestCase.parameterize(
-        HeatUtilsVolumeTests, os_creds=os_creds,
-        ext_net_name=ext_net_name, log_level=log_level,
-        image_metadata=image_metadata))
-    suite.addTest(OSComponentTestCase.parameterize(
         HeatUtilsFlavorTests, os_creds=os_creds,
         ext_net_name=ext_net_name, log_level=log_level,
         image_metadata=image_metadata))
@@ -650,3 +646,6 @@ def add_openstack_staging_tests(suite, os_creds, ext_net_name,
     suite.addTest(OSIntegrationTestCase.parameterize(
             CreateInstancePubPrivNetTests, os_creds=os_creds,
             ext_net_name=ext_net_name, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        HeatUtilsVolumeTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, log_level=log_level))
