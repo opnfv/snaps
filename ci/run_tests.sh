@@ -6,7 +6,7 @@ set -e
 sudo pip install virtualenv
 virtualenv ./vpy
 source ./vpy/bin/activate
-pip install -e ../
+pip install -chttps://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt?h=stable/ocata -e ../
 
 # $1 is the IP to the pod's build server
 # $2 is the IP to the pod's control server
