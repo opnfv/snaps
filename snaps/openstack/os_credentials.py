@@ -44,6 +44,8 @@ class OSCreds:
                                     clients
         :param volume_api_version: The OpenStack's API version to use
                                    for Cinder clients
+        :param magnum_api_version: The OpenStack's API version to use
+                                   for magnum clients
         :param user_domain_id: Used for v3 APIs (default='default')
         :param user_domain_name: Used for v3 APIs (default='Default')
         :param project_domain_id: Used for v3 APIs (default='default')
@@ -88,8 +90,12 @@ class OSCreds:
         if kwargs.get('volume_api_version') is None:
             self.volume_api_version = cinder_utils.VERSION_2
         else:
-            self.volume_api_version = float(
-                kwargs['volume_api_version'])
+            self.volume_api_version = float(kwargs['volume_api_version'])
+
+        if kwargs.get('magnum_api_version') is None:
+            self.magnum_api_version = 1
+        else:
+            self.magnum_api_version = float(kwargs['magnum_api_version'])
 
         self.user_domain_id = kwargs.get('user_domain_id', 'default')
 
