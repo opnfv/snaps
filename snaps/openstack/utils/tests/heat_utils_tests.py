@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import os
+
 import pkg_resources
 import uuid
 
@@ -277,6 +279,9 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
 
         self.assertTrue(stack_active(self.heat_client, self.stack))
 
+        self.keypair1_settings = None
+        self.keypair2_settings = None
+
     def tearDown(self):
         """
         Cleans the stack and image
@@ -335,6 +340,18 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
             except:
                 pass
 
+        if self.keypair1_settings:
+            expanded_path = os.path.expanduser(
+                self.keypair1_settings.private_filepath)
+            os.chmod(expanded_path, 0o755)
+            os.remove(expanded_path)
+
+        if self.keypair2_settings:
+            expanded_path = os.path.expanduser(
+                self.keypair2_settings.private_filepath)
+            os.chmod(expanded_path, 0o755)
+            os.remove(expanded_path)
+
     def test_get_settings_from_stack(self):
         """
         Tests that a heat template with floating IPs and can have the proper
@@ -392,17 +409,17 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
             self.assertEqual(
                 self.image_creator2.image_settings.name, image_settings.name)
 
-        keypair1_settings = settings_utils.determine_keypair_settings(
+        self.keypair1_settings = settings_utils.determine_keypair_settings(
             self.heat_client, self.stack, servers[0],
             priv_key_key='private_key')
-        self.assertIsNotNone(keypair1_settings)
-        self.assertEqual(self.keypair_name, keypair1_settings.name)
+        self.assertIsNotNone(self.keypair1_settings)
+        self.assertEqual(self.keypair_name, self.keypair1_settings.name)
 
-        keypair2_settings = settings_utils.determine_keypair_settings(
+        self.keypair2_settings = settings_utils.determine_keypair_settings(
             self.heat_client, self.stack, servers[1],
             priv_key_key='private_key')
-        self.assertIsNotNone(keypair2_settings)
-        self.assertEqual(self.keypair_name, keypair2_settings.name)
+        self.assertIsNotNone(self.keypair2_settings)
+        self.assertEqual(self.keypair_name, self.keypair2_settings.name)
 
 
 class HeatUtilsRouterTests(OSComponentTestCase):

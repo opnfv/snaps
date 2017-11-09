@@ -441,6 +441,8 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
         self.heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'floating_ip_heat_template.yaml')
 
+        self.vm_inst_creators = list()
+
     def tearDown(self):
         """
         Cleans the stack and downloaded stack file
@@ -454,6 +456,17 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
         if self.image_creator:
             try:
                 self.image_creator.clean()
+            except:
+                pass
+
+        for vm_inst_creator in self.vm_inst_creators:
+            try:
+                keypair_settings = vm_inst_creator.keypair_settings
+                if keypair_settings and keypair_settings.private_filepath:
+                    expanded_path = os.path.expanduser(
+                        keypair_settings.private_filepath)
+                    os.chmod(expanded_path, 0o755)
+                    os.remove(expanded_path)
             except:
                 pass
 
@@ -475,12 +488,12 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
         created_stack = self.stack_creator.create()
         self.assertIsNotNone(created_stack)
 
-        vm_inst_creators = self.stack_creator.get_vm_inst_creators(
+        self.vm_inst_creators = self.stack_creator.get_vm_inst_creators(
             heat_keypair_option='private_key')
-        self.assertIsNotNone(vm_inst_creators)
-        self.assertEqual(2, len(vm_inst_creators))
+        self.assertIsNotNone(self.vm_inst_creators)
+        self.assertEqual(2, len(self.vm_inst_creators))
 
-        for vm_inst_creator in vm_inst_creators:
+        for vm_inst_creator in self.vm_inst_creators:
             if vm_inst_creator.get_vm_inst().name == self.vm_inst1_name:
                 self.assertTrue(
                     create_instance_tests.validate_ssh_client(vm_inst_creator))
@@ -753,6 +766,8 @@ class CreateStackKeypairTests(OSIntegrationTestCase):
         self.created_stack = self.stack_creator.create()
         self.assertIsNotNone(self.created_stack)
 
+        self.keypair_creators = list()
+
     def tearDown(self):
         """
         Cleans the stack and downloaded stack file
@@ -760,6 +775,11 @@ class CreateStackKeypairTests(OSIntegrationTestCase):
         if self.stack_creator:
             try:
                 self.stack_creator.clean()
+            except:
+                pass
+        for keypair_creator in self.keypair_creators:
+            try:
+                keypair_creator.clean()
             except:
                 pass
 
@@ -770,23 +790,26 @@ class CreateStackKeypairTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack stack from Heat template file and
         the retrieval of an OpenStackKeypair creator/state machine instance
         """
-        kp_creators = self.stack_creator.get_keypair_creators('private_key')
-        self.assertEqual(1, len(kp_creators))
+        self.kp_creators = self.stack_creator.get_keypair_creators(
+            'private_key')
+        self.assertEqual(1, len(self.kp_creators))
 
-        creator = kp_creators[0]
+        self.keypair_creator = self.kp_creators[0]
 
-        self.assertEqual(self.keypair_name, creator.get_keypair().name)
-        self.assertIsNotNone(creator.keypair_settings.private_filepath)
+        self.assertEqual(self.keypair_name,
+                         self.keypair_creator.get_keypair().name)
+        self.assertIsNotNone(
+            self.keypair_creator.keypair_settings.private_filepath)
 
         private_file_contents = file_utils.read_file(
-            creator.keypair_settings.private_filepath)
+            self.keypair_creator.keypair_settings.private_filepath)
         self.assertTrue(private_file_contents.startswith(
             '-----BEGIN RSA PRIVATE KEY-----'))
 
         keypair = nova_utils.get_keypair_by_id(
-            self.nova, creator.get_keypair().id)
+            self.nova, self.keypair_creator.get_keypair().id)
         self.assertIsNotNone(keypair)
-        self.assertEqual(creator.get_keypair(), keypair)
+        self.assertEqual(self.keypair_creator.get_keypair(), keypair)
 
 
 class CreateStackSecurityGroupTests(OSIntegrationTestCase):

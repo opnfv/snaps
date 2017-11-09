@@ -123,6 +123,7 @@ class OpenStackKeypair(OpenStackComputeObject):
                     self.keypair_settings.public_filepath)
                 os.chmod(expanded_path, 0o755)
                 os.remove(expanded_path)
+                logger.info('Deleted public key file [%s]', expanded_path)
             if (self.keypair_settings.private_filepath and
                     file_utils.file_exists(
                         self.keypair_settings.private_filepath)):
@@ -130,6 +131,7 @@ class OpenStackKeypair(OpenStackComputeObject):
                     self.keypair_settings.private_filepath)
                 os.chmod(expanded_path, 0o755)
                 os.remove(expanded_path)
+                logger.info('Deleted private key file [%s]', expanded_path)
 
     def get_keypair(self):
         """
