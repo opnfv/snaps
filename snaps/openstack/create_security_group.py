@@ -529,6 +529,8 @@ def map_protocol(protocol):
             return Protocol.tcp
         elif proto_str == 'udp':
             return Protocol.udp
+        elif proto_str == 'any':
+            return Protocol.null
         elif proto_str == 'null':
             return Protocol.null
         else:
