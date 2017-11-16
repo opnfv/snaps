@@ -37,7 +37,7 @@ def heat_client(os_creds):
     :param os_creds: the OpenStack credentials
     :return: the client
     """
-    logger.debug('Retrieving Nova Client')
+    logger.debug('Retrieving Heat Client')
     return Client(os_creds.heat_api_version,
                   session=keystone_utils.keystone_session(os_creds),
                   region_name=os_creds.region_name)
@@ -155,7 +155,7 @@ def get_resources(heat_cli, stack, res_type=None):
         out = list()
         for os_resource in os_resources:
             if ((res_type and os_resource.resource_type == res_type)
-                or not res_type):
+                    or not res_type):
                 out.append(Resource(
                     name=os_resource.resource_name,
                     resource_type=os_resource.resource_type,

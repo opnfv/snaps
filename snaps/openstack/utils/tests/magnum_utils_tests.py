@@ -20,7 +20,7 @@ from snaps.openstack.utils import magnum_utils
 
 __author__ = 'spisarski'
 
-logger = logging.getLogger('nova_utils_tests')
+logger = logging.getLogger('magnum_utils_tests')
 
 
 class MagnumSmokeTests(OSComponentTestCase):
