@@ -34,6 +34,29 @@
       "revId": "53c94ec9d9bac636c4e708e1e09a28976327e296",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_c9b0fb8d",
+        "filename": "setup.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 2651
+      },
+      "writtenOn": "2017-11-16T01:09:16Z",
+      "side": 1,
+      "message": "why \u0027Hewlett-Packard Development Company, L.P.\u0027 company? I think no one among us from that company",
+      "range": {
+        "startLine": 1,
+        "startChar": 21,
+        "endLine": 1,
+        "endChar": 62
+      },
+      "revId": "53c94ec9d9bac636c4e708e1e09a28976327e296",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
