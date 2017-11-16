@@ -19,7 +19,8 @@ import pkg_resources
 from heatclient.exc import HTTPBadRequest
 from snaps import file_utils
 from snaps.openstack.create_flavor import OpenStackFlavor, FlavorSettings
-from snaps.openstack.create_image import OpenStackImage, ImageSettings
+from snaps.openstack.create_image import OpenStackImage
+from snaps.config.image import ImageConfig
 
 try:
     from urllib.request import URLError
@@ -974,7 +975,7 @@ class CreateStackFailureTests(OSIntegrationTestCase):
         self.tmp_file = file_utils.save_string_to_file(
             ' ', str(uuid.uuid4()) + '-bad-image')
         self.image_creator = OpenStackImage(
-            self.heat_creds, ImageSettings(
+            self.heat_creds, ImageConfig(
                 name=self.guid + 'image', image_file=self.tmp_file.name,
                 image_user='foo', img_format='qcow2'))
         self.image_creator.create()

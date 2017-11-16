@@ -60,11 +60,17 @@ SecurityGroupDomainObjectTests
 Ensures that all required members are included when constructing a
 SecurityGroup domain object
 
+ImageConfigUnitTests
+--------------------
+
+Ensures that all required members are included when constructing a
+ImageConfig object
+
 ImageSettingsUnitTests
 ----------------------
 
 Ensures that all required members are included when constructing a
-ImageSettings object
+ImageSettings object (deprecated see ImageConfigUnitTests)
 
 ImageDomainObjectTests
 ----------------------

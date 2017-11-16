@@ -313,7 +313,7 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
                     for server in servers:
                         vm_settings = settings_utils.create_vm_inst_settings(
                             nova, neutron, server)
-                        img_settings = settings_utils.determine_image_settings(
+                        img_settings = settings_utils.determine_image_config(
                             glance, server,
                             [self.image_creator1.image_settings,
                              self.image_creator2.image_settings])
@@ -385,7 +385,7 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
         self.assertIsNotNone(servers)
         self.assertEqual(2, len(servers))
 
-        image_settings = settings_utils.determine_image_settings(
+        image_settings = settings_utils.determine_image_config(
             glance, servers[0],
             [self.image_creator1.image_settings,
              self.image_creator2.image_settings])
@@ -398,7 +398,7 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
             self.assertEqual(
                 self.image_creator2.image_settings.name, image_settings.name)
 
-        image_settings = settings_utils.determine_image_settings(
+        image_settings = settings_utils.determine_image_config(
             glance, servers[1],
             [self.image_creator1.image_settings,
              self.image_creator2.image_settings])

@@ -170,7 +170,7 @@ Create Image
 ------------
 -  Image - snaps.openstack.create\_image.OpenStackImage
 
-   -  snaps.openstack.create\_image.ImageSettings
+   -  snaps.config.image.ImageConfig
 
       -  name - the image name (required)
       -  image\_user - the default image user generally used by
@@ -193,9 +193,10 @@ Create Image
 
 .. code:: python
 
-    from snaps.openstack.create_image import ImageSettings, OpenStackImage
-    image_settings = ImageSettings(name='image-name', image_user='ubuntu', img_format='qcow2',
-                                   url='http://uec-images.ubuntu.com/releases/trusty/14.04/ubuntu-14.04-server-cloudimg-amd64-disk1.img')
+    from snaps.openstack.create_image import OpenStackImage
+    from snaps.config.image import ImageConfig
+    image_settings = ImageConfig(name='image-name', image_user='ubuntu', img_format='qcow2',
+                                 url='http://uec-images.ubuntu.com/releases/trusty/14.04/ubuntu-14.04-server-cloudimg-amd64-disk1.img')
     image_creator = OpenStackImage(os_creds, image_settings)
     image_creator.create()
 
@@ -571,7 +572,7 @@ Create VM Instance
       -  userdata - the cloud-init script to execute after VM has been
          started
 
-   -  image\_settings - see snaps.openstack.create\_image.ImageSettings
+   -  image\_settings - see snaps.config.image.ImageConfig
       above (required)
    -  keypair\_settings - see
       snaps.openstack.create\_keypairs.KeypairSettings above (optional)

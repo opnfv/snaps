@@ -27,7 +27,8 @@ import yaml
 
 from snaps import file_utils
 from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
-from snaps.openstack.create_image import ImageSettings, OpenStackImage
+from snaps.openstack.create_image import OpenStackImage
+from snaps.config.image import ImageConfig
 from snaps.openstack.create_instance import VmInstanceSettings
 from snaps.openstack.create_keypairs import KeypairSettings, OpenStackKeypair
 from snaps.openstack.create_network import (
@@ -659,7 +660,7 @@ def main(arguments):
 
                 # Create images
                 images_dict = __create_instances(
-                    os_creds_dict, OpenStackImage, ImageSettings,
+                    os_creds_dict, OpenStackImage, ImageConfig,
                     os_config.get('images'), 'image', clean, users_dict)
                 creators.append(images_dict)
 

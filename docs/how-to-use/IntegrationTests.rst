@@ -80,7 +80,7 @@ create_image_tests.py - CreateImageNegativeTests
 | Test Name                             | Glance API    | Description                                               |
 +=======================================+===============+===========================================================+
 | test_bad_image_name                   | 1 & 2         | Ensures OpenStackImage.create() results in an Exception   |
-|                                       |               | being raised when the ImageSettings.name attribute has    |
+|                                       |               | being raised when the ImageConfig.name attribute has    |
 |                                       |               | not been set                                              |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | test_bad_image_url                    | 1 & 2         | Ensures OpenStackImage.create() results in an Exception   |

@@ -27,9 +27,10 @@ import uuid
 import os
 
 from snaps import file_utils
+from snaps.config.image import ImageConfigError
 from snaps.openstack import create_image
-from snaps.openstack.create_image import (ImageSettings, ImageCreationError,
-                                          ImageSettingsError)
+from snaps.openstack.create_image import ImageSettings, ImageCreationError
+from snaps.config.image import ImageConfig
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import glance_utils
@@ -42,38 +43,40 @@ logger = logging.getLogger('create_image_tests')
 class ImageSettingsUnitTests(unittest.TestCase):
     """
     Tests the construction of the ImageSettings class
+    To be removed once the deprecated class ImageSettings is finally removed
+    from the source tree
     """
 
     def test_no_params(self):
-        with self.assertRaises(ImageSettingsError):
+        with self.assertRaises(ImageConfigError):
             ImageSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(ImageSettingsError):
+        with self.assertRaises(ImageConfigError):
             ImageSettings(**dict())
 
     def test_name_only(self):
-        with self.assertRaises(ImageSettingsError):
+        with self.assertRaises(ImageConfigError):
             ImageSettings(name='foo')
 
     def test_config_with_name_only(self):
-        with self.assertRaises(ImageSettingsError):
+        with self.assertRaises(ImageConfigError):
             ImageSettings(**{'name': 'foo'})
 
     def test_name_user_only(self):
-        with self.assertRaises(ImageSettingsError):
+        with self.assertRaises(ImageConfigError):
             ImageSettings(name='foo', image_user='bar')
 
     def test_config_with_name_user_only(self):
-        with self.assertRaises(ImageSettingsError):
+        with self.assertRaises(ImageConfigError):
             ImageSettings(**{'name': 'foo', 'image_user': 'bar'})
 
     def test_name_user_format_only(self):
-        with self.assertRaises(ImageSettingsError):
+        with self.assertRaises(ImageConfigError):
             ImageSettings(name='foo', image_user='bar', img_format='qcow2')
 
     def test_config_with_name_user_format_only(self):
-        with self.assertRaises(ImageSettingsError):
+        with self.assertRaises(ImageConfigError):
             ImageSettings(
                 **{'name': 'foo', 'image_user': 'bar', 'format': 'qcow2'})
 
@@ -448,8 +451,8 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         self.assertEqual(image1.properties, retrieved_image.properties)
 
         # Should be retrieving the instance data
-        image_2_settings = ImageSettings(name=self.image_settings.name,
-                                         image_user='foo', exists=True)
+        image_2_settings = ImageConfig(name=self.image_settings.name,
+                                       image_user='foo', exists=True)
         os_image_2 = create_image.OpenStackImage(self.os_creds,
                                                  image_2_settings)
         image2 = os_image_2.create()
@@ -478,8 +481,8 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
         Expect an ImageCreationError when the image name does not exist when a
         file or URL has not been configured
         """
-        os_image_settings = ImageSettings(name='foo', image_user='bar',
-                                          exists=True)
+        os_image_settings = ImageConfig(name='foo', image_user='bar',
+                                        exists=True)
         self.image_creator = create_image.OpenStackImage(self.os_creds,
                                                          os_image_settings)
 
@@ -497,10 +500,11 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
             name=self.image_name)
         self.image_creator = create_image.OpenStackImage(
             self.os_creds,
-            create_image.ImageSettings(name=os_image_settings.name,
-                                       image_user=os_image_settings.image_user,
-                                       img_format=os_image_settings.format,
-                                       url="http://foo.bar"))
+            ImageConfig(
+                name=os_image_settings.name,
+                image_user=os_image_settings.image_user,
+                img_format=os_image_settings.format,
+                url="http://foo.bar"))
 
         try:
             self.image_creator.create()
@@ -519,10 +523,10 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
             name=self.image_name)
         self.image_creator = create_image.OpenStackImage(
             self.os_creds,
-            create_image.ImageSettings(name=os_image_settings.name,
-                                       image_user=os_image_settings.image_user,
-                                       img_format='foo',
-                                       url=os_image_settings.url))
+            ImageConfig(
+                name=os_image_settings.name,
+                image_user=os_image_settings.image_user,
+                img_format='foo', url=os_image_settings.url))
 
         with self.assertRaises(Exception):
             self.image_creator.create()
@@ -535,10 +539,10 @@ class CreateImageNegativeTests(OSIntegrationTestCase):
             name=self.image_name)
         self.image_creator = create_image.OpenStackImage(
             self.os_creds,
-            create_image.ImageSettings(name=os_image_settings.name,
-                                       image_user=os_image_settings.image_user,
-                                       img_format=os_image_settings.format,
-                                       image_file="/foo/bar.qcow"))
+            ImageConfig(
+                name=os_image_settings.name,
+                image_user=os_image_settings.image_user,
+                img_format=os_image_settings.format, image_file="/foo/bar.qcow"))
         with self.assertRaises(IOError):
             self.image_creator.create()
 

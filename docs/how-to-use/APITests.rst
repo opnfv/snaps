@@ -566,6 +566,6 @@ settings_utils_tests.py - SettingsUtilsVmInstTests
 | test_derive_vm_inst_settings          | Neutron 2     | Tests to ensure that derived VmInstanceSettings from an   |
 |                                       |               | OpenStack VM instance is correct                          |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_derive_image_settings            | Neutron 2     | Tests to ensure that derived ImageSettings from an        |
+| test_derive_image_settings            | Neutron 2     | Tests to ensure that derived ImageConfig from an        |
 |                                       |               | OpenStack VM instance is correct                          |
 +---------------------------------------+---------------+-----------------------------------------------------------+

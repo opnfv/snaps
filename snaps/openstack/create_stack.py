@@ -56,9 +56,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         Constructor
         :param os_creds: The OpenStack connection credentials
         :param stack_settings: The stack settings
-        :param image_settings: A list of ImageSettings objects that were used
-                               for spawning this stack
-        :param image_settings: A list of ImageSettings objects that were used
+        :param image_settings: A list of ImageConfig objects that were used
                                for spawning this stack
         :param keypair_settings: A list of KeypairSettings objects that were
                                  used for spawning this stack
@@ -299,7 +297,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         for stack_server in stack_servers:
             vm_inst_settings = settings_utils.create_vm_inst_settings(
                 nova, neutron, stack_server)
-            image_settings = settings_utils.determine_image_settings(
+            image_settings = settings_utils.determine_image_config(
                 glance, stack_server, self.image_settings)
             keypair_settings = settings_utils.determine_keypair_settings(
                 self.__heat_cli, self.__stack, stack_server,

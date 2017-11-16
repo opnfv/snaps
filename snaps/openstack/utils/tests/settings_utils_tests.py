@@ -332,13 +332,13 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
     def test_derive_image_settings(self):
         """
         Validates the utility function settings_utils#create_image_settings
-        returns an acceptable ImageSettings object
+        returns an acceptable ImageConfig object
         """
         self.inst_creator.create(block=True)
 
         server = nova_utils.get_server(
             self.nova, vm_inst_settings=self.inst_creator.instance_settings)
-        derived_image_settings = settings_utils.determine_image_settings(
+        derived_image_settings = settings_utils.determine_image_config(
             self.glance, server, [self.image_creator.image_settings])
         self.assertIsNotNone(derived_image_settings)
         self.assertEqual(self.image_creator.image_settings.name,

@@ -19,6 +19,7 @@ import time
 
 from snaps.openstack.openstack_creator import OpenStackCloudObject
 from snaps.openstack.utils import glance_utils
+from snaps.config import image
 
 __author__ = 'spisarski'
 
@@ -38,8 +39,7 @@ class OpenStackImage(OpenStackCloudObject):
         """
         Constructor
         :param os_creds: The OpenStack connection credentials
-        :param image_settings: The image settings
-        :return:
+        :param image_settings: An snaps.config.image.ImageConfig object
         """
         super(self.__class__, self).__init__(os_creds)
 
@@ -132,10 +132,10 @@ class OpenStackImage(OpenStackCloudObject):
         Cleanse environment of all artifacts
         :return: void
         """
-        for image in [self.__image, self.__kernel_image, self.__ramdisk_image]:
-            if image:
+        for img in [self.__image, self.__kernel_image, self.__ramdisk_image]:
+            if img:
                 try:
-                    glance_utils.delete_image(self.__glance, image)
+                    glance_utils.delete_image(self.__glance, img)
                 except HTTPNotFound:
                     pass
 
@@ -236,100 +236,14 @@ class OpenStackImage(OpenStackCloudObject):
         return status == expected_status_code
 
 
-class ImageSettings:
+class ImageSettings(image.ImageConfig):
+    """
+    Deprecated, use snaps.config.image.ImageSettings instead
+    """
     def __init__(self, **kwargs):
-        """
-        Constructor
-        :param name: the image's name (required)
-        :param image_user: the image's default sudo user (required)
-        :param format or img_format: the image format type (required)
-        :param url or download_url: the image download location (requires url
-                                    or img_file)
-        :param image_file: the image file location (requires url or img_file)
-        :param extra_properties: dict() object containing extra parameters to
-                                 pass when loading the image;
-                                 can be ids of kernel and initramfs images for
-                                 a 3-part image
-        :param nic_config_pb_loc: the file location to the Ansible Playbook
-                                  that can configure multiple NICs
-        :param kernel_image_settings: the settings for a kernel image
-        :param ramdisk_image_settings: the settings for a ramdisk image
-        :param exists: When True, an image with the given name must exist
-        :param public: When True, an image will be created with public
-                       visibility
-        """
-
-        self.name = kwargs.get('name')
-        self.image_user = kwargs.get('image_user')
-        self.format = kwargs.get('format')
-        if not self.format:
-            self.format = kwargs.get('img_format')
-
-        self.url = kwargs.get('url')
-        if not self.url:
-            self.url = kwargs.get('download_url')
-        if self.url == 'None':
-            self.url = None
-
-        self.image_file = kwargs.get('image_file')
-        if self.image_file == 'None':
-            self.image_file = None
-
-        self.extra_properties = kwargs.get('extra_properties')
-        self.nic_config_pb_loc = kwargs.get('nic_config_pb_loc')
-
-        kernel_image_settings = kwargs.get('kernel_image_settings')
-        if kernel_image_settings:
-            if isinstance(kernel_image_settings, dict):
-                self.kernel_image_settings = ImageSettings(
-                    **kernel_image_settings)
-            else:
-                self.kernel_image_settings = kernel_image_settings
-        else:
-            self.kernel_image_settings = None
-
-        ramdisk_image_settings = kwargs.get('ramdisk_image_settings')
-        if ramdisk_image_settings:
-            if isinstance(ramdisk_image_settings, dict):
-                self.ramdisk_image_settings = ImageSettings(
-                    **ramdisk_image_settings)
-            else:
-                self.ramdisk_image_settings = ramdisk_image_settings
-        else:
-            self.ramdisk_image_settings = None
-
-        if 'exists' in kwargs and kwargs['exists'] is True:
-            self.exists = True
-        else:
-            self.exists = False
-
-        if 'public' in kwargs and kwargs['public'] is True:
-            self.public = True
-        else:
-            self.public = False
-
-        if not self.name:
-            raise ImageSettingsError("The attribute name is required")
-
-        if not (self.url or self.image_file) and not self.exists:
-            raise ImageSettingsError(
-                'URL or image file must be set or image must already exist')
-
-        if not self.image_user:
-            raise ImageSettingsError('Image user is required')
-
-        if not self.format and not self.exists:
-            raise ImageSettingsError(
-                'Format is required when the image should not already exist')
-
-
-class ImageSettingsError(Exception):
-    """
-    Exception to be thrown when an image settings are incorrect
-    """
-
-    def __init__(self, message):
-        Exception.__init__(self, message)
+        from warnings import warn
+        warn('Use snaps.config.image.ImageConfig instead', DeprecationWarning)
+        super(ImageSettings, self).__init__(**kwargs)
 
 
 class ImageCreationError(Exception):

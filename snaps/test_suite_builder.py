@@ -16,6 +16,8 @@
 import logging
 import unittest
 
+import snaps.config.tests.image_tests as image_tests
+import snaps.openstack.tests.create_image_tests as creator_tests
 from snaps.domain.test.flavor_tests import FlavorDomainObjectTests
 from snaps.domain.test.image_tests import ImageDomainObjectTests
 from snaps.domain.test.keypair_tests import KeypairDomainObjectTests
@@ -40,7 +42,7 @@ from snaps.openstack.tests.conf.os_credentials_tests import (
 from snaps.openstack.tests.create_flavor_tests import (
     CreateFlavorTests, FlavorSettingsUnitTests)
 from snaps.openstack.tests.create_image_tests import (
-    CreateImageSuccessTests, CreateImageNegativeTests, ImageSettingsUnitTests,
+    CreateImageSuccessTests, CreateImageNegativeTests,
     CreateMultiPartImageTests)
 from snaps.openstack.tests.create_instance_tests import (
     CreateInstanceSingleNetworkTests, CreateInstancePubPrivNetTests,
@@ -132,7 +134,9 @@ def add_unit_tests(suite):
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         SecurityGroupRuleDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
-        ImageSettingsUnitTests))
+        image_tests.ImageConfigUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        creator_tests.ImageSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         ImageDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

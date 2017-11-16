@@ -17,7 +17,7 @@ import re
 
 import pkg_resources
 from snaps import file_utils
-from snaps.openstack.create_image import ImageSettings
+from snaps.config.image import ImageConfig
 from snaps.openstack.create_network import NetworkSettings, SubnetSettings
 from snaps.openstack.create_router import RouterSettings
 from snaps.openstack.os_credentials import OSCreds, ProxySettings
@@ -171,7 +171,7 @@ def create_image_settings(image_name, image_user, image_format, metadata,
     logger.debug('Image metadata - ' + str(metadata))
 
     if metadata and 'config' in metadata:
-        return ImageSettings(**metadata['config'])
+        return ImageConfig(**metadata['config'])
 
     disk_file = None
     if metadata:
@@ -185,10 +185,9 @@ def create_image_settings(image_name, image_user, image_format, metadata,
     if metadata and \
             ('kernel_file' in metadata or 'kernel_url' in metadata) and \
             kernel_settings is None:
-        kernel_image_settings = ImageSettings(
+        kernel_image_settings = ImageConfig(
             name=image_name + '-kernel', image_user=image_user,
-            img_format=image_format,
-            image_file=metadata.get('kernel_file'),
+            img_format=image_format, image_file=metadata.get('kernel_file'),
             url=metadata.get('kernel_url'), public=public)
     else:
         kernel_image_settings = kernel_settings
@@ -196,7 +195,7 @@ def create_image_settings(image_name, image_user, image_format, metadata,
     if metadata and \
             ('ramdisk_file' in metadata or 'ramdisk_url' in metadata) and \
             ramdisk_settings is None:
-        ramdisk_image_settings = ImageSettings(
+        ramdisk_image_settings = ImageConfig(
             name=image_name + '-ramdisk', image_user=image_user,
             img_format=image_format,
             image_file=metadata.get('ramdisk_file'),
@@ -208,13 +207,13 @@ def create_image_settings(image_name, image_user, image_format, metadata,
     if metadata and 'extra_properties' in metadata:
         extra_properties = metadata['extra_properties']
 
-    return ImageSettings(name=image_name, image_user=image_user,
-                         img_format=image_format, image_file=disk_file,
-                         url=disk_url, extra_properties=extra_properties,
-                         kernel_image_settings=kernel_image_settings,
-                         ramdisk_image_settings=ramdisk_image_settings,
-                         public=public,
-                         nic_config_pb_loc=nic_config_pb_loc)
+    return ImageConfig(name=image_name, image_user=image_user,
+                       img_format=image_format, image_file=disk_file,
+                       url=disk_url, extra_properties=extra_properties,
+                       kernel_image_settings=kernel_image_settings,
+                       ramdisk_image_settings=ramdisk_image_settings,
+                       public=public,
+                       nic_config_pb_loc=nic_config_pb_loc)
 
 
 def cirros_image_settings(name=None, url=None, image_metadata=None,
@@ -248,8 +247,8 @@ def cirros_image_settings(name=None, url=None, image_metadata=None,
 
 
 def file_image_test_settings(name, file_path, image_user=CIRROS_USER):
-    return ImageSettings(name=name, image_user=image_user,
-                         img_format=DEFAULT_IMAGE_FORMAT, image_file=file_path)
+    return ImageConfig(name=name, image_user=image_user,
+                       img_format=DEFAULT_IMAGE_FORMAT, image_file=file_path)
 
 
 def centos_image_settings(name, url=None, image_metadata=None,

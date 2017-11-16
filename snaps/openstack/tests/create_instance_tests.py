@@ -26,7 +26,8 @@ from novaclient.exceptions import BadRequest
 from snaps import file_utils
 from snaps.openstack import create_network, create_router
 from snaps.openstack.create_flavor import OpenStackFlavor, FlavorSettings
-from snaps.openstack.create_image import OpenStackImage, ImageSettings
+from snaps.openstack.create_image import OpenStackImage
+from snaps.config.image import ImageConfig
 from snaps.openstack.create_instance import (
     VmInstanceSettings, OpenStackVmInstance, FloatingIpSettings,
     VmInstanceSettingsError, FloatingIpSettingsError)
@@ -2316,9 +2317,9 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         image_settings = self.image_creator.image_settings
         test_image_creator = OpenStackImage(
             self.os_creds,
-            ImageSettings(name=image_settings.name,
-                          image_user=image_settings.image_user,
-                          exists=True))
+            ImageConfig(
+                name=image_settings.name, image_user=image_settings.image_user,
+                exists=True))
         test_image_creator.create()
         self.assertEqual(self.image_creator.get_image().id,
                          test_image_creator.get_image().id)
@@ -2611,9 +2612,9 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         image_settings = self.image_creator.image_settings
         test_image_creator = OpenStackImage(
             self.os_creds,
-            ImageSettings(name=image_settings.name,
-                          image_user=image_settings.image_user,
-                          exists=True))
+            ImageConfig(
+                name=image_settings.name, image_user=image_settings.image_user,
+                exists=True))
         test_image_creator.create()
         self.assertEqual(self.image_creator.get_image().id,
                          test_image_creator.get_image().id)

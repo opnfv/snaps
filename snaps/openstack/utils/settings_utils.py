@@ -348,14 +348,14 @@ def __create_floatingip_settings(neutron, port_settings):
     return out
 
 
-def determine_image_settings(glance, server, image_settings):
+def determine_image_config(glance, server, image_settings):
     """
-    Returns a ImageSettings object from the list that matches the name in one
+    Returns a ImageConfig object from the list that matches the name in one
     of the image_settings parameter
     :param glance: the glance client
     :param server: a SNAPS-OO VmInst domain object
-    :param image_settings: list of ImageSettings objects
-    :return: ImageSettings or None
+    :param image_settings: list of ImageConfig objects
+    :return: ImageConfig or None
     """
     if image_settings:
         for image_setting in image_settings:

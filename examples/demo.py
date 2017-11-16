@@ -13,10 +13,11 @@ os_creds = OSCreds(username='admin', password='cable123', auth_url='http://192.1
 
 
 # Images
-from snaps.openstack.create_image import ImageSettings, OpenStackImage
+from snaps.openstack.create_image import OpenStackImage
+from snaps.config.image import ImageConfig
 
-image_settings = ImageSettings(name='cirros-test', image_user='cirros', img_format='qcow2',
-                               url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img')
+image_settings = ImageConfig(name='cirros-test', image_user='cirros', img_format='qcow2',
+                             url='http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img')
 
 image = OpenStackImage(os_creds, image_settings)
 image.create()
