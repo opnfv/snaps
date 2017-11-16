@@ -59,6 +59,38 @@ class SecurityGroupRuleSettingsUnitTests(unittest.TestCase):
         self.assertEqual('foo', settings.sec_grp_name)
         self.assertEqual(Direction.ingress, settings.direction)
 
+    def test_proto_ah_str(self):
+        settings = SecurityGroupRuleSettings(
+            **{'sec_grp_name': 'foo', 'direction': 'ingress',
+               'protocol': 'ah'})
+        self.assertEqual('foo', settings.sec_grp_name)
+        self.assertEqual(Direction.ingress, settings.direction)
+        self.assertEqual(Protocol.ah, settings.protocol)
+
+    def test_proto_ah_value(self):
+        settings = SecurityGroupRuleSettings(
+            **{'sec_grp_name': 'foo', 'direction': 'ingress',
+               'protocol': 51})
+        self.assertEqual('foo', settings.sec_grp_name)
+        self.assertEqual(Direction.ingress, settings.direction)
+        self.assertEqual(Protocol.ah, settings.protocol)
+
+    def test_proto_any(self):
+        settings = SecurityGroupRuleSettings(
+            **{'sec_grp_name': 'foo', 'direction': 'ingress',
+               'protocol': 'any'})
+        self.assertEqual('foo', settings.sec_grp_name)
+        self.assertEqual(Direction.ingress, settings.direction)
+        self.assertEqual(Protocol.null, settings.protocol)
+
+    def test_proto_null(self):
+        settings = SecurityGroupRuleSettings(
+            **{'sec_grp_name': 'foo', 'direction': 'ingress',
+               'protocol': 'null'})
+        self.assertEqual('foo', settings.sec_grp_name)
+        self.assertEqual(Direction.ingress, settings.direction)
+        self.assertEqual(Protocol.null, settings.protocol)
+
     def test_all(self):
         settings = SecurityGroupRuleSettings(
             sec_grp_name='foo', description='fubar',
@@ -592,11 +624,6 @@ def validate_sec_grp_rules(neutron, rule_settings, rules):
         if rule_setting.description:
             match = False
             for rule in rules:
-                if rule_setting.protocol == Protocol.null:
-                    setting_proto = None
-                else:
-                    setting_proto = rule_setting.protocol.name
-
                 sec_grp = neutron_utils.get_security_group(
                     neutron, sec_grp_name=rule_setting.sec_grp_name)
 
@@ -607,12 +634,16 @@ def validate_sec_grp_rules(neutron, rule_settings, rules):
                 if not sec_grp:
                     return False
 
+                proto_str = 'null'
+                if rule.protocol:
+                    proto_str = rule.protocol
+
                 if (rule.description == rule_setting.description and
                     rule.direction == rule_setting.direction.name and
                     rule.ethertype == setting_eth_type.name and
                     rule.port_range_max == rule_setting.port_range_max and
                     rule.port_range_min == rule_setting.port_range_min and
-                    rule.protocol == setting_proto and
+                    proto_str == str(rule_setting.protocol.value) and
                     rule.remote_group_id == rule_setting.remote_group_id and
                     rule.remote_ip_prefix == rule_setting.remote_ip_prefix and
                     rule.security_group_id == sec_grp.id):
