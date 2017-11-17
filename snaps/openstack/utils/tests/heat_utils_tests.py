@@ -409,13 +409,13 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
             self.assertEqual(
                 self.image_creator2.image_settings.name, image_settings.name)
 
-        self.keypair1_settings = settings_utils.determine_keypair_settings(
+        self.keypair1_settings = settings_utils.determine_keypair_config(
             self.heat_client, self.stack, servers[0],
             priv_key_key='private_key')
         self.assertIsNotNone(self.keypair1_settings)
         self.assertEqual(self.keypair_name, self.keypair1_settings.name)
 
-        self.keypair2_settings = settings_utils.determine_keypair_settings(
+        self.keypair2_settings = settings_utils.determine_keypair_config(
             self.heat_client, self.stack, servers[1],
             priv_key_key='private_key')
         self.assertIsNotNone(self.keypair2_settings)

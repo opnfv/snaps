@@ -84,11 +84,17 @@ FlavorDomainObjectTests
 Ensures that all required members are included when constructing a
 Flavor domain object
 
+KeypairConfigUnitTests
+----------------------
+
+Ensures that all required members are included when constructing a
+KeypairConfig object
+
 KeypairSettingsUnitTests
 ------------------------
 
 Ensures that all required members are included when constructing a
-KeypairSettings object
+deprecated KeypairSettings object
 
 KeypairDomainObjectTests
 ------------------------

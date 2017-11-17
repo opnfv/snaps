@@ -18,6 +18,7 @@ import unittest
 import os
 import uuid
 
+from snaps.config.keypair import KeypairConfig
 from snaps.domain.flavor import Flavor
 from snaps.domain.volume import (
     Volume, VolumeType, VolumeTypeEncryption, QoSSpec)
@@ -206,7 +207,7 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
 
             # Create Key/Pair
             self.keypair_creator = create_keypairs.OpenStackKeypair(
-                self.os_creds, create_keypairs.KeypairSettings(
+                self.os_creds, KeypairConfig(
                     name=self.keypair_name,
                     public_filepath=self.keypair_pub_filepath,
                     private_filepath=self.keypair_priv_filepath))

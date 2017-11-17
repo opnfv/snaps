@@ -60,7 +60,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
                                for spawning this stack
         :param image_settings: A list of ImageSettings objects that were used
                                for spawning this stack
-        :param keypair_settings: A list of KeypairSettings objects that were
+        :param keypair_settings: A list of KeypairConfig objects that were
                                  used for spawning this stack
         :return:
         """
@@ -301,7 +301,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
                 nova, neutron, stack_server)
             image_settings = settings_utils.determine_image_settings(
                 glance, stack_server, self.image_settings)
-            keypair_settings = settings_utils.determine_keypair_settings(
+            keypair_settings = settings_utils.determine_keypair_config(
                 self.__heat_cli, self.__stack, stack_server,
                 keypair_settings=self.keypair_settings,
                 priv_key_key=heat_keypair_option)

@@ -52,22 +52,22 @@ def nova_client(os_creds):
                   region_name=os_creds.region_name)
 
 
-def create_server(nova, neutron, glance, instance_settings, image_settings,
-                  keypair_settings=None):
+def create_server(nova, neutron, glance, instance_config, image_config,
+                  keypair_config=None):
     """
     Creates a VM instance
     :param nova: the nova client (required)
     :param neutron: the neutron client for retrieving ports (required)
     :param glance: the glance client (required)
-    :param instance_settings: the VM instance settings object (required)
-    :param image_settings: the VM's image settings object (required)
-    :param keypair_settings: the VM's keypair settings object (optional)
+    :param instance_config: the VMInstConfig object (required)
+    :param image_config: the VM's ImageConfig object (required)
+    :param keypair_config: the VM's KeypairConfig object (optional)
     :return: a snaps.domain.VmInst object
     """
 
     ports = list()
 
-    for port_setting in instance_settings.port_settings:
+    for port_setting in instance_config.port_settings:
         ports.append(neutron_utils.get_port(
             neutron, port_settings=port_setting))
     nics = []
@@ -76,41 +76,41 @@ def create_server(nova, neutron, glance, instance_settings, image_settings,
         kv['port-id'] = port.id
         nics.append(kv)
 
-    logger.info('Creating VM with name - ' + instance_settings.name)
+    logger.info('Creating VM with name - ' + instance_config.name)
     keypair_name = None
-    if keypair_settings:
-        keypair_name = keypair_settings.name
+    if keypair_config:
+        keypair_name = keypair_config.name
 
-    flavor = get_flavor_by_name(nova, instance_settings.flavor)
+    flavor = get_flavor_by_name(nova, instance_config.flavor)
     if not flavor:
         raise NovaException(
-            'Flavor not found with name - %s', instance_settings.flavor)
+            'Flavor not found with name - %s', instance_config.flavor)
 
-    image = glance_utils.get_image(glance, image_settings=image_settings)
+    image = glance_utils.get_image(glance, image_settings=image_config)
     if image:
         userdata = None
-        if instance_settings.userdata:
-            if isinstance(instance_settings.userdata, str):
-                userdata = instance_settings.userdata + '\n'
-            elif (isinstance(instance_settings.userdata, dict) and
-                  'script_file' in instance_settings.userdata):
+        if instance_config.userdata:
+            if isinstance(instance_config.userdata, str):
+                userdata = instance_config.userdata + '\n'
+            elif (isinstance(instance_config.userdata, dict) and
+                  'script_file' in instance_config.userdata):
                 try:
                     userdata = file_utils.read_file(
-                        instance_settings.userdata['script_file'])
+                        instance_config.userdata['script_file'])
                 except Exception as e:
                     logger.warn('error reading userdata file %s - %s',
-                                instance_settings.userdata, e)
-        args = {'name': instance_settings.name,
+                                instance_config.userdata, e)
+        args = {'name': instance_config.name,
                 'flavor': flavor,
                 'image': image,
                 'nics': nics,
                 'key_name': keypair_name,
                 'security_groups':
-                    instance_settings.security_group_names,
+                    instance_config.security_group_names,
                 'userdata': userdata}
 
-        if instance_settings.availability_zone:
-            args['availability_zone'] = instance_settings.availability_zone
+        if instance_config.availability_zone:
+            args['availability_zone'] = instance_config.availability_zone
 
         server = nova.servers.create(**args)
 
@@ -118,7 +118,7 @@ def create_server(nova, neutron, glance, instance_settings, image_settings,
     else:
         raise NovaException(
             'Cannot create instance, image cannot be located with name %s',
-            image_settings.name)
+            image_config.name)
 
 
 def get_server(nova, vm_inst_settings=None, server_name=None):
