@@ -26,6 +26,7 @@ import os
 import yaml
 
 from snaps import file_utils
+from snaps.config.router import RouterConfig
 from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
 from snaps.openstack.create_image import ImageSettings, OpenStackImage
 from snaps.openstack.create_instance import VmInstanceSettings
@@ -34,7 +35,7 @@ from snaps.openstack.create_network import (
     PortSettings, NetworkSettings, OpenStackNetwork)
 from snaps.openstack.create_project import OpenStackProject, ProjectSettings
 from snaps.openstack.create_qos import QoSSettings, OpenStackQoS
-from snaps.openstack.create_router import RouterSettings, OpenStackRouter
+from snaps.openstack.create_router import OpenStackRouter
 from snaps.openstack.create_security_group import (
     OpenStackSecurityGroup, SecurityGroupSettings)
 from snaps.openstack.create_user import OpenStackUser, UserSettings
@@ -670,7 +671,7 @@ def main(arguments):
 
                 # Create routers
                 creators.append(__create_instances(
-                    os_creds_dict, OpenStackRouter, RouterSettings,
+                    os_creds_dict, OpenStackRouter, RouterConfig,
                     os_config.get('routers'), 'router', clean, users_dict))
 
                 # Create keypairs

@@ -24,6 +24,7 @@ from neutronclient.common.exceptions import InvalidIpForSubnetClient
 from novaclient.exceptions import BadRequest
 
 from snaps import file_utils
+from snaps.config.router import RouterConfig
 from snaps.openstack import create_network, create_router
 from snaps.openstack.create_flavor import OpenStackFlavor, FlavorSettings
 from snaps.openstack.create_image import OpenStackImage, ImageSettings
@@ -33,7 +34,7 @@ from snaps.openstack.create_instance import (
 from snaps.openstack.create_keypairs import OpenStackKeypair, KeypairSettings
 from snaps.openstack.create_network import (
     OpenStackNetwork, PortSettings, NetworkSettings, SubnetSettings)
-from snaps.openstack.create_router import OpenStackRouter, RouterSettings
+from snaps.openstack.create_router import OpenStackRouter
 from snaps.openstack.create_security_group import (
     SecurityGroupSettings, OpenStackSecurityGroup, SecurityGroupRuleSettings,
     Direction, Protocol)
@@ -945,7 +946,7 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
             ip_version=6)
         network_settings = NetworkSettings(
             name=self.guid + '-net', subnet_settings=[subnet_settings])
-        router_settings = RouterSettings(
+        router_settings = RouterConfig(
             name=self.guid + '-router', external_gateway=self.ext_net_name,
             internal_subnets=[subnet_settings.name])
 
@@ -993,7 +994,7 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
         network_settings = NetworkSettings(
             name=self.guid + '-net',
             subnet_settings=[subnet4_settings, subnet6_settings])
-        router_settings = RouterSettings(
+        router_settings = RouterConfig(
             name=self.guid + '-router', external_gateway=self.ext_net_name,
             internal_subnets=[subnet4_settings.name])
 
@@ -2717,8 +2718,8 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
                     network_name=self.net_config_2.name,
                     project_name=self.os_creds.project_name)]
 
-            router_settings = RouterSettings(name=self.guid + '-pub-router',
-                                             port_settings=port_settings)
+            router_settings = RouterConfig(
+                name=self.guid + '-pub-router', port_settings=port_settings)
             self.router_creator = create_router.OpenStackRouter(
                 self.os_creds, router_settings)
             self.router_creator.create()

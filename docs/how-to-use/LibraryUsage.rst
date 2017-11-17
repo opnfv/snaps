@@ -358,7 +358,7 @@ Create Router
 
 -  Router - snaps.openstack.create\_router.OpenStackRouter
 
-   -  snaps.openstack.create\_router.RouterSettings
+   -  snaps.openstack.router.RouterConfig
 
       -  name - the router name (required)
       -  project\_name - the name of the project (optional - can only be
@@ -402,9 +402,10 @@ Create Router
 
 .. code:: python
 
-    from snaps.openstack.create_router import RouterSettings, OpenStackRouter
+    from snaps.config.router import RouterConfig
+    from snaps.openstack.create_router import OpenStackRouter
 
-    router_settings = RouterSettings(name='router-name', external_gateway='external')
+    router_settings = RouterConfig(name='router-name', external_gateway='external')
     router_creator = OpenStackRouter(os_creds, router_settings)
     router_creator.create()
 

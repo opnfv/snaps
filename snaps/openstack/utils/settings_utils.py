@@ -15,6 +15,7 @@
 import uuid
 
 from snaps import file_utils
+from snaps.config.router import RouterConfig
 from snaps.openstack.create_flavor import FlavorSettings
 from snaps.openstack.create_instance import (
     VmInstanceSettings, FloatingIpSettings)
@@ -23,7 +24,6 @@ from snaps.openstack.create_network import (
     PortSettings, SubnetSettings, NetworkSettings)
 from snaps.openstack.create_security_group import (
     SecurityGroupSettings, SecurityGroupRuleSettings)
-from snaps.openstack.create_router import RouterSettings
 from snaps.openstack.create_volume import VolumeSettings
 from snaps.openstack.create_volume_type import (
     VolumeTypeSettings, VolumeTypeEncryptionSettings, ControlLocation)
@@ -96,7 +96,7 @@ def create_subnet_settings(neutron, network):
 
 def create_router_settings(neutron, router):
     """
-    Returns a RouterSettings object
+    Returns a RouterConfig object
     :param neutron: the neutron client
     :param router: a SNAPS-OO Router domain object
     :return:
@@ -142,7 +142,7 @@ def create_router_settings(neutron, router):
         if port_setting.network_name != ext_net_name:
             filtered_settings.append(port_setting)
 
-    return RouterSettings(
+    return RouterConfig(
         name=router.name, external_gateway=ext_net_name,
         admin_state_up=router.admin_state_up,
         port_settings=filtered_settings)

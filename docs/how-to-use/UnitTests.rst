@@ -180,11 +180,17 @@ PortDomainObjectTests
 Ensures that all required members are included when constructing a
 Port domain object
 
+RouterConfigUnitTests
+---------------------
+
+Ensures that all required members are included when constructing a
+RouterConfig object
+
 RouterSettingsUnitTests
 -----------------------
 
 Ensures that all required members are included when constructing a
-RouterSettings object
+deprecated RouterSettings object
 
 RouterDomainObjectTests
 -----------------------
