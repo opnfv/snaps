@@ -30,6 +30,7 @@ from snaps.config.flavor import FlavorConfig
 from snaps.config.image import ImageConfig
 from snaps.config.keypair import KeypairConfig
 from snaps.config.project import ProjectConfig
+from snaps.config.user import UserConfig
 from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_instance import VmInstanceSettings
@@ -41,7 +42,7 @@ from snaps.openstack.create_qos import QoSSettings, OpenStackQoS
 from snaps.openstack.create_router import RouterSettings, OpenStackRouter
 from snaps.openstack.create_security_group import (
     OpenStackSecurityGroup, SecurityGroupSettings)
-from snaps.openstack.create_user import OpenStackUser, UserSettings
+from snaps.openstack.create_user import OpenStackUser
 from snaps.openstack.create_volume import OpenStackVolume, VolumeSettings
 from snaps.openstack.create_volume_type import (
     OpenStackVolumeType, VolumeTypeSettings)
@@ -622,7 +623,7 @@ def main(arguments):
 
                 # Create users
                 users_dict = __create_instances(
-                    os_creds_dict, OpenStackUser, UserSettings,
+                    os_creds_dict, OpenStackUser, UserConfig,
                     os_config.get('users'), 'user', clean)
                 creators.append(users_dict)
 

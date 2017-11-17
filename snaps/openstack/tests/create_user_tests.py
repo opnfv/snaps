@@ -15,6 +15,7 @@
 import unittest
 import uuid
 
+from snaps.config.user import UserConfig
 from snaps.openstack.create_user import OpenStackUser, UserSettings
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import keystone_utils
@@ -102,7 +103,7 @@ class CreateUserSuccessTests(OSComponentTestCase):
         """
         guid = str(uuid.uuid4())[:-19]
         guid = self.__class__.__name__ + '-' + guid
-        self.user_settings = UserSettings(
+        self.user_settings = UserConfig(
             name=guid + '-name',
             password=guid + '-password',
             roles={'admin': self.os_creds.project_name},

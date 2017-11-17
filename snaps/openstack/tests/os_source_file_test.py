@@ -19,7 +19,7 @@ import unittest
 
 from snaps import file_utils
 from snaps.config.project import ProjectConfig
-from snaps.openstack.create_user import UserSettings
+from snaps.config.user import UserConfig
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.utils import deploy_utils, keystone_utils
 
@@ -150,7 +150,7 @@ class OSIntegrationTestCase(OSComponentTestCase):
                     domain=self.admin_os_creds.project_domain_name))
 
             self.user_creator = deploy_utils.create_user(
-                self.admin_os_creds, UserSettings(
+                self.admin_os_creds, UserConfig(
                     name=guid + '-user', password=guid,
                     project_name=project_name, roles={
                         'admin': self.project_creator.project_settings.name},

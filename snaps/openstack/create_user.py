@@ -16,6 +16,7 @@ import logging
 
 from keystoneclient.exceptions import NotFound
 
+from snaps.config.user import UserConfig
 from snaps.openstack.openstack_creator import OpenStackIdentityObject
 from snaps.openstack.os_credentials import OSCreds
 from snaps.openstack.utils import keystone_utils
@@ -110,43 +111,15 @@ class OpenStackUser(OpenStackIdentityObject):
             cacert=self._os_creds.cacert)
 
 
-class UserSettings:
+class UserSettings(UserConfig):
+    """
+    Class to hold the configuration settings required for creating OpenStack
+    user objects
+    deprecated
+    """
+
     def __init__(self, **kwargs):
-
-        """
-        Constructor
-        :param name: the user's name (required)
-        :param password: the user's password (required)
-        :param project_name: the user's primary project name (optional)
-        :param domain_name: the user's domain name (default='Default'). For v3
-                            APIs
-        :param email: the user's email address (optional)
-        :param enabled: denotes whether or not the user is enabled
-                        (default True)
-        :param roles: dict where key is the role's name and value is the name
-                      of the project to associate with the role (optional)
-        """
-
-        self.name = kwargs.get('name')
-        self.password = kwargs.get('password')
-        self.project_name = kwargs.get('project_name')
-        self.email = kwargs.get('email')
-        self.domain_name = kwargs.get('domain_name', 'Default')
-        self.enabled = kwargs.get('enabled', True)
-        self.roles = kwargs.get('roles', dict())
-
-        if not self.name or not self.password:
-            raise UserSettingsException(
-                'The attributes name and password are required for '
-                'UserSettings')
-
-        if not isinstance(self.enabled, bool):
-            raise UserSettingsException('The attribute enabled must be of type'
-                                        ' boolean')
-
-
-class UserSettingsException(Exception):
-    """
-    Raised when there is a problem with the values set in the UserSettings
-    class
-    """
+        from warnings import warn
+        warn('Use snaps.config.user.UserConfig instead',
+             DeprecationWarning)
+        super(self.__class__, self).__init__(**kwargs)

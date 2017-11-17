@@ -114,11 +114,17 @@ KeypairDomainObjectTests
 Ensures that all required members are included when constructing a
 Keypair domain object
 
+UserConfigUnitTests
+-------------------
+
+Ensures that all required members are included when constructing a
+UserConfig object
+
 UserSettingsUnitTests
 ---------------------
 
 Ensures that all required members are included when constructing a
-UserSettings object
+deprecated UserSettings object
 
 UserDomainObjectTests
 ---------------------

@@ -15,7 +15,7 @@
 import uuid
 
 from snaps.config.project import ProjectConfig
-from snaps.openstack.create_user import UserSettings
+from snaps.config.user import UserConfig
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import keystone_utils, neutron_utils
 
@@ -96,7 +96,7 @@ class KeystoneUtilsTests(OSComponentTestCase):
         """
         Tests the keystone_utils.create_user() function
         """
-        user_settings = UserSettings(
+        user_settings = UserConfig(
             name=self.username,
             password=str(uuid.uuid4()),
             domain_name=self.os_creds.user_domain_name)
@@ -180,7 +180,7 @@ class KeystoneUtilsTests(OSComponentTestCase):
         Tests the keystone_utils function grant_user_role_to_project()
         :return:
         """
-        user_settings = UserSettings(
+        user_settings = UserConfig(
             name=self.username, password=str(uuid.uuid4()),
             domain_name=self.os_creds.user_domain_name)
         self.user = keystone_utils.create_user(self.keystone, user_settings)
