@@ -18,8 +18,9 @@ import uuid
 import os
 
 from snaps import file_utils
+from snaps.config.keypair import KeypairConfig, KeypairConfigError
 from snaps.openstack.create_keypairs import (
-    KeypairSettings, OpenStackKeypair, KeypairSettingsError)
+    KeypairSettings, OpenStackKeypair)
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import nova_utils
 
@@ -32,15 +33,15 @@ class KeypairSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(KeypairSettingsError):
+        with self.assertRaises(KeypairConfigError):
             KeypairSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(KeypairSettingsError):
+        with self.assertRaises(KeypairConfigError):
             KeypairSettings(**dict())
 
     def test_small_key_size(self):
-        with self.assertRaises(KeypairSettingsError):
+        with self.assertRaises(KeypairConfigError):
             KeypairSettings(name='foo', key_size=511)
 
     def test_name_only(self):
@@ -228,7 +229,7 @@ class CreateKeypairsTests(OSIntegrationTestCase):
         Tests the creation of a generated keypair without saving to file
         :return:
         """
-        self.keypair_creator = OpenStackKeypair(self.os_creds, KeypairSettings(
+        self.keypair_creator = OpenStackKeypair(self.os_creds, KeypairConfig(
             name=self.keypair_name))
         self.keypair_creator.create()
 
@@ -241,7 +242,7 @@ class CreateKeypairsTests(OSIntegrationTestCase):
         Tests the creation of a generated keypair without saving to file
         :return:
         """
-        self.keypair_creator = OpenStackKeypair(self.os_creds, KeypairSettings(
+        self.keypair_creator = OpenStackKeypair(self.os_creds, KeypairConfig(
             name=self.keypair_name, key_size=10000))
         self.keypair_creator.create()
 
@@ -255,7 +256,7 @@ class CreateKeypairsTests(OSIntegrationTestCase):
         clean() does not raise an Exception.
         """
         # Create Image
-        self.keypair_creator = OpenStackKeypair(self.os_creds, KeypairSettings(
+        self.keypair_creator = OpenStackKeypair(self.os_creds, KeypairConfig(
             name=self.keypair_name))
         created_keypair = self.keypair_creator.create()
         self.assertIsNotNone(created_keypair)
@@ -277,8 +278,8 @@ class CreateKeypairsTests(OSIntegrationTestCase):
         :return:
         """
         self.keypair_creator = OpenStackKeypair(
-            self.os_creds, KeypairSettings(name=self.keypair_name,
-                                           public_filepath=self.pub_file_path))
+            self.os_creds, KeypairConfig(
+                name=self.keypair_name, public_filepath=self.pub_file_path))
         self.keypair_creator.create()
 
         keypair = nova_utils.keypair_exists(self.nova,
@@ -302,7 +303,7 @@ class CreateKeypairsTests(OSIntegrationTestCase):
         :return:
         """
         self.keypair_creator = OpenStackKeypair(
-            self.os_creds, KeypairSettings(
+            self.os_creds, KeypairConfig(
                 name=self.keypair_name, public_filepath=self.pub_file_path,
                 private_filepath=self.priv_file_path))
         self.keypair_creator.create()
@@ -335,8 +336,8 @@ class CreateKeypairsTests(OSIntegrationTestCase):
         file_utils.save_keys_to_files(keys=keys,
                                       pub_file_path=self.pub_file_path)
         self.keypair_creator = OpenStackKeypair(
-            self.os_creds, KeypairSettings(name=self.keypair_name,
-                                           public_filepath=self.pub_file_path))
+            self.os_creds, KeypairConfig(
+                name=self.keypair_name, public_filepath=self.pub_file_path))
         self.keypair_creator.create()
 
         keypair = nova_utils.keypair_exists(self.nova,
@@ -400,7 +401,7 @@ class CreateKeypairsCleanupTests(OSIntegrationTestCase):
         :return:
         """
         self.keypair_creator = OpenStackKeypair(
-            self.os_creds, KeypairSettings(
+            self.os_creds, KeypairConfig(
                 name=self.keypair_name, public_filepath=self.pub_file_path,
                 private_filepath=self.priv_file_path))
         self.keypair_creator.create()
@@ -416,7 +417,7 @@ class CreateKeypairsCleanupTests(OSIntegrationTestCase):
         :return:
         """
         self.keypair_creator = OpenStackKeypair(
-            self.os_creds, KeypairSettings(
+            self.os_creds, KeypairConfig(
                 name=self.keypair_name, public_filepath=self.pub_file_path,
                 private_filepath=self.priv_file_path, delete_on_clean=True))
         self.keypair_creator.create()
@@ -432,7 +433,7 @@ class CreateKeypairsCleanupTests(OSIntegrationTestCase):
         :return:
         """
         self.keypair_creator = OpenStackKeypair(
-            self.os_creds, KeypairSettings(
+            self.os_creds, KeypairConfig(
                 name=self.keypair_name, public_filepath=self.pub_file_path,
                 private_filepath=self.priv_file_path, delete_on_clean=False))
         self.keypair_creator.create()
@@ -452,7 +453,7 @@ class CreateKeypairsCleanupTests(OSIntegrationTestCase):
             keys=keys, pub_file_path=self.pub_file_path,
             priv_file_path=self.priv_file_path)
         self.keypair_creator = OpenStackKeypair(
-            self.os_creds, KeypairSettings(
+            self.os_creds, KeypairConfig(
                 name=self.keypair_name, public_filepath=self.pub_file_path,
                 private_filepath=self.priv_file_path, delete_on_clean=False))
         self.keypair_creator.create()
@@ -472,7 +473,7 @@ class CreateKeypairsCleanupTests(OSIntegrationTestCase):
             keys=keys, pub_file_path=self.pub_file_path,
             priv_file_path=self.priv_file_path)
         self.keypair_creator = OpenStackKeypair(
-            self.os_creds, KeypairSettings(
+            self.os_creds, KeypairConfig(
                 name=self.keypair_name, public_filepath=self.pub_file_path,
                 private_filepath=self.priv_file_path, delete_on_clean=True))
         self.keypair_creator.create()

@@ -24,6 +24,7 @@ from neutronclient.common.exceptions import InvalidIpForSubnetClient
 from novaclient.exceptions import BadRequest
 
 from snaps import file_utils
+from snaps.config.keypair import KeypairConfig
 from snaps.openstack import create_network, create_router
 from snaps.config.flavor import FlavorConfig
 from snaps.openstack.create_flavor import OpenStackFlavor
@@ -32,7 +33,7 @@ from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_instance import (
     VmInstanceSettings, OpenStackVmInstance, FloatingIpSettings,
     VmInstanceSettingsError, FloatingIpSettingsError)
-from snaps.openstack.create_keypairs import OpenStackKeypair, KeypairSettings
+from snaps.openstack.create_keypairs import OpenStackKeypair
 from snaps.openstack.create_network import (
     OpenStackNetwork, PortSettings, NetworkSettings, SubnetSettings)
 from snaps.openstack.create_router import OpenStackRouter, RouterSettings
@@ -573,7 +574,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             self.flavor_creator.create()
 
             self.keypair_creator = OpenStackKeypair(
-                self.os_creds, KeypairSettings(
+                self.os_creds, KeypairConfig(
                     name=self.keypair_name,
                     public_filepath=self.keypair_pub_filepath,
                     private_filepath=self.keypair_priv_filepath))
@@ -852,7 +853,7 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
             self.flavor_creator.create()
 
             self.keypair_creator = OpenStackKeypair(
-                self.os_creds, KeypairSettings(
+                self.os_creds, KeypairConfig(
                     name=self.keypair_name,
                     public_filepath=self.keypair_pub_filepath,
                     private_filepath=self.keypair_priv_filepath))
@@ -1542,7 +1543,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
 
             # Create Keypair
             self.keypair_creator = OpenStackKeypair(
-                self.os_creds, KeypairSettings(
+                self.os_creds, KeypairConfig(
                     name=self.keypair_name,
                     public_filepath=self.keypair_pub_filepath,
                     private_filepath=self.keypair_priv_filepath))

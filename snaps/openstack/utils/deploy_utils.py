@@ -103,7 +103,7 @@ def create_keypair(os_creds, keypair_settings, cleanup=False):
     """
     Creates a keypair that can be applied to an instance
     :param os_creds: The OpenStack credentials object
-    :param keypair_settings: The KeypairSettings object
+    :param keypair_settings: The KeypairConfig object
     :param cleanup: Denotes whether or not this is being called for cleanup
     :return: A reference to the keypair creator object
     """

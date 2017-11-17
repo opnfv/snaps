@@ -19,6 +19,8 @@ import os
 import pkg_resources
 from scp import SCPClient
 
+from snaps.config.keypair import KeypairConfig
+
 from snaps.config.flavor import FlavorConfig
 from snaps.openstack import create_flavor
 from snaps.openstack import create_image
@@ -109,7 +111,7 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
 
             # Create Key/Pair
             self.keypair_creator = create_keypairs.OpenStackKeypair(
-                self.os_creds, create_keypairs.KeypairSettings(
+                self.os_creds, KeypairConfig(
                     name=self.keypair_name,
                     public_filepath=self.keypair_pub_filepath,
                     private_filepath=self.keypair_priv_filepath))

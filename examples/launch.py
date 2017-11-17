@@ -28,10 +28,11 @@ import yaml
 from snaps import file_utils
 from snaps.config.flavor import FlavorConfig
 from snaps.config.image import ImageConfig
+from snaps.config.keypair import KeypairConfig
 from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_instance import VmInstanceSettings
-from snaps.openstack.create_keypairs import KeypairSettings, OpenStackKeypair
+from snaps.openstack.create_keypairs import OpenStackKeypair
 from snaps.openstack.create_network import (
     PortSettings, NetworkSettings, OpenStackNetwork)
 from snaps.openstack.create_project import OpenStackProject, ProjectSettings
@@ -677,7 +678,7 @@ def main(arguments):
 
                 # Create keypairs
                 keypairs_dict = __create_instances(
-                    os_creds_dict, OpenStackKeypair, KeypairSettings,
+                    os_creds_dict, OpenStackKeypair, KeypairConfig,
                     os_config.get('keypairs'), 'keypair', clean, users_dict)
                 creators.append(keypairs_dict)
 

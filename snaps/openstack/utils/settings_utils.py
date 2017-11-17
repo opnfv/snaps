@@ -16,9 +16,9 @@ import uuid
 
 from snaps import file_utils
 from snaps.config.flavor import FlavorConfig
+from snaps.config.keypair import KeypairConfig
 from snaps.openstack.create_instance import (
     VmInstanceSettings, FloatingIpSettings)
-from snaps.openstack.create_keypairs import KeypairSettings
 from snaps.openstack.create_network import (
     PortSettings, SubnetSettings, NetworkSettings)
 from snaps.openstack.create_security_group import (
@@ -205,13 +205,13 @@ def create_flavor_config(flavor):
 
 def create_keypair_settings(heat_cli, stack, keypair, pk_output_key):
     """
-    Instantiates a KeypairSettings object from a Keypair domain objects
+    Instantiates a KeypairConfig object from a Keypair domain objects
     :param heat_cli: the heat client
     :param stack: the Stack domain object
     :param keypair: the Keypair SNAPS domain object
     :param pk_output_key: the key to the heat template's outputs for retrieval
                           of the private key file
-    :return: a KeypairSettings object
+    :return: a KeypairConfig object
     """
     if pk_output_key:
         outputs = heat_utils.get_outputs(heat_cli, stack)
@@ -222,11 +222,11 @@ def create_keypair_settings(heat_cli, stack, keypair, pk_output_key):
                 key_file = file_utils.save_string_to_file(
                     output.value, str(guid), 0o400)
 
-                # Use outputs, file and resources for the KeypairSettings
-                return KeypairSettings(
+                # Use outputs, file and resources for the KeypairConfig
+                return KeypairConfig(
                     name=keypair.name, private_filepath=key_file.name)
 
-    return KeypairSettings(name=keypair.name)
+    return KeypairConfig(name=keypair.name)
 
 
 def create_vm_inst_settings(nova, neutron, server):
@@ -364,20 +364,20 @@ def determine_image_config(glance, server, image_settings):
                 return image_setting
 
 
-def determine_keypair_settings(heat_cli, stack, server, keypair_settings=None,
-                               priv_key_key=None):
+def determine_keypair_config(heat_cli, stack, server, keypair_settings=None,
+                             priv_key_key=None):
     """
-    Returns a KeypairSettings object from the list that matches the
+    Returns a KeypairConfig object from the list that matches the
     server.keypair_name value in the keypair_settings parameter if not None,
     else if the output_key is not None, the output's value when contains the
     string 'BEGIN RSA PRIVATE KEY', this value will be stored into a file and
-    encoded into the KeypairSettings object returned
+    encoded into the KeypairConfig object returned
     :param heat_cli: the OpenStack heat client
     :param stack: a SNAPS-OO Stack domain object
     :param server: a SNAPS-OO VmInst domain object
-    :param keypair_settings: list of KeypairSettings objects
+    :param keypair_settings: list of KeypairConfig objects
     :param priv_key_key: the stack options that holds the private key value
-    :return: KeypairSettings or None
+    :return: KeypairConfig or None
     """
     # Existing keypair being used by Heat Template
     if keypair_settings:
@@ -395,6 +395,6 @@ def determine_keypair_settings(heat_cli, stack, server, keypair_settings=None,
                 key_file = file_utils.save_string_to_file(
                     output.value, str(guid), 0o400)
 
-                # Use outputs, file and resources for the KeypairSettings
-                return KeypairSettings(
+                # Use outputs, file and resources for the KeypairConfig
+                return KeypairConfig(
                     name=server.keypair_name, private_filepath=key_file.name)

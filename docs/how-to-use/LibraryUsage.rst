@@ -211,7 +211,7 @@ Create Keypair
 --------------
 -  Keypair - snaps.openstack.create\_keypair.OpenStackKeypair
 
-   -  snaps.openstack.create\_keypair.KeypairSettings
+   -  snaps.openstack.keypair.KeypairConfig
 
       -  name - the keypair name (required)
       -  public\_filepath - the file location to where the public key is
@@ -227,8 +227,9 @@ Create Keypair
 
 .. code:: python
 
-    from snaps.openstack.create_keypairs import KeypairSettings, OpenStackKeypair
-    keypair_settings = KeypairSettings(name='kepair-name', private_filepath='/tmp/priv-kp')
+    from snaps.openstack.keypair.KeypairConfig
+    from snaps.openstack.create_keypairs import OpenStackKeypair
+    keypair_settings = KeypairConfig(name='kepair-name', private_filepath='/tmp/priv-kp')
     keypair_creator = OpenStackKeypair(os_creds, keypair_settings)
     keypair_creator.create()
 
@@ -576,7 +577,7 @@ Create VM Instance
    -  image\_settings - see snaps.config.image.ImageConfig
       above (required)
    -  keypair\_settings - see
-      snaps.openstack.create\_keypairs.KeypairSettings above (optional)
+      snaps.openstack.keypair.KeypairConfig above (optional)
 
 .. code:: python
 

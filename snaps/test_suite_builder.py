@@ -16,6 +16,7 @@
 import logging
 import unittest
 
+from snaps.config.tests.keypair_tests import KeypairConfigUnitTests
 from snaps.config.tests.flavor_tests import FlavorConfigUnitTests
 import snaps.config.tests.image_tests as image_tests
 import snaps.openstack.tests.create_image_tests as creator_tests
@@ -146,6 +147,8 @@ def add_unit_tests(suite):
         FlavorSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         FlavorDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        KeypairConfigUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         KeypairSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
