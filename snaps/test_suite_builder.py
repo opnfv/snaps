@@ -16,6 +16,7 @@
 import logging
 import unittest
 
+from snaps.config.tests.volume_tests import VolumeConfigUnitTests
 from snaps.domain.test.flavor_tests import FlavorDomainObjectTests
 from snaps.domain.test.image_tests import ImageDomainObjectTests
 from snaps.domain.test.keypair_tests import KeypairDomainObjectTests
@@ -203,6 +204,8 @@ def add_unit_tests(suite):
         QoSSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         VolumeTypeSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        VolumeConfigUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         VolumeSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

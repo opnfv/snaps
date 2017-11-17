@@ -18,9 +18,9 @@ import uuid
 import time
 from cinderclient.exceptions import NotFound, BadRequest
 
+from snaps.config.volume import VolumeConfig
 from snaps.openstack import create_volume
 from snaps.openstack.create_qos import QoSSettings, Consumer
-from snaps.openstack.create_volume import VolumeSettings
 from snaps.openstack.create_volume_type import (
     VolumeTypeSettings, VolumeTypeEncryptionSettings, ControlLocation)
 from snaps.openstack.tests import validation_utils
@@ -91,7 +91,7 @@ class CinderUtilsVolumeTests(OSComponentTestCase):
         """
         Tests the cinder_utils.create_volume()
         """
-        volume_settings = VolumeSettings(name=self.volume_name)
+        volume_settings = VolumeConfig(name=self.volume_name)
         self.volume = cinder_utils.create_volume(
             self.cinder, volume_settings)
         self.assertIsNotNone(self.volume)
@@ -108,7 +108,7 @@ class CinderUtilsVolumeTests(OSComponentTestCase):
         """
         Tests the cinder_utils.create_volume()
         """
-        volume_settings = VolumeSettings(name=self.volume_name)
+        volume_settings = VolumeConfig(name=self.volume_name)
         self.volume = cinder_utils.create_volume(
             self.cinder, volume_settings)
         self.assertIsNotNone(self.volume)

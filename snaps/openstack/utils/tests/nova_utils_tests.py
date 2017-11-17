@@ -19,13 +19,14 @@ import os
 import time
 
 from snaps import file_utils
+from snaps.config.volume import VolumeConfig
 from snaps.openstack import create_instance
 from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_instance import (
     VmInstanceSettings, OpenStackVmInstance)
 from snaps.openstack.create_network import OpenStackNetwork, PortSettings
-from snaps.openstack.create_volume import OpenStackVolume, VolumeSettings
+from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import (
@@ -376,7 +377,7 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
             self.flavor_creator.create()
 
             # Create Volume
-            volume_settings = VolumeSettings(
+            volume_settings = VolumeConfig(
                 name=self.__class__.__name__ + '-' + str(guid))
             self.volume_creator = OpenStackVolume(
                 self.os_creds, volume_settings)

@@ -24,6 +24,7 @@ from neutronclient.common.exceptions import InvalidIpForSubnetClient
 from novaclient.exceptions import BadRequest
 
 from snaps import file_utils
+from snaps.config.volume import VolumeConfig
 from snaps.openstack import create_network, create_router
 from snaps.openstack.create_flavor import OpenStackFlavor, FlavorSettings
 from snaps.openstack.create_image import OpenStackImage, ImageSettings
@@ -37,7 +38,7 @@ from snaps.openstack.create_router import OpenStackRouter, RouterSettings
 from snaps.openstack.create_security_group import (
     SecurityGroupSettings, OpenStackSecurityGroup, SecurityGroupRuleSettings,
     Direction, Protocol)
-from snaps.openstack.create_volume import OpenStackVolume, VolumeSettings
+from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.tests import openstack_tests, validation_utils
 from snaps.openstack.tests.os_source_file_test import (
     OSIntegrationTestCase, OSComponentTestCase)
@@ -2882,9 +2883,9 @@ class CreateInstanceVolumeTests(OSIntegrationTestCase):
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
             router_name=guid + '-pub-router', external_net=self.ext_net_name)
 
-        self.volume_settings1 = VolumeSettings(
+        self.volume_settings1 = VolumeConfig(
             name=self.__class__.__name__ + '-' + str(guid) + '-1')
-        self.volume_settings2 = VolumeSettings(
+        self.volume_settings2 = VolumeConfig(
             name=self.__class__.__name__ + '-' + str(guid) + '-2')
 
         # Initialize for tearDown()

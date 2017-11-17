@@ -14,6 +14,7 @@
 # limitations under the License.
 from cinderclient.exceptions import NotFound, BadRequest
 
+from snaps.config.volume import VolumeConfig, VolumeConfigError
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_volume_type import (
     VolumeTypeSettings, OpenStackVolumeType)
@@ -29,7 +30,7 @@ import unittest
 import uuid
 
 from snaps.openstack.create_volume import (
-    VolumeSettings, VolumeSettingsError, OpenStackVolume)
+    VolumeSettings, OpenStackVolume)
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import cinder_utils
 
@@ -44,11 +45,11 @@ class VolumeSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(VolumeSettingsError):
+        with self.assertRaises(VolumeConfigError):
             VolumeSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(VolumeSettingsError):
+        with self.assertRaises(VolumeConfigError):
             VolumeSettings(**dict())
 
     def test_name_only(self):
@@ -125,7 +126,7 @@ class CreateSimpleVolumeSuccessTests(OSIntegrationTestCase):
         super(self.__class__, self).__start__()
 
         guid = uuid.uuid4()
-        self.volume_settings = VolumeSettings(
+        self.volume_settings = VolumeConfig(
             name=self.__class__.__name__ + '-' + str(guid))
 
         self.cinder = cinder_utils.cinder_client(self.os_creds)
@@ -234,7 +235,7 @@ class CreateSimpleVolumeFailureTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack volume with a negative size to
         ensure it raises a BadRequest exception.
         """
-        volume_settings = VolumeSettings(
+        volume_settings = VolumeConfig(
             name=self.__class__.__name__ + '-' + str(self.guid), size=-1)
 
         # Create Volume
@@ -248,7 +249,7 @@ class CreateSimpleVolumeFailureTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack volume with a type that does not
         exist to ensure it raises a NotFound exception.
         """
-        volume_settings = VolumeSettings(
+        volume_settings = VolumeConfig(
             name=self.__class__.__name__ + '-' + str(self.guid),
             type_name='foo')
 
@@ -263,7 +264,7 @@ class CreateSimpleVolumeFailureTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack volume with an image that does not
         exist to ensure it raises a BadRequest exception.
         """
-        volume_settings = VolumeSettings(
+        volume_settings = VolumeConfig(
             name=self.__class__.__name__ + '-' + str(self.guid),
             image_name='foo')
 
@@ -278,7 +279,7 @@ class CreateSimpleVolumeFailureTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack volume with an availability zone
         that does not exist to ensure it raises a BadRequest exception.
         """
-        volume_settings = VolumeSettings(
+        volume_settings = VolumeConfig(
             name=self.__class__.__name__ + '-' + str(self.guid),
             availability_zone='foo')
 
@@ -321,7 +322,7 @@ class CreateVolumeWithTypeTests(OSIntegrationTestCase):
         """
         self.volume_creator = OpenStackVolume(
             self.os_creds,
-            VolumeSettings(name=self.volume_name, type_name='foo'))
+            VolumeConfig(name=self.volume_name, type_name='foo'))
 
         with self.assertRaises(NotFound):
             self.volume_creator.create()
@@ -332,8 +333,8 @@ class CreateVolumeWithTypeTests(OSIntegrationTestCase):
         """
         self.volume_creator = OpenStackVolume(
             self.os_creds,
-            VolumeSettings(name=self.volume_name,
-                           type_name=self.volume_type_name))
+            VolumeConfig(
+                name=self.volume_name, type_name=self.volume_type_name))
 
         created_volume = self.volume_creator.create(block=True)
         self.assertIsNotNone(created_volume)
@@ -383,7 +384,7 @@ class CreateVolumeWithImageTests(OSIntegrationTestCase):
         """
         self.volume_creator = OpenStackVolume(
             self.os_creds,
-            VolumeSettings(name=self.volume_name, image_name='foo'))
+            VolumeConfig(name=self.volume_name, image_name='foo'))
 
         with self.assertRaises(BadRequest):
             self.volume_creator.create(block=True)
@@ -395,7 +396,7 @@ class CreateVolumeWithImageTests(OSIntegrationTestCase):
         """
         self.volume_creator = OpenStackVolume(
             self.os_creds,
-            VolumeSettings(name=self.volume_name, image_name=self.image_name))
+            VolumeConfig(name=self.volume_name, image_name=self.image_name))
 
         created_volume = self.volume_creator.create(block=True)
         self.assertIsNotNone(created_volume)
