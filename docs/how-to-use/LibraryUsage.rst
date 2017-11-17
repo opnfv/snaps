@@ -502,7 +502,7 @@ Create Heat Stack
 
 -  Heat Stack - snaps.openstack.create\_stack.OpenStackHeatStack
 
-   -  snaps.openstack.create\_stack.StackSettings
+   -  snaps.config.stack.StackConfig
 
       -  name - the stack's name (required)
       -  template - the heat template in dict() format (required when
@@ -514,9 +514,10 @@ Create Heat Stack
 
 .. code:: python
 
-    from snaps.openstack.create_stack import StackSettings, OpenStackHeatStack
+    from snaps.config.stack import StackConfig
+    from snaps.openstack.create_stack import OpenStackHeatStack
 
-    stack_settings = StackSettings(name='stack-name', template_path='/tmp/template.yaml')
+    stack_settings = StackConfig(name='stack-name', template_path='/tmp/template.yaml')
     stack_creator = OpenStackHeatStack(os_creds, stack_settings)
     stack_creator.create()
 

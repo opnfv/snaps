@@ -18,6 +18,8 @@ import time
 
 from heatclient.exc import HTTPNotFound
 
+import snaps
+from snaps.config.stack import StackConfig
 from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_instance import OpenStackVmInstance
 from snaps.openstack.create_keypairs import OpenStackKeypair
@@ -35,14 +37,6 @@ from snaps.openstack.utils import heat_utils, neutron_utils
 __author__ = 'spisarski'
 
 logger = logging.getLogger('create_stack')
-
-STACK_DELETE_TIMEOUT = 1200
-STACK_COMPLETE_TIMEOUT = 1200
-POLL_INTERVAL = 3
-STATUS_CREATE_FAILED = 'CREATE_FAILED'
-STATUS_CREATE_COMPLETE = 'CREATE_COMPLETE'
-STATUS_DELETE_COMPLETE = 'DELETE_COMPLETE'
-STATUS_DELETE_FAILED = 'DELETE_FAILED'
 
 
 class OpenStackHeatStack(OpenStackCloudObject, object):
@@ -185,7 +179,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         return heat_utils.get_stack_status(self.__heat_cli, self.__stack.id)
 
     def stack_complete(self, block=False, timeout=None,
-                       poll_interval=POLL_INTERVAL):
+                       poll_interval=snaps.config.stack.POLL_INTERVAL):
         """
         Returns true when the stack status returns the value of
         expected_status_code
@@ -197,11 +191,13 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         """
         if not timeout:
             timeout = self.stack_settings.stack_create_timeout
-        return self._stack_status_check(STATUS_CREATE_COMPLETE, block, timeout,
-                                        poll_interval, STATUS_CREATE_FAILED)
+        return self._stack_status_check(
+            snaps.config.stack.STATUS_CREATE_COMPLETE, block, timeout,
+            poll_interval, snaps.config.stack.STATUS_CREATE_FAILED)
 
-    def stack_deleted(self, block=False, timeout=STACK_DELETE_TIMEOUT,
-                      poll_interval=POLL_INTERVAL):
+    def stack_deleted(self, block=False,
+                      timeout=snaps.config.stack.STACK_DELETE_TIMEOUT,
+                      poll_interval=snaps.config.stack.POLL_INTERVAL):
         """
         Returns true when the stack status returns the value of
         expected_status_code
@@ -211,8 +207,9 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         :param poll_interval: The polling interval in seconds
         :return: T/F
         """
-        return self._stack_status_check(STATUS_DELETE_COMPLETE, block, timeout,
-                                        poll_interval, STATUS_DELETE_FAILED)
+        return self._stack_status_check(
+            snaps.config.stack.STATUS_DELETE_COMPLETE, block, timeout,
+            poll_interval, snaps.config.stack.STATUS_DELETE_FAILED)
 
     def get_network_creators(self):
         """
@@ -457,7 +454,8 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
             'Timeout checking for stack status for ' + expected_status_code)
         return False
 
-    def _status(self, expected_status_code, fail_status=STATUS_CREATE_FAILED):
+    def _status(self, expected_status_code,
+                fail_status=snaps.config.stack.STATUS_CREATE_FAILED):
         """
         Returns True when active else False
         :param expected_status_code: stack status evaluated with this string
@@ -474,7 +472,8 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
             resources = heat_utils.get_resources(self.__heat_cli, self.__stack)
             logger.error('Stack %s failed', self.__stack.name)
             for resource in resources:
-                if resource.status != STATUS_CREATE_COMPLETE:
+                if (resource.status !=
+                        snaps.config.stack.STATUS_CREATE_COMPLETE):
                     logger.error(
                         'Resource: [%s] status: [%s] reason: [%s]',
                         resource.name, resource.status, resource.status_reason)
@@ -488,46 +487,18 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         return status == expected_status_code
 
 
-class StackSettings:
+class StackSettings(StackConfig):
+    """
+    Class to hold the configuration settings required for creating OpenStack
+    stack objects
+    deprecated
+    """
+
     def __init__(self, **kwargs):
-        """
-        Constructor
-        :param name: the stack's name (required)
-        :param template: the heat template in dict() format (required if
-                         template_path attribute is None)
-        :param template_path: the location of the heat template file (required
-                              if template attribute is None)
-        :param env_values: dict() of strings for substitution of template
-                           default values (optional)
-        """
-
-        self.name = kwargs.get('name')
-        self.template = kwargs.get('template')
-        self.template_path = kwargs.get('template_path')
-        self.env_values = kwargs.get('env_values')
-        if 'stack_create_timeout' in kwargs:
-            self.stack_create_timeout = kwargs['stack_create_timeout']
-        else:
-            self.stack_create_timeout = STACK_COMPLETE_TIMEOUT
-
-        if not self.name:
-            raise StackSettingsError('name is required')
-
-        if not self.template and not self.template_path:
-            raise StackSettingsError('A Heat template is required')
-
-    def __eq__(self, other):
-        return (self.name == other.name and
-                self.template == other.template and
-                self.template_path == other.template_path and
-                self.env_values == other.env_values and
-                self.stack_create_timeout == other.stack_create_timeout)
-
-
-class StackSettingsError(Exception):
-    """
-    Exception to be thrown when an stack settings are incorrect
-    """
+        from warnings import warn
+        warn('Use snaps.config.stack.StackConfig instead',
+             DeprecationWarning)
+        super(self.__class__, self).__init__(**kwargs)
 
 
 class StackCreationError(Exception):

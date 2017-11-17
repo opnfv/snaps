@@ -81,7 +81,7 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
         elif config.get('OS_INSECURE'):
             https_cacert = False
 
-        interface = 'admin'
+        interface = 'public'
         if config.get('OS_INTERFACE'):
             interface = config.get('OS_INTERFACE')
 

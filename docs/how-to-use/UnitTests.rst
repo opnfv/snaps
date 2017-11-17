@@ -198,11 +198,17 @@ InterfaceRouterDomainObjectTests
 Ensures that all required members are included when constructing a
 InterfaceRouter domain object
 
+StackConfigUnitTests
+--------------------
+
+Ensures that all required members are included when constructing a
+StackConfig object
+
 StackSettingsUnitTests
 ----------------------
 
 Ensures that all required members are included when constructing a
-StackSettings object
+deprecated StackSettings object
 
 StackDomainObjectTests
 ----------------------
