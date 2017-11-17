@@ -78,11 +78,17 @@ ImageDomainObjectTests
 Ensures that all required members are included when constructing a
 Image domain object
 
+FlavorConfigUnitTests
+---------------------
+
+Ensures that all required members are included when constructing a
+FlavorConfig object
+
 FlavorSettingsUnitTests
 -----------------------
 
 Ensures that all required members are included when constructing a
-FlavorSettings object
+deprecated FlavorSettings object
 
 FlavorDomainObjectTests
 -----------------------
@@ -310,6 +316,6 @@ snaps.domain.VolumeType object to a
 snaps.openstack.create_volume.VolumeSettings object
 
 
-Ensures that the settings_utils.py#create_flavor_settings() function properly
+Ensures that the settings_utils.py#create_flavor_config() function properly
 maps a snaps.domain.Flavor object correctly to a
-snaps.openstack.create_flavor.FlavorSettings object
+snaps.config.flavor.FlavorConfig object

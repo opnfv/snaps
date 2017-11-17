@@ -16,6 +16,7 @@
 import logging
 import unittest
 
+from snaps.config.tests.flavor_tests import FlavorConfigUnitTests
 import snaps.config.tests.image_tests as image_tests
 import snaps.openstack.tests.create_image_tests as creator_tests
 from snaps.domain.test.flavor_tests import FlavorDomainObjectTests
@@ -139,6 +140,8 @@ def add_unit_tests(suite):
         creator_tests.ImageSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         ImageDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        FlavorConfigUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         FlavorSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

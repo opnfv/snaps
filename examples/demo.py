@@ -34,9 +34,10 @@ network.create()
 
 
 # Flavors
-from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
+from snaps.config.flavor import FlavorConfig
+from snaps.openstack.create_flavor import OpenStackFlavor
 
-flavor_settings = FlavorSettings(name='test-flavor', ram=256, disk=10, vcpus=2)
+flavor_settings = FlavorConfig(name='test-flavor', ram=256, disk=10, vcpus=2)
 flavor = OpenStackFlavor(os_creds, flavor_settings)
 flavor.create()
 

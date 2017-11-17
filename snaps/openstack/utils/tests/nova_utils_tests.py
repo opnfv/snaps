@@ -13,14 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import time
 import uuid
 
 import os
-import time
 
 from snaps import file_utils
+from snaps.config.flavor import FlavorConfig
 from snaps.openstack import create_instance
-from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
+from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_instance import (
     VmInstanceSettings, OpenStackVmInstance)
@@ -159,11 +160,9 @@ class NovaUtilsFlavorTests(OSComponentTestCase):
         and creating an OS image file within OpenStack
         """
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        self.flavor_settings = FlavorSettings(name=guid + '-name',
-                                              flavor_id=guid + '-id', ram=1,
-                                              disk=1, vcpus=1,
-                                              ephemeral=1, swap=2,
-                                              rxtx_factor=3.0, is_public=False)
+        self.flavor_settings = FlavorConfig(
+            name=guid + '-name', flavor_id=guid + '-id', ram=1, disk=1,
+            vcpus=1, ephemeral=1, swap=2, rxtx_factor=3.0, is_public=False)
         self.nova = nova_utils.nova_client(self.os_creds)
         self.flavor = None
 
@@ -255,7 +254,7 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
 
             self.flavor_creator = OpenStackFlavor(
                 self.os_creds,
-                FlavorSettings(
+                FlavorConfig(
                     name=guid + '-flavor-name', ram=256, disk=10, vcpus=1))
             self.flavor_creator.create()
 
@@ -371,7 +370,7 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
 
             self.flavor_creator = OpenStackFlavor(
                 self.os_creds,
-                FlavorSettings(
+                FlavorConfig(
                     name=guid + '-flavor-name', ram=256, disk=10, vcpus=1))
             self.flavor_creator.create()
 

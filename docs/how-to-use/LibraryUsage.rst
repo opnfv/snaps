@@ -138,7 +138,7 @@ Create Flavor
 -------------
 -  Flavor - snaps.openstack.create\_flavor.OpenStackFlavor
 
-   -  snaps.openstack.create\_flavor.FlavorSettings
+   -  snaps.config.flavor.FlavorConfig
 
       -  name - the flavor name (required)
       -  flavor\_id - the flavor's string ID (default='auto')
@@ -155,8 +155,9 @@ Create Flavor
 
 .. code:: python
 
-    from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
-    flavor_settings = FlavorSettings(name='flavor-name', ram=4, disk=10, vcpus=2)
+    from snaps.config.flavor import FlavorConfig
+    from snaps.openstack.create_flavor import OpenStackFlavor
+    flavor_settings = FlavorConfig(name='flavor-name', ram=4, disk=10, vcpus=2)
     flavor_creator = OpenStackFlavor(os_creds, flavor_settings)
     flavor_creator.create()
 
