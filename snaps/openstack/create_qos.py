@@ -15,9 +15,9 @@
 
 import logging
 
-import enum
 from cinderclient.exceptions import NotFound
 
+from snaps.config.qos import QoSConfig
 from snaps.openstack.openstack_creator import OpenStackVolumeObject
 from snaps.openstack.utils import cinder_utils
 
@@ -98,72 +98,18 @@ class OpenStackQoS(OpenStackVolumeObject):
         return self.__qos
 
 
-class Consumer(enum.Enum):
+class QoSSettings(QoSConfig):
     """
-    QoS Specification consumer types
+    Class to hold the configuration settings required for creating OpenStack
+    QoS objects
+    deprecated
     """
-    front_end = 'front-end'
-    back_end = 'back-end'
-    both = 'both'
 
-
-class QoSSettings:
     def __init__(self, **kwargs):
-        """
-        Constructor
-        :param name: the qos's name (required)
-        :param consumer: the qos's consumer type of the enum type Consumer
-                         (required)
-        :param specs: dict of key/values
-        """
-
-        self.name = kwargs.get('name')
-
-        if kwargs.get('consumer'):
-            self.consumer = map_consumer(kwargs['consumer'])
-        else:
-            self.consumer = None
-
-        self.specs = kwargs.get('specs')
-        if not self.specs:
-            self.specs = dict()
-
-        if not self.name or not self.consumer:
-            raise QoSSettingsError(
-                "The attributes name and consumer are required")
-
-
-def map_consumer(consumer):
-    """
-    Takes a the protocol value maps it to the Consumer enum. When None return
-    None
-    :param consumer: the value to map to the Enum
-    :return: the Protocol enum object
-    :raise: Exception if value is invalid
-    """
-    if not consumer:
-        return None
-    elif isinstance(consumer, Consumer):
-        return consumer
-    else:
-        proto_str = str(consumer)
-        if proto_str == 'front-end':
-            return Consumer.front_end
-        elif proto_str == 'back-end':
-            return Consumer.back_end
-        elif proto_str == 'both':
-            return Consumer.both
-        else:
-            raise QoSSettingsError('Invalid Consumer - ' + proto_str)
-
-
-class QoSSettingsError(Exception):
-    """
-    Exception to be thrown when an qos settings are incorrect
-    """
-
-    def __init__(self, message):
-        Exception.__init__(self, message)
+        from warnings import warn
+        warn('Use snaps.config.qos.QoSConfig instead',
+             DeprecationWarning)
+        super(self.__class__, self).__init__(**kwargs)
 
 
 class QoSCreationError(Exception):

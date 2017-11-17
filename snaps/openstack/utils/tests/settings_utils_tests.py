@@ -18,6 +18,7 @@ import unittest
 import os
 import uuid
 
+from snaps.config.qos import Consumer
 from snaps.domain.flavor import Flavor
 from snaps.domain.volume import (
     Volume, VolumeType, VolumeTypeEncryption, QoSSpec)
@@ -26,7 +27,6 @@ from snaps.openstack import (
     create_keypairs, create_instance)
 from snaps.openstack.create_network import (
     NetworkSettings, OpenStackNetwork, SubnetSettings)
-from snaps.openstack.create_qos import Consumer
 from snaps.openstack.create_security_group import (
     SecurityGroupRuleSettings,  Direction, Protocol, OpenStackSecurityGroup,
     SecurityGroupSettings)

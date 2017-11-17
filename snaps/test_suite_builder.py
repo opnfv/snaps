@@ -16,6 +16,7 @@
 import logging
 import unittest
 
+from snaps.config.tests.qos_tests import QoSConfigUnitTests
 from snaps.domain.test.flavor_tests import FlavorDomainObjectTests
 from snaps.domain.test.image_tests import ImageDomainObjectTests
 from snaps.domain.test.keypair_tests import KeypairDomainObjectTests
@@ -199,6 +200,8 @@ def add_unit_tests(suite):
         VmInstDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         FloatingIpDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        QoSConfigUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         QoSSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

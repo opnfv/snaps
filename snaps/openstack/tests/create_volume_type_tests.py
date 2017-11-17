@@ -12,7 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from snaps.openstack.create_qos import QoSSettings, Consumer, OpenStackQoS
+from snaps.config.qos import QoSConfig, Consumer
+from snaps.openstack.create_qos import OpenStackQoS
 
 try:
     from urllib.request import URLError
@@ -23,10 +24,9 @@ import logging
 import unittest
 import uuid
 
-from snaps.openstack import create_volume_type
 from snaps.openstack.create_volume_type import (
     VolumeTypeSettings, VolumeTypeSettingsError, VolumeTypeEncryptionSettings,
-    ControlLocation)
+    ControlLocation, OpenStackVolumeType)
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import cinder_utils
 
@@ -109,7 +109,7 @@ class VolumeTypeSettingsUnitTests(unittest.TestCase):
 
 class CreateSimpleVolumeTypeSuccessTests(OSIntegrationTestCase):
     """
-    Test for the OpenStackVolumeType class defined in create_volume_type.py
+    Test for the OpenStackVolumeType class defined in py
     without any QoS Specs or Encryption
     """
 
@@ -141,7 +141,7 @@ class CreateSimpleVolumeTypeSuccessTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack volume.
         """
         # Create VolumeType
-        self.volume_type_creator = create_volume_type.OpenStackVolumeType(
+        self.volume_type_creator = OpenStackVolumeType(
             self.os_creds, self.volume_type_settings)
         created_volume_type = self.volume_type_creator.create()
         self.assertIsNotNone(created_volume_type)
@@ -163,7 +163,7 @@ class CreateSimpleVolumeTypeSuccessTests(OSIntegrationTestCase):
         clean() does not raise an Exception.
         """
         # Create VolumeType
-        self.volume_type_creator = create_volume_type.OpenStackVolumeType(
+        self.volume_type_creator = OpenStackVolumeType(
             self.os_creds, self.volume_type_settings)
         created_volume_type = self.volume_type_creator.create()
         self.assertIsNotNone(created_volume_type)
@@ -189,7 +189,7 @@ class CreateSimpleVolumeTypeSuccessTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack volume_type when one already exists.
         """
         # Create VolumeType
-        self.volume_type_creator = create_volume_type.OpenStackVolumeType(
+        self.volume_type_creator = OpenStackVolumeType(
             self.os_creds, self.volume_type_settings)
         volume_type1 = self.volume_type_creator.create()
 
@@ -198,7 +198,7 @@ class CreateSimpleVolumeTypeSuccessTests(OSIntegrationTestCase):
         self.assertEqual(volume_type1, retrieved_volume_type)
 
         # Should be retrieving the instance data
-        os_volume_type_2 = create_volume_type.OpenStackVolumeType(
+        os_volume_type_2 = OpenStackVolumeType(
             self.os_creds, self.volume_type_settings)
         volume_type2 = os_volume_type_2.create()
         self.assertEqual(volume_type2, volume_type2)
@@ -220,7 +220,7 @@ class CreateVolumeTypeComplexTests(OSIntegrationTestCase):
         self.volume_type_name = guid + '-vol_type'
         self.volume_type_creator = None
 
-        qos_settings = QoSSettings(
+        qos_settings = QoSConfig(
             name=guid + '-qos-spec', consumer=Consumer.both)
         self.qos_creator = OpenStackQoS(self.os_creds, qos_settings)
         self.qos_creator.create()
@@ -238,7 +238,7 @@ class CreateVolumeTypeComplexTests(OSIntegrationTestCase):
         """
         Creates a Volume Type object with an associated QoS Spec
         """
-        self.volume_type_creator = create_volume_type.OpenStackVolumeType(
+        self.volume_type_creator = OpenStackVolumeType(
             self.os_creds,
             VolumeTypeSettings(
                 name=self.volume_type_name,
@@ -267,7 +267,7 @@ class CreateVolumeTypeComplexTests(OSIntegrationTestCase):
         encryption_settings = VolumeTypeEncryptionSettings(
             name='foo', provider_class='bar',
             control_location=ControlLocation.back_end)
-        self.volume_type_creator = create_volume_type.OpenStackVolumeType(
+        self.volume_type_creator = OpenStackVolumeType(
             self.os_creds,
             VolumeTypeSettings(
                 name=self.volume_type_name,
@@ -296,7 +296,7 @@ class CreateVolumeTypeComplexTests(OSIntegrationTestCase):
         encryption_settings = VolumeTypeEncryptionSettings(
             name='foo', provider_class='bar',
             control_location=ControlLocation.back_end)
-        self.volume_type_creator = create_volume_type.OpenStackVolumeType(
+        self.volume_type_creator = OpenStackVolumeType(
             self.os_creds,
             VolumeTypeSettings(
                 name=self.volume_type_name,
