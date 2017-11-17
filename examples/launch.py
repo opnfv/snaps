@@ -26,6 +26,7 @@ import os
 import yaml
 
 from snaps import file_utils
+from snaps.config.qos import QoSConfig
 from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
 from snaps.openstack.create_image import ImageSettings, OpenStackImage
 from snaps.openstack.create_instance import VmInstanceSettings
@@ -33,7 +34,7 @@ from snaps.openstack.create_keypairs import KeypairSettings, OpenStackKeypair
 from snaps.openstack.create_network import (
     PortSettings, NetworkSettings, OpenStackNetwork)
 from snaps.openstack.create_project import OpenStackProject, ProjectSettings
-from snaps.openstack.create_qos import QoSSettings, OpenStackQoS
+from snaps.openstack.create_qos import OpenStackQoS
 from snaps.openstack.create_router import RouterSettings, OpenStackRouter
 from snaps.openstack.create_security_group import (
     OpenStackSecurityGroup, SecurityGroupSettings)
@@ -640,7 +641,7 @@ def main(arguments):
 
                 # Create QoS specs
                 qos_dict = __create_instances(
-                    os_creds_dict, OpenStackQoS, QoSSettings,
+                    os_creds_dict, OpenStackQoS, QoSConfig,
                     os_config.get('qos_specs'), 'qos_spec', clean, users_dict)
                 creators.append(qos_dict)
 

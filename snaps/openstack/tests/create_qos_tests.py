@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from snaps.config.qos import Consumer, QoSConfigError, QoSConfig
 
 try:
     from urllib.request import URLError
@@ -23,8 +24,7 @@ import unittest
 import uuid
 
 from snaps.openstack import create_qos
-from snaps.openstack.create_qos import (QoSSettings, QoSSettingsError,
-                                        Consumer)
+from snaps.openstack.create_qos import QoSSettings
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import cinder_utils
 
@@ -39,27 +39,27 @@ class QoSSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(QoSSettingsError):
+        with self.assertRaises(QoSConfigError):
             QoSSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(QoSSettingsError):
+        with self.assertRaises(QoSConfigError):
             QoSSettings(**dict())
 
     def test_name_only(self):
-        with self.assertRaises(QoSSettingsError):
+        with self.assertRaises(QoSConfigError):
             QoSSettings(name='foo')
 
     def test_config_with_name_only(self):
-        with self.assertRaises(QoSSettingsError):
+        with self.assertRaises(QoSConfigError):
             QoSSettings(**{'name': 'foo'})
 
     def test_invalid_consumer(self):
-        with self.assertRaises(QoSSettingsError):
+        with self.assertRaises(QoSConfigError):
             QoSSettings(name='foo', consumer='bar')
 
     def test_config_with_invalid_consumer(self):
-        with self.assertRaises(QoSSettingsError):
+        with self.assertRaises(QoSConfigError):
             QoSSettings(**{'name': 'foo', 'consumer': 'bar'})
 
     def test_name_consumer(self):
@@ -121,7 +121,7 @@ class CreateQoSTests(OSIntegrationTestCase):
         super(self.__class__, self).__start__()
 
         guid = uuid.uuid4()
-        self.qos_settings = QoSSettings(
+        self.qos_settings = QoSConfig(
             name=self.__class__.__name__ + '-' + str(guid),
             consumer=Consumer.both)
 
