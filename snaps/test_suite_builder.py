@@ -16,6 +16,7 @@
 import logging
 import unittest
 
+from snaps.config.tests.project_tests import ProjectConfigUnitTests
 from snaps.domain.test.flavor_tests import FlavorDomainObjectTests
 from snaps.domain.test.image_tests import ImageDomainObjectTests
 from snaps.domain.test.keypair_tests import KeypairDomainObjectTests
@@ -147,6 +148,8 @@ def add_unit_tests(suite):
         UserSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         UserDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        ProjectConfigUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         ProjectSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

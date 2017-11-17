@@ -16,6 +16,7 @@ import logging
 
 from keystoneclient.exceptions import NotFound, Conflict
 
+from snaps.config.project import ProjectConfig
 from snaps.openstack.openstack_creator import OpenStackIdentityObject
 from snaps.openstack.utils import keystone_utils, neutron_utils, nova_utils
 
@@ -169,44 +170,15 @@ class OpenStackProject(OpenStackIdentityObject):
         neutron_utils.update_quotas(neutron, self.__project.id, network_quotas)
 
 
-class ProjectSettings:
+class ProjectSettings(ProjectConfig):
     """
     Class to hold the configuration settings required for creating OpenStack
     project objects
+    deprecated
     """
 
     def __init__(self, **kwargs):
-
-        """
-        Constructor
-        :param name: the project's name (required)
-        :param domain or domain_name: the project's domain name
-                                      (default = 'Default').
-                                      Field is used for v3 clients
-        :param description: the description (optional)
-        :param users: list of users to associate project to (optional)
-        :param enabled: denotes whether or not the project is enabled
-                        (default True)
-        """
-
-        self.name = kwargs.get('name')
-        self.domain_name = kwargs.get(
-            'domain', kwargs.get('domain', 'Default'))
-
-        self.description = kwargs.get('description')
-        if kwargs.get('enabled') is not None:
-            self.enabled = kwargs['enabled']
-        else:
-            self.enabled = True
-
-        self.users = kwargs.get('users', list())
-
-        if not self.name:
-            raise ProjectSettingsError(
-                "The attribute name is required for ProjectSettings")
-
-
-class ProjectSettingsError(Exception):
-    """
-    Exception to be thrown when project settings attributes are incorrect
-    """
+        from warnings import warn
+        warn('Use snaps.config.project.ProjectConfig instead',
+             DeprecationWarning)
+        super(self.__class__, self).__init__(**kwargs)
