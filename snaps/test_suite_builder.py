@@ -16,6 +16,7 @@
 import logging
 import unittest
 
+from snaps.config.tests.volume_tests import VolumeConfigUnitTests
 from snaps.config.tests.volume_type_tests import VolumeTypeConfigUnitTests
 from snaps.config.tests.qos_tests import QoSConfigUnitTests
 from snaps.config.tests.stack_tests import StackConfigUnitTests
@@ -231,6 +232,8 @@ def add_unit_tests(suite):
         VolumeTypeConfigUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         VolumeTypeSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        VolumeConfigUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         VolumeSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

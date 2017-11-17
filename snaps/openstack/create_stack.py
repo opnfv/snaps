@@ -322,7 +322,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
             self.__heat_cli, cinder, self.__stack)
 
         for volume in volumes:
-            settings = settings_utils.create_volume_settings(volume)
+            settings = settings_utils.create_volume_config(volume)
             creator = OpenStackVolume(self._os_creds, settings)
             out.append(creator)
 

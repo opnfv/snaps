@@ -18,6 +18,7 @@ import time
 
 from cinderclient.exceptions import NotFound
 
+from snaps.config.volume import VolumeConfig
 from snaps.openstack.openstack_creator import OpenStackVolumeObject
 from snaps.openstack.utils import cinder_utils
 
@@ -228,45 +229,18 @@ class OpenStackVolume(OpenStackVolumeObject):
         return status == expected_status_code
 
 
-class VolumeSettings:
+class VolumeSettings(VolumeConfig):
+    """
+    Class to hold the configuration settings required for creating OpenStack
+    Volume Type Encryption objects
+    deprecated
+    """
+
     def __init__(self, **kwargs):
-        """
-        Constructor
-        :param name: the volume's name (required)
-        :param description: the volume's name (optional)
-        :param size: the volume's size in GB (default 1)
-        :param image_name: when a glance image is used for the image source
-                           (optional)
-        :param type_name: the associated volume's type name (optional)
-        :param availability_zone: the name of the compute server on which to
-                                  deploy the volume (optional)
-        :param multi_attach: when true, volume can be attached to more than one
-                             server (default False)
-        """
-
-        self.name = kwargs.get('name')
-        self.description = kwargs.get('description')
-        self.size = int(kwargs.get('size', 1))
-        self.image_name = kwargs.get('image_name')
-        self.type_name = kwargs.get('type_name')
-        self.availability_zone = kwargs.get('availability_zone')
-
-        if kwargs.get('availability_zone'):
-            self.multi_attach = bool(kwargs.get('availability_zone'))
-        else:
-            self.multi_attach = False
-
-        if not self.name:
-            raise VolumeSettingsError("The attribute name is required")
-
-
-class VolumeSettingsError(Exception):
-    """
-    Exception to be thrown when an volume settings are incorrect
-    """
-
-    def __init__(self, message):
-        Exception.__init__(self, message)
+        from warnings import warn
+        warn('Use snaps.config.volume.VolumeConfig instead',
+             DeprecationWarning)
+        super(self.__class__, self).__init__(**kwargs)
 
 
 class VolumeCreationError(Exception):

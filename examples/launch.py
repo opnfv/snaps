@@ -26,7 +26,6 @@ import os
 import yaml
 
 from snaps import file_utils
-from snaps.config.volume_type import VolumeTypeConfig
 from snaps.config.flavor import FlavorConfig
 from snaps.config.image import ImageConfig
 from snaps.config.keypair import KeypairConfig
@@ -34,6 +33,8 @@ from snaps.config.project import ProjectConfig
 from snaps.config.qos import QoSConfig
 from snaps.config.router import RouterConfig
 from snaps.config.user import UserConfig
+from snaps.config.volume import VolumeConfig
+from snaps.config.volume_type import VolumeTypeConfig
 from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_instance import VmInstanceSettings
@@ -46,7 +47,7 @@ from snaps.openstack.create_router import OpenStackRouter
 from snaps.openstack.create_security_group import (
     OpenStackSecurityGroup, SecurityGroupSettings)
 from snaps.openstack.create_user import OpenStackUser
-from snaps.openstack.create_volume import OpenStackVolume, VolumeSettings
+from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.create_volume_type import OpenStackVolumeType
 from snaps.openstack.os_credentials import OSCreds, ProxySettings
 from snaps.openstack.utils import deploy_utils
@@ -660,7 +661,7 @@ def main(arguments):
 
                 # Create volume types
                 vol_dict = __create_instances(
-                    os_creds_dict, OpenStackVolume, VolumeSettings,
+                    os_creds_dict, OpenStackVolume, VolumeConfig,
                     os_config.get('volumes'), 'volume', clean, users_dict)
                 creators.append(vol_dict)
 

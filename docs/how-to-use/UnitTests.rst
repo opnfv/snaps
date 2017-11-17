@@ -264,11 +264,17 @@ OutputDomainObjectTests
 Ensures that all required members are included when constructing a
 Output domain object (for Heat)
 
+VolumeConfigUnitTests
+---------------------
+
+Ensures that all required members are included when constructing a
+VolumeConfig object
+
 VolumeSettingsUnitTests
 -----------------------
 
 Ensures that all required members are included when constructing a
-VolumeSettings object
+deprecated VolumeSettings object
 
 VolumeDomainObjectTests
 -----------------------
@@ -351,11 +357,11 @@ VmInst domain object
 SettingsUtilsUnitTests
 ----------------------
 
-Ensures that the settings_utils.py#create_volume_settings() function properly
+Ensures that the settings_utils.py#create_volume_config() function properly
 maps a snaps.domain.Volume object correctly to a
-snaps.openstack.create_volume.VolumeSettings object as well as a
+snaps.config.volume.VolumeConfig object as well as a
 snaps.domain.VolumeType object to a
-snaps.openstack.create_volume.VolumeSettings object
+snaps.config.volume.VolumeConfig object
 
 
 Ensures that the settings_utils.py#create_flavor_config() function properly

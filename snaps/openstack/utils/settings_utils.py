@@ -15,18 +15,18 @@
 import uuid
 
 from snaps import file_utils
-from snaps.config.volume_type import (
-    ControlLocation,  VolumeTypeEncryptionConfig, VolumeTypeConfig)
 from snaps.config.flavor import FlavorConfig
 from snaps.config.keypair import KeypairConfig
 from snaps.config.router import RouterConfig
+from snaps.config.volume import VolumeConfig
+from snaps.config.volume_type import (
+    ControlLocation,  VolumeTypeEncryptionConfig, VolumeTypeConfig)
 from snaps.openstack.create_instance import (
     VmInstanceSettings, FloatingIpSettings)
 from snaps.openstack.create_network import (
     PortSettings, SubnetSettings, NetworkSettings)
 from snaps.openstack.create_security_group import (
     SecurityGroupSettings, SecurityGroupRuleSettings)
-from snaps.openstack.create_volume import VolumeSettings
 from snaps.openstack.utils import (
     neutron_utils, nova_utils, heat_utils, glance_utils)
 
@@ -148,13 +148,13 @@ def create_router_settings(neutron, router):
         port_settings=filtered_settings)
 
 
-def create_volume_settings(volume):
+def create_volume_config(volume):
     """
     Returns a VolumeSettings object
     :param volume: a SNAPS-OO Volume object
     """
 
-    return VolumeSettings(
+    return VolumeConfig(
         name=volume.name, description=volume.description,
         size=volume.size, type_name=volume.type,
         availability_zone=volume.availability_zone,

@@ -479,7 +479,7 @@ Create Volume
 
 -  Volume - snaps.openstack.create\_volume.OpenStackVolume
 
-   -  snaps.openstack.create\_volume.VolumeSettings
+   -  snaps.config.volume.VolumeConfig
 
       -  name - the volume type's name (required)
       -  description - the volume type's description (optional)
@@ -493,9 +493,10 @@ Create Volume
 
 .. code:: python
 
-    from snaps.openstack.create\_volume import VolumeSettings, OpenStackVolume
+    from snaps.config.volume import VolumeConfig
+    from snaps.openstack.create\_volume import OpenStackVolume
 
-    vol_settings = VolumeSettings(name='stack-name')
+    vol_settings = VolumeConfig(name='stack-name')
     vol_creator = OpenStackVolume(os_creds, vol_settings)
     vol_creator.create()
 
