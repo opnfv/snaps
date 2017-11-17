@@ -18,6 +18,8 @@ import uuid
 import os
 import pkg_resources
 from scp import SCPClient
+
+from snaps.config.flavor import FlavorConfig
 from snaps.openstack import create_flavor
 from snaps.openstack import create_image
 from snaps.openstack import create_instance
@@ -100,9 +102,9 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = create_flavor.OpenStackFlavor(
                 self.admin_os_creds,
-                create_flavor.FlavorSettings(name=guid + '-flavor-name',
-                                             ram=2048, disk=10, vcpus=2,
-                                             metadata=self.flavor_metadata))
+                FlavorConfig(
+                    name=guid + '-flavor-name', ram=2048, disk=10, vcpus=2,
+                    metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
             # Create Key/Pair
@@ -262,12 +264,13 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         ssh = ansible_utils.ssh_client(ip, user, priv_key,
                                        self.os_creds.proxy_settings)
         self.assertIsNotNone(ssh)
-
+        scp = None
         try:
             scp = SCPClient(ssh.get_transport())
             scp.get('~/hello.txt', self.test_file_local_path)
         finally:
-            scp.close()
+            if scp:
+                scp.close()
             ssh.close()
 
         self.assertTrue(os.path.isfile(self.test_file_local_path))
@@ -326,12 +329,14 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         ssh = ansible_utils.ssh_client(ip, user, priv_key,
                                        self.os_creds.proxy_settings)
         self.assertIsNotNone(ssh)
+        scp = None
 
         try:
             scp = SCPClient(ssh.get_transport())
             scp.get('/tmp/hello.txt', self.test_file_local_path)
         finally:
-            scp.close()
+            if scp:
+                scp.close()
             ssh.close()
 
         self.assertTrue(os.path.isfile(self.test_file_local_path))

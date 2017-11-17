@@ -408,7 +408,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
             self.__heat_cli, nova, self.__stack)
 
         for flavor in flavors:
-            settings = settings_utils.create_flavor_settings(flavor)
+            settings = settings_utils.create_flavor_config(flavor)
             creator = OpenStackFlavor(self._os_creds, settings)
             out.append(creator)
 

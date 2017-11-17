@@ -16,6 +16,7 @@ import logging
 
 from novaclient.exceptions import NotFound
 
+from snaps.config.flavor import FlavorConfig
 from snaps.openstack.openstack_creator import OpenStackComputeObject
 from snaps.openstack.utils import nova_utils
 
@@ -36,7 +37,7 @@ class OpenStackFlavor(OpenStackComputeObject):
         """
         Constructor
         :param os_creds: The OpenStack connection credentials
-        :param flavor_settings: The flavor settings
+        :param flavor_settings: a FlavorConfig instance
         :return:
         """
         super(self.__class__, self).__init__(os_creds)
@@ -96,94 +97,13 @@ class OpenStackFlavor(OpenStackComputeObject):
         return self.__flavor
 
 
-class FlavorSettings:
+class FlavorSettings(FlavorConfig):
     """
     Configuration settings for OpenStack flavor creation
     """
 
     def __init__(self, **kwargs):
-        """
-        Constructor
-        :param name: the flavor's name (required)
-        :param flavor_id: the string ID (default 'auto')
-        :param ram: the required RAM in MB (required)
-        :param disk: the size of the root disk in GB (required)
-        :param vcpus: the number of virtual CPUs (required)
-        :param ephemeral: the size of the ephemeral disk in GB (default 0)
-        :param swap: the size of the dedicated swap disk in GB (default 0)
-        :param rxtx_factor: the receive/transmit factor to be set on ports if
-                            backend supports QoS extension (default 1.0)
-        :param is_public: denotes whether or not the flavor is public
-                          (default True)
-        :param metadata: freeform dict() for special metadata
-        """
-        self.name = kwargs.get('name')
-
-        if kwargs.get('flavor_id'):
-            self.flavor_id = kwargs['flavor_id']
-        else:
-            self.flavor_id = 'auto'
-
-        self.ram = kwargs.get('ram')
-        self.disk = kwargs.get('disk')
-        self.vcpus = kwargs.get('vcpus')
-
-        if kwargs.get('ephemeral'):
-            self.ephemeral = kwargs['ephemeral']
-        else:
-            self.ephemeral = 0
-
-        if kwargs.get('swap'):
-            self.swap = kwargs['swap']
-        else:
-            self.swap = 0
-
-        if kwargs.get('rxtx_factor'):
-            self.rxtx_factor = kwargs['rxtx_factor']
-        else:
-            self.rxtx_factor = 1.0
-
-        if kwargs.get('is_public') is not None:
-            self.is_public = kwargs['is_public']
-        else:
-            self.is_public = True
-
-        if kwargs.get('metadata'):
-            self.metadata = kwargs['metadata']
-        else:
-            self.metadata = None
-
-        if not self.name or not self.ram or not self.disk or not self.vcpus:
-            raise FlavorSettingsError(
-                'The attributes name, ram, disk, and vcpus are required for'
-                'FlavorSettings')
-
-        if not isinstance(self.ram, int):
-            raise FlavorSettingsError('The ram attribute must be a integer')
-
-        if not isinstance(self.disk, int):
-            raise FlavorSettingsError('The ram attribute must be a integer')
-
-        if not isinstance(self.vcpus, int):
-            raise FlavorSettingsError('The vcpus attribute must be a integer')
-
-        if self.ephemeral and not isinstance(self.ephemeral, int):
-            raise FlavorSettingsError(
-                'The ephemeral attribute must be an integer')
-
-        if self.swap and not isinstance(self.swap, int):
-            raise FlavorSettingsError('The swap attribute must be an integer')
-
-        if self.rxtx_factor and not isinstance(self.rxtx_factor, (int, float)):
-            raise FlavorSettingsError(
-                'The is_public attribute must be an integer or float')
-
-        if self.is_public and not isinstance(self.is_public, bool):
-            raise FlavorSettingsError(
-                'The is_public attribute must be a boolean')
-
-
-class FlavorSettingsError(Exception):
-    """
-    Exception to be thrown when an flavor settings are incorrect
-    """
+        from warnings import warn
+        warn('Use snaps.config.flavor.FlavorConfig instead',
+             DeprecationWarning)
+        super(self.__class__, self).__init__(**kwargs)

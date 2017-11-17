@@ -20,8 +20,9 @@ import uuid
 
 import time
 
+from snaps.config.flavor import FlavorConfig
 from snaps.openstack import create_stack
-from snaps.openstack.create_flavor import OpenStackFlavor, FlavorSettings
+from snaps.openstack.create_flavor import OpenStackFlavor
 
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_instance import OpenStackVmInstance
@@ -96,7 +97,7 @@ class HeatUtilsCreateSimpleStackTests(OSComponentTestCase):
         # Create Flavor
         self.flavor_creator = OpenStackFlavor(
             self.os_creds,
-            FlavorSettings(name=guid + '-flavor', ram=256, disk=10, vcpus=1))
+            FlavorConfig(name=guid + '-flavor', ram=256, disk=10, vcpus=1))
         self.flavor_creator.create()
 
         env_values = {'image_name': self.image_creator.image_settings.name,

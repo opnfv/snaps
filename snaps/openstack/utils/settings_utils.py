@@ -15,7 +15,7 @@
 import uuid
 
 from snaps import file_utils
-from snaps.openstack.create_flavor import FlavorSettings
+from snaps.config.flavor import FlavorConfig
 from snaps.openstack.create_instance import (
     VmInstanceSettings, FloatingIpSettings)
 from snaps.openstack.create_keypairs import KeypairSettings
@@ -191,12 +191,12 @@ def create_volume_type_settings(volume_type):
         qos_spec_name=qos_spec_name, public=volume_type.public)
 
 
-def create_flavor_settings(flavor):
+def create_flavor_config(flavor):
     """
     Returns a VolumeSettings object
     :param flavor: a SNAPS-OO Volume object
     """
-    return FlavorSettings(
+    return FlavorConfig(
         name=flavor.name, flavor_id=flavor.id, ram=flavor.ram,
         disk=flavor.disk, vcpus=flavor.vcpus, ephemeral=flavor.ephemeral,
         swap=flavor.swap, rxtx_factor=flavor.rxtx_factor,

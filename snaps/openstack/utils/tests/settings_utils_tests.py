@@ -18,6 +18,7 @@ import unittest
 import os
 import uuid
 
+from snaps.config.flavor import FlavorConfig
 from snaps.domain.flavor import Flavor
 from snaps.domain.volume import (
     Volume, VolumeType, VolumeTypeEncryption, QoSSpec)
@@ -200,8 +201,8 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
             # Create Flavor
             self.flavor_creator = create_flavor.OpenStackFlavor(
                 self.os_creds,
-                create_flavor.FlavorSettings(name=guid + '-flavor-name',
-                                             ram=256, disk=1, vcpus=1))
+                FlavorConfig(
+                    name=guid + '-flavor-name', ram=256, disk=1, vcpus=1))
             self.flavor_creator.create()
 
             # Create Key/Pair
@@ -390,7 +391,7 @@ class SettingsUtilsUnitTests(unittest.TestCase):
         flavor = Flavor(
             name='flavor-name', flavor_id='flavor-id', ram=99, disk=101,
             vcpus=9, ephemeral=3, swap=5, rxtx_factor=7, is_public=False)
-        settings = settings_utils.create_flavor_settings(flavor)
+        settings = settings_utils.create_flavor_config(flavor)
         self.assertEqual(flavor.name, settings.name)
         self.assertEqual(flavor.id, settings.flavor_id)
         self.assertEqual(flavor.ram, settings.ram)
