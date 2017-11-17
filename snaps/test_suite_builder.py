@@ -16,6 +16,7 @@
 import logging
 import unittest
 
+from snaps.config.tests.stack_tests import StackConfigUnitTests
 from snaps.config.tests.router_tests import RouterConfigUnitTests
 from snaps.config.tests.user_tests import UserConfigUnitTests
 from snaps.config.tests.project_tests import ProjectConfigUnitTests
@@ -204,6 +205,8 @@ def add_unit_tests(suite):
         StackDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         ResourceDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        StackConfigUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         StackSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

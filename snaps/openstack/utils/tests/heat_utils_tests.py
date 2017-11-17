@@ -20,13 +20,13 @@ import uuid
 
 import time
 
+import snaps.config.stack as stack_config
 from snaps.config.flavor import FlavorConfig
-from snaps.openstack import create_stack
 from snaps.openstack.create_flavor import OpenStackFlavor
 
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_instance import OpenStackVmInstance
-from snaps.openstack.create_stack import StackSettings
+from snaps.openstack.create_stack import StackConfig
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import (
@@ -107,10 +107,10 @@ class HeatUtilsCreateSimpleStackTests(OSComponentTestCase):
                       'inst_name': self.vm_inst_name}
         heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'test_heat_template.yaml')
-        self.stack_settings1 = StackSettings(
+        self.stack_settings1 = StackConfig(
             name=stack_name1, template_path=heat_tmplt_path,
             env_values=env_values)
-        self.stack_settings2 = StackSettings(
+        self.stack_settings2 = StackConfig(
             name=stack_name2, template_path=heat_tmplt_path,
             env_values=env_values)
         self.stack1 = None
@@ -272,7 +272,7 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
                       'external_net_name': self.ext_net_name}
         heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'floating_ip_heat_template.yaml')
-        stack_settings = StackSettings(
+        stack_settings = StackConfig(
             name=stack_name, template_path=heat_tmplt_path,
             env_values=env_values)
         self.heat_client = heat_utils.heat_client(self.os_creds)
@@ -291,15 +291,16 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
             try:
                 heat_utils.delete_stack(self.heat_client, self.stack)
                 # Wait until stack deployment has completed
-                end_time = time.time() + create_stack.STACK_COMPLETE_TIMEOUT
+                end_time = (time.time() +
+                            stack_config.STACK_COMPLETE_TIMEOUT)
                 is_deleted = False
                 while time.time() < end_time:
                     status = heat_utils.get_stack_status(self.heat_client,
                                                          self.stack.id)
-                    if status == create_stack.STATUS_DELETE_COMPLETE:
+                    if status == stack_config.STATUS_DELETE_COMPLETE:
                         is_deleted = True
                         break
-                    elif status == create_stack.STATUS_DELETE_FAILED:
+                    elif status == stack_config.STATUS_DELETE_FAILED:
                         is_deleted = False
                         break
 
@@ -447,7 +448,7 @@ class HeatUtilsRouterTests(OSComponentTestCase):
 
         heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'router_heat_template.yaml')
-        self.stack_settings = StackSettings(
+        self.stack_settings = StackConfig(
             name=stack_name, template_path=heat_tmplt_path,
             env_values=env_values)
         self.stack = None
@@ -473,15 +474,15 @@ class HeatUtilsRouterTests(OSComponentTestCase):
             self.heat_client, self.stack_settings)
 
         # Wait until stack deployment has completed
-        end_time = time.time() + create_stack.STACK_COMPLETE_TIMEOUT
+        end_time = time.time() + stack_config.STACK_COMPLETE_TIMEOUT
         is_active = False
         while time.time() < end_time:
             status = heat_utils.get_stack_status(self.heat_client,
                                                  self.stack.id)
-            if status == create_stack.STATUS_CREATE_COMPLETE:
+            if status == stack_config.STATUS_CREATE_COMPLETE:
                 is_active = True
                 break
-            elif status == create_stack.STATUS_CREATE_FAILED:
+            elif status == stack_config.STATUS_CREATE_FAILED:
                 is_active = False
                 break
 
@@ -522,7 +523,7 @@ class HeatUtilsVolumeTests(OSComponentTestCase):
 
         heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'volume_heat_template.yaml')
-        self.stack_settings = StackSettings(
+        self.stack_settings = StackConfig(
             name=stack_name, template_path=heat_tmplt_path,
             env_values=env_values)
         self.stack = None
@@ -602,7 +603,7 @@ class HeatUtilsFlavorTests(OSComponentTestCase):
 
         heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'flavor_heat_template.yaml')
-        self.stack_settings = StackSettings(
+        self.stack_settings = StackConfig(
             name=stack_name, template_path=heat_tmplt_path)
         self.stack = None
         self.heat_client = heat_utils.heat_client(self.os_creds)
@@ -660,7 +661,7 @@ class HeatUtilsKeypairTests(OSComponentTestCase):
 
         heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'keypair_heat_template.yaml')
-        self.stack_settings = StackSettings(
+        self.stack_settings = StackConfig(
             name=stack_name, template_path=heat_tmplt_path,
             env_values=env_values)
         self.stack = None
@@ -723,7 +724,7 @@ class HeatUtilsSecurityGroupTests(OSComponentTestCase):
 
         heat_tmplt_path = pkg_resources.resource_filename(
             'snaps.openstack.tests.heat', 'security_group_heat_template.yaml')
-        self.stack_settings = StackSettings(
+        self.stack_settings = StackConfig(
             name=stack_name, template_path=heat_tmplt_path,
             env_values=env_values)
         self.stack = None
@@ -790,14 +791,14 @@ def stack_active(heat_cli, stack):
     :return: T/F
     """
     # Wait until stack deployment has completed
-    end_time = time.time() + create_stack.STACK_COMPLETE_TIMEOUT
+    end_time = time.time() + stack_config.STACK_COMPLETE_TIMEOUT
     is_active = False
     while time.time() < end_time:
         status = heat_utils.get_stack_status(heat_cli, stack.id)
-        if status == create_stack.STATUS_CREATE_COMPLETE:
+        if status == stack_config.STATUS_CREATE_COMPLETE:
             is_active = True
             break
-        elif status == create_stack.STATUS_CREATE_FAILED:
+        elif status == stack_config.STATUS_CREATE_FAILED:
             is_active = False
             break
 
