@@ -276,11 +276,17 @@ VolumeDomainObjectTests
 Ensures that all required members are included when constructing a
 Volume domain object (for Cinder)
 
+VolumeTypeConfigUnitTests
+-------------------------
+
+Ensures that all required members are included when constructing a
+VolumeTypeConfig object
+
 VolumeTypeSettingsUnitTests
 ---------------------------
 
 Ensures that all required members are included when constructing a
-VolumeTypeSettings object
+deprecated VolumeTypeSettings object
 
 VolumeTypeDomainObjectTests
 ---------------------------

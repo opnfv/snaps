@@ -14,9 +14,9 @@
 # limitations under the License.
 from cinderclient.exceptions import NotFound, BadRequest
 
+from snaps.config.volume_type import VolumeTypeConfig
 from snaps.openstack.create_image import OpenStackImage
-from snaps.openstack.create_volume_type import (
-    VolumeTypeSettings, OpenStackVolumeType)
+from snaps.openstack.create_volume_type import OpenStackVolumeType
 from snaps.openstack.tests import openstack_tests
 
 try:
@@ -303,7 +303,7 @@ class CreateVolumeWithTypeTests(OSIntegrationTestCase):
         self.volume_type_name = guid + '-vol-type'
 
         self.volume_type_creator = OpenStackVolumeType(
-            self.os_creds, VolumeTypeSettings(name=self.volume_type_name))
+            self.os_creds, VolumeTypeConfig(name=self.volume_type_name))
         self.volume_type_creator.create()
         self.volume_creator = None
 
