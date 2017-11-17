@@ -79,7 +79,7 @@ Create User
 -----------
 -  User - snaps.openstack.create\_user.OpenStackUser
 
-   -  snaps.openstack.create\_user.UserSettings
+   -  snaps.openstack.user.UserConfig
 
       -  name - the username (required)
       -  password - the user's password (required)
@@ -94,8 +94,9 @@ Create User
 
 .. code:: python
 
-    from snaps.openstack.create_user import UserSettings, OpenStackUser
-    user_settings = UserSettings(name='username', password='password')
+    from snaps.config.user import UserConfig
+    from snaps.openstack.create_user import OpenStackUser
+    user_settings = UserConfig(name='username', password='password')
     user_creator = OpenStackUser(os_creds, user_settings)
     user_creator.create()
 

@@ -17,13 +17,13 @@ import uuid
 
 from keystoneclient.exceptions import BadRequest
 
+from snaps.config.user import UserConfig
 from snaps.domain.project import ComputeQuotas, NetworkQuotas
 from snaps.openstack.create_project import (
     OpenStackProject, ProjectSettings, ProjectSettingsError)
 from snaps.openstack.create_security_group import OpenStackSecurityGroup
 from snaps.openstack.create_security_group import SecurityGroupSettings
 from snaps.openstack.create_user import OpenStackUser
-from snaps.openstack.create_user import UserSettings
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import keystone_utils, nova_utils, neutron_utils
 
@@ -272,9 +272,10 @@ class CreateProjectUserTests(OSComponentTestCase):
         self.assertIsNotNone(created_project)
 
         user_creator = OpenStackUser(
-            self.os_creds, UserSettings(
+            self.os_creds, UserConfig(
                 name=self.guid + '-user',
-                password=self.guid, roles={'admin':  self.project_settings.name},
+                password=self.guid,
+                roles={'admin':  self.project_settings.name},
                 domain_name=self.os_creds.user_domain_name))
         self.project_creator.assoc_user(user_creator.create())
         self.user_creators.append(user_creator)
@@ -282,8 +283,8 @@ class CreateProjectUserTests(OSComponentTestCase):
         sec_grp_os_creds = user_creator.get_os_creds(
             self.project_creator.get_project().name)
         sec_grp_creator = OpenStackSecurityGroup(
-            sec_grp_os_creds, SecurityGroupSettings(name=self.guid + '-name',
-                                                    description='hello group'))
+            sec_grp_os_creds, SecurityGroupSettings(
+                name=self.guid + '-name', description='hello group'))
         sec_grp = sec_grp_creator.create()
         self.assertIsNotNone(sec_grp)
         self.sec_grp_creators.append(sec_grp_creator)
@@ -302,7 +303,7 @@ class CreateProjectUserTests(OSComponentTestCase):
         self.assertIsNotNone(created_project)
 
         user_creator_1 = OpenStackUser(
-            self.os_creds, UserSettings(
+            self.os_creds, UserConfig(
                 name=self.guid + '-user1', password=self.guid,
                 roles={'admin': self.project_settings.name},
                 domain_name=self.os_creds.user_domain_name))
@@ -310,7 +311,7 @@ class CreateProjectUserTests(OSComponentTestCase):
         self.user_creators.append(user_creator_1)
 
         user_creator_2 = OpenStackUser(
-            self.os_creds, UserSettings(
+            self.os_creds, UserConfig(
                 name=self.guid + '-user2', password=self.guid,
                 roles={'admin': self.project_settings.name},
                 domain_name=self.os_creds.user_domain_name))

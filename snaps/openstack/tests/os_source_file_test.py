@@ -14,22 +14,18 @@
 # limitations under the License.
 import logging
 import pkg_resources
-import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import uuid
 import unittest
 
 from snaps import file_utils
+from snaps.config.user import UserConfig
 from snaps.openstack.create_project import ProjectSettings
-from snaps.openstack.create_user import UserSettings
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.utils import deploy_utils, keystone_utils
 
 
 dev_os_env_file = pkg_resources.resource_filename(
     'snaps.openstack.tests.conf', 'os_env.yaml')
-
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 class OSComponentTestCase(unittest.TestCase):
@@ -154,7 +150,7 @@ class OSIntegrationTestCase(OSComponentTestCase):
                     domain=self.admin_os_creds.project_domain_name))
 
             self.user_creator = deploy_utils.create_user(
-                self.admin_os_creds, UserSettings(
+                self.admin_os_creds, UserConfig(
                     name=guid + '-user', password=guid,
                     project_name=project_name, roles={
                         'admin': self.project_creator.project_settings.name},
