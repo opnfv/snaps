@@ -29,13 +29,14 @@ from snaps import file_utils
 from snaps.config.flavor import FlavorConfig
 from snaps.config.image import ImageConfig
 from snaps.config.keypair import KeypairConfig
+from snaps.config.project import ProjectConfig
 from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_instance import VmInstanceSettings
 from snaps.openstack.create_keypairs import OpenStackKeypair
 from snaps.openstack.create_network import (
     PortSettings, NetworkSettings, OpenStackNetwork)
-from snaps.openstack.create_project import OpenStackProject, ProjectSettings
+from snaps.openstack.create_project import OpenStackProject
 from snaps.openstack.create_qos import QoSSettings, OpenStackQoS
 from snaps.openstack.create_router import RouterSettings, OpenStackRouter
 from snaps.openstack.create_security_group import (
@@ -615,7 +616,7 @@ def main(arguments):
             try:
                 # Create projects
                 projects_dict = __create_instances(
-                    os_creds_dict, OpenStackProject, ProjectSettings,
+                    os_creds_dict, OpenStackProject, ProjectConfig,
                     os_config.get('projects'), 'project', clean)
                 creators.append(projects_dict)
 

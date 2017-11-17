@@ -126,11 +126,17 @@ UserDomainObjectTests
 Ensures that all required members are included when constructing a
 User domain object
 
+ProjectConfigUnitTests
+----------------------
+
+Ensures that all required members are included when constructing a
+ProjectConfig object
+
 ProjectSettingsUnitTests
 ------------------------
 
 Ensures that all required members are included when constructing a
-ProjectSettings object
+deprecated ProjectSettings object
 
 ProjectDomainObjectTests
 ------------------------

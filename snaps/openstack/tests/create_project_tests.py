@@ -17,9 +17,10 @@ import uuid
 
 from keystoneclient.exceptions import BadRequest
 
+from snaps.config.project import ProjectConfigError, ProjectConfig
 from snaps.domain.project import ComputeQuotas, NetworkQuotas
 from snaps.openstack.create_project import (
-    OpenStackProject, ProjectSettings, ProjectSettingsError)
+    OpenStackProject, ProjectSettings)
 from snaps.openstack.create_security_group import OpenStackSecurityGroup
 from snaps.openstack.create_security_group import SecurityGroupSettings
 from snaps.openstack.create_user import OpenStackUser
@@ -36,11 +37,11 @@ class ProjectSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(ProjectSettingsError):
+        with self.assertRaises(ProjectConfigError):
             ProjectSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(ProjectSettingsError):
+        with self.assertRaises(ProjectConfigError):
             ProjectSettings(**dict())
 
     def test_name_only(self):
@@ -94,7 +95,7 @@ class CreateProjectSuccessTests(OSComponentTestCase):
         """
         guid = str(uuid.uuid4())[:-19]
         guid = self.__class__.__name__ + '-' + guid
-        self.project_settings = ProjectSettings(
+        self.project_settings = ProjectConfig(
             name=guid + '-name',
             domain=self.os_creds.project_domain_name)
 
@@ -236,7 +237,7 @@ class CreateProjectUserTests(OSComponentTestCase):
         """
         guid = str(uuid.uuid4())[:-19]
         self.guid = self.__class__.__name__ + '-' + guid
-        self.project_settings = ProjectSettings(
+        self.project_settings = ProjectConfig(
             name=self.guid + '-name',
             domain=self.os_creds.project_domain_name)
 
@@ -274,7 +275,8 @@ class CreateProjectUserTests(OSComponentTestCase):
         user_creator = OpenStackUser(
             self.os_creds, UserSettings(
                 name=self.guid + '-user',
-                password=self.guid, roles={'admin':  self.project_settings.name},
+                password=self.guid, roles={
+                    'admin':  self.project_settings.name},
                 domain_name=self.os_creds.user_domain_name))
         self.project_creator.assoc_user(user_creator.create())
         self.user_creators.append(user_creator)
@@ -282,8 +284,8 @@ class CreateProjectUserTests(OSComponentTestCase):
         sec_grp_os_creds = user_creator.get_os_creds(
             self.project_creator.get_project().name)
         sec_grp_creator = OpenStackSecurityGroup(
-            sec_grp_os_creds, SecurityGroupSettings(name=self.guid + '-name',
-                                                    description='hello group'))
+            sec_grp_os_creds, SecurityGroupSettings(
+                name=self.guid + '-name', description='hello group'))
         sec_grp = sec_grp_creator.create()
         self.assertIsNotNone(sec_grp)
         self.sec_grp_creators.append(sec_grp_creator)

@@ -112,7 +112,7 @@ Create Project
 --------------
 -  Project - snaps.openstack.create\_project.OpenStackProject
 
-   -  snaps.openstack.create\_project.ProjectSettings
+   -  snaps.openstack.project.ProjectConfig
 
       -  name - the project name (required)
       -  domain - the project's domain (default='default')
@@ -123,8 +123,9 @@ Create Project
 
 .. code:: python
 
-    from snaps.openstack.create_project import ProjectSettings, OpenStackProject
-    project_settings = ProjectSettings(name='username', password='password')
+    from snaps.openstack.project import ProjectConfig
+    from snaps.openstack.create_project import OpenStackProject
+    project_settings = ProjectConfig(name='username', password='password')
     project_creator = OpenStackProject(os_creds, project_settings)
     project_creator.create()
 

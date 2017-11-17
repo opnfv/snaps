@@ -14,7 +14,7 @@
 # limitations under the License.
 import uuid
 
-from snaps.openstack.create_project import ProjectSettings
+from snaps.config.project import ProjectConfig
 from snaps.openstack.create_user import UserSettings
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import keystone_utils, neutron_utils
@@ -111,7 +111,7 @@ class KeystoneUtilsTests(OSComponentTestCase):
         """
         Tests the keyston_utils.create_project() funtion
         """
-        project_settings = ProjectSettings(
+        project_settings = ProjectConfig(
             name=self.project_name, domain=self.os_creds.project_domain_name)
         self.project = keystone_utils.create_project(self.keystone,
                                                      project_settings)
@@ -186,7 +186,7 @@ class KeystoneUtilsTests(OSComponentTestCase):
         self.user = keystone_utils.create_user(self.keystone, user_settings)
         self.assertEqual(self.username, self.user.name)
 
-        project_settings = ProjectSettings(
+        project_settings = ProjectConfig(
             name=self.project_name, domain=self.os_creds.project_domain_name)
         self.project = keystone_utils.create_project(self.keystone,
                                                      project_settings)

@@ -114,7 +114,7 @@ def get_project(keystone=None, os_creds=None, project_settings=None,
     :param keystone: the Keystone client
     :param os_creds: the OpenStack credentials used to obtain the Keystone
                      client if the keystone parameter is None
-    :param project_settings: a ProjectSettings object
+    :param project_settings: a ProjectConfig object
     :param project_name: the name to query
     :return: the SNAPS-OO Project domain object or None
     """
