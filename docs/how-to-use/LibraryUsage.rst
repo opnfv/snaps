@@ -444,19 +444,20 @@ Create Volume Type
 
 -  Volume Type - snaps.openstack.create\_volume\_type.OpenStackVolumeType
 
-   -  snaps.openstack.create\_volume\_type.VolumeTypeSettings
+   -  snaps.config.volume\_type.VolumeTypeConfig
 
       -  name - the volume type's name (required)
       -  description - the volume type's description (optional)
-      -  encryption - instance or config for VolumeTypeEncryptionSettings (optional)
+      -  encryption - instance or config for VolumeTypeEncryptionConfig (optional)
       -  qos\_spec\_name - name of the QoS Spec to associate (optional)
-      -  public - instance or config for VolumeTypeEncryptionSettings (optional)
+      -  public - instance or config for VolumeTypeEncryptionConfig (optional)
 
 .. code:: python
 
-    from snaps.openstack.create_volume_type import VolumeTypeSettings, OpenStackVolumeType
+    from snaps.config.volume_type import VolumeTypeConfig
+    from snaps.openstack.create_volume_type import OpenStackVolumeType
 
-    vol_type_settings = VolumeTypeSettings(name='stack-name')
+    vol_type_settings = VolumeTypeConfig(name='stack-name')
     vol_type_creator = OpenStackHeatStack(os_creds, vol_type_settings)
     vol_type_creator.create()
 

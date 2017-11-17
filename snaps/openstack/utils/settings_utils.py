@@ -15,6 +15,8 @@
 import uuid
 
 from snaps import file_utils
+from snaps.config.volume_type import (
+    ControlLocation,  VolumeTypeEncryptionConfig, VolumeTypeConfig)
 from snaps.openstack.create_flavor import FlavorSettings
 from snaps.openstack.create_instance import (
     VmInstanceSettings, FloatingIpSettings)
@@ -25,8 +27,6 @@ from snaps.openstack.create_security_group import (
     SecurityGroupSettings, SecurityGroupRuleSettings)
 from snaps.openstack.create_router import RouterSettings
 from snaps.openstack.create_volume import VolumeSettings
-from snaps.openstack.create_volume_type import (
-    VolumeTypeSettings, VolumeTypeEncryptionSettings, ControlLocation)
 from snaps.openstack.utils import (
     neutron_utils, nova_utils, heat_utils, glance_utils)
 
@@ -161,7 +161,7 @@ def create_volume_settings(volume):
         multi_attach=volume.multi_attach)
 
 
-def create_volume_type_settings(volume_type):
+def create_volume_type_config(volume_type):
     """
     Returns a VolumeTypeSettings object
     :param volume_type: a SNAPS-OO VolumeType object
@@ -175,7 +175,7 @@ def create_volume_type_settings(volume_type):
         else:
             control = ControlLocation.back_end
 
-    encrypt_settings = VolumeTypeEncryptionSettings(
+    encrypt_settings = VolumeTypeEncryptionConfig(
         name=volume_type.encryption.__class__,
         provider_class=volume_type.encryption.provider,
         control_location=control,
@@ -186,7 +186,7 @@ def create_volume_type_settings(volume_type):
     if volume_type.qos_spec:
         qos_spec_name = volume_type.qos_spec.name
 
-    return VolumeTypeSettings(
+    return VolumeTypeConfig(
         name=volume_type.name, encryption=encrypt_settings,
         qos_spec_name=qos_spec_name, public=volume_type.public)
 

@@ -18,11 +18,11 @@ import uuid
 import time
 from cinderclient.exceptions import NotFound, BadRequest
 
+from snaps.config.volume_type import VolumeTypeConfig, ControlLocation, \
+    VolumeTypeEncryptionConfig
 from snaps.openstack import create_volume
 from snaps.openstack.create_qos import QoSSettings, Consumer
 from snaps.openstack.create_volume import VolumeSettings
-from snaps.openstack.create_volume_type import (
-    VolumeTypeSettings, VolumeTypeEncryptionSettings, ControlLocation)
 from snaps.openstack.tests import validation_utils
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import cinder_utils
@@ -275,7 +275,7 @@ class CinderUtilsSimpleVolumeTypeTests(OSComponentTestCase):
         """
         guid = uuid.uuid4()
         volume_type_name = self.__class__.__name__ + '-' + str(guid)
-        self.volume_type_settings = VolumeTypeSettings(name=volume_type_name)
+        self.volume_type_settings = VolumeTypeConfig(name=volume_type_name)
         self.volume_type = None
         self.cinder = cinder_utils.cinder_client(self.os_creds)
 
@@ -349,7 +349,7 @@ class CinderUtilsAddEncryptionTests(OSComponentTestCase):
 
         volume_type_name = self.__class__.__name__ + '-' + str(guid) + '-type'
         self.volume_type = cinder_utils.create_volume_type(
-            self.cinder, VolumeTypeSettings(name=volume_type_name))
+            self.cinder, VolumeTypeConfig(name=volume_type_name))
 
     def tearDown(self):
         """
@@ -373,7 +373,7 @@ class CinderUtilsAddEncryptionTests(OSComponentTestCase):
         Tests the cinder_utils.create_volume_encryption(),
         get_volume_encryption(), and get_volume_encryption_by_id()
         """
-        encryption_settings = VolumeTypeEncryptionSettings(
+        encryption_settings = VolumeTypeEncryptionConfig(
             name=self.encryption_name, provider_class='foo',
             control_location=ControlLocation.front_end)
         self.encryption = cinder_utils.create_volume_encryption(
@@ -391,7 +391,7 @@ class CinderUtilsAddEncryptionTests(OSComponentTestCase):
         """
         Primarily tests the cinder_utils.delete_volume_type_encryption()
         """
-        encryption_settings = VolumeTypeEncryptionSettings(
+        encryption_settings = VolumeTypeEncryptionConfig(
             name=self.encryption_name, provider_class='LuksEncryptor',
             control_location=ControlLocation.back_end)
         self.encryption = cinder_utils.create_volume_encryption(
@@ -417,7 +417,7 @@ class CinderUtilsAddEncryptionTests(OSComponentTestCase):
         Tests the cinder_utils.create_volume_encryption() with all valid
         settings
         """
-        encryption_settings = VolumeTypeEncryptionSettings(
+        encryption_settings = VolumeTypeEncryptionConfig(
             name=self.encryption_name, provider_class='foo',
             cipher='bar', control_location=ControlLocation.back_end,
             key_size=1)
@@ -439,7 +439,7 @@ class CinderUtilsAddEncryptionTests(OSComponentTestCase):
         Tests the cinder_utils.create_volume_encryption() raises an exception
         when the provider class does not exist
         """
-        encryption_settings = VolumeTypeEncryptionSettings(
+        encryption_settings = VolumeTypeEncryptionConfig(
             name=self.encryption_name, provider_class='foo',
             cipher='bar', control_location=ControlLocation.back_end,
             key_size=-1)
@@ -495,10 +495,10 @@ class CinderUtilsVolumeTypeCompleteTests(OSComponentTestCase):
         Tests the cinder_utils.create_volume_type() where encryption has been
         configured
         """
-        encryption_settings = VolumeTypeEncryptionSettings(
+        encryption_settings = VolumeTypeEncryptionConfig(
             name='foo', provider_class='bar',
             control_location=ControlLocation.back_end)
-        volume_type_settings = VolumeTypeSettings(
+        volume_type_settings = VolumeTypeConfig(
             name=self.vol_type_name, encryption=encryption_settings)
         self.volume_type = cinder_utils.create_volume_type(
             self.cinder, volume_type_settings)
@@ -514,7 +514,7 @@ class CinderUtilsVolumeTypeCompleteTests(OSComponentTestCase):
         """
         Tests the cinder_utils.create_volume_type() with an associated QoS Spec
         """
-        volume_type_settings = VolumeTypeSettings(
+        volume_type_settings = VolumeTypeConfig(
             name=self.vol_type_name, qos_spec_name=self.qos_name)
         self.volume_type = cinder_utils.create_volume_type(
             self.cinder, volume_type_settings)
@@ -529,7 +529,7 @@ class CinderUtilsVolumeTypeCompleteTests(OSComponentTestCase):
         Tests the cinder_utils.create_volume_type() when the QoS Spec name
         does not exist
         """
-        volume_type_settings = VolumeTypeSettings(
+        volume_type_settings = VolumeTypeConfig(
             name=self.vol_type_name, qos_spec_name='foo')
 
         self.volume_type = cinder_utils.create_volume_type(
@@ -542,10 +542,10 @@ class CinderUtilsVolumeTypeCompleteTests(OSComponentTestCase):
         Tests the cinder_utils.create_volume_type() with encryption and an
         associated QoS Spec
         """
-        encryption_settings = VolumeTypeEncryptionSettings(
+        encryption_settings = VolumeTypeEncryptionConfig(
             name='foo', provider_class='bar',
             control_location=ControlLocation.back_end)
-        volume_type_settings = VolumeTypeSettings(
+        volume_type_settings = VolumeTypeConfig(
             name=self.vol_type_name, qos_spec_name=self.qos_name,
             encryption=encryption_settings)
         self.volume_type = cinder_utils.create_volume_type(

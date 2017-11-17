@@ -373,7 +373,7 @@ class SettingsUtilsUnitTests(unittest.TestCase):
             name='vol-type-name', volume_type_id='vol-type-id', public=True,
             encryption=encryption, qos_spec=qos_spec)
 
-        settings = settings_utils.create_volume_type_settings(volume_type)
+        settings = settings_utils.create_volume_type_config(volume_type)
         self.assertEqual(volume_type.name, settings.name)
         self.assertEqual(volume_type.public, settings.public)
 
