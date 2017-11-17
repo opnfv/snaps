@@ -16,6 +16,7 @@
 import logging
 import unittest
 
+from snaps.config.tests.qos_tests import QoSConfigUnitTests
 from snaps.config.tests.stack_tests import StackConfigUnitTests
 from snaps.config.tests.router_tests import RouterConfigUnitTests
 from snaps.config.tests.user_tests import UserConfigUnitTests
@@ -221,6 +222,8 @@ def add_unit_tests(suite):
         VmInstDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         FloatingIpDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        QoSConfigUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         QoSSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

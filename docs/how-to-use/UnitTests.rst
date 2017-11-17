@@ -294,11 +294,17 @@ VolumeTypeEncryptionObjectTests
 Ensures that all required members are included when constructing a
 VolumeTypeEncryption domain object (for Cinder)
 
+QoSConfigUnitTests
+------------------
+
+Ensures that all required members are included when constructing a
+QoSConfig object
+
 QoSSettingsUnitTests
 --------------------
 
 Ensures that all required members are included when constructing a
-QoSSettings object
+deprecated QoSSettings object
 
 QoSSpecDomainObjectTests
 ------------------------

@@ -425,7 +425,7 @@ Create QoS Spec
 
 -  Volume Type - snaps.openstack.create\_qos.OpenStackQoS
 
-   -  snaps.openstack.create\_qos.QoSSettings
+   -  snaps.openstack.qos.QoSConfig
 
       -  name - the volume type's name (required)
       -  consumer - the qos's consumer type of the enum type Consumer (required)
@@ -433,9 +433,10 @@ Create QoS Spec
 
 .. code:: python
 
-    from snaps.openstack.create_qos import QoSSettings, OpenStackQoS
+    from snaps.openstack.qos import QoSConfig
+    from snaps.openstack.create_qos import OpenStackQoS
 
-    qos_settings = QoSSettings(name='stack-name', consumer=Consumer.front-end)
+    qos_settings = QoSConfig(name='stack-name', consumer=Consumer.front-end)
     qos_creator = OpenStackQoS(os_creds, vol_type_settings)
     qos_creator.create()
 

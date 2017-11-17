@@ -18,8 +18,8 @@ import uuid
 import time
 from cinderclient.exceptions import NotFound, BadRequest
 
+from snaps.config.qos import Consumer, QoSConfig
 from snaps.openstack import create_volume
-from snaps.openstack.create_qos import QoSSettings, Consumer
 from snaps.openstack.create_volume import VolumeSettings
 from snaps.openstack.create_volume_type import (
     VolumeTypeSettings, VolumeTypeEncryptionSettings, ControlLocation)
@@ -196,8 +196,8 @@ class CinderUtilsQoSTests(OSComponentTestCase):
         """
         Tests the cinder_utils.create_qos()
         """
-        qos_settings = QoSSettings(name=self.qos_name, specs=self.specs,
-                                   consumer=Consumer.both)
+        qos_settings = QoSConfig(
+            name=self.qos_name, specs=self.specs, consumer=Consumer.both)
         self.qos = cinder_utils.create_qos(self.cinder, qos_settings)
         self.assertIsNotNone(self.qos)
 
@@ -213,8 +213,8 @@ class CinderUtilsQoSTests(OSComponentTestCase):
         """
         Tests the cinder_utils.create_qos()
         """
-        qos_settings = QoSSettings(name=self.qos_name, specs=self.specs,
-                                   consumer=Consumer.front_end)
+        qos_settings = QoSConfig(
+            name=self.qos_name, specs=self.specs, consumer=Consumer.front_end)
         self.qos = cinder_utils.create_qos(self.cinder, qos_settings)
         self.assertIsNotNone(self.qos)
 
@@ -230,8 +230,8 @@ class CinderUtilsQoSTests(OSComponentTestCase):
         """
         Tests the cinder_utils.create_qos()
         """
-        qos_settings = QoSSettings(name=self.qos_name, specs=self.specs,
-                                   consumer=Consumer.back_end)
+        qos_settings = QoSConfig(
+            name=self.qos_name, specs=self.specs, consumer=Consumer.back_end)
         self.qos = cinder_utils.create_qos(self.cinder, qos_settings)
         self.assertIsNotNone(self.qos)
 
@@ -247,7 +247,7 @@ class CinderUtilsQoSTests(OSComponentTestCase):
         """
         Tests the cinder_utils.create_qos()
         """
-        qos_settings = QoSSettings(name=self.qos_name, consumer=Consumer.both)
+        qos_settings = QoSConfig(name=self.qos_name, consumer=Consumer.both)
         self.qos = cinder_utils.create_qos(self.cinder, qos_settings)
         self.assertIsNotNone(self.qos)
         self.assertEqual(self.qos_name, self.qos.name)
@@ -463,8 +463,8 @@ class CinderUtilsVolumeTypeCompleteTests(OSComponentTestCase):
         self.vol_type_name = self.__class__.__name__ + '-' + str(guid)
         self.specs = {'foo': 'bar'}
         self.cinder = cinder_utils.cinder_client(self.os_creds)
-        qos_settings = QoSSettings(name=self.qos_name, specs=self.specs,
-                                   consumer=Consumer.both)
+        qos_settings = QoSConfig(
+            name=self.qos_name, specs=self.specs, consumer=Consumer.both)
         self.qos = cinder_utils.create_qos(self.cinder, qos_settings)
         self.volume_type = None
 
