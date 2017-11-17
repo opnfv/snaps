@@ -246,7 +246,7 @@ Create Network
 
 -  Network - snaps.openstack.create\_network.OpenStackNetwork
 
-   -  snaps.openstack.create\_network.NetworkSettings
+   -  snaps.config_network.NetworkConfig
 
       -  name - the name of the network (required)
       -  admin\_state\_up - flag denoting the administrative status of
@@ -263,7 +263,7 @@ Create Network
       -  segmentation\_id - the id of the segmentation (required
          when network\_type is 'vlan')
       -  subnet\_settings (list of optional
-         snaps.openstack.create\_network.SubnetSettings objects)
+         snaps.config.network.SubnetConfig objects)
 
          -  cidr - the subnet's CIDR (required)
          -  ip\_version - 4 or 6 (default=4)
@@ -287,10 +287,11 @@ Create Network
 
 .. code:: python
 
-    from snaps.openstack.create_network import NetworkSettings, SubnetSettings, OpenStackNetwork
+    from snaps.config.network import NetworkConfig, SubnetConfig
+    from snaps.openstack.create_network import OpenStackNetwork
 
-    subnet_settings = SubnetSettings(name='subnet-name', cidr='10.0.0.0/24')
-    network_settings = NetworkSettings(name='network-name', subnet_settings=[subnet_settings])
+    subnet_settings = SubnetConfig(name='subnet-name', cidr='10.0.0.0/24')
+    network_settings = NetworkConfig(name='network-name', subnet_settings=[subnet_settings])
 
     network_creator = OpenStackNetwork(os_creds, network_settings)
     network_creator.create()
@@ -340,10 +341,12 @@ Create Security Group
 
 .. code:: python
 
+    from snaps.config.network import SubnetConfig
+    from snaps.config.rule import RuleConfig
     from snaps.openstack.create_security_group import SecurityGroupSettings, SecurityGroupRuleSettings, Direction, OpenStackSecurityGroup
 
-    rule_settings = SubnetSettings(name='subnet-name', cidr='10.0.0.0/24')
-    network_settings = NetworkSettings(name='network-name', subnet_settings=[subnet_settings])
+    rule_settings = RuleConfig(name='subnet-name', cidr='10.0.0.0/24')
+    network_settings = SubnetConfig(name='network-name', subnet_settings=[subnet_settings])
 
     sec_grp_name = 'sec-grp-name'
     rule_settings = SecurityGroupRuleSettings(name=sec_grp_name, direction=Direction.ingress)
@@ -376,7 +379,7 @@ Create Router
       -  internal\_subnets - list of subnet names to which this router
          will connect (optional)
       -  port\_settings (list of optional
-         snaps.openstack.create\_router.PortSettings objects) - creates
+         snaps.config.network.PortConfig objects) - creates
          custom ports to internal subnets (similar to internal\_subnets
          with more control)
 
@@ -546,7 +549,7 @@ Create VM Instance
       -  name - the name of the VM (required)
       -  flavor - the name of the flavor (required)
       -  port\_settings - list of
-         snaps.openstack.create\_network.PortSettings objects where each
+         snaps.config.network.PortConfig objects where each
          denote a NIC (see above in create router section for details)
          API does not require, but newer NFVIs now require VMs have at
          least one network
@@ -589,9 +592,9 @@ Create VM Instance
 .. code:: python
 
     from snaps.openstack.create_instance import VmInstanceSettings, FloatingIpSettings, OpenStackVmInstance
-    from snaps.openstack.create_network import PortSettings
+    from snaps.config.network import PortConfig
 
-    port_settings = PortSettings(name='port-name', network_name=network_settings.name)
+    port_settings = PortConfig(name='port-name', network_name=network_settings.name)
     floating_ip_settings = FloatingIpSettings(name='fip1', port_name=port_settings.name, router_name=router_settings.name)
     instance_settings = VmInstanceSettings(name='vm-name', flavor='flavor_settings.name', port_settings=[port_settings],
                                            floating_ip_settings=[floating_ip_settings])

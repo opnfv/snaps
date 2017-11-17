@@ -19,9 +19,10 @@ import os
 import pkg_resources
 from scp import SCPClient
 
-from snaps.config.keypair import KeypairConfig
-
 from snaps.config.flavor import FlavorConfig
+from snaps.config.keypair import KeypairConfig
+from snaps.config.network import PortConfig
+
 from snaps.openstack import create_flavor
 from snaps.openstack import create_image
 from snaps.openstack import create_instance
@@ -136,7 +137,7 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
             # Create instance
             ports_settings = list()
             ports_settings.append(
-                create_network.PortSettings(
+                PortConfig(
                     name=self.port_1_name,
                     network_name=self.pub_net_config.network_settings.name))
 

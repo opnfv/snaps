@@ -109,7 +109,7 @@ def get_network(neutron, network_settings=None, network_name=None,
     else the query will use just the name from the network_name parameter.
     When the project_id is included, that will be added to the query filter.
     :param neutron: the client
-    :param network_settings: the NetworkSettings object used to create filter
+    :param network_settings: the NetworkConfig object used to create filter
     :param network_name: the name of the network to retrieve
     :param project_id: the id of the network's project
     :return: a SNAPS-OO Network domain object
@@ -480,7 +480,7 @@ def get_port(neutron, port_settings=None, port_name=None):
     """
     Returns the first port object (dictionary) found for the given query
     :param neutron: the client
-    :param port_settings: the PortSettings object used for generating the query
+    :param port_settings: the PortConfig object used for generating the query
     :param port_name: if port_settings is None, this name is the value to place
                       into the query
     :return: a SNAPS-OO Port domain object

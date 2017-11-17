@@ -18,8 +18,8 @@ import re
 import pkg_resources
 from snaps import file_utils
 from snaps.config.image import ImageConfig
+from snaps.config.network import NetworkConfig, SubnetConfig
 from snaps.config.router import RouterConfig
-from snaps.openstack.create_network import NetworkSettings, SubnetSettings
 from snaps.openstack.os_credentials import OSCreds, ProxySettings
 
 __author__ = 'spisarski'
@@ -338,11 +338,11 @@ class OSNetworkConfig:
                  router_name=None, external_gateway=None):
 
         if subnet_name and subnet_cidr:
-            self.network_settings = NetworkSettings(
+            self.network_settings = NetworkConfig(
                 name=net_name, subnet_settings=[
-                    SubnetSettings(cidr=subnet_cidr, name=subnet_name)])
+                    SubnetConfig(cidr=subnet_cidr, name=subnet_name)])
         else:
-            self.network_settings = NetworkSettings(name=net_name)
+            self.network_settings = NetworkConfig(name=net_name)
 
         if router_name:
             if subnet_name:

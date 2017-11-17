@@ -16,11 +16,9 @@ import uuid
 
 from neutronclient.common.exceptions import NotFound, BadRequest
 
-from snaps.openstack import create_router
-from snaps.openstack.create_network import NetworkSettings, SubnetSettings, \
-    PortSettings
-from snaps.openstack.create_security_group import SecurityGroupSettings, \
-    SecurityGroupRuleSettings, Direction
+from snaps.config.network import NetworkConfig, SubnetConfig, PortConfig
+from snaps.openstack.create_security_group import (
+    SecurityGroupSettings,  SecurityGroupRuleSettings, Direction)
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests import validation_utils
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
@@ -123,7 +121,7 @@ class NeutronUtilsNetworkTests(OSComponentTestCase):
         with self.assertRaises(Exception):
             self.network = neutron_utils.create_network(
                 self.neutron, self.os_creds,
-                network_settings=NetworkSettings(name=''))
+                network_settings=NetworkConfig(name=''))
 
     def test_create_network_null_name(self):
         """
@@ -133,7 +131,7 @@ class NeutronUtilsNetworkTests(OSComponentTestCase):
         with self.assertRaises(Exception):
             self.network = neutron_utils.create_network(
                 self.neutron, self.os_creds,
-                network_settings=NetworkSettings())
+                network_settings=NetworkConfig())
 
 
 class NeutronUtilsSubnetTests(OSComponentTestCase):
@@ -198,7 +196,7 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
             self.neutron, self.net_config.network_settings.name, True))
 
         with self.assertRaises(Exception):
-            SubnetSettings(cidr=self.net_config.subnet_cidr)
+            SubnetConfig(cidr=self.net_config.subnet_cidr)
 
     def test_create_subnet_empty_name(self):
         """
@@ -274,12 +272,12 @@ class NeutronUtilsIPv6Tests(OSComponentTestCase):
         Tests the neutron_utils.create_network() with an IPv6 subnet where DHCP
         is True and IPv6 modes are slaac
         """
-        sub_setting = SubnetSettings(
+        sub_setting = SubnetConfig(
             name=self.guid + '-subnet', cidr='1:1:0:0:0:0:0:0/64',
             ip_version=6, dns_nameservers=['2620:0:ccc:0:0:0:0:2'],
             gateway_ip='1:1:0:0:0:0:0:1', start='1:1::ff', end='1:1::ffff',
             enable_dhcp=True, ipv6_ra_mode='slaac', ipv6_address_mode='slaac')
-        self.network_settings = NetworkSettings(
+        self.network_settings = NetworkConfig(
             name=self.guid + '-net', subnet_settings=[sub_setting])
 
         self.network = neutron_utils.create_network(
@@ -310,13 +308,13 @@ class NeutronUtilsIPv6Tests(OSComponentTestCase):
         Tests the neutron_utils.create_network() with an IPv6 subnet where DHCP
         is True and IPv6 modes are stateful
         """
-        sub_setting = SubnetSettings(
+        sub_setting = SubnetConfig(
             name=self.guid + '-subnet', cidr='1:1:0:0:0:0:0:0/64',
             ip_version=6, dns_nameservers=['2620:0:ccc:0:0:0:0:2'],
             gateway_ip='1:1:0:0:0:0:0:1', start='1:1::ff', end='1:1::ffff',
             enable_dhcp=True, ipv6_ra_mode='dhcpv6-stateful',
             ipv6_address_mode='dhcpv6-stateful')
-        self.network_settings = NetworkSettings(
+        self.network_settings = NetworkConfig(
             name=self.guid + '-net', subnet_settings=[sub_setting])
 
         self.network = neutron_utils.create_network(
@@ -348,13 +346,13 @@ class NeutronUtilsIPv6Tests(OSComponentTestCase):
         Tests the neutron_utils.create_network() when DHCP is enabled and
         the RA and address modes are both 'slaac'
         """
-        sub_setting = SubnetSettings(
+        sub_setting = SubnetConfig(
             name=self.guid + '-subnet', cidr='1:1:0:0:0:0:0:0/64',
             ip_version=6, dns_nameservers=['2620:0:ccc:0:0:0:0:2'],
             gateway_ip='1:1:0:0:0:0:0:1', start='1:1::ff', end='1:1::ffff',
             enable_dhcp=True, ipv6_ra_mode='dhcpv6-stateless',
             ipv6_address_mode='dhcpv6-stateless')
-        self.network_settings = NetworkSettings(
+        self.network_settings = NetworkConfig(
             name=self.guid + '-net', subnet_settings=[sub_setting])
 
         self.network = neutron_utils.create_network(
@@ -386,12 +384,12 @@ class NeutronUtilsIPv6Tests(OSComponentTestCase):
         Tests the neutron_utils.create_network() for a BadRequest when
         DHCP is not enabled and the RA and address modes are both 'slaac'
         """
-        sub_setting = SubnetSettings(
+        sub_setting = SubnetConfig(
             name=self.guid + '-subnet', cidr='1:1:0:0:0:0:0:0/64',
             ip_version=6, dns_nameservers=['2620:0:ccc:0:0:0:0:2'],
             gateway_ip='1:1:0:0:0:0:0:1', start='1:1::ff', end='1:1::ffff',
             enable_dhcp=False, ipv6_ra_mode='slaac', ipv6_address_mode='slaac')
-        self.network_settings = NetworkSettings(
+        self.network_settings = NetworkConfig(
             name=self.guid + '-net', subnet_settings=[sub_setting])
 
         with self.assertRaises(BadRequest):
@@ -404,10 +402,10 @@ class NeutronUtilsIPv6Tests(OSComponentTestCase):
         with an invalid start IP to ensure Neutron assigns it the smallest IP
         possible
         """
-        sub_setting = SubnetSettings(
+        sub_setting = SubnetConfig(
             name=self.guid + '-subnet', cidr='1:1::/48', ip_version=6,
             start='foo')
-        self.network_settings = NetworkSettings(
+        self.network_settings = NetworkConfig(
             name=self.guid + '-net', subnet_settings=[sub_setting])
 
         self.network = neutron_utils.create_network(
@@ -423,10 +421,10 @@ class NeutronUtilsIPv6Tests(OSComponentTestCase):
         with an invalid end IP to ensure Neutron assigns it the largest IP
         possible
         """
-        sub_setting = SubnetSettings(
+        sub_setting = SubnetConfig(
             name=self.guid + '-subnet', cidr='1:1::/48', ip_version=6,
             end='bar')
-        self.network_settings = NetworkSettings(
+        self.network_settings = NetworkConfig(
             name=self.guid + '-net', subnet_settings=[sub_setting])
 
         self.network = neutron_utils.create_network(
@@ -441,9 +439,9 @@ class NeutronUtilsIPv6Tests(OSComponentTestCase):
         Tests the neutron_utils.create_network() for a BadRequest when
         the subnet CIDR is invalid
         """
-        sub_setting = SubnetSettings(
+        sub_setting = SubnetConfig(
             name=self.guid + '-subnet', cidr='1:1:1:/48', ip_version=6)
-        self.network_settings = NetworkSettings(
+        self.network_settings = NetworkConfig(
             name=self.guid + '-net', subnet_settings=[sub_setting])
 
         with self.assertRaises(BadRequest):
@@ -455,10 +453,10 @@ class NeutronUtilsIPv6Tests(OSComponentTestCase):
         Tests the neutron_utils.create_network() for a BadRequest when
         the subnet gateway IP is invalid
         """
-        sub_setting = SubnetSettings(
+        sub_setting = SubnetConfig(
             name=self.guid + '-subnet', cidr='1:1::/48', ip_version=6,
             gateway_ip='1:2::1')
-        self.network_settings = NetworkSettings(
+        self.network_settings = NetworkConfig(
             name=self.guid + '-net', subnet_settings=[sub_setting])
 
         with self.assertRaises(BadRequest):
@@ -470,10 +468,10 @@ class NeutronUtilsIPv6Tests(OSComponentTestCase):
         Tests the neutron_utils.create_network() for a BadRequest when
         the DNS IP is invalid
         """
-        sub_setting = SubnetSettings(
+        sub_setting = SubnetConfig(
             name=self.guid + '-subnet', cidr='1:1::/48', ip_version=6,
             dns_nameservers=['foo'])
-        self.network_settings = NetworkSettings(
+        self.network_settings = NetworkConfig(
             name=self.guid + '-net', subnet_settings=[sub_setting])
 
         with self.assertRaises(BadRequest):
@@ -657,7 +655,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
 
         self.port = neutron_utils.create_port(
-            self.neutron, self.os_creds, PortSettings(
+            self.neutron, self.os_creds, PortConfig(
                 name=self.port_name,
                 ip_addrs=[{
                     'subnet_name': subnet_setting.name,
@@ -681,7 +679,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
                                         subnet_setting.cidr, True))
 
         self.port = neutron_utils.create_port(
-            self.neutron, self.os_creds, PortSettings(
+            self.neutron, self.os_creds, PortConfig(
                 name=self.port_name,
                 network_name=self.net_config.network_settings.name,
                 ip_addrs=[{
@@ -706,7 +704,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
 
         self.port = neutron_utils.create_port(
             self.neutron, self.os_creds,
-            PortSettings(
+            PortConfig(
                 network_name=self.net_config.network_settings.name,
                 ip_addrs=[{
                     'subnet_name': subnet_setting.name,
@@ -723,7 +721,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         with self.assertRaises(Exception):
             self.port = neutron_utils.create_port(
                 self.neutron, self.os_creds,
-                PortSettings(
+                PortConfig(
                     name=self.port_name,
                     network_name=self.net_config.network_settings.name,
                     ip_addrs=[{
@@ -751,7 +749,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         with self.assertRaises(Exception):
             self.port = neutron_utils.create_port(
                 self.neutron, self.os_creds,
-                PortSettings(
+                PortConfig(
                     name=self.port_name,
                     network_name=self.net_config.network_settings.name,
                     ip_addrs=[{
@@ -777,7 +775,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         with self.assertRaises(Exception):
             self.port = neutron_utils.create_port(
                 self.neutron, self.os_creds,
-                PortSettings(
+                PortConfig(
                     name=self.port_name,
                     network_name=self.net_config.network_settings.name,
                     ip_addrs=[{
@@ -803,7 +801,7 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         with self.assertRaises(Exception):
             self.port = neutron_utils.create_port(
                 self.neutron, self.os_creds,
-                PortSettings(
+                PortConfig(
                     name=self.port_name,
                     network_name=self.net_config.network_settings.name,
                     ip_addrs=[{
