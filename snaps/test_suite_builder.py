@@ -16,6 +16,8 @@
 import logging
 import unittest
 
+from snaps.config.tests.network_tests import (
+    NetworkConfigUnitTests, SubnetConfigUnitTests, PortConfigUnitTests)
 from snaps.config.tests.volume_tests import VolumeConfigUnitTests
 from snaps.config.tests.volume_type_tests import VolumeTypeConfigUnitTests
 from snaps.config.tests.qos_tests import QoSConfigUnitTests
@@ -181,13 +183,19 @@ def add_unit_tests(suite):
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         RoleDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        NetworkConfigUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         NetworkSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         NetworkObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        SubnetConfigUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         SubnetSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         SubnetObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        PortConfigUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         PortSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

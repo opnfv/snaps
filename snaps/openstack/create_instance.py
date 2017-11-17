@@ -18,7 +18,7 @@ import time
 from neutronclient.common.exceptions import PortNotFoundClient
 from novaclient.exceptions import NotFound, BadRequest
 
-from snaps.openstack.create_network import PortSettings
+from snaps.config.network import PortConfig
 from snaps.openstack.openstack_creator import OpenStackComputeObject
 from snaps.openstack.utils import glance_utils, cinder_utils
 from snaps.openstack.utils import neutron_utils
@@ -814,8 +814,8 @@ class VmInstanceSettings:
         if port_settings:
             for port_setting in port_settings:
                 if isinstance(port_setting, dict):
-                    self.port_settings.append(PortSettings(**port_setting))
-                elif isinstance(port_setting, PortSettings):
+                    self.port_settings.append(PortConfig(**port_setting))
+                elif isinstance(port_setting, PortConfig):
                     self.port_settings.append(port_setting)
 
         if kwargs.get('security_group_names'):
