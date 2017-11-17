@@ -16,6 +16,7 @@
 import logging
 import unittest
 
+from snaps.config.tests.router_tests import RouterConfigUnitTests
 from snaps.config.tests.user_tests import UserConfigUnitTests
 from snaps.config.tests.project_tests import ProjectConfigUnitTests
 from snaps.config.tests.keypair_tests import KeypairConfigUnitTests
@@ -187,6 +188,8 @@ def add_unit_tests(suite):
         PortSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         PortDomainObjectTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        RouterConfigUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         RouterSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

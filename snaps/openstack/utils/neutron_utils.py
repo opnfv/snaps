@@ -327,7 +327,7 @@ def get_router(neutron, router_settings=None, router_name=None):
     values if not None, else finds the first with the value of the router_name
     parameter, else None
     :param neutron: the client
-    :param router_settings: the RouterSettings object
+    :param router_settings: the RouterConfig object
     :param router_name: the name of the network to retrieve
     :return: a SNAPS-OO Router domain object
     """

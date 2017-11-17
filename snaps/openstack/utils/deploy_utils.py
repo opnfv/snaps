@@ -78,7 +78,7 @@ def create_router(os_creds, router_settings, cleanup=False):
     """
     Creates a network on which the CMTSs can attach
     :param os_creds: The OpenStack credentials object
-    :param router_settings: The RouterSettings instance
+    :param router_settings: The RouterConfig instance
     :param cleanup: Denotes whether or not this is being called for cleanup
     :return: A reference to the network creator objects for each network from
              which network elements such as the subnet, router, interface
