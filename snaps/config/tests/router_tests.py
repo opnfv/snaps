@@ -14,8 +14,8 @@
 # limitations under the License.
 import unittest
 
+from snaps.config.network import PortConfig
 from snaps.config.router import RouterConfig, RouterConfigError
-from snaps.openstack.create_network import PortSettings
 
 
 class RouterConfigUnitTests(unittest.TestCase):
@@ -60,7 +60,7 @@ class RouterConfigUnitTests(unittest.TestCase):
         self.assertEqual(0, len(settings.port_settings))
 
     def test_all(self):
-        port_settings = PortSettings(name='foo', network_name='bar')
+        port_settings = PortConfig(name='foo', network_name='bar')
         settings = RouterConfig(
             name='foo', project_name='bar', external_gateway='foo_gateway',
             admin_state_up=True, enable_snat=False,
@@ -93,6 +93,6 @@ class RouterConfigUnitTests(unittest.TestCase):
         self.assertTrue(isinstance(settings.internal_subnets, list))
         self.assertEqual(1, len(settings.internal_subnets))
         self.assertEqual(['10.0.0.1/24'], settings.internal_subnets)
-        self.assertEqual([PortSettings(**{'name': 'foo-port',
-                                          'network_name': 'bar-net'})],
+        self.assertEqual([PortConfig(**{'name': 'foo-port',
+                                        'network_name': 'bar-net'})],
                          settings.port_settings)

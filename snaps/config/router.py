@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from snaps.openstack.create_network import PortSettings
+from snaps.config.network import PortConfig
 from snaps.openstack.utils import neutron_utils, keystone_utils
 
 
@@ -34,7 +34,7 @@ class RouterConfig(object):
                                True = up / False = down (default True)
         :param internal_subnets: List of subnet names to which to connect this
                                  router for Floating IP purposes
-        :param port_settings: List of PortSettings objects
+        :param port_settings: List of PortConfig objects
         :return:
         """
         self.name = kwargs.get('name')
@@ -52,11 +52,11 @@ class RouterConfig(object):
         if kwargs.get('interfaces', kwargs.get('port_settings')):
             interfaces = kwargs.get('interfaces', kwargs.get('port_settings'))
             for interface in interfaces:
-                if isinstance(interface, PortSettings):
+                if isinstance(interface, PortConfig):
                     self.port_settings.append(interface)
                 else:
                     self.port_settings.append(
-                        PortSettings(**interface['port']))
+                        PortConfig(**interface['port']))
 
         if not self.name:
             raise RouterConfigError('Name is required')

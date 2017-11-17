@@ -550,10 +550,10 @@ settings_utils_tests.py - SettingsUtilsNetworkingTests
 +---------------------------------------+---------------+-----------------------------------------------------------+
 | Test Name                             | API           | Description                                               |
 +=======================================+===============+===========================================================+
-| test_derive_net_settings_no_subnet    | Neutron 2     | Tests to ensure that derived NetworkSettings from an      |
+| test_derive_net_settings_no_subnet    | Neutron 2     | Tests to ensure that derived NetworkConfig from an        |
 |                                       |               | OpenStack network are correct without a subnet            |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_derive_net_settings_two_subnets  | Neutron 2     | Tests to ensure that derived NetworkSettings from an      |
+| test_derive_net_settings_two_subnets  | Neutron 2     | Tests to ensure that derived NetworkConfig from an        |
 |                                       |               | OpenStack network are correct with two subnets            |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 

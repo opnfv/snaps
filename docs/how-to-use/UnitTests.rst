@@ -174,11 +174,17 @@ RoleDomainObjectTests
 Ensures that all required members are included when constructing a
 Role domain object
 
+NetworkConfigUnitTests
+----------------------
+
+Ensures that all required members are included when constructing a
+NetworkConfig object
+
 NetworkSettingsUnitTests
 ------------------------
 
 Ensures that all required members are included when constructing a
-NetworkSettings object
+deprecated NetworkSettings object
 
 NetworkObjectTests
 ------------------
@@ -186,11 +192,17 @@ NetworkObjectTests
 Ensures that all required members are included when constructing a
 Network domain object
 
+SubnetConfigUnitTests
+---------------------
+
+Ensures that all required members are included when constructing a
+SubnetConfig object
+
 SubnetSettingsUnitTests
 -----------------------
 
 Ensures that all required members are included when constructing a
-SubnetSettings object
+deprecated SubnetSettings object
 
 SubnetObjectTests
 -----------------
@@ -198,11 +210,17 @@ SubnetObjectTests
 Ensures that all required members are included when constructing a
 Subnet domain object
 
+PortConfigUnitTests
+-------------------
+
+Ensures that all required members are included when constructing a
+PortConfig object
+
 PortSettingsUnitTests
 ---------------------
 
 Ensures that all required members are included when constructing a
-PortSettings object
+deprecated PortSettings object
 
 PortDomainObjectTests
 ---------------------
