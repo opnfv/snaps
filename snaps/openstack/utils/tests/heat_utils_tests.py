@@ -372,7 +372,7 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
         self.assertEqual(1, len(networks))
         self.assertEqual(self.network_name, networks[0].name)
 
-        network_settings = settings_utils.create_network_settings(
+        network_settings = settings_utils.create_network_config(
             neutron, networks[0])
         self.assertIsNotNone(network_settings)
         self.assertEqual(self.network_name, network_settings.name)

@@ -15,12 +15,11 @@
 import uuid
 
 from snaps import file_utils
+from snaps.config.network import SubnetConfig, PortConfig, NetworkConfig
 from snaps.openstack.create_flavor import FlavorSettings
 from snaps.openstack.create_instance import (
     VmInstanceSettings, FloatingIpSettings)
 from snaps.openstack.create_keypairs import KeypairSettings
-from snaps.openstack.create_network import (
-    PortSettings, SubnetSettings, NetworkSettings)
 from snaps.openstack.create_security_group import (
     SecurityGroupSettings, SecurityGroupRuleSettings)
 from snaps.openstack.create_router import RouterSettings
@@ -31,21 +30,21 @@ from snaps.openstack.utils import (
     neutron_utils, nova_utils, heat_utils, glance_utils)
 
 
-def create_network_settings(neutron, network):
+def create_network_config(neutron, network):
     """
-    Returns a NetworkSettings object
+    Returns a NetworkConfig object
     :param neutron: the neutron client
     :param network: a SNAPS-OO Network domain object
     :return:
     """
-    return NetworkSettings(
+    return NetworkConfig(
         name=network.name, network_type=network.type,
-        subnet_settings=create_subnet_settings(neutron, network))
+        subnet_settings=create_subnet_config(neutron, network))
 
 
 def create_security_group_settings(neutron, security_group):
     """
-    Returns a NetworkSettings object
+    Returns a NetworkConfig object
     :param neutron: the neutron client
     :param security_group: a SNAPS-OO SecurityGroup domain object
     :return:
@@ -67,9 +66,9 @@ def create_security_group_settings(neutron, security_group):
         rule_settings=rule_settings)
 
 
-def create_subnet_settings(neutron, network):
+def create_subnet_config(neutron, network):
     """
-    Returns a list of SubnetSettings objects for a given network
+    Returns a list of SubnetConfig objects for a given network
     :param neutron: the OpenStack neutron client
     :param network: the SNAPS-OO Network domain object
     :return: a list
@@ -90,7 +89,7 @@ def create_subnet_settings(neutron, network):
         kwargs['host_routes'] = subnet.host_routes
         kwargs['ipv6_ra_mode'] = subnet.ipv6_ra_mode
         kwargs['ipv6_address_mode'] = subnet.ipv6_address_mode
-        out.append(SubnetSettings(**kwargs))
+        out.append(SubnetConfig(**kwargs))
     return out
 
 
@@ -135,7 +134,7 @@ def create_router_settings(neutron, router):
 
             ports_tuple_list.append((network, ip_list))
 
-    port_settings = __create_port_settings(neutron, ports_tuple_list)
+    port_settings = __create_port_config(neutron, ports_tuple_list)
 
     filtered_settings = list()
     for port_setting in port_settings:
@@ -231,7 +230,7 @@ def create_keypair_settings(heat_cli, stack, keypair, pk_output_key):
 
 def create_vm_inst_settings(nova, neutron, server):
     """
-    Returns a NetworkSettings object
+    Returns a NetworkConfig object
     :param nova: the nova client
     :param neutron: the neutron client
     :param server: a SNAPS-OO VmInst domain object
@@ -250,7 +249,7 @@ def create_vm_inst_settings(nova, neutron, server):
         if network:
             net_tuples.append((network, ips))
 
-    kwargs['port_settings'] = __create_port_settings(
+    kwargs['port_settings'] = __create_port_config(
         neutron, net_tuples)
     kwargs['security_group_names'] = server.sec_grp_names
     kwargs['floating_ip_settings'] = __create_floatingip_settings(
@@ -259,7 +258,7 @@ def create_vm_inst_settings(nova, neutron, server):
     return VmInstanceSettings(**kwargs)
 
 
-def __create_port_settings(neutron, networks):
+def __create_port_config(neutron, networks):
     """
     Returns a list of port settings based on the networks parameter
     :param neutron: the neutron client
@@ -288,7 +287,7 @@ def __create_port_settings(neutron, networks):
                 kwargs['allowed_address_pairs'] = port.allowed_address_pairs
                 kwargs['admin_state_up'] = port.admin_state_up
                 kwargs['ip_addrs'] = ip_addrs
-                out.append(PortSettings(**kwargs))
+                out.append(PortConfig(**kwargs))
 
     return out
 
@@ -298,7 +297,7 @@ def __create_floatingip_settings(neutron, port_settings):
     Returns a list of FloatingIPSettings objects as they pertain to an
     existing deployed server instance
     :param neutron: the neutron client
-    :param port_settings: list of SNAPS-OO PortSettings objects
+    :param port_settings: list of SNAPS-OO PortConfig objects
     :return: a list of FloatingIPSettings objects or an empty list if no
              floating IPs have been created
     """

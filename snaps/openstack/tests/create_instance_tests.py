@@ -24,6 +24,7 @@ from neutronclient.common.exceptions import InvalidIpForSubnetClient
 from novaclient.exceptions import BadRequest
 
 from snaps import file_utils
+from snaps.config.network import PortConfig, SubnetConfig, NetworkConfig
 from snaps.openstack import create_network, create_router
 from snaps.openstack.create_flavor import OpenStackFlavor, FlavorSettings
 from snaps.openstack.create_image import OpenStackImage, ImageSettings
@@ -31,8 +32,7 @@ from snaps.openstack.create_instance import (
     VmInstanceSettings, OpenStackVmInstance, FloatingIpSettings,
     VmInstanceSettingsError, FloatingIpSettingsError)
 from snaps.openstack.create_keypairs import OpenStackKeypair, KeypairSettings
-from snaps.openstack.create_network import (
-    OpenStackNetwork, PortSettings, NetworkSettings, SubnetSettings)
+from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_router import OpenStackRouter, RouterSettings
 from snaps.openstack.create_security_group import (
     SecurityGroupSettings, OpenStackSecurityGroup, SecurityGroupRuleSettings,
@@ -80,7 +80,7 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
             VmInstanceSettings(config={'name': 'foo', 'flavor': 'bar'})
 
     def test_name_flavor_port_only(self):
-        port_settings = PortSettings(name='foo-port', network_name='bar-net')
+        port_settings = PortConfig(name='foo-port', network_name='bar-net')
         settings = VmInstanceSettings(name='foo', flavor='bar',
                                       port_settings=[port_settings])
         self.assertEqual('foo', settings.name)
@@ -98,7 +98,7 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
         self.assertIsNone(settings.volume_names)
 
     def test_config_with_name_flavor_port_only(self):
-        port_settings = PortSettings(name='foo-port', network_name='bar-net')
+        port_settings = PortConfig(name='foo-port', network_name='bar-net')
         settings = VmInstanceSettings(
             **{'name': 'foo', 'flavor': 'bar', 'ports': [port_settings]})
         self.assertEqual('foo', settings.name)
@@ -116,7 +116,7 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
         self.assertIsNone(settings.volume_names)
 
     def test_all(self):
-        port_settings = PortSettings(name='foo-port', network_name='bar-net')
+        port_settings = PortConfig(name='foo-port', network_name='bar-net')
         fip_settings = FloatingIpSettings(name='foo-fip', port_name='bar-port',
                                           router_name='foo-bar-router')
 
@@ -148,7 +148,7 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
         self.assertEqual('vol1', settings.volume_names[0])
 
     def test_config_all(self):
-        port_settings = PortSettings(name='foo-port', network_name='bar-net')
+        port_settings = PortConfig(name='foo-port', network_name='bar-net')
         fip_settings = FloatingIpSettings(name='foo-fip', port_name='bar-port',
                                           router_name='foo-bar-router')
 
@@ -298,7 +298,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
 
         self.priv_net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-priv-net', subnet_name=guid + '-priv-subnet')
-        self.port_settings = PortSettings(
+        self.port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.priv_net_config.network_settings.name)
 
@@ -437,7 +437,7 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
                 self.os_creds, net_config.network_settings)
             self.network_creator.create()
 
-            self.port_settings = PortSettings(
+            self.port_settings = PortConfig(
                 name=guid + '-port',
                 network_name=net_config.network_settings.name)
 
@@ -663,7 +663,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         """
         ip_1 = '10.55.1.100'
         sub_settings = self.pub_net_config.network_settings.subnet_settings
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.pub_net_config.network_settings.name,
             ip_addrs=[
@@ -693,7 +693,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         Tests the ability to access a VM via SSH and a floating IP when it has
         been assigned prior to being active.
         """
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.pub_net_config.network_settings.name)
 
@@ -728,7 +728,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         Tests the ability to access a VM via SSH and a floating IP when it has
         been assigned prior to being active.
         """
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.pub_net_config.network_settings.name)
 
@@ -765,7 +765,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         Tests the ability to access a VM via SSH and a floating IP via a
         creator that is identical to the original creator.
         """
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.pub_net_config.network_settings.name)
 
@@ -940,10 +940,10 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
         Tests the ability to assign an IPv4 floating IP to an IPv6 overlay
         network when the external network does not have an IPv6 subnet.
         """
-        subnet_settings = SubnetSettings(
+        subnet_settings = SubnetConfig(
             name=self.guid + '-subnet', cidr='1:1:0:0:0:0:0:0/64',
             ip_version=6)
-        network_settings = NetworkSettings(
+        network_settings = NetworkConfig(
             name=self.guid + '-net', subnet_settings=[subnet_settings])
         router_settings = RouterSettings(
             name=self.guid + '-router', external_gateway=self.ext_net_name,
@@ -959,7 +959,7 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
             self.os_creds, router_settings)
         self.router_creator.create()
 
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port1_name, network_name=network_settings.name)
 
         instance_settings = VmInstanceSettings(
@@ -984,13 +984,13 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
         Tests the ability to assign an IPv4 floating IP to an IPv6 overlay
         network when the external network does not have an IPv6 subnet.
         """
-        subnet4_settings = SubnetSettings(
+        subnet4_settings = SubnetConfig(
             name=self.guid + '-subnet4', cidr='10.0.1.0/24',
             ip_version=4)
-        subnet6_settings = SubnetSettings(
+        subnet6_settings = SubnetConfig(
             name=self.guid + '-subnet6', cidr='1:1:0:0:0:0:0:0/64',
             ip_version=6)
-        network_settings = NetworkSettings(
+        network_settings = NetworkConfig(
             name=self.guid + '-net',
             subnet_settings=[subnet4_settings, subnet6_settings])
         router_settings = RouterSettings(
@@ -1007,7 +1007,7 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
             self.os_creds, router_settings)
         self.router_creator.create()
 
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port1_name, network_name=network_settings.name)
 
         instance_settings = VmInstanceSettings(
@@ -1125,7 +1125,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         """
         ip = '10.55.0.101'
         sub_settings = self.net_config.network_settings.subnet_settings
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.net_config.network_settings.name,
             ip_addrs=[{'subnet_name': sub_settings[0].name, 'ip': ip}])
@@ -1152,7 +1152,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         """
         ip = '10.66.0.101'
         sub_settings = self.net_config.network_settings.subnet_settings
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.net_config.network_settings.name,
             ip_addrs=[{'subnet_name': sub_settings[0].name, 'ip': ip}])
@@ -1175,7 +1175,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         the MAC address is assigned.
         """
         mac_addr = '0a:1b:2c:3d:4e:5f'
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.net_config.network_settings.name,
             mac_address=mac_addr)
@@ -1199,7 +1199,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         invalid MAC address value is being
         assigned. This should raise an Exception
         """
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.net_config.network_settings.name,
             mac_address='foo')
@@ -1224,7 +1224,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         ip = '10.55.0.101'
         mac_addr = '0a:1b:2c:3d:4e:5f'
         sub_settings = self.net_config.network_settings.subnet_settings
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.net_config.network_settings.name,
             mac_address=mac_addr,
@@ -1255,7 +1255,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         ip = '10.55.0.101'
         mac_addr = '0a:1b:2c:3d:4e:5f'
         pair = {'ip_address': ip, 'mac_address': mac_addr}
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.net_config.network_settings.name,
             allowed_address_pairs=[pair])
@@ -1287,7 +1287,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         pair = {'ip_address': ip, 'mac_address': mac_addr}
         pairs = set()
         pairs.add((ip, mac_addr))
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.net_config.network_settings.name,
             allowed_address_pairs=[pair])
@@ -1313,7 +1313,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         pair = {'ip_address': ip, 'mac_address': mac_addr}
         pairs = set()
         pairs.add((ip, mac_addr))
-        port_settings = PortSettings(
+        port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.net_config.network_settings.name,
             allowed_address_pairs=[pair])
@@ -1430,7 +1430,7 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
         for zone in zone_hosts:
             inst_name = self.vm_inst_name + '-' + zone
             ctr += 1
-            port_settings = PortSettings(
+            port_settings = PortConfig(
                 name=self.port_base_name + '-' + str(ctr),
                 network_name=self.priv_net_config.network_settings.name)
 
@@ -1642,7 +1642,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
         ports_settings = []
         ctr = 1
         for network_creator in self.network_creators:
-            ports_settings.append(PortSettings(
+            ports_settings.append(PortConfig(
                 name=self.guid + '-port-' + str(ctr),
                 network_name=network_creator.network_settings.name))
             ctr += 1
@@ -1734,7 +1734,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
                                metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
-            self.port_settings = PortSettings(
+            self.port_settings = PortConfig(
                 name=self.guid + '-port',
                 network_name=net_config.network_settings.name)
         except Exception as e:
@@ -2072,7 +2072,7 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
                 self.os_creds, net_config.network_settings)
             self.network_creator.create()
 
-            self.port_settings = PortSettings(
+            self.port_settings = PortConfig(
                 name=guid + '-port',
                 network_name=net_config.network_settings.name)
         except Exception as e:
@@ -2167,7 +2167,7 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.priv_net_config = openstack_tests.get_priv_net_config(
             net_name=self.guid + '-priv-net',
             subnet_name=self.guid + '-priv-subnet')
-        self.port_settings = PortSettings(
+        self.port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.priv_net_config.network_settings.name)
 
@@ -2665,16 +2665,16 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
         self.vm_inst2_name = self.guid + '-inst2'
         self.port_1_name = self.guid + '-vm1-port'
         self.port_2_name = self.guid + '-vm2-port'
-        self.net_config_1 = NetworkSettings(
+        self.net_config_1 = NetworkConfig(
             name=self.guid + '-net1',
             subnet_settings=[
-                create_network.SubnetSettings(
+                create_network.SubnetConfig(
                     cidr=cidr1, name=self.guid + '-subnet1',
                     gateway_ip=static_gateway_ip1)])
-        self.net_config_2 = NetworkSettings(
+        self.net_config_2 = NetworkConfig(
             name=self.guid + '-net2',
             subnet_settings=[
-                create_network.SubnetSettings(
+                create_network.SubnetConfig(
                     cidr=cidr2, name=self.guid + '-subnet2',
                     gateway_ip=static_gateway_ip2)])
 
@@ -2698,7 +2698,7 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
                 network_creator.create()
 
             port_settings = [
-                create_network.PortSettings(
+                create_network.PortConfig(
                     name=self.guid + '-router-port1',
                     ip_addrs=[{
                         'subnet_name':
@@ -2707,7 +2707,7 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
                     }],
                     network_name=self.net_config_1.name,
                     project_name=self.os_creds.project_name),
-                create_network.PortSettings(
+                create_network.PortConfig(
                     name=self.guid + '-router-port2',
                     ip_addrs=[{
                         'subnet_name':
@@ -2808,7 +2808,7 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
         ports_settings = []
         ctr = 1
         for network_creator in self.network_creators:
-            ports_settings.append(PortSettings(
+            ports_settings.append(PortConfig(
                 name=self.guid + '-port-' + str(ctr),
                 network_name=network_creator.network_settings.name))
             ctr += 1
@@ -2818,7 +2818,7 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
             name=self.vm_inst1_name,
             flavor=self.flavor_creator.flavor_settings.name,
             userdata=_get_ping_userdata(self.ip2),
-            port_settings=[PortSettings(
+            port_settings=[PortConfig(
                 name=self.port_1_name,
                 ip_addrs=[{
                     'subnet_name':
@@ -2830,7 +2830,7 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
             name=self.vm_inst2_name,
             flavor=self.flavor_creator.flavor_settings.name,
             userdata=_get_ping_userdata(self.ip1),
-            port_settings=[PortSettings(
+            port_settings=[PortConfig(
                 name=self.port_2_name,
                 ip_addrs=[{
                     'subnet_name':
@@ -2914,7 +2914,7 @@ class CreateInstanceVolumeTests(OSIntegrationTestCase):
                 self.os_creds, net_config.network_settings)
             self.network_creator.create()
 
-            self.port_settings = PortSettings(
+            self.port_settings = PortConfig(
                 name=guid + '-port',
                 network_name=net_config.network_settings.name)
 

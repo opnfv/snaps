@@ -19,12 +19,13 @@ import os
 import time
 
 from snaps import file_utils
+from snaps.config.network import PortConfig
 from snaps.openstack import create_instance
 from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_instance import (
     VmInstanceSettings, OpenStackVmInstance)
-from snaps.openstack.create_network import OpenStackNetwork, PortSettings
+from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_volume import OpenStackVolume, VolumeSettings
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
@@ -259,8 +260,8 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
                     name=guid + '-flavor-name', ram=256, disk=10, vcpus=1))
             self.flavor_creator.create()
 
-            port_settings = PortSettings(name=guid + '-port',
-                                         network_name=network_settings.name)
+            port_settings = PortConfig(
+                name=guid + '-port', network_name=network_settings.name)
             self.port = neutron_utils.create_port(
                 self.neutron, self.os_creds, port_settings)
 
@@ -382,7 +383,7 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
                 self.os_creds, volume_settings)
             self.volume_creator.create(block=True)
 
-            port_settings = PortSettings(
+            port_settings = PortConfig(
                 name=guid + '-port', network_name=network_settings.name)
             instance_settings = VmInstanceSettings(
                 name=guid + '-vm_inst',

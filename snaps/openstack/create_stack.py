@@ -228,7 +228,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
             self.__heat_cli, neutron, self.__stack)
 
         for stack_network in stack_networks:
-            net_settings = settings_utils.create_network_settings(
+            net_settings = settings_utils.create_network_config(
                 neutron, stack_network)
             net_creator = OpenStackNetwork(self._os_creds, net_settings)
             out.append(net_creator)

@@ -26,12 +26,12 @@ import os
 import yaml
 
 from snaps import file_utils
+from snaps.config.network import PortConfig, NetworkConfig
 from snaps.openstack.create_flavor import FlavorSettings, OpenStackFlavor
 from snaps.openstack.create_image import ImageSettings, OpenStackImage
 from snaps.openstack.create_instance import VmInstanceSettings
 from snaps.openstack.create_keypairs import KeypairSettings, OpenStackKeypair
-from snaps.openstack.create_network import (
-    PortSettings, NetworkSettings, OpenStackNetwork)
+from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_project import OpenStackProject, ProjectSettings
 from snaps.openstack.create_qos import QoSSettings, OpenStackQoS
 from snaps.openstack.create_router import RouterSettings, OpenStackRouter
@@ -144,7 +144,7 @@ def __parse_ports_config(config):
     """
     out = list()
     for port_config in config:
-        out.append(PortSettings(**port_config.get('port')))
+        out.append(PortConfig(**port_config.get('port')))
     return out
 
 
@@ -665,7 +665,7 @@ def main(arguments):
 
                 # Create networks
                 creators.append(__create_instances(
-                    os_creds_dict, OpenStackNetwork, NetworkSettings,
+                    os_creds_dict, OpenStackNetwork, NetworkConfig,
                     os_config.get('networks'), 'network', clean, users_dict))
 
                 # Create routers

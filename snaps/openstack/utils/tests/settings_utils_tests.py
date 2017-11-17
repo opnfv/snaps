@@ -18,14 +18,14 @@ import unittest
 import os
 import uuid
 
+from snaps.config.network import SubnetConfig, NetworkConfig, PortConfig
 from snaps.domain.flavor import Flavor
 from snaps.domain.volume import (
     Volume, VolumeType, VolumeTypeEncryption, QoSSpec)
 from snaps.openstack import (
     create_image, create_network, create_router, create_flavor,
     create_keypairs, create_instance)
-from snaps.openstack.create_network import (
-    NetworkSettings, OpenStackNetwork, SubnetSettings)
+from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_qos import Consumer
 from snaps.openstack.create_security_group import (
     SecurityGroupRuleSettings,  Direction, Protocol, OpenStackSecurityGroup,
@@ -42,7 +42,7 @@ logger = logging.getLogger('nova_utils_tests')
 
 class SettingsUtilsNetworkingTests(OSComponentTestCase):
     """
-    Tests the ability to reverse engineer NetworkSettings objects from existing
+    Tests the ability to reverse engineer NetworkConfig objects from existing
     networks deployed to OpenStack
     """
 
@@ -68,16 +68,16 @@ class SettingsUtilsNetworkingTests(OSComponentTestCase):
 
     def test_derive_net_settings_no_subnet(self):
         """
-        Validates the utility function settings_utils#create_network_settings
-        returns an acceptable NetworkSettings object and ensures that the
+        Validates the utility function settings_utils#create_network_config
+        returns an acceptable NetworkConfig object and ensures that the
         new settings object will not cause the new OpenStackNetwork instance
         to create another network
         """
-        net_settings = NetworkSettings(name=self.network_name)
+        net_settings = NetworkConfig(name=self.network_name)
         self.net_creator = OpenStackNetwork(self.os_creds, net_settings)
         network = self.net_creator.create()
 
-        derived_settings = settings_utils.create_network_settings(
+        derived_settings = settings_utils.create_network_config(
             self.neutron, network)
 
         self.assertIsNotNone(derived_settings)
@@ -95,18 +95,18 @@ class SettingsUtilsNetworkingTests(OSComponentTestCase):
 
     def test_derive_net_settings_two_subnets(self):
         """
-        Validates the utility function settings_utils#create_network_settings
-        returns an acceptable NetworkSettings object
+        Validates the utility function settings_utils#create_network_config
+        returns an acceptable NetworkConfig object
         """
         subnet_settings = list()
-        subnet_settings.append(SubnetSettings(name='sub1', cidr='10.0.0.0/24'))
-        subnet_settings.append(SubnetSettings(name='sub2', cidr='10.0.1.0/24'))
-        net_settings = NetworkSettings(name=self.network_name,
-                                       subnet_settings=subnet_settings)
+        subnet_settings.append(SubnetConfig(name='sub1', cidr='10.0.0.0/24'))
+        subnet_settings.append(SubnetConfig(name='sub2', cidr='10.0.1.0/24'))
+        net_settings = NetworkConfig(
+            name=self.network_name, subnet_settings=subnet_settings)
         self.net_creator = OpenStackNetwork(self.os_creds, net_settings)
         network = self.net_creator.create()
 
-        derived_settings = settings_utils.create_network_settings(
+        derived_settings = settings_utils.create_network_config(
             self.neutron, network)
 
         self.assertIsNotNone(derived_settings)
@@ -231,7 +231,7 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
             # Create instance
             ports_settings = list()
             ports_settings.append(
-                create_network.PortSettings(
+                PortConfig(
                     name=self.port_1_name,
                     network_name=self.pub_net_config.network_settings.name))
 

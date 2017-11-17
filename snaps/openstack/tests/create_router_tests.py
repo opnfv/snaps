@@ -15,10 +15,9 @@
 import unittest
 import uuid
 
+from snaps.config.network import PortConfig, NetworkConfig
 from snaps.openstack import create_network
 from snaps.openstack import create_router
-from snaps.openstack.create_network import (
-    NetworkSettings, PortSettings)
 from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_router import (
     RouterSettings, RouterSettingsError)
@@ -75,7 +74,7 @@ class RouterSettingsUnitTests(unittest.TestCase):
         self.assertEqual(0, len(settings.port_settings))
 
     def test_all(self):
-        port_settings = PortSettings(name='foo', network_name='bar')
+        port_settings = PortConfig(name='foo', network_name='bar')
         settings = RouterSettings(
             name='foo', project_name='bar', external_gateway='foo_gateway',
             admin_state_up=True, enable_snat=False,
@@ -108,9 +107,9 @@ class RouterSettingsUnitTests(unittest.TestCase):
         self.assertTrue(isinstance(settings.internal_subnets, list))
         self.assertEqual(1, len(settings.internal_subnets))
         self.assertEqual(['10.0.0.1/24'], settings.internal_subnets)
-        self.assertEqual([PortSettings(**{'name': 'foo-port',
-                                          'network_name': 'bar-net'})],
-                         settings.port_settings)
+        self.assertEqual(
+            [PortConfig(**{'name': 'foo-port', 'network_name': 'bar-net'})],
+            settings.port_settings)
 
 
 class CreateRouterSuccessTests(OSIntegrationTestCase):
@@ -275,16 +274,16 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         Test creation of a router connected with two private networks and no
         external gateway
         """
-        network_settings1 = NetworkSettings(
+        network_settings1 = NetworkConfig(
             name=self.guid + '-pub-net1',
             subnet_settings=[
-                create_network.SubnetSettings(
+                create_network.SubnetConfig(
                     cidr=cidr1, name=self.guid + '-pub-subnet1',
                     gateway_ip=static_gateway_ip1)])
-        network_settings2 = NetworkSettings(
+        network_settings2 = NetworkConfig(
             name=self.guid + '-pub-net2',
             subnet_settings=[
-                create_network.SubnetSettings(
+                create_network.SubnetConfig(
                     cidr=cidr2, name=self.guid + '-pub-subnet2',
                     gateway_ip=static_gateway_ip2)])
 
@@ -297,7 +296,7 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         self.network_creator2.create()
 
         port_settings = [
-            create_network.PortSettings(
+            create_network.PortConfig(
                 name=self.guid + '-port1',
                 ip_addrs=[{
                     'subnet_name':
@@ -306,7 +305,7 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
                 }],
                 network_name=network_settings1.name,
                 project_name=self.os_creds.project_name),
-            create_network.PortSettings(
+            create_network.PortConfig(
                 name=self.guid + '-port2',
                 ip_addrs=[{
                     'subnet_name': network_settings2.subnet_settings[0].name,
@@ -340,10 +339,10 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         Test creation of a router connected to an external network and a
         private network.
         """
-        network_settings = NetworkSettings(
+        network_settings = NetworkConfig(
             name=self.guid + '-pub-net1',
             subnet_settings=[
-                create_network.SubnetSettings(
+                create_network.SubnetConfig(
                     cidr=cidr1, name=self.guid + '-pub-subnet1',
                     gateway_ip=static_gateway_ip1)])
         self.network_creator1 = OpenStackNetwork(self.os_creds,
@@ -351,7 +350,7 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         self.network_creator1.create()
 
         port_settings = [
-            create_network.PortSettings(
+            create_network.PortConfig(
                 name=self.guid + '-port1',
                 ip_addrs=[{
                     'subnet_name': network_settings.subnet_settings[0].name,
