@@ -245,7 +245,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
             self.__heat_cli, neutron, self.__stack)
 
         for stack_security_group in stack_security_groups:
-            settings = settings_utils.create_security_group_settings(
+            settings = settings_utils.create_security_group_config(
                 neutron, stack_security_group)
             creator = OpenStackSecurityGroup(self._os_creds, settings)
             out.append(creator)

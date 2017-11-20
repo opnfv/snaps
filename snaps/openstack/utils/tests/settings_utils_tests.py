@@ -22,6 +22,8 @@ from snaps.config.network import SubnetConfig, NetworkConfig, PortConfig
 from snaps.config.flavor import FlavorConfig
 from snaps.config.keypair import KeypairConfig
 from snaps.config.qos import Consumer
+from snaps.config.security_group import (
+    SecurityGroupRuleConfig, Direction, Protocol, SecurityGroupConfig)
 from snaps.config.vm_inst import VmInstanceConfig, FloatingIpConfig
 from snaps.domain.flavor import Flavor
 from snaps.domain.volume import (
@@ -31,9 +33,7 @@ from snaps.openstack import (
     create_keypairs, create_instance)
 from snaps.openstack.create_qos import Consumer
 from snaps.openstack.create_network import OpenStackNetwork
-from snaps.openstack.create_security_group import (
-    SecurityGroupRuleSettings,  Direction, Protocol, OpenStackSecurityGroup,
-    SecurityGroupSettings)
+from snaps.openstack.create_security_group import OpenStackSecurityGroup
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import (
@@ -218,18 +218,16 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
 
             # Create Security Group
             sec_grp_name = guid + '-sec-grp'
-            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
-                                              direction=Direction.ingress,
-                                              protocol=Protocol.icmp)
-            rule2 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
-                                              direction=Direction.ingress,
-                                              protocol=Protocol.tcp,
-                                              port_range_min=22,
-                                              port_range_max=22)
+            rule1 = SecurityGroupRuleConfig(
+                sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                protocol=Protocol.icmp)
+            rule2 = SecurityGroupRuleConfig(
+                sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                protocol=Protocol.tcp, port_range_min=22, port_range_max=22)
             self.sec_grp_creator = OpenStackSecurityGroup(
                 self.os_creds,
-                SecurityGroupSettings(name=sec_grp_name,
-                                      rule_settings=[rule1, rule2]))
+                SecurityGroupConfig(
+                    name=sec_grp_name, rule_settings=[rule1, rule2]))
             self.sec_grp_creator.create()
 
             # Create instance

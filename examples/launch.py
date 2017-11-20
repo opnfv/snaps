@@ -33,6 +33,7 @@ from snaps.config.network import PortConfig, NetworkConfig
 from snaps.config.project import ProjectConfig
 from snaps.config.qos import QoSConfig
 from snaps.config.router import RouterConfig
+from snaps.config.security_group import SecurityGroupConfig
 from snaps.config.user import UserConfig
 from snaps.config.vm_inst import VmInstanceConfig
 from snaps.config.volume import VolumeConfig
@@ -44,8 +45,7 @@ from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_project import OpenStackProject
 from snaps.openstack.create_qos import OpenStackQoS
 from snaps.openstack.create_router import OpenStackRouter
-from snaps.openstack.create_security_group import (
-    OpenStackSecurityGroup, SecurityGroupSettings)
+from snaps.openstack.create_security_group import OpenStackSecurityGroup
 from snaps.openstack.create_user import OpenStackUser
 from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.create_volume_type import OpenStackVolumeType
@@ -690,7 +690,7 @@ def main(arguments):
                 # Create security groups
                 creators.append(__create_instances(
                     os_creds_dict, OpenStackSecurityGroup,
-                    SecurityGroupSettings,
+                    SecurityGroupConfig,
                     os_config.get('security_groups'), 'security_group', clean,
                     users_dict))
 

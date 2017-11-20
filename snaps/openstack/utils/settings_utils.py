@@ -19,12 +19,12 @@ from snaps.config.flavor import FlavorConfig
 from snaps.config.keypair import KeypairConfig
 from snaps.config.network import SubnetConfig, PortConfig, NetworkConfig
 from snaps.config.router import RouterConfig
+from snaps.config.security_group import (
+    SecurityGroupRuleConfig, SecurityGroupConfig)
 from snaps.config.vm_inst import VmInstanceConfig, FloatingIpConfig
 from snaps.config.volume import VolumeConfig
 from snaps.config.volume_type import (
     ControlLocation,  VolumeTypeEncryptionConfig, VolumeTypeConfig)
-from snaps.openstack.create_security_group import (
-    SecurityGroupSettings, SecurityGroupRuleSettings)
 from snaps.openstack.utils import (
     neutron_utils, nova_utils, heat_utils, glance_utils)
 
@@ -41,7 +41,7 @@ def create_network_config(neutron, network):
         subnet_settings=create_subnet_config(neutron, network))
 
 
-def create_security_group_settings(neutron, security_group):
+def create_security_group_config(neutron, security_group):
     """
     Returns a NetworkConfig object
     :param neutron: the neutron client
@@ -52,7 +52,7 @@ def create_security_group_settings(neutron, security_group):
 
     rule_settings = list()
     for rule in rules:
-        rule_settings.append(SecurityGroupRuleSettings(
+        rule_settings.append(SecurityGroupRuleConfig(
             sec_grp_name=security_group.name, description=rule.description,
             direction=rule.direction, ethertype=rule.ethertype,
             port_range_min=rule.port_range_min,
@@ -60,7 +60,7 @@ def create_security_group_settings(neutron, security_group):
             remote_group_id=rule.remote_group_id,
             remote_ip_prefix=rule.remote_ip_prefix))
 
-    return SecurityGroupSettings(
+    return SecurityGroupConfig(
         name=security_group.name, description=security_group.description,
         rule_settings=rule_settings)
 

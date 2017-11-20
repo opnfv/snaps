@@ -18,8 +18,10 @@ import unittest
 
 from snaps.config.tests.network_tests import (
     NetworkConfigUnitTests, SubnetConfigUnitTests, PortConfigUnitTests)
-from snaps.config.tests.vm_inst_tests import VmInstanceConfigUnitTests, \
-    FloatingIpConfigUnitTests
+from snaps.config.tests.security_group_tests import (
+    SecurityGroupConfigUnitTests, SecurityGroupRuleConfigUnitTests)
+from snaps.config.tests.vm_inst_tests import (
+    VmInstanceConfigUnitTests, FloatingIpConfigUnitTests)
 from snaps.config.tests.volume_tests import VolumeConfigUnitTests
 from snaps.config.tests.volume_type_tests import VolumeTypeConfigUnitTests
 from snaps.config.tests.qos_tests import QoSConfigUnitTests
@@ -135,13 +137,17 @@ def add_unit_tests(suite):
     """
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(FileUtilsTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
-        SecurityGroupRuleSettingsUnitTests))
-    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         ProxySettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         OSCredsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        SecurityGroupConfigUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         SecurityGroupSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        SecurityGroupRuleConfigUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        SecurityGroupRuleSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         SecurityGroupDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
@@ -391,6 +397,10 @@ def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True,
         ext_net_name=ext_net_name, log_level=log_level,
         image_metadata=image_metadata))
     suite.addTest(OSComponentTestCase.parameterize(
+        HeatUtilsVolumeTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, log_level=log_level,
+        image_metadata=image_metadata))
+    suite.addTest(OSComponentTestCase.parameterize(
         CinderUtilsQoSTests, os_creds=os_creds,
         ext_net_name=ext_net_name, log_level=log_level,
         image_metadata=image_metadata))
@@ -614,6 +624,11 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
             flavor_metadata=flavor_metadata, image_metadata=image_metadata,
             log_level=log_level))
         suite.addTest(OSIntegrationTestCase.parameterize(
+            CreateInstancePubPrivNetTests, os_creds=os_creds,
+            ext_net_name=ext_net_name, use_keystone=use_keystone,
+            flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+            log_level=log_level))
+        suite.addTest(OSIntegrationTestCase.parameterize(
             AnsibleProvisioningTests, os_creds=os_creds,
             ext_net_name=ext_net_name, use_keystone=use_keystone,
             flavor_metadata=flavor_metadata, image_metadata=image_metadata,
@@ -699,13 +714,7 @@ def add_openstack_staging_tests(suite, os_creds, ext_net_name,
         CreateInstanceMockOfflineTests, os_creds=os_creds,
         ext_net_name=ext_net_name, log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
-        CreateInstancePubPrivNetTests, os_creds=os_creds,
-        ext_net_name=ext_net_name, log_level=log_level))
-    suite.addTest(OSIntegrationTestCase.parameterize(
         CreateInstanceIPv6NetworkTests, os_creds=os_creds,
-        ext_net_name=ext_net_name, log_level=log_level))
-    suite.addTest(OSComponentTestCase.parameterize(
-        HeatUtilsVolumeTests, os_creds=os_creds,
         ext_net_name=ext_net_name, log_level=log_level))
     suite.addTest(OSComponentTestCase.parameterize(
         MagnumSmokeTests, os_creds=os_creds,

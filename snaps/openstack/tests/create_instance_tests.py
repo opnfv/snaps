@@ -29,6 +29,8 @@ from snaps.config.image import ImageConfig
 from snaps.config.keypair import KeypairConfig
 from snaps.config.network import PortConfig, NetworkConfig, SubnetConfig
 from snaps.config.router import RouterConfig
+from snaps.config.security_group import (
+    Protocol, SecurityGroupRuleConfig, Direction, SecurityGroupConfig)
 from snaps.config.vm_inst import (
     VmInstanceConfig, FloatingIpConfig,  VmInstanceConfigError,
     FloatingIpConfigError)
@@ -41,9 +43,7 @@ from snaps.openstack.create_instance import (
 from snaps.openstack.create_keypairs import OpenStackKeypair
 from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_router import OpenStackRouter
-from snaps.openstack.create_security_group import (
-    SecurityGroupSettings, OpenStackSecurityGroup, SecurityGroupRuleSettings,
-    Direction, Protocol)
+from snaps.openstack.create_security_group import OpenStackSecurityGroup
 from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.tests import openstack_tests, validation_utils
 from snaps.openstack.tests.os_source_file_test import (
@@ -585,18 +585,16 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             self.keypair_creator.create()
 
             sec_grp_name = guid + '-sec-grp'
-            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
-                                              direction=Direction.ingress,
-                                              protocol=Protocol.icmp)
-            rule2 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
-                                              direction=Direction.ingress,
-                                              protocol=Protocol.tcp,
-                                              port_range_min=22,
-                                              port_range_max=22)
+            rule1 = SecurityGroupRuleConfig(
+                sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                protocol=Protocol.icmp)
+            rule2 = SecurityGroupRuleConfig(
+                sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                protocol=Protocol.tcp, port_range_min=22, port_range_max=22)
             self.sec_grp_creator = OpenStackSecurityGroup(
                 self.os_creds,
-                SecurityGroupSettings(name=sec_grp_name,
-                                      rule_settings=[rule1, rule2]))
+                SecurityGroupConfig(
+                    name=sec_grp_name, rule_settings=[rule1, rule2]))
             self.sec_grp_creator.create()
         except Exception as e:
             self.tearDown()
@@ -864,18 +862,16 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
             self.keypair_creator.create()
 
             sec_grp_name = self.guid + '-sec-grp'
-            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
-                                              direction=Direction.ingress,
-                                              protocol=Protocol.icmp)
-            rule2 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
-                                              direction=Direction.ingress,
-                                              protocol=Protocol.tcp,
-                                              port_range_min=22,
-                                              port_range_max=22)
+            rule1 = SecurityGroupRuleConfig(
+                sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                protocol=Protocol.icmp)
+            rule2 = SecurityGroupRuleConfig(
+                sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                protocol=Protocol.tcp, port_range_min=22, port_range_max=22)
             self.sec_grp_creator = OpenStackSecurityGroup(
                 self.os_creds,
-                SecurityGroupSettings(name=sec_grp_name,
-                                      rule_settings=[rule1, rule2]))
+                SecurityGroupConfig(
+                    name=sec_grp_name, rule_settings=[rule1, rule2]))
             self.sec_grp_creator.create()
         except Exception as e:
             self.tearDown()
@@ -1554,18 +1550,16 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             self.keypair_creator.create()
 
             sec_grp_name = self.guid + '-sec-grp'
-            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
-                                              direction=Direction.ingress,
-                                              protocol=Protocol.icmp)
-            rule2 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
-                                              direction=Direction.ingress,
-                                              protocol=Protocol.tcp,
-                                              port_range_min=22,
-                                              port_range_max=22)
+            rule1 = SecurityGroupRuleConfig(
+                sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                protocol=Protocol.icmp)
+            rule2 = SecurityGroupRuleConfig(
+                sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                protocol=Protocol.tcp, port_range_min=22, port_range_max=22)
             self.sec_grp_creator = OpenStackSecurityGroup(
                 self.os_creds,
-                SecurityGroupSettings(name=sec_grp_name,
-                                      rule_settings=[rule1, rule2]))
+                SecurityGroupConfig(
+                    name=sec_grp_name, rule_settings=[rule1, rule2]))
             self.sec_grp_creator.create()
         except:
             self.tearDown()
@@ -1809,8 +1803,8 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.assertIsNotNone(vm_inst)
 
         # Create security group object to add to instance
-        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name',
-                                                 description='hello group')
+        sec_grp_settings = SecurityGroupConfig(
+            name=self.guid + '-name', description='hello group')
         sec_grp_creator = OpenStackSecurityGroup(self.os_creds,
                                                  sec_grp_settings)
         sec_grp = sec_grp_creator.create()
@@ -1843,8 +1837,8 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.assertIsNotNone(vm_inst)
 
         # Create security group object to add to instance
-        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name',
-                                                 description='hello group')
+        sec_grp_settings = SecurityGroupConfig(
+            name=self.guid + '-name', description='hello group')
         sec_grp_creator = OpenStackSecurityGroup(self.os_creds,
                                                  sec_grp_settings)
         sec_grp = sec_grp_creator.create()
@@ -1868,8 +1862,8 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         instance.
         """
         # Create security group object to add to instance
-        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name',
-                                                 description='hello group')
+        sec_grp_settings = SecurityGroupConfig(
+            name=self.guid + '-name', description='hello group')
         sec_grp_creator = OpenStackSecurityGroup(self.os_creds,
                                                  sec_grp_settings)
         sec_grp = sec_grp_creator.create()
@@ -1904,8 +1898,8 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         place.
         """
         # Create security group object to add to instance
-        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name',
-                                                 description='hello group')
+        sec_grp_settings = SecurityGroupConfig(
+            name=self.guid + '-name', description='hello group')
         sec_grp_creator = OpenStackSecurityGroup(self.os_creds,
                                                  sec_grp_settings)
         sec_grp = sec_grp_creator.create()
@@ -1939,8 +1933,8 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         instance.
         """
         # Create security group object to add to instance
-        sec_grp_settings = SecurityGroupSettings(name=self.guid + '-name',
-                                                 description='hello group')
+        sec_grp_settings = SecurityGroupConfig(
+            name=self.guid + '-name', description='hello group')
         sec_grp_creator = OpenStackSecurityGroup(self.os_creds,
                                                  sec_grp_settings)
         sec_grp = sec_grp_creator.create()
@@ -2739,13 +2733,13 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
             self.flavor_creator.create()
 
             sec_grp_name = self.guid + '-sec-grp'
-            rule1 = SecurityGroupRuleSettings(sec_grp_name=sec_grp_name,
-                                              direction=Direction.ingress,
-                                              protocol=Protocol.icmp)
+            rule1 = SecurityGroupRuleConfig(
+                sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                protocol=Protocol.icmp)
             self.sec_grp_creator = OpenStackSecurityGroup(
                 self.os_creds,
-                SecurityGroupSettings(name=sec_grp_name,
-                                      rule_settings=[rule1]))
+                SecurityGroupConfig(
+                    name=sec_grp_name, rule_settings=[rule1]))
             self.sec_grp_creator.create()
         except:
             self.tearDown()
