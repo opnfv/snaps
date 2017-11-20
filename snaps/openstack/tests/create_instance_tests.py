@@ -29,13 +29,15 @@ from snaps.config.image import ImageConfig
 from snaps.config.keypair import KeypairConfig
 from snaps.config.network import PortConfig, NetworkConfig, SubnetConfig
 from snaps.config.router import RouterConfig
+from snaps.config.vm_inst import (
+    VmInstanceConfig, FloatingIpConfig,  VmInstanceConfigError,
+    FloatingIpConfigError)
 from snaps.config.volume import VolumeConfig
 from snaps.openstack import create_network, create_router
 from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_instance import (
-    VmInstanceSettings, OpenStackVmInstance, FloatingIpSettings,
-    VmInstanceSettingsError, FloatingIpSettingsError)
+    VmInstanceSettings, OpenStackVmInstance, FloatingIpSettings)
 from snaps.openstack.create_keypairs import OpenStackKeypair
 from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_router import OpenStackRouter
@@ -61,27 +63,27 @@ class VmInstanceSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(VmInstanceSettingsError):
+        with self.assertRaises(VmInstanceConfigError):
             VmInstanceSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(VmInstanceSettingsError):
+        with self.assertRaises(VmInstanceConfigError):
             VmInstanceSettings(config=dict())
 
     def test_name_only(self):
-        with self.assertRaises(VmInstanceSettingsError):
+        with self.assertRaises(VmInstanceConfigError):
             VmInstanceSettings(name='foo')
 
     def test_config_with_name_only(self):
-        with self.assertRaises(VmInstanceSettingsError):
+        with self.assertRaises(VmInstanceConfigError):
             VmInstanceSettings(config={'name': 'foo'})
 
     def test_name_flavor_only(self):
-        with self.assertRaises(VmInstanceSettingsError):
+        with self.assertRaises(VmInstanceConfigError):
             VmInstanceSettings(name='foo', flavor='bar')
 
     def test_config_with_name_flavor_only(self):
-        with self.assertRaises(VmInstanceSettingsError):
+        with self.assertRaises(VmInstanceConfigError):
             VmInstanceSettings(config={'name': 'foo', 'flavor': 'bar'})
 
     def test_name_flavor_port_only(self):
@@ -190,35 +192,35 @@ class FloatingIpSettingsUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(FloatingIpSettingsError):
+        with self.assertRaises(FloatingIpConfigError):
             FloatingIpSettings()
 
     def test_empty_config(self):
-        with self.assertRaises(FloatingIpSettingsError):
+        with self.assertRaises(FloatingIpConfigError):
             FloatingIpSettings(**dict())
 
     def test_name_only(self):
-        with self.assertRaises(FloatingIpSettingsError):
+        with self.assertRaises(FloatingIpConfigError):
             FloatingIpSettings(name='foo')
 
     def test_config_with_name_only(self):
-        with self.assertRaises(FloatingIpSettingsError):
+        with self.assertRaises(FloatingIpConfigError):
             FloatingIpSettings(**{'name': 'foo'})
 
     def test_name_port_only(self):
-        with self.assertRaises(FloatingIpSettingsError):
+        with self.assertRaises(FloatingIpConfigError):
             FloatingIpSettings(name='foo', port_name='bar')
 
     def test_config_with_name_port_only(self):
-        with self.assertRaises(FloatingIpSettingsError):
+        with self.assertRaises(FloatingIpConfigError):
             FloatingIpSettings(**{'name': 'foo', 'port_name': 'bar'})
 
     def test_name_router_only(self):
-        with self.assertRaises(FloatingIpSettingsError):
+        with self.assertRaises(FloatingIpConfigError):
             FloatingIpSettings(name='foo', router_name='bar')
 
     def test_config_with_name_router_only(self):
-        with self.assertRaises(FloatingIpSettingsError):
+        with self.assertRaises(FloatingIpConfigError):
             FloatingIpSettings(**{'name': 'foo', 'router_name': 'bar'})
 
     def test_name_port_router_name_only(self):
@@ -376,7 +378,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         Tests the creation of an OpenStack instance with a single port and
         ensures that it's assigned IP address is the actual.
         """
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -492,7 +494,7 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack instance with a single port with a
         static IP without a Floating IP.
         """
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -674,11 +676,11 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             ip_addrs=[
                 {'subnet_name': sub_settings[0].name, 'ip': ip_1}])
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings],
-            floating_ip_settings=[FloatingIpSettings(
+            floating_ip_settings=[FloatingIpConfig(
                 name=self.floating_ip_name, port_name=self.port_1_name,
                 router_name=self.pub_net_config.router_settings.name)])
 
@@ -702,12 +704,12 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             name=self.port_1_name,
             network_name=self.pub_net_config.network_settings.name)
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings],
             security_group_names=[self.sec_grp_creator.sec_grp_settings.name],
-            floating_ip_settings=[FloatingIpSettings(
+            floating_ip_settings=[FloatingIpConfig(
                 name=self.floating_ip_name, port_name=self.port_1_name,
                 router_name=self.pub_net_config.router_settings.name)])
 
@@ -737,12 +739,12 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             name=self.port_1_name,
             network_name=self.pub_net_config.network_settings.name)
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings],
             security_group_names=[self.sec_grp_creator.sec_grp_settings.name],
-            floating_ip_settings=[FloatingIpSettings(
+            floating_ip_settings=[FloatingIpConfig(
                 name=self.floating_ip_name, port_name=self.port_1_name,
                 router_name=self.pub_net_config.router_settings.name)])
 
@@ -774,12 +776,12 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             name=self.port_1_name,
             network_name=self.pub_net_config.network_settings.name)
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings],
             security_group_names=[self.sec_grp_creator.sec_grp_settings.name],
-            floating_ip_settings=[FloatingIpSettings(
+            floating_ip_settings=[FloatingIpConfig(
                 name=self.floating_ip_name, port_name=self.port_1_name,
                 router_name=self.pub_net_config.router_settings.name)])
 
@@ -967,12 +969,12 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
         port_settings = PortConfig(
             name=self.port1_name, network_name=network_settings.name)
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings],
             security_group_names=[self.sec_grp_creator.sec_grp_settings.name],
-            floating_ip_settings=[FloatingIpSettings(
+            floating_ip_settings=[FloatingIpConfig(
                 name='fip1', port_name=self.port1_name,
                 router_name=router_settings.name)])
 
@@ -1015,12 +1017,12 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
         port_settings = PortConfig(
             name=self.port1_name, network_name=network_settings.name)
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings],
             security_group_names=[self.sec_grp_creator.sec_grp_settings.name],
-            floating_ip_settings=[FloatingIpSettings(
+            floating_ip_settings=[FloatingIpConfig(
                 name='fip1', port_name=self.port1_name,
                 router_name=router_settings.name)])
 
@@ -1135,7 +1137,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             network_name=self.net_config.network_settings.name,
             ip_addrs=[{'subnet_name': sub_settings[0].name, 'ip': ip}])
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings])
@@ -1162,7 +1164,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             network_name=self.net_config.network_settings.name,
             ip_addrs=[{'subnet_name': sub_settings[0].name, 'ip': ip}])
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings])
@@ -1185,7 +1187,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             network_name=self.net_config.network_settings.name,
             mac_address=mac_addr)
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings])
@@ -1209,7 +1211,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             network_name=self.net_config.network_settings.name,
             mac_address='foo')
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings])
@@ -1235,7 +1237,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             mac_address=mac_addr,
             ip_addrs=[{'subnet_name': sub_settings[0].name, 'ip': ip}])
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings])
@@ -1265,7 +1267,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             network_name=self.net_config.network_settings.name,
             allowed_address_pairs=[pair])
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings])
@@ -1297,7 +1299,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             network_name=self.net_config.network_settings.name,
             allowed_address_pairs=[pair])
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings])
@@ -1323,7 +1325,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             network_name=self.net_config.network_settings.name,
             allowed_address_pairs=[pair])
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[port_settings])
@@ -1439,7 +1441,7 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
                 name=self.port_base_name + '-' + str(ctr),
                 network_name=self.priv_net_config.network_settings.name)
 
-            instance_settings = VmInstanceSettings(
+            instance_settings = VmInstanceConfig(
                 name=inst_name,
                 flavor=self.flavor_creator.flavor_settings.name,
                 availability_zone=zone,
@@ -1653,12 +1655,12 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
             ctr += 1
 
         # Create instance
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=ports_settings,
             security_group_names=[self.sec_grp_creator.sec_grp_settings.name],
-            floating_ip_settings=[FloatingIpSettings(
+            floating_ip_settings=[FloatingIpConfig(
                 name=self.floating_ip_name, port_name=self.port_1_name,
                 router_name=self.pub_net_config.router_settings.name)])
 
@@ -1796,7 +1798,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         Tests the addition of a security group created after the instance.
         """
         # Create instance
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -1830,7 +1832,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         Tests the addition of a security group that no longer exists.
         """
         # Create instance
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -1874,7 +1876,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.sec_grp_creators.append(sec_grp_creator)
 
         # Create instance
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             security_group_names=[sec_grp_settings.name],
@@ -1910,7 +1912,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.sec_grp_creators.append(sec_grp_creator)
 
         # Create instance
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -1945,7 +1947,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.sec_grp_creators.append(sec_grp_creator)
 
         # Create instance
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             security_group_names=[sec_grp_settings.name],
@@ -2125,7 +2127,7 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
         """
         Tests the creation of an OpenStack instance from a 3-part image.
         """
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -2260,7 +2262,7 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
         self.image_creator.create()
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -2296,7 +2298,7 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
         self.image_creator.create()
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -2328,7 +2330,7 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.assertEqual(self.image_creator.get_image().id,
                          test_image_creator.get_image().id)
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -2363,7 +2365,7 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         test_image = OpenStackImage(self.os_creds, test_image_settings)
         test_image.create()
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -2443,7 +2445,7 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
         self.image_creator.create()
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -2513,7 +2515,7 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.assertIsNotNone(self.image_creator.get_kernel_image())
         self.assertIsNotNone(self.image_creator.get_ramdisk_image())
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -2583,7 +2585,7 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.assertIsNotNone(self.image_creator.get_kernel_image())
         self.assertIsNotNone(self.image_creator.get_ramdisk_image())
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -2623,7 +2625,7 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.assertEqual(self.image_creator.get_image().id,
                          test_image_creator.get_image().id)
 
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings])
@@ -2819,7 +2821,7 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
             ctr += 1
 
         # Configure instances
-        instance1_settings = VmInstanceSettings(
+        instance1_settings = VmInstanceConfig(
             name=self.vm_inst1_name,
             flavor=self.flavor_creator.flavor_settings.name,
             userdata=_get_ping_userdata(self.ip2),
@@ -2831,7 +2833,7 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
                     'ip': self.ip1
                 }],
                 network_name=self.network_creators[0].network_settings.name)])
-        instance2_settings = VmInstanceSettings(
+        instance2_settings = VmInstanceConfig(
             name=self.vm_inst2_name,
             flavor=self.flavor_creator.flavor_settings.name,
             userdata=_get_ping_userdata(self.ip1),
@@ -2992,7 +2994,7 @@ class CreateInstanceVolumeTests(OSIntegrationTestCase):
         """
         Tests the creation of an OpenStack instance with a single volume.
         """
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings],
@@ -3015,7 +3017,7 @@ class CreateInstanceVolumeTests(OSIntegrationTestCase):
         """
         Tests the creation of an OpenStack instance with a single volume.
         """
-        instance_settings = VmInstanceSettings(
+        instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
             port_settings=[self.port_settings],

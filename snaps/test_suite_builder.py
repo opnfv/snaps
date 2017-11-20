@@ -18,6 +18,8 @@ import unittest
 
 from snaps.config.tests.network_tests import (
     NetworkConfigUnitTests, SubnetConfigUnitTests, PortConfigUnitTests)
+from snaps.config.tests.vm_inst_tests import VmInstanceConfigUnitTests, \
+    FloatingIpConfigUnitTests
 from snaps.config.tests.volume_tests import VolumeConfigUnitTests
 from snaps.config.tests.volume_type_tests import VolumeTypeConfigUnitTests
 from snaps.config.tests.qos_tests import QoSConfigUnitTests
@@ -209,7 +211,11 @@ def add_unit_tests(suite):
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         InterfaceRouterDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        FloatingIpConfigUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         FloatingIpSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        VmInstanceConfigUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         VmInstanceSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

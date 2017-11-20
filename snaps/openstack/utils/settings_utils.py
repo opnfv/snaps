@@ -19,11 +19,10 @@ from snaps.config.flavor import FlavorConfig
 from snaps.config.keypair import KeypairConfig
 from snaps.config.network import SubnetConfig, PortConfig, NetworkConfig
 from snaps.config.router import RouterConfig
+from snaps.config.vm_inst import VmInstanceConfig, FloatingIpConfig
 from snaps.config.volume import VolumeConfig
 from snaps.config.volume_type import (
     ControlLocation,  VolumeTypeEncryptionConfig, VolumeTypeConfig)
-from snaps.openstack.create_instance import (
-    VmInstanceSettings, FloatingIpSettings)
 from snaps.openstack.create_security_group import (
     SecurityGroupSettings, SecurityGroupRuleSettings)
 from snaps.openstack.utils import (
@@ -93,7 +92,7 @@ def create_subnet_config(neutron, network):
     return out
 
 
-def create_router_settings(neutron, router):
+def create_router_config(neutron, router):
     """
     Returns a RouterConfig object
     :param neutron: the neutron client
@@ -202,7 +201,7 @@ def create_flavor_config(flavor):
         is_public=flavor.is_public)
 
 
-def create_keypair_settings(heat_cli, stack, keypair, pk_output_key):
+def create_keypair_config(heat_cli, stack, keypair, pk_output_key):
     """
     Instantiates a KeypairConfig object from a Keypair domain objects
     :param heat_cli: the heat client
@@ -228,7 +227,7 @@ def create_keypair_settings(heat_cli, stack, keypair, pk_output_key):
     return KeypairConfig(name=keypair.name)
 
 
-def create_vm_inst_settings(nova, neutron, server):
+def create_vm_inst_config(nova, neutron, server):
     """
     Returns a NetworkConfig object
     :param nova: the nova client
@@ -252,10 +251,10 @@ def create_vm_inst_settings(nova, neutron, server):
     kwargs['port_settings'] = __create_port_config(
         neutron, net_tuples)
     kwargs['security_group_names'] = server.sec_grp_names
-    kwargs['floating_ip_settings'] = __create_floatingip_settings(
+    kwargs['floating_ip_settings'] = __create_floatingip_config(
         neutron, kwargs['port_settings'])
 
-    return VmInstanceSettings(**kwargs)
+    return VmInstanceConfig(**kwargs)
 
 
 def __create_port_config(neutron, networks):
@@ -292,13 +291,13 @@ def __create_port_config(neutron, networks):
     return out
 
 
-def __create_floatingip_settings(neutron, port_settings):
+def __create_floatingip_config(neutron, port_settings):
     """
-    Returns a list of FloatingIPSettings objects as they pertain to an
+    Returns a list of FloatingIpConfig objects as they pertain to an
     existing deployed server instance
     :param neutron: the neutron client
     :param port_settings: list of SNAPS-OO PortConfig objects
-    :return: a list of FloatingIPSettings objects or an empty list if no
+    :return: a list of FloatingIpConfig objects or an empty list if no
              floating IPs have been created
     """
     base_fip_name = 'fip-'
@@ -340,7 +339,7 @@ def __create_floatingip_settings(neutron, port_settings):
                     if subnet:
                         kwargs['subnet_name'] = subnet.name
 
-        out.append(FloatingIpSettings(**kwargs))
+        out.append(FloatingIpConfig(**kwargs))
 
         fip_ctr += 1
 

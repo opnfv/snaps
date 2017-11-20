@@ -22,6 +22,7 @@ from snaps.config.network import SubnetConfig, NetworkConfig, PortConfig
 from snaps.config.flavor import FlavorConfig
 from snaps.config.keypair import KeypairConfig
 from snaps.config.qos import Consumer
+from snaps.config.vm_inst import VmInstanceConfig, FloatingIpConfig
 from snaps.domain.flavor import Flavor
 from snaps.domain.volume import (
     Volume, VolumeType, VolumeTypeEncryption, QoSSpec)
@@ -144,7 +145,7 @@ class SettingsUtilsNetworkingTests(OSComponentTestCase):
 
 class SettingsUtilsVmInstTests(OSComponentTestCase):
     """
-    Tests the ability to reverse engineer VmInstanceSettings objects from
+    Tests the ability to reverse engineer VmInstanceConfig objects from
     existing VMs/servers deployed to OpenStack
     """
 
@@ -238,11 +239,11 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
                     name=self.port_1_name,
                     network_name=self.pub_net_config.network_settings.name))
 
-            instance_settings = create_instance.VmInstanceSettings(
+            instance_settings = VmInstanceConfig(
                 name=self.vm_inst_name,
                 flavor=self.flavor_creator.flavor_settings.name,
                 port_settings=ports_settings,
-                floating_ip_settings=[create_instance.FloatingIpSettings(
+                floating_ip_settings=[FloatingIpConfig(
                     name=self.floating_ip_name, port_name=self.port_1_name,
                     router_name=self.pub_net_config.router_settings.name)])
 
@@ -317,16 +318,16 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
 
         # super(self.__class__, self).__clean__()
 
-    def test_derive_vm_inst_settings(self):
+    def test_derive_vm_inst_config(self):
         """
-        Validates the utility function settings_utils#create_vm_inst_settings
-        returns an acceptable VmInstanceSettings object
+        Validates the utility function settings_utils#create_vm_inst_config
+        returns an acceptable VmInstanceConfig object
         """
         self.inst_creator.create(block=True)
 
         server = nova_utils.get_server(
             self.nova, vm_inst_settings=self.inst_creator.instance_settings)
-        derived_vm_settings = settings_utils.create_vm_inst_settings(
+        derived_vm_settings = settings_utils.create_vm_inst_config(
             self.nova, self.neutron, server)
         self.assertIsNotNone(derived_vm_settings)
         self.assertIsNotNone(derived_vm_settings.port_settings)

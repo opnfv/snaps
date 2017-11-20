@@ -125,7 +125,7 @@ def get_server(nova, vm_inst_settings=None, server_name=None):
     """
     Returns a VmInst object for the first server instance found.
     :param nova: the Nova client
-    :param vm_inst_settings: the VmInstanceSettings object from which to build
+    :param vm_inst_settings: the VmInstanceConfig object from which to build
                              the query if not None
     :param server_name: the server with this name to return if vm_inst_settings
                         is not None
@@ -146,7 +146,7 @@ def get_server_connection(nova, vm_inst_settings=None, server_name=None):
     """
     Returns a VmInst object for the first server instance found.
     :param nova: the Nova client
-    :param vm_inst_settings: the VmInstanceSettings object from which to build
+    :param vm_inst_settings: the VmInstanceConfig object from which to build
                              the query if not None
     :param server_name: the server with this name to return if vm_inst_settings
                         is not None

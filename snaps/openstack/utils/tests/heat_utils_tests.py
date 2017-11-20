@@ -313,7 +313,7 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
                     servers = heat_utils.get_stack_servers(
                         self.heat_client, nova, self.stack)
                     for server in servers:
-                        vm_settings = settings_utils.create_vm_inst_settings(
+                        vm_settings = settings_utils.create_vm_inst_config(
                             nova, neutron, server)
                         img_settings = settings_utils.determine_image_config(
                             glance, server,

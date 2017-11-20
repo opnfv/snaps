@@ -121,7 +121,7 @@ def create_vm_instance(os_creds, instance_settings, image_settings,
     """
     Creates a VM instance
     :param os_creds: The OpenStack credentials
-    :param instance_settings: Instance of VmInstanceSettings
+    :param instance_settings: Instance of VmInstanceConfig
     :param image_settings: The object containing image settings
     :param keypair_creator: The object responsible for creating the keypair
                             associated with this VM instance. (optional)

@@ -34,11 +34,11 @@ from snaps.config.project import ProjectConfig
 from snaps.config.qos import QoSConfig
 from snaps.config.router import RouterConfig
 from snaps.config.user import UserConfig
+from snaps.config.vm_inst import VmInstanceConfig
 from snaps.config.volume import VolumeConfig
 from snaps.config.volume_type import VolumeTypeConfig
 from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_image import OpenStackImage
-from snaps.openstack.create_instance import VmInstanceSettings
 from snaps.openstack.create_keypairs import OpenStackKeypair
 from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_project import OpenStackProject
@@ -218,7 +218,7 @@ def __create_vm_instances(os_creds_dict, os_users_dict, instances_config,
                     if image_dict:
                         image_creator = image_dict.get(conf.get('imageName'))
                         if image_creator:
-                            instance_settings = VmInstanceSettings(
+                            instance_settings = VmInstanceConfig(
                                 **instance_config['instance'])
                             kp_creator = keypairs_dict.get(
                                 conf.get('keypair_name'))

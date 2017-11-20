@@ -22,6 +22,7 @@ from scp import SCPClient
 from snaps.config.flavor import FlavorConfig
 from snaps.config.keypair import KeypairConfig
 from snaps.config.network import PortConfig
+from snaps.config.vm_inst import VmInstanceConfig, FloatingIpConfig
 
 from snaps.openstack import create_flavor
 from snaps.openstack import create_image
@@ -141,11 +142,11 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
                     name=self.port_1_name,
                     network_name=self.pub_net_config.network_settings.name))
 
-            instance_settings = create_instance.VmInstanceSettings(
+            instance_settings = VmInstanceConfig(
                 name=self.vm_inst_name,
                 flavor=self.flavor_creator.flavor_settings.name,
                 port_settings=ports_settings,
-                floating_ip_settings=[create_instance.FloatingIpSettings(
+                floating_ip_settings=[FloatingIpConfig(
                     name=self.floating_ip_name, port_name=self.port_1_name,
                     router_name=self.pub_net_config.router_settings.name)])
 

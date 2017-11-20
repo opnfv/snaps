@@ -1,4 +1,7 @@
 import logging
+
+from snaps.config.vm_inst import VmInstanceConfig
+
 logging.basicConfig(level=logging.INFO)
 
 # Credentials
@@ -48,12 +51,11 @@ flavor.create()
 
 # Instances
 from snaps.config.network import PortConfig
-from snaps.openstack.create_instance import (
-    VmInstanceSettings, OpenStackVmInstance)
+from snaps.openstack.create_instance import OpenStackVmInstance
 
 port_settings = PortConfig(
     name='test-port', network_name=network_settings.name)
-instance_settings = VmInstanceSettings(
+instance_settings = VmInstanceConfig(
     name='test-inst', flavor=flavor_settings.name,
     port_settings=[port_settings])
 

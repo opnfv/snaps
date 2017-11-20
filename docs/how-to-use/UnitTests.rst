@@ -348,11 +348,17 @@ VolumeDomainObjectTests
 Ensures that all required members are included when constructing a
 Volume domain object (for Cinder)
 
+FloatingIpConfigUnitTests
+-------------------------
+
+Ensures that all required members are included when constructing a
+FloatingIpConfig object
+
 FloatingIpSettingsUnitTests
 ---------------------------
 
 Ensures that all required members are included when constructing a
-FloatingIpSettings object
+depecated FloatingIpSettings object
 
 FloatingIpDomainObjectTests
 ---------------------------
@@ -360,11 +366,17 @@ FloatingIpDomainObjectTests
 Ensures that all required members are included when constructing a
 FloatingIp domain object
 
+VmInstanceConfigUnitTests
+-------------------------
+
+Ensures that all required members are included when constructing a
+VmInstanceConfig object
+
 VmInstanceSettingsUnitTests
 ---------------------------
 
 Ensures that all required members are included when constructing a
-VmInstanceSettings object
+deprecated VmInstanceSettings object
 
 VmInstDomainObjectTests
 -----------------------

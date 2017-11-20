@@ -380,7 +380,7 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
                               responsible for creating the router
         :return: the derived RouterConfig object
         """
-        derived_settings = settings_utils.create_router_settings(
+        derived_settings = settings_utils.create_router_config(
             self.neutron, router)
         self.assertIsNotNone(derived_settings)
         self.assertEqual(

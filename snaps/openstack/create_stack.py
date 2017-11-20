@@ -267,7 +267,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
             self.__heat_cli, neutron, self.__stack)
 
         for routers in stack_routers:
-            settings = settings_utils.create_router_settings(
+            settings = settings_utils.create_router_config(
                 neutron, routers)
             creator = OpenStackRouter(self._os_creds, settings)
             out.append(creator)
@@ -292,7 +292,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         glance = glance_utils.glance_client(self._os_creds)
 
         for stack_server in stack_servers:
-            vm_inst_settings = settings_utils.create_vm_inst_settings(
+            vm_inst_settings = settings_utils.create_vm_inst_config(
                 nova, neutron, stack_server)
             image_settings = settings_utils.determine_image_config(
                 glance, stack_server, self.image_settings)
@@ -375,7 +375,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
             self.__heat_cli, nova, self.__stack)
 
         for keypair in keypairs:
-            settings = settings_utils.create_keypair_settings(
+            settings = settings_utils.create_keypair_config(
                 self.__heat_cli, self.__stack, keypair, outputs_pk_key)
             creator = OpenStackKeypair(self._os_creds, settings)
             out.append(creator)
