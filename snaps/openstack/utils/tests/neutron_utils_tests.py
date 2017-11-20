@@ -17,8 +17,8 @@ import uuid
 from neutronclient.common.exceptions import NotFound, BadRequest
 
 from snaps.config.network import NetworkConfig, SubnetConfig, PortConfig
-from snaps.openstack.create_security_group import (
-    SecurityGroupSettings,  SecurityGroupRuleSettings, Direction)
+from snaps.config.security_group import (
+    SecurityGroupConfig, SecurityGroupRuleConfig, Direction)
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests import validation_utils
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
@@ -841,7 +841,7 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         """
         Tests the neutron_utils.create_security_group() function
         """
-        sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name)
+        sec_grp_settings = SecurityGroupConfig(name=self.sec_grp_name)
         security_group = neutron_utils.create_security_group(self.neutron,
                                                              self.keystone,
                                                              sec_grp_settings)
@@ -861,13 +861,13 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
 
     def test_create_sec_grp_no_name(self):
         """
-        Tests the SecurityGroupSettings constructor and
+        Tests the SecurityGroupConfig constructor and
         neutron_utils.create_security_group() function to ensure that
         attempting to create a security group without a name will raise an
         exception
         """
         with self.assertRaises(Exception):
-            sec_grp_settings = SecurityGroupSettings()
+            sec_grp_settings = SecurityGroupConfig()
             self.security_groups.append(
                 neutron_utils.create_security_group(self.neutron,
                                                     self.keystone,
@@ -877,8 +877,8 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         """
         Tests the neutron_utils.create_security_group() function
         """
-        sec_grp_settings = SecurityGroupSettings(name=self.sec_grp_name,
-                                                 description='hello group')
+        sec_grp_settings = SecurityGroupConfig(
+            name=self.sec_grp_name, description='hello group')
         self.security_groups.append(
             neutron_utils.create_security_group(self.neutron, self.keystone,
                                                 sec_grp_settings))
@@ -896,9 +896,9 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         Tests the neutron_utils.create_security_group() function
         """
 
-        sec_grp_rule_settings = SecurityGroupRuleSettings(
+        sec_grp_rule_settings = SecurityGroupRuleConfig(
             sec_grp_name=self.sec_grp_name, direction=Direction.ingress)
-        sec_grp_settings = SecurityGroupSettings(
+        sec_grp_settings = SecurityGroupConfig(
             name=self.sec_grp_name, description='hello group',
             rule_settings=[sec_grp_rule_settings])
 
@@ -939,12 +939,12 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
 
         self.security_groups.append(neutron_utils.create_security_group(
             self.neutron, self.keystone,
-            SecurityGroupSettings(name=self.sec_grp_name + '-1',
-                                  description='hello group')))
+            SecurityGroupConfig(
+                name=self.sec_grp_name + '-1', description='hello group')))
         self.security_groups.append(neutron_utils.create_security_group(
             self.neutron, self.keystone,
-            SecurityGroupSettings(name=self.sec_grp_name + '-2',
-                                  description='hello group')))
+            SecurityGroupConfig(
+                name=self.sec_grp_name + '-2', description='hello group')))
 
         sec_grp_1b = neutron_utils.get_security_group_by_id(
             self.neutron, self.security_groups[0].id)

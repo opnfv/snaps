@@ -18,6 +18,8 @@ import unittest
 
 from snaps.config.tests.network_tests import (
     NetworkConfigUnitTests, SubnetConfigUnitTests, PortConfigUnitTests)
+from snaps.config.tests.security_group_tests import (
+    SecurityGroupConfigUnitTests, SecurityGroupRuleConfigUnitTests)
 from snaps.config.tests.volume_tests import VolumeConfigUnitTests
 from snaps.config.tests.volume_type_tests import VolumeTypeConfigUnitTests
 from snaps.config.tests.qos_tests import QoSConfigUnitTests
@@ -133,13 +135,17 @@ def add_unit_tests(suite):
     """
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(FileUtilsTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
-        SecurityGroupRuleSettingsUnitTests))
-    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         ProxySettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         OSCredsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        SecurityGroupConfigUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         SecurityGroupSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        SecurityGroupRuleConfigUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        SecurityGroupRuleSettingsUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         SecurityGroupDomainObjectTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(

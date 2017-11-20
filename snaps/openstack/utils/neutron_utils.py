@@ -579,7 +579,7 @@ def get_security_group(neutron, sec_grp_settings=None, sec_grp_name=None,
     the security group will be used, else if the query parameters are None then
     None will be returned
     :param neutron: the client
-    :param sec_grp_settings: an instance of SecurityGroupSettings config object
+    :param sec_grp_settings: an instance of SecurityGroupConfig object
     :param sec_grp_name: the name of security group object to retrieve
     :param project_id: the ID of the project/tentant object that owns the
                        secuity group to retrieve

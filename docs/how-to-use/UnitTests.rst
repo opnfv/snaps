@@ -36,11 +36,17 @@ OSCredsUnitTests
 Ensures that all required members are included when constructing a
 OSCreds object
 
+SecurityGroupRuleConfigUnitTests
+--------------------------------
+
+Ensures that all required members are included when constructing a
+SecurityGroupRuleConfig object
+
 SecurityGroupRuleSettingsUnitTests
 ----------------------------------
 
 Ensures that all required members are included when constructing a
-SecurityGroupRuleSettings object
+deprecated SecurityGroupRuleSettings object
 
 SecurityGroupRuleDomainObjectTests
 ----------------------------------
@@ -48,11 +54,17 @@ SecurityGroupRuleDomainObjectTests
 Ensures that all required members are included when constructing a
 SecurityGroupRule domain object
 
+SecurityGroupConfigUnitTests
+----------------------------
+
+Ensures that all required members are included when constructing a
+SecuirtyGroupConfig object
+
 SecurityGroupSettingsUnitTests
 ------------------------------
 
 Ensures that all required members are included when constructing a
-SecuirtyGroupSettings object
+deprecated SecuirtyGroupSettings object
 
 SecurityGroupDomainObjectTests
 ------------------------------

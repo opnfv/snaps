@@ -17,13 +17,13 @@ import uuid
 
 from keystoneclient.exceptions import BadRequest
 
+from snaps.config.security_group import SecurityGroupConfig
 from snaps.config.user import UserConfig
 from snaps.config.project import ProjectConfigError, ProjectConfig
 from snaps.domain.project import ComputeQuotas, NetworkQuotas
 from snaps.openstack.create_project import (
     OpenStackProject, ProjectSettings)
 from snaps.openstack.create_security_group import OpenStackSecurityGroup
-from snaps.openstack.create_security_group import SecurityGroupSettings
 from snaps.openstack.create_user import OpenStackUser
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import keystone_utils, nova_utils, neutron_utils
@@ -284,7 +284,7 @@ class CreateProjectUserTests(OSComponentTestCase):
         sec_grp_os_creds = user_creator.get_os_creds(
             self.project_creator.get_project().name)
         sec_grp_creator = OpenStackSecurityGroup(
-            sec_grp_os_creds, SecurityGroupSettings(
+            sec_grp_os_creds, SecurityGroupConfig(
                 name=self.guid + '-name', description='hello group'))
         sec_grp = sec_grp_creator.create()
         self.assertIsNotNone(sec_grp)
@@ -327,8 +327,8 @@ class CreateProjectUserTests(OSComponentTestCase):
 
             sec_grp_creator = OpenStackSecurityGroup(
                 sec_grp_os_creds,
-                SecurityGroupSettings(name=self.guid + '-name',
-                                      description='hello group'))
+                SecurityGroupConfig(
+                    name=self.guid + '-name', description='hello group'))
             sec_grp = sec_grp_creator.create()
             self.assertIsNotNone(sec_grp)
             self.sec_grp_creators.append(sec_grp_creator)
