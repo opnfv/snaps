@@ -304,9 +304,29 @@ class Protocol(enum.Enum):
     """
     A rule's protocol
     """
-    icmp = 'icmp'
-    tcp = 'tcp'
-    udp = 'udp'
+    ah = 51
+    dccp = 33
+    egp = 8
+    esp = 50
+    gre = 47
+    icmp = 1
+    icmpv6 = 58
+    igmp = 2
+    ipv6_encap = 41
+    ipv6_frag = 44
+    ipv6_icmp = 58
+    ipv6_nonxt = 59
+    ipv6_opts = 60
+    ipv6_route = 43
+    ospf = 89
+    pgm = 113
+    rsvp = 46
+    sctp = 132
+    tcp = 6
+    udp = 17
+    udplite = 136
+    vrrp = 112
+    any = 'any'
     null = 'null'
 
 
@@ -406,8 +426,8 @@ class SecurityGroupRuleSettings:
             out['port_range_max'] = self.port_range_max
         if self.ethertype:
             out['ethertype'] = self.ethertype.name
-        if self.protocol and self.protocol.name != 'null':
-            out['protocol'] = self.protocol.name
+        if self.protocol and self.protocol.value != 'null':
+            out['protocol'] = self.protocol.value
         if self.sec_grp_name:
             sec_grp = neutron_utils.get_security_group(
                 neutron, sec_grp_name=self.sec_grp_name)
@@ -522,18 +542,13 @@ def map_protocol(protocol):
     elif isinstance(protocol, Protocol):
         return protocol
     else:
-        proto_str = str(protocol)
-        if proto_str == 'icmp':
-            return Protocol.icmp
-        elif proto_str == 'tcp':
-            return Protocol.tcp
-        elif proto_str == 'udp':
-            return Protocol.udp
-        elif proto_str == 'null':
-            return Protocol.null
-        else:
-            raise SecurityGroupRuleSettingsError(
-                'Invalid Protocol - ' + proto_str)
+        for proto_enum in Protocol:
+            if proto_enum.name == protocol or proto_enum.value == protocol:
+                if proto_enum == Protocol.any:
+                    return Protocol.null
+                return proto_enum
+        raise SecurityGroupRuleSettingsError(
+            'Invalid Protocol - ' + protocol)
 
 
 def map_ethertype(ethertype):
