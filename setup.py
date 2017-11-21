@@ -11,7 +11,6 @@ from setuptools import setup
 
 __author__ = 'spisarski'
 
-setup(
-    setup_requires=['pbr>=1.9', 'setuptools>=17.1'],
-    pbr=True,
-)
+setuptools.setup(
+    setup_requires=['pbr>=1.8'],
+    pbr=True)
