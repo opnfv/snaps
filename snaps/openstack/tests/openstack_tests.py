@@ -174,17 +174,15 @@ def create_image_settings(image_name, image_user, image_format, metadata,
         return ImageConfig(**metadata['config'])
 
     disk_file = None
-    if metadata:
+    if metadata and ('disk_url' in metadata or 'disk_file' in metadata):
         disk_url = metadata.get('disk_url')
         disk_file = metadata.get('disk_file')
     elif not disk_url:
         disk_url = default_url
-    else:
-        disk_url = disk_url
 
-    if metadata and \
-            ('kernel_file' in metadata or 'kernel_url' in metadata) and \
-            kernel_settings is None:
+    if (metadata
+            and ('kernel_file' in metadata or 'kernel_url' in metadata)
+            and kernel_settings is None):
         kernel_image_settings = ImageConfig(
             name=image_name + '-kernel', image_user=image_user,
             img_format=image_format, image_file=metadata.get('kernel_file'),
@@ -192,9 +190,9 @@ def create_image_settings(image_name, image_user, image_format, metadata,
     else:
         kernel_image_settings = kernel_settings
 
-    if metadata and \
-            ('ramdisk_file' in metadata or 'ramdisk_url' in metadata) and \
-            ramdisk_settings is None:
+    if (metadata
+            and ('ramdisk_file' in metadata or 'ramdisk_url' in metadata)
+            and ramdisk_settings is None):
         ramdisk_image_settings = ImageConfig(
             name=image_name + '-ramdisk', image_user=image_user,
             img_format=image_format,
