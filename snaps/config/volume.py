@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from neutronclient.common.utils import str2bool
 
 
 class VolumeConfig(object):
@@ -37,8 +38,8 @@ class VolumeConfig(object):
         self.type_name = kwargs.get('type_name')
         self.availability_zone = kwargs.get('availability_zone')
 
-        if kwargs.get('availability_zone'):
-            self.multi_attach = bool(kwargs.get('availability_zone'))
+        if kwargs.get('multi_attach'):
+            self.multi_attach = str2bool(str(kwargs.get('multi_attach')))
         else:
             self.multi_attach = False
 

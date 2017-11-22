@@ -396,6 +396,18 @@ VmInstDomainObjectTests
 Ensures that all required members are included when constructing a
 VmInst domain object
 
+ClusterTemplateConfigUnitTests
+------------------------------
+
+Ensures that all required members are included when constructing a
+ClusterTemplateConfig object
+
+ClusterTemplateUnitTests
+------------------------
+
+Ensures that all required members are included when constructing a
+ClusterTemplate object
+
 SettingsUtilsUnitTests
 ----------------------
 

@@ -544,6 +544,17 @@ heat_utils_tests.py - HeatUtilsFlavorTests
 |                                       |               | Flavor domain objects deployed with Heat                  |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+magnum_utils_tests.py - MagnumUtilsTests
+----------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Magnum API    | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_cluster_template_simple   | 1             | Tests ability of the function                             |
+|                                       |               | magnum_utils.create_cluster_template() to create a simple |
+|                                       |               | cluster template OpenStack object with minimal config     |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 settings_utils_tests.py - SettingsUtilsNetworkingTests
 ------------------------------------------------------
 
