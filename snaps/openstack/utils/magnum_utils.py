@@ -16,6 +16,7 @@ import logging
 
 from magnumclient.client import Client
 
+from snaps.domain.cluster_template import ClusterTemplate
 from snaps.openstack.utils import keystone_utils
 
 __author__ = 'spisarski'
@@ -25,9 +26,71 @@ logger = logging.getLogger('heat_utils')
 
 def magnum_client(os_creds):
     """
-    Retrieves the Heat client
-    :param os_creds: the OpenStack credentials
+    Retrieves the Magnum client
+    :param os_creds: the OpenStack credentialsf
     :return: the client
     """
-    logger.debug('Retrieving Nova Client')
-    return Client(session=keystone_utils.keystone_session(os_creds))
+    logger.debug('Retrieving Magnum Client')
+    return Client(str(os_creds.magnum_api_version),
+                  session=keystone_utils.keystone_session(os_creds))
+
+
+def create_cluster_template(magnum, cluster_template_config):
+    """
+    Creates a Magnum Cluster Template object in OpenStack
+    :param magnum: the Magnum client
+    :param cluster_template_config: a ClusterTemplateConfig object
+    :return: a SNAPS ClusterTemplate domain object
+    """
+    config_dict = cluster_template_config.magnum_dict()
+    os_cluster_template = magnum.cluster_templates.create(**config_dict)
+    logger.info('Creating cluster template named [%s]',
+                cluster_template_config.name)
+    return __map_os_cluster_template(os_cluster_template)
+
+
+def delete_cluster_template(magnum, tmplt_id):
+    """
+    Deletes a Cluster Template from OpenStack
+    :param magnum: the Magnum client
+    :param tmplt_id: the cluster template ID to delete
+    """
+    logger.info('Deleting cluster template with ID [%s]', tmplt_id)
+    magnum.cluster_templates.delete(tmplt_id)
+
+
+def __map_os_cluster_template(os_tmplt):
+    """
+    Returns a SNAPS ClusterTemplate object from an OpenStack ClusterTemplate
+    object
+    :param os_tmplt: the OpenStack ClusterTemplate object
+    :return: SNAPS ClusterTemplate object
+    """
+    return ClusterTemplate(
+        id=os_tmplt.uuid,
+        name=os_tmplt.name,
+        image=os_tmplt.image_id,
+        keypair=os_tmplt.keypair_id,
+        network_driver=os_tmplt.network_driver,
+        external_net=os_tmplt.external_network_id,
+        floating_ip_enabled=os_tmplt.floating_ip_enabled,
+        docker_volume_size=os_tmplt.docker_volume_size,
+        server_type=os_tmplt.server_type,
+        flavor=os_tmplt.flavor_id,
+        master_flavor=os_tmplt.master_flavor_id,
+        coe=os_tmplt.coe,
+        fixed_net=os_tmplt.fixed_network,
+        fixed_subnet=os_tmplt.fixed_subnet,
+        registry_enabled=os_tmplt.registry_enabled,
+        insecure_registry=os_tmplt.insecure_registry,
+        docker_storage_driver=os_tmplt.docker_storage_driver,
+        dns_nameserver=os_tmplt.dns_nameserver,
+        public=os_tmplt.public,
+        tls_disabled=os_tmplt.tls_disabled,
+        http_proxy=os_tmplt.http_proxy,
+        https_proxy=os_tmplt.https_proxy,
+        no_proxy=os_tmplt.no_proxy,
+        volume_driver=os_tmplt.volume_driver,
+        master_lb_enabled=os_tmplt.master_lb_enabled,
+        labels=os_tmplt.labels
+    )

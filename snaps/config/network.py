@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import enum
+from neutronclient.common.utils import str2bool
 
 from snaps.openstack.utils import keystone_utils, neutron_utils
 
@@ -52,19 +53,19 @@ class NetworkConfig(object):
 
         self.name = kwargs.get('name')
         if kwargs.get('admin_state_up') is not None:
-            self.admin_state_up = bool(kwargs['admin_state_up'])
+            self.admin_state_up = str2bool(str(kwargs['admin_state_up']))
         else:
             self.admin_state_up = True
 
         if kwargs.get('shared') is not None:
-            self.shared = bool(kwargs['shared'])
+            self.shared = str2bool(str(kwargs['shared']))
         else:
             self.shared = None
 
         self.project_name = kwargs.get('project_name')
 
         if kwargs.get('external') is not None:
-            self.external = bool(kwargs.get('external'))
+            self.external = str2bool(str(kwargs.get('external')))
         else:
             self.external = False
 
@@ -370,7 +371,7 @@ class PortConfig(object):
         self.network_name = kwargs.get('network_name')
 
         if kwargs.get('admin_state_up') is not None:
-            self.admin_state_up = bool(kwargs['admin_state_up'])
+            self.admin_state_up = str2bool(str(kwargs['admin_state_up']))
         else:
             self.admin_state_up = True
 

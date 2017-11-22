@@ -16,6 +16,8 @@
 import logging
 import unittest
 
+from snaps.config.tests.cluster_template_tests import \
+    ClusterTemplateConfigUnitTests
 from snaps.config.tests.network_tests import (
     NetworkConfigUnitTests, SubnetConfigUnitTests, PortConfigUnitTests)
 from snaps.config.tests.security_group_tests import (
@@ -33,6 +35,7 @@ from snaps.config.tests.keypair_tests import KeypairConfigUnitTests
 from snaps.config.tests.flavor_tests import FlavorConfigUnitTests
 import snaps.config.tests.image_tests as image_tests
 import snaps.openstack.tests.create_image_tests as creator_tests
+from snaps.domain.test.cluster_template_tests import ClusterTemplateUnitTests
 from snaps.domain.test.flavor_tests import FlavorDomainObjectTests
 from snaps.domain.test.image_tests import ImageDomainObjectTests
 from snaps.domain.test.keypair_tests import KeypairDomainObjectTests
@@ -121,7 +124,7 @@ from snaps.openstack.utils.tests.nova_utils_tests import (
 from snaps.openstack.utils.tests.settings_utils_tests import (
     SettingsUtilsUnitTests)
 from snaps.openstack.utils.tests.magnum_utils_tests import (
-    MagnumSmokeTests)
+    MagnumSmokeTests, MagnumUtilsTests)
 from snaps.provisioning.tests.ansible_utils_tests import (
     AnsibleProvisioningTests)
 from snaps.tests.file_utils_tests import FileUtilsTests
@@ -256,6 +259,10 @@ def add_unit_tests(suite):
         VolumeConfigUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         VolumeSettingsUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        ClusterTemplateConfigUnitTests))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
+        ClusterTemplateUnitTests))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(
         SettingsUtilsUnitTests))
 
@@ -718,4 +725,7 @@ def add_openstack_staging_tests(suite, os_creds, ext_net_name,
         ext_net_name=ext_net_name, log_level=log_level))
     suite.addTest(OSComponentTestCase.parameterize(
         MagnumSmokeTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        MagnumUtilsTests, os_creds=os_creds,
         ext_net_name=ext_net_name, log_level=log_level))
