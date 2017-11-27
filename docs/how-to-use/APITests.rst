@@ -554,6 +554,39 @@ magnum_utils_tests.py - MagnumUtilsTests
 |                                       |               | magnum_utils.create_cluster_template() to create a simple |
 |                                       |               | cluster template OpenStack object with minimal config     |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_all      | 1             | Tests ability of the function                             |
+|                                       |               | magnum_utils.create_cluster_template() to create a        |
+|                                       |               | cluster template OpenStack object with maximum config     |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_bad_image| 1             | Ensures the function                                      |
+|                                       |               | magnum_utils.create_cluster_template() will raise a       |
+|                                       |               | BadRequest exception when the image does not exist        |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_bad_kp   | 1             | Ensures the function                                      |
+|                                       |               | magnum_utils.create_cluster_template() will raise a       |
+|                                       |               | NotFound exception when the keypair does not exist        |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_bad_ext  | 1             | Ensures the function                                      |
+| _net                                  |               | magnum_utils.create_cluster_template() will raise a       |
+|                                       |               | BadRequest exception when the external network does not   |
+|                                       |               | exist                                                     |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_bad      | 1             | Ensures the function                                      |
+| _flavor                               |               | magnum_utils.create_cluster_template() will raise a       |
+|                                       |               | BadRequest exception when the flavor does not exist       |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_bad      | 1             | Ensures the function                                      |
+| _master_flavor                        |               | magnum_utils.create_cluster_template() will raise a       |
+|                                       |               | BadRequest exception when the master flavor does not exist|
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_bad      | 1             | Ensures the function                                      |
+| _network_driver                       |               | magnum_utils.create_cluster_template() will raise a       |
+|                                       |               | BadRequest exception when the network driver is invalid   |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_bad      | 1             | Ensures the function                                      |
+| _volume_driver                        |               | magnum_utils.create_cluster_template() will raise a       |
+|                                       |               | BadRequest exception when the volume driver is invalid    |
++---------------------------------------+---------------+-----------------------------------------------------------+
 
 settings_utils_tests.py - SettingsUtilsNetworkingTests
 ------------------------------------------------------

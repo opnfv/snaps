@@ -15,8 +15,14 @@
 import logging
 import uuid
 
-from snaps.config.cluster_template import ClusterTemplateConfig
+from magnumclient.common.apiclient.exceptions import BadRequest, NotFound
+
+from snaps.config.cluster_template import (
+    ClusterTemplateConfig, ServerType,  ContainerOrchestrationEngine,
+    DockerStorageDriver)
+from snaps.config.flavor import FlavorConfig
 from snaps.config.keypair import KeypairConfig
+from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_keypairs import OpenStackKeypair
 from snaps.openstack.os_credentials import OSCreds
@@ -56,7 +62,7 @@ class MagnumSmokeTests(OSComponentTestCase):
                         proxy_settings=self.os_creds.proxy_settings))
 
 
-class MagnumUtilsTests(OSComponentTestCase):
+class MagnumUtilsClusterTypeTests(OSComponentTestCase):
     """
     Tests individual functions within magnum_utils.py
     """
@@ -78,6 +84,10 @@ class MagnumUtilsTests(OSComponentTestCase):
 
         self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
 
+        self.flavor_creator = OpenStackFlavor(
+            self.os_creds, FlavorConfig(
+                name=self.guid + '-flavor', ram=512, disk=10, vcpus=1))
+
         keypair_priv_filepath = 'tmp/' + self.guid
         keypair_pub_filepath = keypair_priv_filepath + '.pub'
 
@@ -91,6 +101,7 @@ class MagnumUtilsTests(OSComponentTestCase):
 
         try:
             self.image_creator.create()
+            self.flavor_creator.create()
             self.keypair_creator.create()
         except:
             self.tearDown()
@@ -108,6 +119,11 @@ class MagnumUtilsTests(OSComponentTestCase):
                 self.keypair_creator.clean()
             except:
                 pass
+        if self.flavor_creator:
+            try:
+                self.flavor_creator.clean()
+            except:
+                pass
         if self.image_creator:
             try:
                 self.image_creator.clean()
@@ -119,13 +135,123 @@ class MagnumUtilsTests(OSComponentTestCase):
             name=self.cluster_type_name,
             image=self.image_creator.image_settings.name,
             keypair=self.keypair_creator.keypair_settings.name,
-            external_net=self.ext_net_name)
+            external_net=self.ext_net_name,
+            flavor=self.flavor_creator.flavor_settings.name)
 
         self.cluster_template = magnum_utils.create_cluster_template(
             self.magnum, config)
         self.assertIsNotNone(self.cluster_template)
         self.assertTrue(
             validate_cluster_template(config, self.cluster_template))
+
+    def test_create_cluster_template_all(self):
+        config = ClusterTemplateConfig(
+            name=self.cluster_type_name,
+            image=self.image_creator.image_settings.name,
+            keypair=self.keypair_creator.keypair_settings.name,
+            network_driver='flannel', external_net=self.ext_net_name,
+            floating_ip_enabled=True, docker_volume_size=100,
+            server_type=ServerType.vm,
+            flavor=self.flavor_creator.flavor_settings.name,
+            master_flavor=self.flavor_creator.flavor_settings.name,
+            coe=ContainerOrchestrationEngine.kubernetes,
+            fixed_net='foo', fixed_subnet='bar',
+            registry_enabled=True, insecure_registry='localhost',
+            docker_storage_driver=DockerStorageDriver.overlay,
+            dns_nameserver='8.8.4.4', public=True, tls_disabled=True,
+            http_proxy=None, https_proxy=None, volume_driver='cinder',
+            master_lb_enabled=False, labels={'foo': 'bar'})
+
+        self.cluster_template = magnum_utils.create_cluster_template(
+            self.magnum, config)
+        self.assertIsNotNone(self.cluster_template)
+        self.assertTrue(
+            validate_cluster_template(config, self.cluster_template))
+
+    def test_create_cluster_template_bad_image(self):
+        config = ClusterTemplateConfig(
+            name=self.cluster_type_name,
+            image='foo',
+            keypair=self.keypair_creator.keypair_settings.name,
+            external_net=self.ext_net_name,
+            flavor=self.flavor_creator.flavor_settings.name)
+
+        with self.assertRaises(BadRequest):
+            self.cluster_template = magnum_utils.create_cluster_template(
+                self.magnum, config)
+
+    def test_create_cluster_template_bad_kp(self):
+        config = ClusterTemplateConfig(
+            name=self.cluster_type_name,
+            image=self.image_creator.image_settings.name,
+            keypair='foo',
+            external_net=self.ext_net_name,
+            flavor=self.flavor_creator.flavor_settings.name)
+
+        with self.assertRaises(NotFound):
+            self.cluster_template = magnum_utils.create_cluster_template(
+                self.magnum, config)
+
+    def test_create_cluster_template_bad_ext_net(self):
+        config = ClusterTemplateConfig(
+            name=self.cluster_type_name,
+            image=self.image_creator.image_settings.name,
+            keypair=self.keypair_creator.keypair_settings.name,
+            external_net='foo',
+            flavor=self.flavor_creator.flavor_settings.name)
+
+        with self.assertRaises(BadRequest):
+            self.cluster_template = magnum_utils.create_cluster_template(
+                self.magnum, config)
+
+    def test_create_cluster_template_bad_flavor(self):
+        config = ClusterTemplateConfig(
+            name=self.cluster_type_name,
+            image=self.image_creator.image_settings.name,
+            keypair=self.keypair_creator.keypair_settings.name,
+            external_net=self.ext_net_name,
+            flavor='foo')
+
+        with self.assertRaises(BadRequest):
+            self.cluster_template = magnum_utils.create_cluster_template(
+                self.magnum, config)
+
+    def test_create_cluster_template_bad_master_flavor(self):
+        config = ClusterTemplateConfig(
+            name=self.cluster_type_name,
+            image=self.image_creator.image_settings.name,
+            keypair=self.keypair_creator.keypair_settings.name,
+            external_net=self.ext_net_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            master_flavor='foo')
+
+        with self.assertRaises(BadRequest):
+            self.cluster_template = magnum_utils.create_cluster_template(
+                self.magnum, config)
+
+    def test_create_cluster_template_bad_network_driver(self):
+        config = ClusterTemplateConfig(
+            name=self.cluster_type_name,
+            image=self.image_creator.image_settings.name,
+            keypair=self.keypair_creator.keypair_settings.name,
+            external_net=self.ext_net_name,
+            network_driver='foo')
+
+        with self.assertRaises(BadRequest):
+            self.cluster_template = magnum_utils.create_cluster_template(
+                self.magnum, config)
+
+    def test_create_cluster_template_bad_volume_driver(self):
+        config = ClusterTemplateConfig(
+            name=self.cluster_type_name,
+            image=self.image_creator.image_settings.name,
+            keypair=self.keypair_creator.keypair_settings.name,
+            external_net=self.ext_net_name,
+            volume_driver='foo')
+
+        with self.assertRaises(BadRequest):
+            self.cluster_template = magnum_utils.create_cluster_template(
+                self.magnum, config)
 
 
 def validate_cluster_template(tmplt_config, tmplt_obj):
@@ -144,7 +270,7 @@ def validate_cluster_template(tmplt_config, tmplt_obj):
         tmplt_config.coe.value == tmplt_obj.coe and
         tmplt_config.dns_nameserver == tmplt_obj.dns_nameserver and
         tmplt_config.docker_storage_driver.value
-            == tmplt_obj.docker_storage_driver and
+        == tmplt_obj.docker_storage_driver and
         tmplt_config.docker_volume_size == tmplt_obj.docker_volume_size and
         tmplt_config.external_net == tmplt_obj.external_net and
         tmplt_config.fixed_net == tmplt_obj.fixed_net and
@@ -169,6 +295,3 @@ def validate_cluster_template(tmplt_config, tmplt_obj):
         tmplt_config.tls_disabled == tmplt_obj.tls_disabled and
         tmplt_config.volume_driver == tmplt_obj.volume_driver
     )
-    # def test_create_cluster_simple(self):
-    #     cluster = magnum_utils.create_cluster(self.magnum, 'foo')
-    #     self.assertIsNotNone(cluster)
