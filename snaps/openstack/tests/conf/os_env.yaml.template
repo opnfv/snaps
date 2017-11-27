@@ -1,17 +1,17 @@
 # Keystone v2.0
 #username: admin
 #password: admin
-#os_auth_url: http://<host>:<port>/v2.0/
+#os_auth_url: http://<host>:<port>/
 #project_name: admin
 #ext_net: <external network name>
 #http_proxy: <host>:<port>
 #ssh_proxy_cmd: '/usr/local/bin/corkscrew <host> <port> %h %p'
 #ssh_proxy_cmd: 'ssh <host> nc %h %p'
 
-# Keystone v2.0
+# Keystone v3
 #username: admin
 #password: admin
-#os_auth_url: http://<host>:<port>/v3
+#os_auth_url: http://<host>:<port>/
 #project_name: admin
 #identity_api_version: 3
 #ext_net: <external network name>
