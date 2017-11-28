@@ -14,9 +14,9 @@
 # limitations under the License.
 import unittest
 
-from snaps.config.cluster_template import ClusterTemplateConfig, \
-    ClusterTypeConfigError, ServerType, DockerStorageDriver, \
-    ContainerOrchestrationEngine
+from snaps.config.cluster_template import (
+    ClusterTemplateConfig, ClusterTemplateConfigError, ServerType,
+    DockerStorageDriver, ContainerOrchestrationEngine)
 
 
 class ClusterTemplateConfigUnitTests(unittest.TestCase):
@@ -25,15 +25,15 @@ class ClusterTemplateConfigUnitTests(unittest.TestCase):
     """
 
     def test_no_params(self):
-        with self.assertRaises(ClusterTypeConfigError):
+        with self.assertRaises(ClusterTemplateConfigError):
             ClusterTemplateConfig()
 
     def test_empty_config(self):
-        with self.assertRaises(ClusterTypeConfigError):
+        with self.assertRaises(ClusterTemplateConfigError):
             ClusterTemplateConfig(config=dict())
 
     def test_name_only(self):
-        with self.assertRaises(ClusterTypeConfigError):
+        with self.assertRaises(ClusterTemplateConfigError):
             ClusterTemplateConfig(name='foo')
 
     def test_minimal_named(self):

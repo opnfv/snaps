@@ -131,3 +131,45 @@ class ClusterTemplate(object):
         self.volume_driver = kwargs.get('volume_driver')
         self.master_lb_enabled = kwargs.get('master_lb_enabled', True)
         self.labels = kwargs.get('labels')
+
+    def __eq__(self, other):
+        labels_eq = False
+        if (self.labels and isinstance(self.labels, dict)
+                and len(self.labels) == 0):
+            if (other.labels and isinstance(other.labels, dict)
+                    and len(other.labels) == 0):
+                labels_eq = True
+        elif not self.labels:
+            if (not other.labels or
+                    (isinstance(other.labels, dict)
+                     and len(other.labels) == 0)):
+                labels_eq = True
+        else:
+            labels_eq = self.labels == other.labels
+
+        return (self.name == other.name
+                and self.id == other.id
+                and self.image == other.image
+                and self.keypair == other.keypair
+                and self.network_driver == other.network_driver
+                and self.external_net == other.external_net
+                and self.floating_ip_enabled == other.floating_ip_enabled
+                and self.docker_volume_size == other.docker_volume_size
+                and self.server_type == other.server_type
+                and self.flavor == other.flavor
+                and self.master_flavor == other.master_flavor
+                and self.coe == other.coe
+                and self.fixed_net == other.fixed_net
+                and self.fixed_subnet == other.fixed_subnet
+                and self.registry_enabled == other.registry_enabled
+                and self.insecure_registry == other.insecure_registry
+                and self.docker_storage_driver == other.docker_storage_driver
+                and self.dns_nameserver == other.dns_nameserver
+                and self.public == other.public
+                and self.tls_disabled == other.tls_disabled
+                and self.http_proxy == other.http_proxy
+                and self.https_proxy == other.https_proxy
+                and self.no_proxy == other.no_proxy
+                and self.volume_driver == other.volume_driver
+                and self.master_lb_enabled == other.master_lb_enabled
+                and labels_eq)

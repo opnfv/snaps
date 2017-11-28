@@ -55,6 +55,8 @@ from snaps.domain.test.vm_inst_tests import (
 from snaps.domain.test.volume_tests import (
     QoSSpecDomainObjectTests, VolumeTypeDomainObjectTests,
     VolumeTypeEncryptionObjectTests, VolumeDomainObjectTests)
+from snaps.openstack.tests.cluster_template_tests import (
+    CreateClusterTemplateTests)
 from snaps.openstack.tests.conf.os_credentials_tests import (
     ProxySettingsUnitTests, OSCredsUnitTests)
 from snaps.openstack.tests.create_flavor_tests import (
@@ -728,4 +730,7 @@ def add_openstack_staging_tests(suite, os_creds, ext_net_name,
         ext_net_name=ext_net_name, log_level=log_level))
     suite.addTest(OSComponentTestCase.parameterize(
         MagnumUtilsClusterTypeTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, log_level=log_level))
+    suite.addTest(OSComponentTestCase.parameterize(
+        CreateClusterTemplateTests, os_creds=os_creds,
         ext_net_name=ext_net_name, log_level=log_level))

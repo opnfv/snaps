@@ -35,6 +35,36 @@ def magnum_client(os_creds):
                   session=keystone_utils.keystone_session(os_creds))
 
 
+def get_cluster_template(magnum, template_config=None, template_name=None):
+    """
+    Returns the first ClusterTemplate domain object that matches the parameters
+    :param magnum: the Magnum client
+    :param template_config: a ClusterTemplateConfig object (optional)
+    :param template_name: the name of the template to lookup
+    :return: ClusterTemplate object or None
+    """
+    name = None
+    if template_config:
+        name = template_config.name
+    elif template_name:
+        name = template_name
+
+    os_templates = magnum.cluster_templates.list()
+    for os_template in os_templates:
+        if os_template.name == name:
+            return __map_os_cluster_template(os_template)
+
+
+def get_cluster_template_by_id(magnum, tmplt_id):
+    """
+    Returns the first ClusterTemplate domain object that matches the parameters
+    :param magnum: the Magnum client
+    :param tmplt_id: the template's ID
+    :return: ClusterTemplate object or None
+    """
+    return __map_os_cluster_template(magnum.cluster_templates.get(tmplt_id))
+
+
 def create_cluster_template(magnum, cluster_template_config):
     """
     Creates a Magnum Cluster Template object in OpenStack

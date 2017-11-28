@@ -144,6 +144,13 @@ class MagnumUtilsClusterTypeTests(OSComponentTestCase):
         self.assertTrue(
             validate_cluster_template(config, self.cluster_template))
 
+        template_by_name = magnum_utils.get_cluster_template(
+            self.magnum, template_name=config.name)
+        self.assertEqual(self.cluster_template, template_by_name)
+        template_by_id = magnum_utils.get_cluster_template_by_id(
+            self.magnum, self.cluster_template.id)
+        self.assertEqual(self.cluster_template, template_by_id)
+
     def test_create_cluster_template_all(self):
         config = ClusterTemplateConfig(
             name=self.cluster_type_name,
@@ -167,6 +174,13 @@ class MagnumUtilsClusterTypeTests(OSComponentTestCase):
         self.assertIsNotNone(self.cluster_template)
         self.assertTrue(
             validate_cluster_template(config, self.cluster_template))
+
+        template_by_name = magnum_utils.get_cluster_template(
+            self.magnum, template_name=config.name)
+        self.assertEqual(self.cluster_template, template_by_name)
+        template_by_id = magnum_utils.get_cluster_template_by_id(
+            self.magnum, self.cluster_template.id)
+        self.assertEqual(self.cluster_template, template_by_id)
 
     def test_create_cluster_template_bad_image(self):
         config = ClusterTemplateConfig(

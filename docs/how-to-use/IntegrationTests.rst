@@ -669,3 +669,38 @@ ansible_utils_tests.py - AnsibleProvisioningTests
 |                                       | Neutron 2     | apply a Ansible playbook containing Jinga2 substitution   |
 |                                       |               | values                                                    |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+
+cluster_template_tests.py - CreateClusterTemplateTests
+------------------------------------------------------
+
++----------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                              |  Magnum API   | Description                                               |
++========================================+===============+===========================================================+
+| test_create_cluster_template           | 1             | Tests the creation of a Cluster template with the class   |
+|                                        |               | OpenStackClusterTemplate                                  |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_delete_cluster_template    | 1             | Tests the creation and deletiong of a Cluster template    |
+|                                        |               | with the class OpenStackClusterTemplate                   |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_same_cluster_template      | 1             | Tests the creation of a Cluster template 2x using the same|
+|                                        |               | config object to ensure it was only created once          |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_bad_flavor| 1             | Tests to ensure OpenStackClusterTemplate#create() will    |
+|                                        |               | raise an exception when the flavor is invalid             |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_bad_master| 1             | Tests to ensure OpenStackClusterTemplate#create() will    |
+| _flavor                                |               | raise an exception when the master flavor is invalid      |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_bad_image | 1             | Tests to ensure OpenStackClusterTemplate#create() will    |
+|                                        |               | raise an exception when the image is invalid              |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_bad       | 1             | Tests to ensure OpenStackClusterTemplate#create() will    |
+| _keypair                               |               | raise an exception when the keypair is invalid            |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_bad       | 1             | Tests to ensure OpenStackClusterTemplate#create() will    |
+| _network_driver                        |               | raise an exception when the network driver is invalid     |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_cluster_template_bad       | 1             | Tests to ensure OpenStackClusterTemplate#create() will    |
+| _volume_driver                         |               | raise an exception when the volume driver is invalid      |
++----------------------------------------+---------------+-----------------------------------------------------------+
+

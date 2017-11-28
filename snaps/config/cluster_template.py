@@ -50,7 +50,7 @@ class ClusterTemplateConfig(object):
     def __init__(self, **kwargs):
         """
         Constructor
-        :param name: the cluster type's name (required)
+        :param name: the cluster template's name (required)
         :param image: name or ID of the base image in Glance used to boot the
                       cluster's servers. The image must have the attribute
                       'os-distro' defined as appropriate for the cluster
@@ -110,7 +110,7 @@ class ClusterTemplateConfig(object):
                                This is configured in the private Neutron
                                network for the bay/cluster.
                                (default provided by Magnum - 8.8.8.8)
-        :param public: denotes whether or not the cluster type is public
+        :param public: denotes whether or not the cluster template is public
                        (default False)
         :param tls_disabled: denotes whether or not TLS should be enabled
                              (default False)
@@ -177,9 +177,9 @@ class ClusterTemplateConfig(object):
 
         if (not self.name or not self.image or not self.keypair
                 or not self.external_net):
-            raise ClusterTypeConfigError(
+            raise ClusterTemplateConfigError(
                 'The attributes name, image, keypair, and '
-                'external_net are required for ClusterTypeConfig')
+                'external_net are required for ClusterTemplateConfig')
 
     def magnum_dict(self):
         """
@@ -243,9 +243,9 @@ class ClusterTemplateConfig(object):
         return out
 
 
-class ClusterTypeConfigError(Exception):
+class ClusterTemplateConfigError(Exception):
     """
-    Exception to be thrown when a cluster type configuration is incorrect
+    Exception to be thrown when a cluster template configuration is incorrect
     """
 
 
@@ -265,7 +265,8 @@ def map_server_type(server_type):
         for this_type in ServerType:
             if this_type.value == server_type:
                 return this_type
-        raise ClusterTypeConfigError('Invalid server type - ' + server_type)
+        raise ClusterTemplateConfigError(
+            'Invalid server type - ' + server_type)
 
 
 def map_coe(coe):
@@ -284,7 +285,7 @@ def map_coe(coe):
         for this_type in ContainerOrchestrationEngine:
             if this_type.value == coe:
                 return this_type
-        raise ClusterTypeConfigError('Invalid COE - ' + coe)
+        raise ClusterTemplateConfigError('Invalid COE - ' + coe)
 
 
 def map_docker_storage_driver(driver):
@@ -303,4 +304,5 @@ def map_docker_storage_driver(driver):
         for this_type in DockerStorageDriver:
             if this_type.value == driver:
                 return this_type
-        raise ClusterTypeConfigError('Invalid DockerStorageDriver - ' + driver)
+        raise ClusterTemplateConfigError(
+            'Invalid DockerStorageDriver - ' + driver)
