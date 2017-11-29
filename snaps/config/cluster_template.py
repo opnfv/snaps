@@ -255,7 +255,7 @@ def map_server_type(server_type):
     return None
     :param server_type: the server_type value to map
     :return: the ServerType enum object
-    :raise: ClusterTypeConfigError if value is invalid
+    :raise: ClusterTemplateConfigError if value is invalid
     """
     if not server_type:
         return None
@@ -275,7 +275,7 @@ def map_coe(coe):
     When None return None
     :param coe: the COE value to map
     :return: the ContainerOrchestrationEngine enum object
-    :raise: ClusterTypeConfigError if value is invalid
+    :raise: ClusterTemplateConfigError if value is invalid
     """
     if not coe:
         return None
@@ -294,7 +294,7 @@ def map_docker_storage_driver(driver):
     When None return None
     :param driver: the docker storage driver value to map
     :return: the DockerStorageDriver enum object
-    :raise: ClusterTypeConfigError if value is invalid
+    :raise: ClusterTemplateConfigError if value is invalid
     """
     if not driver:
         return None

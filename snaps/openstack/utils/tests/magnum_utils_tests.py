@@ -15,7 +15,7 @@
 import logging
 import uuid
 
-from magnumclient.common.apiclient.exceptions import BadRequest, NotFound
+from magnumclient.common.apiclient.exceptions import BadRequest
 
 from snaps.config.cluster_template import (
     ClusterTemplateConfig, ServerType,  ContainerOrchestrationEngine,
@@ -191,18 +191,6 @@ class MagnumUtilsClusterTypeTests(OSComponentTestCase):
             flavor=self.flavor_creator.flavor_settings.name)
 
         with self.assertRaises(BadRequest):
-            self.cluster_template = magnum_utils.create_cluster_template(
-                self.magnum, config)
-
-    def test_create_cluster_template_bad_kp(self):
-        config = ClusterTemplateConfig(
-            name=self.cluster_type_name,
-            image=self.image_creator.image_settings.name,
-            keypair='foo',
-            external_net=self.ext_net_name,
-            flavor=self.flavor_creator.flavor_settings.name)
-
-        with self.assertRaises(NotFound):
             self.cluster_template = magnum_utils.create_cluster_template(
                 self.magnum, config)
 

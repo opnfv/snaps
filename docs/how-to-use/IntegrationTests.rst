@@ -695,9 +695,6 @@ cluster_template_tests.py - CreateClusterTemplateTests
 |                                        |               | raise an exception when the image is invalid              |
 +----------------------------------------+---------------+-----------------------------------------------------------+
 | test_create_cluster_template_bad       | 1             | Tests to ensure OpenStackClusterTemplate#create() will    |
-| _keypair                               |               | raise an exception when the keypair is invalid            |
-+----------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_cluster_template_bad       | 1             | Tests to ensure OpenStackClusterTemplate#create() will    |
 | _network_driver                        |               | raise an exception when the network driver is invalid     |
 +----------------------------------------+---------------+-----------------------------------------------------------+
 | test_create_cluster_template_bad       | 1             | Tests to ensure OpenStackClusterTemplate#create() will    |

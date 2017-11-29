@@ -562,10 +562,6 @@ magnum_utils_tests.py - MagnumUtilsTests
 |                                       |               | magnum_utils.create_cluster_template() will raise a       |
 |                                       |               | BadRequest exception when the image does not exist        |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_cluster_template_bad_kp   | 1             | Ensures the function                                      |
-|                                       |               | magnum_utils.create_cluster_template() will raise a       |
-|                                       |               | NotFound exception when the keypair does not exist        |
-+---------------------------------------+---------------+-----------------------------------------------------------+
 | test_create_cluster_template_bad_ext  | 1             | Ensures the function                                      |
 | _net                                  |               | magnum_utils.create_cluster_template() will raise a       |
 |                                       |               | BadRequest exception when the external network does not   |

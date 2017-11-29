@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from magnumclient.common.apiclient.exceptions import BadRequest, NotFound
+from magnumclient.common.apiclient.exceptions import BadRequest
 
 from snaps.config.cluster_template import ClusterTemplateConfig
 from snaps.config.flavor import FlavorConfig
@@ -239,25 +239,6 @@ class CreateClusterTemplateTests(OSIntegrationTestCase):
             self.os_creds, cluster_template_config)
 
         with self.assertRaises(BadRequest):
-            self.cluster_template_creator.create()
-
-    def test_create_cluster_template_bad_keypair(self):
-        """
-        Tests the creation of an OpenStack cluster template raises an
-        exception with an invalid keypair.
-        """
-        # Create ClusterTemplate
-        cluster_template_config = ClusterTemplateConfig(
-            name=self.cluster_type_name,
-            image=self.image_creator.image_settings.name,
-            keypair='foo',
-            external_net=self.ext_net_name,
-            flavor=self.flavor_creator.flavor_settings.name)
-
-        self.cluster_template_creator = OpenStackClusterTemplate(
-            self.os_creds, cluster_template_config)
-
-        with self.assertRaises(NotFound):
             self.cluster_template_creator.create()
 
     def test_create_cluster_template_bad_network_driver(self):
