@@ -21,7 +21,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from novaclient.client import Client
-from novaclient.exceptions import NotFound
+from novaclient.exceptions import NotFound, ClientException
 
 from snaps import file_utils
 from snaps.domain.flavor import Flavor
@@ -605,7 +605,18 @@ def add_security_group(nova, vm, security_group_name):
     :param vm: the OpenStack server object (VM) to alter
     :param security_group_name: the name of the security group to add
     """
-    nova.servers.add_security_group(str(vm.id), security_group_name)
+    try:
+        nova.servers.add_security_group(str(vm.id), security_group_name)
+    except ClientException as e:
+        sec_grp_names = get_server_security_group_names(nova, vm)
+        if security_group_name in sec_grp_names:
+            logger.warn('Security group [%s] already added to VM [%s]',
+                        security_group_name, vm.name)
+            return
+
+        logger.error('Unexpected error while adding security group [%s] - %s',
+                     security_group_name, e)
+        raise
 
 
 def remove_security_group(nova, vm, security_group):
