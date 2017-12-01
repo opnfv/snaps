@@ -548,6 +548,9 @@ create_instance_tests.py - CreateInstanceSingleNetworkTests
 | test_ssh_client_fip_reverse_engineer  | Nova 2        | Ensures that an instance can be reverse engineered and    |
 |                                       | Neutron 2     | allows for a floating IP to be added after initialization |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_ssh_client_fip_after_reboot      | Nova 2        | Ensures that an instance can be reached over SSH after    |
+|                                       | Neutron 2     | a reboot call has been issued                             |
++---------------------------------------+---------------+-----------------------------------------------------------+
 | test_ssh_client_fip_second_creator    | Nova 2        | Ensures that an instance can be reached over SSH via a    |
 |                                       | Neutron 2     | second identical creator object                           |
 +---------------------------------------+---------------+-----------------------------------------------------------+
