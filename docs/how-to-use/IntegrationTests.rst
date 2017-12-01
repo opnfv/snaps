@@ -542,6 +542,12 @@ create_instance_tests.py - CreateInstanceSingleNetworkTests
 | test_ssh_client_fip_after_active      | Nova 2        | Ensures that an instance can be reached over SSH when the |
 |                                       | Neutron 2     | floating IP is assigned after to the VM becoming ACTIVE   |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_ssh_client_fip_after_init        | Nova 2        | Ensures that an instance can have a floating IP assigned  |
+|                                       | Neutron 2     | added after initialization                                |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_ssh_client_fip_reverse_engineer  | Nova 2        | Ensures that an instance can be reverse engineered and    |
+|                                       | Neutron 2     | allows for a floating IP to be added after initialization |
++---------------------------------------+---------------+-----------------------------------------------------------+
 | test_ssh_client_fip_second_creator    | Nova 2        | Ensures that an instance can be reached over SSH via a    |
 |                                       | Neutron 2     | second identical creator object                           |
 +---------------------------------------+---------------+-----------------------------------------------------------+
