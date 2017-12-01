@@ -20,7 +20,7 @@ from novaclient.exceptions import NotFound, BadRequest
 
 from snaps.config.vm_inst import VmInstanceConfig, FloatingIpConfig
 from snaps.openstack.openstack_creator import OpenStackComputeObject
-from snaps.openstack.utils import glance_utils, cinder_utils
+from snaps.openstack.utils import glance_utils, cinder_utils, settings_utils
 from snaps.openstack.utils import neutron_utils
 from snaps.openstack.utils import nova_utils
 from snaps.provisioning import ansible_utils
@@ -188,33 +188,45 @@ class OpenStackVmInstance(OpenStackComputeObject):
 
         # Apply floating IPs
         for floating_ip_setting in self.instance_settings.floating_ip_settings:
-            port = port_dict.get(floating_ip_setting.port_name)
+            self.add_floating_ip(floating_ip_setting)
 
-            if not port:
-                raise VmInstanceCreationError(
-                    'Cannot find port object with name - ' +
-                    floating_ip_setting.port_name)
+    def add_floating_ip(self, floating_ip_setting):
+        """
+        Adds a floating IP to a running instance
+        :param floating_ip_setting - the floating IP configuration
+        """
+        port_dict = dict()
+        for key, port in self.__ports:
+            port_dict[key] = port
 
-            # Setup Floating IP only if there is a router with an external
-            # gateway
-            ext_gateway = self.__ext_gateway_by_router(
+        # Apply floating IP
+        port = port_dict.get(floating_ip_setting.port_name)
+
+        if not port:
+            raise VmInstanceCreationError(
+                'Cannot find port object with name - ' +
+                floating_ip_setting.port_name)
+
+        # Setup Floating IP only if there is a router with an external
+        # gateway
+        ext_gateway = self.__ext_gateway_by_router(
+            floating_ip_setting.router_name)
+        if ext_gateway:
+            subnet = neutron_utils.get_subnet(
+                self.__neutron,
+                subnet_name=floating_ip_setting.subnet_name)
+            floating_ip = neutron_utils.create_floating_ip(
+                self.__neutron, ext_gateway)
+            self.__floating_ip_dict[floating_ip_setting.name] = floating_ip
+
+            logger.info(
+                'Created floating IP %s via router - %s', floating_ip.ip,
                 floating_ip_setting.router_name)
-            if ext_gateway:
-                subnet = neutron_utils.get_subnet(
-                    self.__neutron,
-                    subnet_name=floating_ip_setting.subnet_name)
-                floating_ip = neutron_utils.create_floating_ip(
-                    self.__neutron, ext_gateway)
-                self.__floating_ip_dict[floating_ip_setting.name] = floating_ip
-
-                logger.info(
-                    'Created floating IP %s via router - %s', floating_ip.ip,
-                    floating_ip_setting.router_name)
-                self.__add_floating_ip(floating_ip, port, subnet)
-            else:
-                raise VmInstanceCreationError(
-                    'Unable to add floating IP to port, cannot locate router '
-                    'with an external gateway ')
+            self.__add_floating_ip(floating_ip, port, subnet)
+        else:
+            raise VmInstanceCreationError(
+                'Unable to add floating IP to port, cannot locate router '
+                'with an external gateway ')
 
     def __ext_gateway_by_router(self, router_name):
         """
@@ -506,6 +518,11 @@ class OpenStackVmInstance(OpenStackComputeObject):
                     for key, fip in self.__floating_ip_dict.items():
                         return fip
 
+        # When cannot be found above
+        if len(self.__floating_ip_dict) > 0:
+            for key, fip in self.__floating_ip_dict.items():
+                return fip
+
     def __config_nic(self, nic_name, port, ip):
         """
         Although ports/NICs can contain multiple IPs, this code currently only
@@ -585,9 +602,13 @@ class OpenStackVmInstance(OpenStackComputeObject):
         :param poll_interval: The polling interval in seconds
         :return: T/F
         """
-        return self.__vm_status_check(STATUS_ACTIVE, block,
-                                      self.instance_settings.vm_boot_timeout,
-                                      poll_interval)
+        if self.__vm_status_check(
+                STATUS_ACTIVE, block, self.instance_settings.vm_boot_timeout,
+                poll_interval):
+            self.__vm = nova_utils.get_server_object_by_id(
+                self._nova, self.__vm.id)
+            return True
+        return False
 
     def __vm_status_check(self, expected_status_code, block, timeout,
                           poll_interval):
@@ -703,10 +724,9 @@ class OpenStackVmInstance(OpenStackComputeObject):
         :param fip_name: the name of the floating IP to return
         :return: the SSH client or None
         """
-        fip = None
         if fip_name and self.__floating_ip_dict.get(fip_name):
             return self.__floating_ip_dict.get(fip_name)
-        if not fip:
+        else:
             return self.__get_first_provisioning_floating_ip()
 
     def ssh_client(self, fip_name=None):
@@ -724,7 +744,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
                 self.keypair_settings.private_filepath,
                 proxy_settings=self._os_creds.proxy_settings)
         else:
-            logger.warning(
+            FloatingIPAllocationError(
                 'Cannot return an SSH client. No Floating IP configured')
 
     def add_security_group(self, security_group):
@@ -768,6 +788,26 @@ class OpenStackVmInstance(OpenStackComputeObject):
             return False
 
 
+def generate_creator(os_creds, vm_inst, image_config, keypair_config=None):
+    """
+    Initializes an OpenStackVmInstance object
+    :param os_creds: the OpenStack credentials
+    :param vm_inst: the SNAPS-OO VmInst domain object
+    :param image_config: the associated ImageConfig object
+    :param keypair_config: the associated KeypairConfig object (optional)
+    :return: an initialized OpenStackVmInstance object
+    """
+    nova = nova_utils.nova_client(os_creds)
+    neutron = neutron_utils.neutron_client(os_creds)
+    derived_inst_config = settings_utils.create_vm_inst_config(
+        nova, neutron, vm_inst)
+
+    derived_inst_creator = OpenStackVmInstance(
+        os_creds, derived_inst_config, image_config, keypair_config)
+    derived_inst_creator.initialize()
+    return derived_inst_creator
+
+
 class VmInstanceSettings(VmInstanceConfig):
     """
     Deprecated, use snaps.config.vm_inst.VmInstanceConfig instead
@@ -793,4 +833,10 @@ class FloatingIpSettings(FloatingIpConfig):
 class VmInstanceCreationError(Exception):
     """
     Exception to be thrown when an VM instance cannot be created
+    """
+
+
+class FloatingIPAllocationError(Exception):
+    """
+    Exception to be thrown when an VM instance cannot allocate a floating IP
     """

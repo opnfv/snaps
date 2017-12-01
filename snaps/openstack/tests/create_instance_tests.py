@@ -35,7 +35,7 @@ from snaps.config.vm_inst import (
     VmInstanceConfig, FloatingIpConfig,  VmInstanceConfigError,
     FloatingIpConfigError)
 from snaps.config.volume import VolumeConfig
-from snaps.openstack import create_network, create_router
+from snaps.openstack import create_network, create_router, create_instance
 from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_instance import (
@@ -48,7 +48,7 @@ from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.tests import openstack_tests, validation_utils
 from snaps.openstack.tests.os_source_file_test import (
     OSIntegrationTestCase, OSComponentTestCase)
-from snaps.openstack.utils import nova_utils
+from snaps.openstack.utils import nova_utils, settings_utils, neutron_utils
 
 __author__ = 'spisarski'
 
@@ -764,6 +764,83 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.assertEqual(vm_inst.id, inst_creator.get_vm_inst().id)
 
         self.assertTrue(validate_ssh_client(inst_creator))
+
+    def test_ssh_client_fip_after_init(self):
+        """
+        Tests the ability to assign a floating IP to an already initialized
+        OpenStackVmInstance object. After the floating IP has been allocated
+        and assigned, this test will ensure that it can be accessed via SSH.
+        """
+        port_settings = PortConfig(
+            name=self.port_1_name,
+            network_name=self.pub_net_config.network_settings.name)
+
+        instance_settings = VmInstanceConfig(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings],
+            security_group_names=[self.sec_grp_creator.sec_grp_settings.name])
+
+        inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings,
+            keypair_settings=self.keypair_creator.keypair_settings)
+        self.inst_creators.append(inst_creator)
+
+        # block=True will force the create() method to block until the
+        vm_inst = inst_creator.create(block=True)
+        self.assertIsNotNone(vm_inst)
+
+        self.assertTrue(inst_creator.vm_active(block=True))
+        ip = inst_creator.get_port_ip(port_settings.name)
+        self.assertTrue(check_dhcp_lease(inst_creator, ip))
+        self.assertEqual(vm_inst.id, inst_creator.get_vm_inst().id)
+
+        inst_creator.add_floating_ip(FloatingIpConfig(
+            name=self.floating_ip_name, port_name=self.port_1_name,
+            router_name=self.pub_net_config.router_settings.name))
+
+        self.assertTrue(validate_ssh_client(inst_creator))
+
+    def test_ssh_client_fip_reverse_engineer(self):
+        """
+        Tests the ability to assign a floating IP to a reverse engineered
+        OpenStackVmInstance object. After the floating IP has been allocated
+        and assigned, this test will ensure that it can be accessed via SSH.
+        """
+        port_settings = PortConfig(
+            name=self.port_1_name,
+            network_name=self.pub_net_config.network_settings.name)
+
+        instance_settings = VmInstanceConfig(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings],
+            security_group_names=[self.sec_grp_creator.sec_grp_settings.name])
+
+        inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings,
+            keypair_settings=self.keypair_creator.keypair_settings)
+        self.inst_creators.append(inst_creator)
+
+        # block=True will force the create() method to block until the
+        vm_inst = inst_creator.create(block=True)
+        self.assertIsNotNone(vm_inst)
+
+        self.assertTrue(inst_creator.vm_active(block=True))
+
+        derived_inst_creator = create_instance.generate_creator(
+            self.os_creds, vm_inst, self.image_creator.image_settings,
+            self.keypair_creator.keypair_settings)
+
+        derived_inst_creator.add_floating_ip(FloatingIpConfig(
+            name=self.floating_ip_name, port_name=self.port_1_name,
+            router_name=self.pub_net_config.router_settings.name))
+        self.inst_creators.append(derived_inst_creator)
+
+        self.assertTrue(validate_ssh_client(
+            derived_inst_creator, fip_name=self.floating_ip_name))
 
     def test_ssh_client_fip_second_creator(self):
         """
@@ -1979,17 +2056,18 @@ def inst_has_sec_grp(nova, vm_inst, sec_grp_name):
     return False
 
 
-def validate_ssh_client(instance_creator):
+def validate_ssh_client(instance_creator, fip_name=None):
     """
     Returns True if instance_creator returns an SSH client that is valid
     :param instance_creator: the object responsible for creating the VM
                              instance
+    :param fip_name: the name of the floating IP to use
     :return: T/F
     """
     ssh_active = instance_creator.vm_ssh_active(block=True)
 
     if ssh_active:
-        ssh_client = instance_creator.ssh_client()
+        ssh_client = instance_creator.ssh_client(fip_name=fip_name)
         if ssh_client:
             try:
                 out = ssh_client.exec_command('pwd')[1]
