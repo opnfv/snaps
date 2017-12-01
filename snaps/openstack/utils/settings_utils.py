@@ -173,12 +173,15 @@ def create_volume_type_config(volume_type):
         else:
             control = ControlLocation.back_end
 
-    encrypt_settings = VolumeTypeEncryptionConfig(
-        name=volume_type.encryption.__class__,
-        provider_class=volume_type.encryption.provider,
-        control_location=control,
-        cipher=volume_type.encryption.cipher,
-        key_size=volume_type.encryption.key_size)
+    if volume_type and volume_type.encryption:
+        encrypt_settings = VolumeTypeEncryptionConfig(
+            name=volume_type.encryption.__class__,
+            provider_class=volume_type.encryption.provider,
+            control_location=control,
+            cipher=volume_type.encryption.cipher,
+            key_size=volume_type.encryption.key_size)
+    else:
+        encrypt_settings = None
 
     qos_spec_name = None
     if volume_type.qos_spec:
