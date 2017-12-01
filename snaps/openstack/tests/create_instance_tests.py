@@ -49,6 +49,7 @@ from snaps.openstack.tests import openstack_tests, validation_utils
 from snaps.openstack.tests.os_source_file_test import (
     OSIntegrationTestCase, OSComponentTestCase)
 from snaps.openstack.utils import nova_utils
+from snaps.openstack.utils.nova_utils import RebootType
 
 __author__ = 'spisarski'
 
@@ -763,6 +764,62 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
 
         self.assertEqual(vm_inst.id, inst_creator.get_vm_inst().id)
 
+        self.assertTrue(validate_ssh_client(inst_creator))
+
+    def test_ssh_client_fip_after_reboot(self):
+        """
+        Tests the ability to access a VM via SSH and a floating IP after it has
+        been rebooted.
+        """
+        port_settings = PortConfig(
+            name=self.port_1_name,
+            network_name=self.pub_net_config.network_settings.name)
+
+        instance_settings = VmInstanceConfig(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings],
+            security_group_names=[self.sec_grp_creator.sec_grp_settings.name],
+            floating_ip_settings=[FloatingIpConfig(
+                name=self.floating_ip_name, port_name=self.port_1_name,
+                router_name=self.pub_net_config.router_settings.name)])
+
+        inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings,
+            keypair_settings=self.keypair_creator.keypair_settings)
+        self.inst_creators.append(inst_creator)
+
+        # block=True will force the create() method to block until the
+        vm_inst = inst_creator.create(block=True)
+        self.assertIsNotNone(vm_inst)
+
+        self.assertTrue(inst_creator.vm_active(block=True))
+
+        ip = inst_creator.get_port_ip(port_settings.name)
+        self.assertTrue(check_dhcp_lease(inst_creator, ip))
+
+        self.assertEqual(vm_inst.id, inst_creator.get_vm_inst().id)
+
+        self.assertTrue(validate_ssh_client(inst_creator))
+
+        # Test default reboot which should be 'SOFT'
+        inst_creator.reboot()
+        # Lag time to allow for shutdown routine to take effect
+        time.sleep(10)
+        self.assertTrue(check_dhcp_lease(inst_creator, ip))
+        self.assertTrue(validate_ssh_client(inst_creator))
+
+        # Test 'SOFT' reboot
+        inst_creator.reboot(reboot_type=RebootType.soft)
+        time.sleep(10)
+        self.assertTrue(check_dhcp_lease(inst_creator, ip))
+        self.assertTrue(validate_ssh_client(inst_creator))
+
+        # Test 'HARD' reboot
+        inst_creator.reboot(reboot_type=RebootType.hard)
+        time.sleep(10)
+        self.assertTrue(check_dhcp_lease(inst_creator, ip))
         self.assertTrue(validate_ssh_client(inst_creator))
 
     def test_ssh_client_fip_second_creator(self):

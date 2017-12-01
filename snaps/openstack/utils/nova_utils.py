@@ -15,6 +15,7 @@
 
 import logging
 
+import enum
 import os
 import time
 from cryptography.hazmat.backends import default_backend
@@ -280,6 +281,21 @@ def get_server_info(nova, server):
     if vm:
         return vm._info
     return None
+
+def reboot_server(nova, server, reboot_type=None):
+    """
+    Returns a dictionary of a VMs info as returned by OpenStack
+    :param nova: the Nova client
+    :param server: the old server object
+    :param reboot_type: Acceptable values 'SOFT', 'HARD'
+                        (api uses SOFT as the default)
+    :return: a dict of the info if VM exists else None
+    """
+    vm = __get_latest_server_os_object(nova, server)
+    if vm:
+        vm.reboot(reboot_type=reboot_type.value)
+    else:
+        raise ServerNotFoundError('Cannot locate server')
 
 
 def create_keys(key_size=2048):
@@ -730,7 +746,22 @@ def detach_volume(nova, server, volume, timeout=None):
         return get_server_object_by_id(nova, server.id)
 
 
+class RebootType(enum.Enum):
+    """
+    A rule's direction
+    """
+    soft = 'SOFT'
+    hard = 'HARD'
+
+
 class NovaException(Exception):
     """
     Exception when calls to the Keystone client cannot be served properly
+    """
+
+
+class ServerNotFoundError(Exception):
+    """
+    Exception when operations to a VM/Server is requested and the OpenStack
+    Server instance cannot be located
     """

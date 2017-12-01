@@ -23,6 +23,7 @@ from snaps.openstack.openstack_creator import OpenStackComputeObject
 from snaps.openstack.utils import glance_utils, cinder_utils
 from snaps.openstack.utils import neutron_utils
 from snaps.openstack.utils import nova_utils
+from snaps.openstack.utils.nova_utils import RebootType
 from snaps.provisioning import ansible_utils
 
 __author__ = 'spisarski'
@@ -766,6 +767,17 @@ class OpenStackVmInstance(OpenStackComputeObject):
         except NotFound as e:
             logger.warning('Security group not removed - ' + str(e))
             return False
+
+    def reboot(self, reboot_type=RebootType.soft):
+        """
+        Issues a reboot call
+        :param reboot_type: instance of
+                            snaps.openstack.utils.nova_utils.RebootType
+                            enumeration
+        :return:
+        """
+        nova_utils.reboot_server(
+            self._nova, self.__vm, reboot_type=reboot_type)
 
 
 class VmInstanceSettings(VmInstanceConfig):
