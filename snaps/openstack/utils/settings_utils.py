@@ -43,7 +43,7 @@ def create_network_config(neutron, network):
 
 def create_security_group_config(neutron, security_group):
     """
-    Returns a NetworkConfig object
+    Returns a SecurityGroupConfig object
     :param neutron: the neutron client
     :param security_group: a SNAPS-OO SecurityGroup domain object
     :return:
@@ -148,7 +148,7 @@ def create_router_config(neutron, router):
 
 def create_volume_config(volume):
     """
-    Returns a VolumeSettings object
+    Returns a VolumeConfig object
     :param volume: a SNAPS-OO Volume object
     """
 
@@ -161,7 +161,7 @@ def create_volume_config(volume):
 
 def create_volume_type_config(volume_type):
     """
-    Returns a VolumeTypeSettings object
+    Returns a VolumeTypeConfig object
     :param volume_type: a SNAPS-OO VolumeType object
     """
 
@@ -194,8 +194,8 @@ def create_volume_type_config(volume_type):
 
 def create_flavor_config(flavor):
     """
-    Returns a VolumeSettings object
-    :param flavor: a SNAPS-OO Volume object
+    Returns a FlavorConfig object
+    :param flavor: a FlavorConfig object
     """
     return FlavorConfig(
         name=flavor.name, flavor_id=flavor.id, ram=flavor.ram,
@@ -232,7 +232,9 @@ def create_keypair_config(heat_cli, stack, keypair, pk_output_key):
 
 def create_vm_inst_config(nova, neutron, server):
     """
-    Returns a NetworkConfig object
+    Returns a VmInstanceConfig object
+    note: if the server instance is not active, the PortSettings objects will
+    not be generated resulting in an invalid configuration
     :param nova: the nova client
     :param neutron: the neutron client
     :param server: a SNAPS-OO VmInst domain object
@@ -262,7 +264,7 @@ def create_vm_inst_config(nova, neutron, server):
 
 def __create_port_config(neutron, networks):
     """
-    Returns a list of port settings based on the networks parameter
+    Returns a list of PortConfig objects based on the networks parameter
     :param neutron: the neutron client
     :param networks: a list of tuples where #1 is the SNAPS Network domain
                      object and #2 is a list of IP addresses

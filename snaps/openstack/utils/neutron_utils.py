@@ -636,7 +636,7 @@ def get_security_group_by_id(neutron, sec_grp_id):
 
 def create_security_group_rule(neutron, sec_grp_rule_settings):
     """
-    Creates a security group object in OpenStack
+    Creates a security group rule in OpenStack
     :param neutron: the client
     :param sec_grp_rule_settings: the security group rule settings
     :return: a SNAPS-OO SecurityGroupRule domain object
@@ -650,7 +650,7 @@ def create_security_group_rule(neutron, sec_grp_rule_settings):
 
 def delete_security_group_rule(neutron, sec_grp_rule):
     """
-    Deletes a security group object from OpenStack
+    Deletes a security group rule object from OpenStack
     :param neutron: the client
     :param sec_grp_rule: the SNAPS SecurityGroupRule object to delete
     """
@@ -670,7 +670,7 @@ def get_rules_by_security_group(neutron, sec_grp):
 
 def get_rules_by_security_group_id(neutron, sec_grp_id):
     """
-    Retrieves all of the rules for a given security group
+    Retrieves all of the rules for a given security group by it's ID
     :param neutron: the client
     :param sec_grp_id: the ID of the associated security group
     """
@@ -687,7 +687,7 @@ def get_rules_by_security_group_id(neutron, sec_grp_id):
 
 def get_rule_by_id(neutron, sec_grp, rule_id):
     """
-    Deletes a security group object from OpenStack
+    Returns a SecurityGroupRule object from OpenStack
     :param neutron: the client
     :param sec_grp: the SNAPS SecurityGroup domain object
     :param rule_id: the rule's ID
@@ -727,7 +727,7 @@ def get_floating_ips(neutron, ports=None):
     :param ports: a list of tuple 2 where index 0 is the port name and index 1
                   is the SNAPS-OO Port object
     :return: a list of tuple 2 (port_id, SNAPS FloatingIp) objects when ports
-             is not None else a list of Port objects
+             is not None else a list of FloatingIp objects
     """
     out = list()
     fips = neutron.list_floatingips()
@@ -811,7 +811,7 @@ def delete_floating_ip(neutron, floating_ip):
 
 def get_network_quotas(neutron, project_id):
     """
-    Returns a list of all available keypairs
+    Returns a list of NetworkQuotas objects
     :param neutron: the neutron client
     :param project_id: the project's ID of the quotas to lookup
     :return: an object of type NetworkQuotas or None if not found
