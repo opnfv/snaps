@@ -328,10 +328,14 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             self.network_creator.create()
 
             # Create Flavor
+            self.flavor_ram = 256
+            if (self.flavor_metadata and
+               self.flavor_metadata.get('hw:mem_page_size') == 'large'):
+                self.flavor_ram = 1024
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorConfig(name=guid + '-flavor-name', ram=256, disk=10,
-                             vcpus=1, metadata=self.flavor_metadata))
+                FlavorConfig(name=guid + '-flavor-name', ram=self.flavor_ram,
+                             disk=10, vcpus=1, metadata=self.flavor_metadata))
             self.flavor_creator.create()
         except Exception as e:
             self.tearDown()
