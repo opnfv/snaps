@@ -475,6 +475,21 @@ def get_availability_zone_hosts(nova, zone_name='nova'):
     return out
 
 
+def get_hypervisor_hosts(nova):
+    """
+    Returns the host names of all nova nodes with active hypervisors
+    :param nova: the Nova client
+    :return: a list of hypervisor host names
+    """
+    out = list()
+    hypervisors = nova.hypervisors.list()
+    for hypervisor in hypervisors:
+        if hypervisor.state == "up":
+            out.append(hypervisor.hypervisor_hostname)
+
+    return out
+
+
 def delete_vm_instance(nova, vm_inst):
     """
     Deletes a VM instance

@@ -53,6 +53,16 @@ class NovaSmokeTests(OSComponentTestCase):
         # This should not throw an exception
         nova.flavors.list()
 
+    def test_nova_get_hypervisor_hosts(self):
+        """
+        Tests to ensure that get_hypervisors() function works.
+        """
+        nova = nova_utils.nova_client(self.os_creds)
+
+        hosts = nova_utils.get_hypervisor_hosts(nova)
+        # This should not throw an exception
+        self.assertGreaterEqual(len(hosts), 1)
+
     def test_nova_connect_fail(self):
         """
         Tests to ensure that the improper credentials cannot connect.
