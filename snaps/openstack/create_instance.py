@@ -468,7 +468,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
 
     def get_port_by_name(self, port_name):
         """
-        Retrieves the OpenStack port object by its given name
+        Retrieves the SNAPS Port domain object by its given name
         :param port_name: the name of the port
         :return: the OpenStack port object or None if not exists
         """
@@ -477,6 +477,16 @@ class OpenStackVmInstance(OpenStackComputeObject):
                 return port
         logger.warning('Cannot find port with name - ' + port_name)
         return None
+
+    def get_ports(self):
+        """
+        Retrieves the SNAPS Port domain object by its given name
+        :return: a list of Port domain objects or an empty list
+        """
+        out = list()
+        for key, port in self.__ports:
+            out.append(port)
+        return out
 
     def get_vm_info(self):
         """

@@ -399,6 +399,8 @@ class SimpleHealthCheck(OSIntegrationTestCase):
 
         self.assertTrue(self.inst_creator.vm_active(block=True))
 
+        self.assertEqual(1, len(self.inst_creator.get_ports()))
+
         self.assertTrue(check_dhcp_lease(self.inst_creator, ip))
 
 
@@ -1805,6 +1807,7 @@ class CreateInstancePubPrivNetTests(OSIntegrationTestCase):
         vm_inst = self.inst_creator.create(block=True)
 
         self.assertEqual(vm_inst.id, self.inst_creator.get_vm_inst().id)
+        self.assertEqual(2, len(self.inst_creator.get_ports()))
 
         # Effectively blocks until VM has been properly activated
         self.assertTrue(self.inst_creator.vm_active(block=True))
