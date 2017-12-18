@@ -104,7 +104,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
         within the project
         """
         server = nova_utils.get_server(
-            self._nova, vm_inst_settings=self.instance_settings)
+            self._nova, self.__neutron,
+            vm_inst_settings=self.instance_settings)
         if server:
             if server.name == self.instance_settings.name:
                 self.__vm = server
@@ -166,7 +167,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
                 if volume and self.vm_active(block=True):
                     timeout = 30
                     vm = nova_utils.attach_volume(
-                        self._nova, self.__vm, volume, timeout)
+                        self._nova, self.__neutron, self.__vm, volume, timeout)
 
                     if vm:
                         self.__vm = vm
@@ -266,7 +267,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
             if volume:
                 try:
                     vm = nova_utils.detach_volume(
-                        self._nova, self.__vm, volume, 30)
+                        self._nova, self.__neutron, self.__vm, volume, 30)
                     if vm:
                         self.__vm = vm
                     else:
@@ -416,7 +417,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
         Returns the latest version of this server object from OpenStack
         :return: Server object
         """
-        return nova_utils.get_server_object_by_id(self._nova, self.__vm.id)
+        return nova_utils.get_server_object_by_id(
+            self._nova, self.__neutron, self.__vm.id)
 
     def get_console_output(self):
         """
@@ -607,7 +609,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
                 STATUS_ACTIVE, block, self.instance_settings.vm_boot_timeout,
                 poll_interval):
             self.__vm = nova_utils.get_server_object_by_id(
-                self._nova, self.__vm.id)
+                self._nova, self.__neutron, self.__vm.id)
             return True
         return False
 

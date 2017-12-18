@@ -107,7 +107,7 @@ def create_router_config(neutron, router):
         if network:
             ext_net_name = network.name
 
-    ports_tuple_list = list()
+    out_ports = list()
     if router.port_subnets:
         for port, subnets in router.port_subnets:
             network = neutron_utils.get_network_by_id(
@@ -121,19 +121,13 @@ def create_router_config(neutron, router):
                             ip_addrs.append(ext_fixed_ips['ip_address'])
             else:
                 for ip in port.ips:
-                    ip_addrs.append(ip)
+                    ip_addrs.append(ip['ip_address'])
 
-            ip_list = list()
-            if len(ip_addrs) > 0:
-                for ip_addr in ip_addrs:
-                    if isinstance(ip_addr, dict):
-                        ip_list.append(ip_addr['ip_address'])
-                    else:
-                        ip_list.append(ip_addr)
+            ports = neutron_utils.get_ports(neutron, network, ip_addrs)
+            for out_port in ports:
+                out_ports.append(out_port)
 
-            ports_tuple_list.append((network, ip_list))
-
-    port_settings = __create_port_config(neutron, ports_tuple_list)
+    port_settings = __create_port_configs(neutron, out_ports)
 
     filtered_settings = list()
     for port_setting in port_settings:
@@ -247,14 +241,7 @@ def create_vm_inst_config(nova, neutron, server):
     kwargs['name'] = server.name
     kwargs['flavor'] = flavor_name
 
-    net_tuples = list()
-    for net_name, ips in server.networks.items():
-        network = neutron_utils.get_network(neutron, network_name=net_name)
-        if network:
-            net_tuples.append((network, ips))
-
-    kwargs['port_settings'] = __create_port_config(
-        neutron, net_tuples)
+    kwargs['port_settings'] = __create_port_configs(neutron, server.ports)
     kwargs['security_group_names'] = server.sec_grp_names
     kwargs['floating_ip_settings'] = __create_floatingip_config(
         neutron, kwargs['port_settings'])
@@ -262,36 +249,34 @@ def create_vm_inst_config(nova, neutron, server):
     return VmInstanceConfig(**kwargs)
 
 
-def __create_port_config(neutron, networks):
+def __create_port_configs(neutron, ports):
     """
     Returns a list of PortConfig objects based on the networks parameter
     :param neutron: the neutron client
-    :param networks: a list of tuples where #1 is the SNAPS Network domain
-                     object and #2 is a list of IP addresses
+    :param ports: a list of SNAPS-OO Port domain objects
     :return:
     """
     out = list()
 
-    for network, ips in networks:
-        ports = neutron_utils.get_ports(neutron, network, ips)
-        for port in ports:
-            if port.device_owner != 'network:dhcp':
-                ip_addrs = list()
-                for ip_dict in port.ips:
-                    subnet = neutron_utils.get_subnet_by_id(
-                        neutron, ip_dict['subnet_id'])
-                    ip_addrs.append({'subnet_name': subnet.name,
-                                     'ip': ip_dict['ip_address']})
+    for port in ports:
+        if port.device_owner != 'network:dhcp':
+            ip_addrs = list()
+            for ip_dict in port.ips:
+                subnet = neutron_utils.get_subnet_by_id(
+                    neutron, ip_dict['subnet_id'])
+                ip_addrs.append({'subnet_name': subnet.name,
+                                 'ip': ip_dict['ip_address']})
 
-                kwargs = dict()
-                if port.name:
-                    kwargs['name'] = port.name
-                kwargs['network_name'] = network.name
-                kwargs['mac_address'] = port.mac_address
-                kwargs['allowed_address_pairs'] = port.allowed_address_pairs
-                kwargs['admin_state_up'] = port.admin_state_up
-                kwargs['ip_addrs'] = ip_addrs
-                out.append(PortConfig(**kwargs))
+            network = neutron_utils.get_network_by_id(neutron, port.network_id)
+            kwargs = dict()
+            if port.name:
+                kwargs['name'] = port.name
+            kwargs['network_name'] = network.name
+            kwargs['mac_address'] = port.mac_address
+            kwargs['allowed_address_pairs'] = port.allowed_address_pairs
+            kwargs['admin_state_up'] = port.admin_state_up
+            kwargs['ip_addrs'] = ip_addrs
+            out.append(PortConfig(**kwargs))
 
     return out
 

@@ -388,11 +388,12 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
                          vm_inst_creators[0].get_vm_inst().name)
 
         nova = nova_utils.nova_client(self.admin_os_creds)
+        neutron = neutron_utils.neutron_client(self.admin_os_creds)
         vm_inst_by_name = nova_utils.get_server(
-            nova, server_name=vm_inst_creators[0].get_vm_inst().name)
+            nova, neutron, server_name=vm_inst_creators[0].get_vm_inst().name)
         self.assertEqual(vm_inst_creators[0].get_vm_inst(), vm_inst_by_name)
         self.assertIsNotNone(nova_utils.get_server_object_by_id(
-            nova, vm_inst_creators[0].get_vm_inst().id))
+            nova, neutron, vm_inst_creators[0].get_vm_inst().id))
 
 
 class CreateStackFloatingIpTests(OSIntegrationTestCase):

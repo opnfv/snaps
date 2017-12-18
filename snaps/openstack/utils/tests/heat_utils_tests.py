@@ -187,7 +187,7 @@ class HeatUtilsCreateSimpleStackTests(OSComponentTestCase):
 
         nova = nova_utils.nova_client(self.os_creds)
         servers = heat_utils.get_stack_servers(
-            self.heat_client, nova, self.stack1)
+            self.heat_client, nova, neutron, self.stack1)
         self.assertIsNotNone(servers)
         self.assertEqual(1, len(servers))
         self.assertEqual(self.vm_inst_name, servers[0].name)
@@ -311,7 +311,7 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
                     neutron = neutron_utils.neutron_client(self.os_creds)
                     glance = glance_utils.glance_client(self.os_creds)
                     servers = heat_utils.get_stack_servers(
-                        self.heat_client, nova, self.stack)
+                        self.heat_client, nova, neutron, self.stack)
                     for server in servers:
                         vm_settings = settings_utils.create_vm_inst_config(
                             nova, neutron, server)
@@ -383,7 +383,7 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
         glance = glance_utils.glance_client(self.os_creds)
 
         servers = heat_utils.get_stack_servers(
-            self.heat_client, nova, self.stack)
+            self.heat_client, nova, neutron, self.stack)
         self.assertIsNotNone(servers)
         self.assertEqual(2, len(servers))
 

@@ -23,13 +23,13 @@ class VmInstDomainObjectTests(unittest.TestCase):
     """
 
     def test_construction_positional(self):
-        vm_inst = VmInst('name', 'id', '456', '123', dict(), 'kp-name',
+        vm_inst = VmInst('name', 'id', '456', '123', list(), 'kp-name',
                          ['foo', 'bar'], ['123', '456'])
         self.assertEqual('name', vm_inst.name)
         self.assertEqual('id', vm_inst.id)
         self.assertEqual('456', vm_inst.image_id)
         self.assertEqual('123', vm_inst.flavor_id)
-        self.assertEqual(dict(), vm_inst.networks)
+        self.assertEqual(list(), vm_inst.ports)
         self.assertEqual('kp-name', vm_inst.keypair_name)
         self.assertEqual(['foo', 'bar'], vm_inst.sec_grp_names)
         self.assertEqual(['123', '456'], vm_inst.volume_ids)
@@ -37,13 +37,13 @@ class VmInstDomainObjectTests(unittest.TestCase):
     def test_construction_named(self):
         vm_inst = VmInst(
             volume_ids=['123', '456'], sec_grp_names=['foo', 'bar'],
-            networks=dict(), inst_id='id', name='name', flavor_id='123',
+            ports=list(), inst_id='id', name='name', flavor_id='123',
             image_id='456', keypair_name='kp-name')
         self.assertEqual('name', vm_inst.name)
         self.assertEqual('id', vm_inst.id)
         self.assertEqual('456', vm_inst.image_id)
         self.assertEqual('123', vm_inst.flavor_id)
-        self.assertEqual(dict(), vm_inst.networks)
+        self.assertEqual(list(), vm_inst.ports)
         self.assertEqual('kp-name', vm_inst.keypair_name)
         self.assertEqual(['foo', 'bar'], vm_inst.sec_grp_names)
         self.assertEqual(['123', '456'], vm_inst.volume_ids)

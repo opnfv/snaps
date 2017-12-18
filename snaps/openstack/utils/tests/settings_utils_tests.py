@@ -324,7 +324,8 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
         self.inst_creator.create(block=True)
 
         server = nova_utils.get_server(
-            self.nova, vm_inst_settings=self.inst_creator.instance_settings)
+            self.nova, self.neutron,
+            vm_inst_settings=self.inst_creator.instance_settings)
         derived_vm_settings = settings_utils.create_vm_inst_config(
             self.nova, self.neutron, server)
         self.assertIsNotNone(derived_vm_settings)
@@ -339,7 +340,8 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
         self.inst_creator.create(block=True)
 
         server = nova_utils.get_server(
-            self.nova, vm_inst_settings=self.inst_creator.instance_settings)
+            self.nova, self.neutron,
+            vm_inst_settings=self.inst_creator.instance_settings)
         derived_image_settings = settings_utils.determine_image_config(
             self.glance, server, [self.image_creator.image_settings])
         self.assertIsNotNone(derived_image_settings)

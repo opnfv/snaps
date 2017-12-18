@@ -418,6 +418,7 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.vm_inst_name = guid + '-inst'
         self.nova = nova_utils.nova_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(self.os_creds)
         os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
 
@@ -511,14 +512,14 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
 
         vm_inst = self.inst_creator.create()
         self.assertIsNotNone(nova_utils.get_server(
-            self.nova, vm_inst_settings=instance_settings))
+            self.nova, self.neutron, vm_inst_settings=instance_settings))
 
         # Delete instance
         nova_utils.delete_vm_instance(self.nova, vm_inst)
 
         self.assertTrue(self.inst_creator.vm_deleted(block=True))
         self.assertIsNone(nova_utils.get_server(
-            self.nova, vm_inst_settings=instance_settings))
+            self.nova, self.neutron, vm_inst_settings=instance_settings))
 
         # Exception should not be thrown
         self.inst_creator.clean()
@@ -3016,6 +3017,7 @@ class CreateInstanceVolumeTests(OSIntegrationTestCase):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.vm_inst_name = guid + '-inst'
         self.nova = nova_utils.nova_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(self.os_creds)
         os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
 
@@ -3140,7 +3142,7 @@ class CreateInstanceVolumeTests(OSIntegrationTestCase):
 
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(nova_utils.get_server(
-            self.nova, vm_inst_settings=instance_settings))
+            self.nova, self.neutron, vm_inst_settings=instance_settings))
 
         self.assertIsNotNone(vm_inst)
         self.assertEqual(1, len(vm_inst.volume_ids))
@@ -3164,7 +3166,7 @@ class CreateInstanceVolumeTests(OSIntegrationTestCase):
 
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(nova_utils.get_server(
-            self.nova, vm_inst_settings=instance_settings))
+            self.nova, self.neutron, vm_inst_settings=instance_settings))
 
         self.assertIsNotNone(vm_inst)
         self.assertEqual(2, len(vm_inst.volume_ids))

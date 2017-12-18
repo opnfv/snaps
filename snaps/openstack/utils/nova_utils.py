@@ -115,17 +115,18 @@ def create_server(nova, neutron, glance, instance_config, image_config,
 
         server = nova.servers.create(**args)
 
-        return __map_os_server_obj_to_vm_inst(server)
+        return __map_os_server_obj_to_vm_inst(neutron, server)
     else:
         raise NovaException(
             'Cannot create instance, image cannot be located with name %s',
             image_config.name)
 
 
-def get_server(nova, vm_inst_settings=None, server_name=None):
+def get_server(nova, neutron, vm_inst_settings=None, server_name=None):
     """
     Returns a VmInst object for the first server instance found.
     :param nova: the Nova client
+    :param neutron: the Neutron client
     :param vm_inst_settings: the VmInstanceConfig object from which to build
                              the query if not None
     :param server_name: the server with this name to return if vm_inst_settings
@@ -140,7 +141,7 @@ def get_server(nova, vm_inst_settings=None, server_name=None):
 
     servers = nova.servers.list(search_opts=search_opts)
     for server in servers:
-        return __map_os_server_obj_to_vm_inst(server)
+        return __map_os_server_obj_to_vm_inst(neutron, server)
 
 
 def get_server_connection(nova, vm_inst_settings=None, server_name=None):
@@ -164,9 +165,10 @@ def get_server_connection(nova, vm_inst_settings=None, server_name=None):
         return server.links[0]
 
 
-def __map_os_server_obj_to_vm_inst(os_server):
+def __map_os_server_obj_to_vm_inst(neutron, os_server):
     """
     Returns a VmInst object for an OpenStack Server object
+    :param neutron: the Neutron client (when None, ports will be empty)
     :param os_server: the OpenStack server object
     :return: an equivalent SNAPS-OO VmInst domain object
     """
@@ -177,6 +179,14 @@ def __map_os_server_obj_to_vm_inst(os_server):
             if sec_group.get('name'):
                 sec_grp_names.append(sec_group.get('name'))
 
+    out_ports = list()
+    if len(os_server.networks) > 0:
+        for net_name, ips in os_server.networks.items():
+            network = neutron_utils.get_network(neutron, network_name=net_name)
+            ports = neutron_utils.get_ports(neutron, network, ips)
+            for port in ports:
+                out_ports.append(port)
+
     volumes = None
     if hasattr(os_server, 'os-extended-volumes:volumes_attached'):
         volumes = getattr(os_server, 'os-extended-volumes:volumes_attached')
@@ -184,7 +194,7 @@ def __map_os_server_obj_to_vm_inst(os_server):
     return VmInst(
         name=os_server.name, inst_id=os_server.id,
         image_id=os_server.image['id'], flavor_id=os_server.flavor['id'],
-        networks=os_server.networks, keypair_name=os_server.key_name,
+        ports=out_ports, keypair_name=os_server.key_name,
         sec_grp_names=sec_grp_names, volume_ids=volumes)
 
 
@@ -234,26 +244,28 @@ def get_server_console_output(nova, server):
     return None
 
 
-def get_latest_server_object(nova, server):
+def get_latest_server_object(nova, neutron, server):
     """
     Returns a server with a given id
     :param nova: the Nova client
+    :param neutron: the Neutron client
     :param server: the old server object
     :return: the list of servers or None if not found
     """
     server = __get_latest_server_os_object(nova, server)
-    return __map_os_server_obj_to_vm_inst(server)
+    return __map_os_server_obj_to_vm_inst(neutron, server)
 
 
-def get_server_object_by_id(nova, server_id):
+def get_server_object_by_id(nova, neutron, server_id):
     """
     Returns a server with a given id
     :param nova: the Nova client
+    :param neutron: the Neutron client
     :param server_id: the server's id
     :return: an SNAPS-OO VmInst object or None if not found
     """
     server = __get_latest_server_os_object_by_id(nova, server_id)
-    return __map_os_server_obj_to_vm_inst(server)
+    return __map_os_server_obj_to_vm_inst(neutron, server)
 
 
 def get_server_security_group_names(nova, server):
@@ -281,6 +293,7 @@ def get_server_info(nova, server):
     if vm:
         return vm._info
     return None
+
 
 def reboot_server(nova, server, reboot_type=None):
     """
@@ -707,10 +720,11 @@ def update_quotas(nova, project_id, compute_quotas):
     return nova.quotas.update(project_id, **update_values)
 
 
-def attach_volume(nova, server, volume, timeout=None):
+def attach_volume(nova, neutron, server, volume, timeout=None):
     """
     Attaches a volume to a server
     :param nova: the nova client
+    :param neutron: the neutron client
     :param server: the VMInst domain object
     :param volume: the Volume domain object
     :param timeout: denotes the amount of time to block to determine if the
@@ -722,20 +736,21 @@ def attach_volume(nova, server, volume, timeout=None):
     if timeout:
         start_time = time.time()
         while time.time() < start_time + timeout:
-            vm = get_server_object_by_id(nova, server.id)
+            vm = get_server_object_by_id(nova, neutron, server.id)
             for vol_dict in vm.volume_ids:
                 if volume.id == vol_dict['id']:
                     return vm
 
         return None
     else:
-        return get_server_object_by_id(nova, server.id)
+        return get_server_object_by_id(nova, neutron, server.id)
 
 
-def detach_volume(nova, server, volume, timeout=None):
+def detach_volume(nova, neutron, server, volume, timeout=None):
     """
     Attaches a volume to a server
     :param nova: the nova client
+    :param neutron: the neutron client
     :param server: the VMInst domain object
     :param volume: the Volume domain object
     :param timeout: denotes the amount of time to block to determine if the
@@ -747,7 +762,7 @@ def detach_volume(nova, server, volume, timeout=None):
     if timeout:
         start_time = time.time()
         while time.time() < start_time + timeout:
-            vm = get_server_object_by_id(nova, server.id)
+            vm = get_server_object_by_id(nova, neutron, server.id)
             found = False
             for vol_dict in vm.volume_ids:
                 if volume.id == vol_dict['id']:
@@ -758,7 +773,7 @@ def detach_volume(nova, server, volume, timeout=None):
 
         return None
     else:
-        return get_server_object_by_id(nova, server.id)
+        return get_server_object_by_id(nova, neutron, server.id)
 
 
 class RebootType(enum.Enum):

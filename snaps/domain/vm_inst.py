@@ -19,7 +19,7 @@ class VmInst:
     SNAPS domain object for Images. Should contain attributes that
     are shared amongst cloud providers
     """
-    def __init__(self, name, inst_id, image_id, flavor_id, networks,
+    def __init__(self, name, inst_id, image_id, flavor_id, ports,
                  keypair_name, sec_grp_names, volume_ids):
         """
         Constructor
@@ -27,8 +27,8 @@ class VmInst:
         :param inst_id: the instance's id
         :param image_id: the instance's image id
         :param flavor_id: the ID used to spawn this instance
-        :param networks: dict of networks where the key is the network name and
-                         value is a list of associated IPs
+        :param ports: list of SNAPS-OO Port domain objects associated with this
+                      server instance
         :param keypair_name: the name of the associated keypair
         :param sec_grp_names: list of security group names
         :param volume_ids: list of attached volume IDs
@@ -37,7 +37,7 @@ class VmInst:
         self.id = inst_id
         self.image_id = image_id
         self.flavor_id = flavor_id
-        self.networks = networks
+        self.ports = ports
         self.keypair_name = keypair_name
         self.sec_grp_names = sec_grp_names
         self.volume_ids = volume_ids
@@ -47,7 +47,7 @@ class VmInst:
                 self.id == other.id and
                 self.image_id == other.image_id and
                 self.flavor_id == other.flavor_id and
-                self.networks == other.networks and
+                self.ports == other.ports and
                 self.keypair_name == other.keypair_name and
                 self.sec_grp_names == other.sec_grp_names and
                 self.volume_ids == other.volume_ids)

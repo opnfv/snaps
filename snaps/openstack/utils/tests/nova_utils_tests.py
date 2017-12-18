@@ -339,7 +339,8 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
             iters += 1
 
         self.assertTrue(active)
-        vm_inst = nova_utils.get_latest_server_object(self.nova, self.vm_inst)
+        vm_inst = nova_utils.get_latest_server_object(
+            self.nova, self.neutron, self.vm_inst)
 
         self.assertEqual(self.vm_inst.name, vm_inst.name)
         self.assertEqual(self.vm_inst.id, vm_inst.id)
@@ -447,8 +448,9 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         self.assertEqual(0, len(self.volume_creator.get_volume().attachments))
 
         # Attach volume to VM
+        neutron = neutron_utils.neutron_client(self.os_creds)
         nova_utils.attach_volume(
-            self.nova, self.instance_creator.get_vm_inst(),
+            self.nova, neutron, self.instance_creator.get_vm_inst(),
             self.volume_creator.get_volume())
 
         time.sleep(10)
@@ -456,11 +458,11 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         vol_attach = cinder_utils.get_volume_by_id(
             self.cinder, self.volume_creator.get_volume().id)
         vm_attach = nova_utils.get_server_object_by_id(
-            self.nova, self.instance_creator.get_vm_inst().id)
+            self.nova, neutron, self.instance_creator.get_vm_inst().id)
 
         # Detach volume to VM
         nova_utils.detach_volume(
-            self.nova, self.instance_creator.get_vm_inst(),
+            self.nova, neutron, self.instance_creator.get_vm_inst(),
             self.volume_creator.get_volume())
 
         time.sleep(10)
@@ -468,7 +470,7 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         vol_detach = cinder_utils.get_volume_by_id(
             self.cinder, self.volume_creator.get_volume().id)
         vm_detach = nova_utils.get_server_object_by_id(
-            self.nova, self.instance_creator.get_vm_inst().id)
+            self.nova, neutron, self.instance_creator.get_vm_inst().id)
 
         # Validate Attachment
         self.assertIsNotNone(vol_attach)

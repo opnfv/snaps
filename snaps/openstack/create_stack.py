@@ -284,11 +284,11 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
 
         out = list()
         nova = nova_utils.nova_client(self._os_creds)
+        neutron = neutron_utils.neutron_client(self._os_creds)
 
         stack_servers = heat_utils.get_stack_servers(
-            self.__heat_cli, nova, self.__stack)
+            self.__heat_cli, nova, neutron, self.__stack)
 
-        neutron = neutron_utils.neutron_client(self._os_creds)
         glance = glance_utils.glance_client(self._os_creds)
 
         for stack_server in stack_servers:
