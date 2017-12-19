@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_67fb9dc1",
+        "filename": "snaps/openstack/create_instance.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 2091
+      },
+      "writtenOn": "2017-12-19T14:27:02Z",
+      "side": 1,
+      "message": "good point!",
+      "parentUuid": "9a3d3df0_07457116",
+      "revId": "db1604777c6a2c599a2d8b708b1bec6cfa9dc75d",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_a753e5e0",
         "filename": "snaps/openstack/create_instance.py",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2017-12-19T14:23:58Z",
       "side": 1,
       "message": "pep8, only one line between methods",
+      "revId": "db1604777c6a2c599a2d8b708b1bec6cfa9dc75d",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_47f819c3",
+        "filename": "snaps/openstack/create_instance.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 2091
+      },
+      "writtenOn": "2017-12-19T14:27:02Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "9a3d3df0_a753e5e0",
       "revId": "db1604777c6a2c599a2d8b708b1bec6cfa9dc75d",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
