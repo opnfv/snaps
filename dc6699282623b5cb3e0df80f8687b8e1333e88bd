@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_b13843f0",
+        "filename": "snaps/openstack/create_instance.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 2091
+      },
+      "writtenOn": "2017-12-19T09:13:01Z",
+      "side": 1,
+      "message": "could this function return the floating ip?",
+      "revId": "dc6699282623b5cb3e0df80f8687b8e1333e88bd",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
