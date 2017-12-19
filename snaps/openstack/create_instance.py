@@ -195,6 +195,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
         """
         Adds a floating IP to a running instance
         :param floating_ip_setting - the floating IP configuration
+        :return: the floating ip object
         """
         port_dict = dict()
         for key, port in self.__ports:
@@ -228,6 +229,9 @@ class OpenStackVmInstance(OpenStackComputeObject):
             raise VmInstanceCreationError(
                 'Unable to add floating IP to port, cannot locate router '
                 'with an external gateway ')
+
+        return floating_ip
+
 
     def __ext_gateway_by_router(self, router_name):
         """
