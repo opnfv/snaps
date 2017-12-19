@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_07457116",
+        "filename": "snaps/openstack/create_instance.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-12-19T14:23:58Z",
+      "side": 1,
+      "message": "Can you move this up above the else? Potential code warning for returning a variable that may not have been initialized as it is crossing blocks albeit, the block of code must have been executed before reaching the bottom of the method. Future changes could potentially break this logic.",
+      "revId": "db1604777c6a2c599a2d8b708b1bec6cfa9dc75d",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_a753e5e0",
+        "filename": "snaps/openstack/create_instance.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-12-19T14:23:58Z",
+      "side": 1,
+      "message": "pep8, only one line between methods",
+      "revId": "db1604777c6a2c599a2d8b708b1bec6cfa9dc75d",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
