@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
+import ast
 import logging
 
 import re
@@ -45,9 +46,15 @@ def main(parsed_args):
     if ssh:
         ssh.close()
 
+    vars = dict()
+    if args.vars:
+        vars = ast.literal_eval(args.vars)
+        if not isinstance(vars, dict):
+            vars = dict()
+
     retval = ansible_utils.apply_playbook(
         parsed_args.playbook, [parsed_args.ip_addr], parsed_args.host_user,
-        parsed_args.priv_key, variables={'name': 'Foo'},
+        parsed_args.priv_key, variables=vars,
         proxy_setting=proxy_settings)
     exit(retval)
 
@@ -66,6 +73,9 @@ if __name__ == '__main__':
                         required=False, help='<host>:<port>')
     parser.add_argument('-s', '--ssh-proxy-cmd', dest='ssh_proxy_cmd',
                         required=False)
+    parser.add_argument('-v', '--vars', dest='vars',
+                        required=False)
     args = parser.parse_args()
 
     main(args)
+
