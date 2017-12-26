@@ -80,7 +80,7 @@ class OSIntegrationTestCase(OSComponentTestCase):
 
     def __init__(self, method_name='runTest', os_creds=None, ext_net_name=None,
                  use_keystone=True, flavor_metadata=None, image_metadata=None,
-                 log_level=logging.DEBUG):
+                 netconf_override=None, log_level=logging.DEBUG):
         """
         Super for integration tests requiring a connection to OpenStack
         :param method_name: default 'runTest'
@@ -98,12 +98,15 @@ class OSIntegrationTestCase(OSComponentTestCase):
                         'ramdisk_url': '{URI}/cirros-0.3.4-x86_64-initramfs'})
         :param flavor_metadata: dict() to be sent directly into the Nova client
                                 generally used for page sizes
+        :param netconf_override: dict() containing the configured network_type,
+                               physical_network and segmentation_id
         :param log_level: the logging level of your test run (default DEBUG)
         """
         super(OSIntegrationTestCase, self).__init__(
             method_name=method_name, os_creds=os_creds,
             ext_net_name=ext_net_name, image_metadata=image_metadata,
             log_level=log_level)
+        self.netconf_override = netconf_override
         self.use_keystone = use_keystone
         self.keystone = None
         self.flavor_metadata = flavor_metadata
@@ -111,7 +114,8 @@ class OSIntegrationTestCase(OSComponentTestCase):
     @staticmethod
     def parameterize(testcase_klass, os_creds, ext_net_name,
                      use_keystone=False, flavor_metadata=None,
-                     image_metadata=None, log_level=logging.DEBUG):
+                     image_metadata=None, netconf_override=None,
+                     log_level=logging.DEBUG):
         """
         Create a suite containing all tests taken from the given
         subclass, passing them the parameter 'param'.
@@ -122,7 +126,8 @@ class OSIntegrationTestCase(OSComponentTestCase):
         for name in test_names:
             suite.addTest(testcase_klass(name, os_creds, ext_net_name,
                                          use_keystone, flavor_metadata,
-                                         image_metadata, log_level))
+                                         image_metadata, netconf_override,
+                                         log_level))
         return suite
 
     """
