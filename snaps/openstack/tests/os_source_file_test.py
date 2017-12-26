@@ -79,8 +79,8 @@ class OSComponentTestCase(unittest.TestCase):
 class OSIntegrationTestCase(OSComponentTestCase):
 
     def __init__(self, method_name='runTest', os_creds=None, ext_net_name=None,
-                 use_keystone=True, flavor_metadata=None, image_metadata=None,
-                 log_level=logging.DEBUG):
+                 network_config=None, use_keystone=True, flavor_metadata=None,
+                 image_metadata=None, log_level=logging.DEBUG):
         """
         Super for integration tests requiring a connection to OpenStack
         :param method_name: default 'runTest'
@@ -88,6 +88,8 @@ class OSIntegrationTestCase(OSComponentTestCase):
                          in the package snaps.openstack.tests.conf.os_env.yaml
         :param ext_net_name: the name of the external network that is used for
                              creating routers for floating IPs
+        :param network_config: dict() containing the configured network_type,
+                               physical_network and segmentation_id
         :param use_keystone: when true, these tests will create a new
                              user/project under which to run the test
         :param image_metadata: dict() containing the URLs for the disk, kernel,
@@ -104,14 +106,16 @@ class OSIntegrationTestCase(OSComponentTestCase):
             method_name=method_name, os_creds=os_creds,
             ext_net_name=ext_net_name, image_metadata=image_metadata,
             log_level=log_level)
+        self.network_config = network_config
         self.use_keystone = use_keystone
         self.keystone = None
         self.flavor_metadata = flavor_metadata
 
     @staticmethod
     def parameterize(testcase_klass, os_creds, ext_net_name,
-                     use_keystone=False, flavor_metadata=None,
-                     image_metadata=None, log_level=logging.DEBUG):
+                     network_config=None, use_keystone=False,
+                     flavor_metadata=None, image_metadata=None,
+                     log_level=logging.DEBUG):
         """
         Create a suite containing all tests taken from the given
         subclass, passing them the parameter 'param'.
@@ -121,8 +125,9 @@ class OSIntegrationTestCase(OSComponentTestCase):
         suite = unittest.TestSuite()
         for name in test_names:
             suite.addTest(testcase_klass(name, os_creds, ext_net_name,
-                                         use_keystone, flavor_metadata,
-                                         image_metadata, log_level))
+                                         network_config, use_keystone,
+                                         flavor_metadata, image_metadata,
+                                         log_level))
         return suite
 
     """

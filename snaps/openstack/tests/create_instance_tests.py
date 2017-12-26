@@ -305,8 +305,15 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         self.flavor_creator = None
         self.inst_creator = None
 
-        self.priv_net_config = openstack_tests.get_priv_net_config(
-            net_name=guid + '-priv-net', subnet_name=guid + '-priv-subnet')
+        if self.network_config:
+            self.priv_net_config = openstack_tests.get_priv_net_config(
+                net_name=guid + '-priv-net',
+                subnet_name=guid + '-priv-subnet',
+                network_config=self.network_config)
+        else:
+            self.priv_net_config = openstack_tests.get_priv_net_config(
+                net_name=guid + '-priv-net',
+                subnet_name=guid + '-priv-subnet')
         self.port_settings = PortConfig(
             name=self.port_1_name,
             network_name=self.priv_net_config.network_settings.name)

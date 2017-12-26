@@ -315,16 +315,20 @@ def ubuntu_image_settings(name, url=None, image_metadata=None,
         public=public, nic_config_pb_loc=pb_path)
 
 
-def get_priv_net_config(net_name, subnet_name, router_name=None,
-                        cidr='10.55.0.0/24', external_net=None):
+def get_priv_net_config(net_name, subnet_name, network_config=None,
+                        router_name=None, cidr='10.55.0.0/24',
+                        external_net=None):
     return OSNetworkConfig(net_name, subnet_name, cidr, router_name,
-                           external_gateway=external_net)
+                           external_gateway=external_net,
+                           network_config=network_config)
 
 
-def get_pub_net_config(net_name, subnet_name=None, router_name=None,
-                       cidr='10.55.1.0/24', external_net=None):
+def get_pub_net_config(net_name, network_config=None, subnet_name=None,
+                       router_name=None, cidr='10.55.1.0/24',
+                       external_net=None):
     return OSNetworkConfig(net_name, subnet_name, cidr, router_name,
-                           external_gateway=external_net)
+                           external_gateway=external_net,
+                           network_config=network_config)
 
 
 class OSNetworkConfig:
@@ -333,11 +337,19 @@ class OSNetworkConfig:
     """
 
     def __init__(self, net_name, subnet_name=None, subnet_cidr=None,
-                 router_name=None, external_gateway=None):
+                 router_name=None, external_gateway=None, network_config=None):
 
         if subnet_name and subnet_cidr:
             self.network_settings = NetworkConfig(
                 name=net_name, subnet_settings=[
+                    SubnetConfig(cidr=subnet_cidr, name=subnet_name)])
+        elif network_config and subnet_name and subnet_cidr:
+            self.network_settings = NetworkConfig(
+                name=net_name,
+                network_type=network_config.get('network_type'),
+                physical_network=network_config.get('physical_network'),
+                segmentation_id=network_config.get('segmentation_id'),
+                subnet_settings=[
                     SubnetConfig(cidr=subnet_cidr, name=subnet_name)])
         else:
             self.network_settings = NetworkConfig(name=net_name)
