@@ -323,8 +323,22 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             self.image_creator.create()
 
             # Create Network
-            self.network_creator = OpenStackNetwork(
-                self.os_creds, self.priv_net_config.network_settings)
+            if self.network_config:
+                net_type = self.network_config.get('network_type')
+                phy_net = self.network_config.get('physical_network')
+                seg_id = self.network_config.get('segmentation_id')
+                self.network_creator = OpenStackNetwork(
+                    self.os_creds, NetworkConfig(
+                        name=guid + '-priv-net',
+                        network_type=net_type,
+                        physical_network=phy_net,
+                        segmentation_id=seg_id,
+                        subnet_settings=[SubnetConfig(
+                            name=guid + '-priv-subnet',
+                            cidr='10.55.0.0/24')]))
+            else:
+                self.network_creator = OpenStackNetwork(
+                    self.os_creds, self.priv_net_config.network_settings)
             self.network_creator.create()
 
             # Create Flavor
