@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_cde27e2e",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-12-27T15:39:45Z",
+      "side": 1,
+      "message": "Are you sure you only want to address this test class?",
+      "revId": "c15477fd5aed34c16a81d071982d8de445ecddef",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_ed8e6278",
+        "filename": "snaps/openstack/tests/openstack_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-12-27T15:39:45Z",
+      "side": 1,
+      "message": "Can you simplify the NetworkConfig instantiation logic here which I should have thought about when originally authoring this routine which is more evident now with the additional logic? In this first logic block, can you first initialize a variable named \"subnet_conf\" or something like that to None in the line above and call SubnetConfig\u0027s constructor after this line? You would not be instantiating NetworkConfig here then.",
+      "revId": "c15477fd5aed34c16a81d071982d8de445ecddef",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_cd8b9e66",
+        "filename": "snaps/openstack/tests/openstack_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-12-27T15:39:45Z",
+      "side": 1,
+      "message": "With the change above, you can change this line to:\nif network_config: where you can initialize the 3 variables in question: on the line above and set them below the if. You would not be instantiating NetworkConfig here then.",
+      "revId": "c15477fd5aed34c16a81d071982d8de445ecddef",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_2decca29",
+        "filename": "snaps/openstack/tests/openstack_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-12-27T15:39:45Z",
+      "side": 1,
+      "message": "Remove this else.",
+      "revId": "c15477fd5aed34c16a81d071982d8de445ecddef",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_0df10602",
+        "filename": "snaps/openstack/tests/openstack_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-12-27T15:39:45Z",
+      "side": 1,
+      "message": "Make all NetworkConfig instances here once you move the indentation over to the left one block that would look something like:\n\nNetworkConfig(\n    name\u003dnet_name, network_type\u003dnet_type,\n    physical_network\u003dphy_net, segmentaiton_id\u003dseg_id,\n    subnet_settings\u003d[sub_settings])",
+      "revId": "c15477fd5aed34c16a81d071982d8de445ecddef",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
