@@ -241,6 +241,9 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         # Block until VM's ssh port has been opened
         self.assertTrue(self.inst_creator.vm_ssh_active(block=True))
 
+        # Block until cloud-init has completed
+        self.assertTrue(self.inst_creator.cloud_init_complete(block=True))
+
         ssh_client = self.inst_creator.ssh_client()
         self.assertIsNotNone(ssh_client)
 
@@ -309,6 +312,9 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
 
         # Block until VM's ssh port has been opened
         self.assertTrue(self.inst_creator.vm_ssh_active(block=True))
+
+        # Block until cloud-init has completed
+        self.assertTrue(self.inst_creator.cloud_init_complete(block=True))
 
         # Apply Security Group
         self.inst_creator.add_security_group(
