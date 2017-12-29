@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_e31b1371",
+        "filename": "snaps/openstack/tests/openstack_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 5441
+      },
+      "writtenOn": "2017-12-29T09:48:15Z",
+      "side": 1,
+      "message": "@Steven, is it what you mean?",
+      "range": {
+        "startLine": 342,
+        "startChar": 0,
+        "endLine": 353,
+        "endChar": 44
+      },
+      "revId": "1e396eb10ef0dcc6d1e8af488ae5e6a390676860",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
