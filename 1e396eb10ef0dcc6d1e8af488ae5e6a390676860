@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "9a3d3df0_8395e788",
+        "filename": "snaps/openstack/tests/openstack_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-12-29T15:31:39Z",
+      "side": 1,
+      "message": "Would you mind moving the new parameter to the end of the list especially seeing that it is the most optional parameter here and it would coincide with the OSNetworkConfig constructor. Please see my note below regarding my parameter naming suggestion...",
+      "revId": "1e396eb10ef0dcc6d1e8af488ae5e6a390676860",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_a398ebc0",
+        "filename": "snaps/openstack/tests/openstack_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-12-29T15:31:39Z",
+      "side": 1,
+      "message": "Can you add some pydoc here and possible above to explain what the parameter \u0027network_config\u0027 really does? Albeit not a show-stopper, but I am now thinking that the name is a bit confusing and you may want to consider renaming it something like \u0027config_override\u0027 or something like that",
+      "revId": "1e396eb10ef0dcc6d1e8af488ae5e6a390676860",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_e31b1371",
         "filename": "snaps/openstack/tests/openstack_tests.py",
         "patchSetId": 3
@@ -13,6 +47,30 @@
       "writtenOn": "2017-12-29T09:48:15Z",
       "side": 1,
       "message": "@Steven, is it what you mean?",
+      "range": {
+        "startLine": 342,
+        "startChar": 0,
+        "endLine": 353,
+        "endChar": 44
+      },
+      "revId": "1e396eb10ef0dcc6d1e8af488ae5e6a390676860",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_4380ff45",
+        "filename": "snaps/openstack/tests/openstack_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2017-12-29T15:31:39Z",
+      "side": 1,
+      "message": "Yes, I believe that should do the trick, but you will still need that else clause without the SubnetConfig after the first if.",
+      "parentUuid": "9a3d3df0_e31b1371",
       "range": {
         "startLine": 342,
         "startChar": 0,
