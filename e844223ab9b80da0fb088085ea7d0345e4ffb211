@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_197ca4eb",
+        "filename": "snaps/openstack/tests/create_instance_tests.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-01-02T14:41:15Z",
+      "side": 1,
+      "message": "Else clause should not be necessary",
+      "revId": "e844223ab9b80da0fb088085ea7d0345e4ffb211",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
