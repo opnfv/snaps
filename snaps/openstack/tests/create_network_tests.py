@@ -366,7 +366,8 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.net_config = openstack_tests.get_pub_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
-            router_name=guid + '-pub-router', external_net=self.ext_net_name)
+            router_name=guid + '-pub-router', external_net=self.ext_net_name,
+            netconf_override=self.netconf_override)
 
         self.neutron = neutron_utils.neutron_client(self.os_creds)
 

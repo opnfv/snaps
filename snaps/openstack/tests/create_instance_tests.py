@@ -426,7 +426,8 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
 
         net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
-            router_name=guid + '-pub-router', external_net=self.ext_net_name)
+            router_name=guid + '-pub-router', external_net=self.ext_net_name,
+            netconf_override=self.netconf_override)
 
         # Initialize for tearDown()
         self.image_creator = None
@@ -560,7 +561,8 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
 
         self.pub_net_config = openstack_tests.get_pub_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
-            router_name=guid + '-pub-router', external_net=self.ext_net_name)
+            router_name=guid + '-pub-router', external_net=self.ext_net_name,
+            netconf_override=self.netconf_override)
         os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
         try:
@@ -1201,7 +1203,8 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
 
         self.net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
-            router_name=guid + '-pub-router', external_net=self.ext_net_name)
+            router_name=guid + '-pub-router', external_net=self.ext_net_name,
+            netconf_override=self.netconf_override)
         os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
 
@@ -1498,7 +1501,8 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
         self.inst_creators = list()
 
         self.priv_net_config = openstack_tests.get_priv_net_config(
-            net_name=guid + '-priv-net', subnet_name=guid + '-priv-subnet')
+            net_name=guid + '-priv-net', subnet_name=guid + '-priv-subnet',
+            netconf_override=self.netconf_override)
 
         os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
@@ -1630,7 +1634,8 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
             net_name=self.guid + '-pub-net',
             subnet_name=self.guid + '-pub-subnet',
             router_name=self.guid + '-pub-router',
-            external_net=self.ext_net_name)
+            external_net=self.ext_net_name,
+            netconf_override=self.netconf_override)
 
         # Initialize for tearDown()
         self.image_creator = None
@@ -1951,7 +1956,8 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
 
         net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
-            router_name=guid + '-pub-router', external_net=self.ext_net_name)
+            router_name=guid + '-pub-router', external_net=self.ext_net_name,
+            netconf_override=self.netconf_override)
 
         # Initialize for tearDown()
         self.image_creator = None
@@ -2807,7 +2813,8 @@ class CreateInstanceVolumeTests(OSIntegrationTestCase):
 
         net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
-            router_name=guid + '-pub-router', external_net=self.ext_net_name)
+            router_name=guid + '-pub-router', external_net=self.ext_net_name,
+            netconf_override=self.netconf_override)
 
         self.volume_settings1 = VolumeConfig(
             name=self.__class__.__name__ + '-' + str(guid) + '-1')
