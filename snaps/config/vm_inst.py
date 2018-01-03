@@ -32,12 +32,14 @@ class VmInstanceConfig(object):
         :param sudo_user: the sudo user of the VM that will override the
                           instance_settings.image_user when trying to
                           connect to the VM
-        :param vm_boot_timeout: the amount of time a thread will sleep waiting
+        :param vm_boot_timeout: the amount of time a thread will wait
                                 for an instance to boot
-        :param vm_delete_timeout: the amount of time a thread will sleep
-                                  waiting for an instance to be deleted
-        :param ssh_connect_timeout: the amount of time a thread will sleep
-                                    waiting obtaining an SSH connection to a VM
+        :param vm_delete_timeout: the amount of time a thread will wait
+                                  for an instance to be deleted
+        :param ssh_connect_timeout: the amount of time a thread will wait
+                                    to obtain an SSH connection to a VM
+        :param cloud_init_timeout: the amount of time a thread will wait for
+                                   cloud-init to complete
         :param availability_zone: the name of the compute server on which to
                                   deploy the VM (optional)
         :param volume_names: a list of the names of the volume to attach
@@ -93,6 +95,7 @@ class VmInstanceConfig(object):
         self.vm_boot_timeout = kwargs.get('vm_boot_timeout', 900)
         self.vm_delete_timeout = kwargs.get('vm_delete_timeout', 300)
         self.ssh_connect_timeout = kwargs.get('ssh_connect_timeout', 180)
+        self.cloud_init_timeout = kwargs.get('cloud_init_timeout', 300)
         self.availability_zone = kwargs.get('availability_zone')
         self.volume_names = kwargs.get('volume_names')
 

@@ -32,7 +32,6 @@ logger = logging.getLogger('create_instance')
 POLL_INTERVAL = 3
 STATUS_ACTIVE = 'ACTIVE'
 STATUS_DELETED = 'DELETED'
-CLOUD_INIT_TIMEOUT = 120
 
 
 class OpenStackVmInstance(OpenStackComputeObject):
@@ -680,7 +679,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
         # sleep and wait for VM status change
         logger.info('Checking if cloud-init has completed')
 
-        timeout = CLOUD_INIT_TIMEOUT
+        timeout = self.instance_settings.cloud_init_timeout
 
         if self.vm_active(block=True) and self.vm_ssh_active(block=True):
             if block:

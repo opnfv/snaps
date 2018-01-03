@@ -64,6 +64,7 @@ class VmInstanceConfigUnitTests(unittest.TestCase):
         self.assertEqual(900, settings.vm_boot_timeout)
         self.assertEqual(300, settings.vm_delete_timeout)
         self.assertEqual(180, settings.ssh_connect_timeout)
+        self.assertEqual(300, settings.cloud_init_timeout)
         self.assertIsNone(settings.availability_zone)
         self.assertIsNone(settings.volume_names)
 
@@ -82,6 +83,7 @@ class VmInstanceConfigUnitTests(unittest.TestCase):
         self.assertEqual(900, settings.vm_boot_timeout)
         self.assertEqual(300, settings.vm_delete_timeout)
         self.assertEqual(180, settings.ssh_connect_timeout)
+        self.assertEqual(300, settings.cloud_init_timeout)
         self.assertIsNone(settings.availability_zone)
         self.assertIsNone(settings.volume_names)
 
@@ -95,8 +97,8 @@ class VmInstanceConfigUnitTests(unittest.TestCase):
             security_group_names=['sec_grp_1'],
             floating_ip_settings=[fip_settings], sudo_user='joe',
             vm_boot_timeout=999, vm_delete_timeout=333,
-            ssh_connect_timeout=111, availability_zone='server name',
-            volume_names=['vol1'])
+            ssh_connect_timeout=111, cloud_init_timeout=998,
+            availability_zone='server name', volume_names=['vol1'])
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.flavor)
         self.assertEqual(1, len(settings.port_settings))
@@ -114,6 +116,7 @@ class VmInstanceConfigUnitTests(unittest.TestCase):
         self.assertEqual(999, settings.vm_boot_timeout)
         self.assertEqual(333, settings.vm_delete_timeout)
         self.assertEqual(111, settings.ssh_connect_timeout)
+        self.assertEqual(998, settings.cloud_init_timeout)
         self.assertEqual('server name', settings.availability_zone)
         self.assertEqual('vol1', settings.volume_names[0])
 
@@ -127,8 +130,8 @@ class VmInstanceConfigUnitTests(unittest.TestCase):
                'security_group_names': ['sec_grp_1'],
                'floating_ips': [fip_settings], 'sudo_user': 'joe',
                'vm_boot_timeout': 999, 'vm_delete_timeout': 333,
-               'ssh_connect_timeout': 111, 'availability_zone': 'server name',
-               'volume_names': ['vol2']})
+               'ssh_connect_timeout': 111, 'cloud_init_timeout': 998,
+               'availability_zone': 'server name', 'volume_names': ['vol2']})
         self.assertEqual('foo', settings.name)
         self.assertEqual('bar', settings.flavor)
         self.assertEqual(1, len(settings.port_settings))
@@ -145,6 +148,7 @@ class VmInstanceConfigUnitTests(unittest.TestCase):
         self.assertEqual(999, settings.vm_boot_timeout)
         self.assertEqual(333, settings.vm_delete_timeout)
         self.assertEqual(111, settings.ssh_connect_timeout)
+        self.assertEqual(998, settings.cloud_init_timeout)
         self.assertEqual('server name', settings.availability_zone)
         self.assertEqual('vol2', settings.volume_names[0])
 
