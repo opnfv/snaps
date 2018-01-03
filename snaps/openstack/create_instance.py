@@ -15,7 +15,6 @@
 import logging
 import time
 
-from neutronclient.common.exceptions import PortNotFoundClient
 from novaclient.exceptions import NotFound, BadRequest
 
 from snaps.config.vm_inst import VmInstanceConfig, FloatingIpConfig
@@ -33,6 +32,7 @@ logger = logging.getLogger('create_instance')
 POLL_INTERVAL = 3
 STATUS_ACTIVE = 'ACTIVE'
 STATUS_DELETED = 'DELETED'
+CLOUD_INIT_TIMEOUT = 120
 
 
 class OpenStackVmInstance(OpenStackComputeObject):
@@ -255,19 +255,25 @@ class OpenStackVmInstance(OpenStackComputeObject):
 
         # Cleanup floating IPs
         for name, floating_ip in self.__floating_ip_dict.items():
-            try:
-                logger.info('Deleting Floating IP - ' + floating_ip.ip)
-                neutron_utils.delete_floating_ip(self.__neutron, floating_ip)
-            except Exception as e:
-                logger.error('Error deleting Floating IP - ' + str(e))
+            logger.info('Deleting Floating IP - ' + floating_ip.ip)
+            neutron_utils.delete_floating_ip(self.__neutron, floating_ip)
+
         self.__floating_ip_dict = dict()
 
-        # Detach Volume
-        for volume_rec in self.__vm.volume_ids:
-            cinder = cinder_utils.cinder_client(self._os_creds)
-            volume = cinder_utils.get_volume_by_id(cinder, volume_rec['id'])
-            if volume:
-                try:
+        # Cleanup ports
+        for name, port in self.__ports:
+            logger.info('Deleting Port with ID - %s ', port.id)
+            neutron_utils.delete_port(self.__neutron, port)
+
+        self.__ports = list()
+
+        if self.__vm:
+            # Detach Volume
+            for volume_rec in self.__vm.volume_ids:
+                cinder = cinder_utils.cinder_client(self._os_creds)
+                volume = cinder_utils.get_volume_by_id(
+                    cinder, volume_rec['id'])
+                if volume:
                     vm = nova_utils.detach_volume(
                         self._nova, self.__neutron, self.__vm, volume, 30)
                     if vm:
@@ -275,50 +281,32 @@ class OpenStackVmInstance(OpenStackComputeObject):
                     else:
                         logger.warn(
                             'Timeout waiting to detach volume %s', volume.name)
-                except Exception as e:
-                    logger.error('Unexpected error detaching volume %s '
-                                 'with error %s', volume.name, e)
-            else:
-                logger.warn('Unable to detach volume with ID - [%s]',
-                            volume_rec['id'])
+                else:
+                    logger.warn('Unable to detach volume with ID - [%s]',
+                                volume_rec['id'])
 
-        # Cleanup ports
-        for name, port in self.__ports:
-            logger.info('Deleting Port with ID - %s ', port.id)
-            try:
-                neutron_utils.delete_port(self.__neutron, port)
-            except PortNotFoundClient as e:
-                logger.warning('Unexpected error deleting port - %s', e)
-                pass
-        self.__ports = list()
+            # Cleanup VM
+            logger.info(
+                'Deleting VM instance - ' + self.instance_settings.name)
 
-        # Cleanup VM
-        if self.__vm:
             try:
-                logger.info(
-                    'Deleting VM instance - ' + self.instance_settings.name)
                 nova_utils.delete_vm_instance(self._nova, self.__vm)
-            except Exception as e:
-                logger.error('Error deleting VM - %s', e)
+            except NotFound as e:
+                logger.warn('Instance already deleted - %s', e)
 
             # Block until instance cannot be found or returns the status of
             # DELETED
             logger.info('Checking deletion status')
 
-            try:
-                if self.vm_deleted(block=True):
-                    logger.info(
-                        'VM has been properly deleted VM with name - %s',
-                        self.instance_settings.name)
-                    self.__vm = None
-                else:
-                    logger.error(
-                        'VM not deleted within the timeout period of %s '
-                        'seconds', self.instance_settings.vm_delete_timeout)
-            except Exception as e:
+            if self.vm_deleted(block=True):
+                logger.info(
+                    'VM has been properly deleted VM with name - %s',
+                    self.instance_settings.name)
+                self.__vm = None
+            else:
                 logger.error(
-                    'Unexpected error while checking VM instance status - %s',
-                    e)
+                    'VM not deleted within the timeout period of %s '
+                    'seconds', self.instance_settings.vm_delete_timeout)
 
     def __query_ports(self, port_settings):
         """
@@ -489,25 +477,6 @@ class OpenStackVmInstance(OpenStackComputeObject):
         """
         return nova_utils.get_server_info(self._nova, self.__vm)
 
-    def config_nics(self):
-        """
-        Responsible for configuring NICs on RPM systems where the instance has
-        more than one configured port
-        :return: the value returned by ansible_utils.apply_ansible_playbook()
-        """
-        if len(self.__ports) > 1 and len(self.__floating_ip_dict) > 0:
-            if self.vm_active(block=True) and self.vm_ssh_active(block=True):
-                for key, port in self.__ports:
-                    port_index = self.__ports.index((key, port))
-                    if port_index > 0:
-                        nic_name = 'eth' + repr(port_index)
-                        retval = self.__config_nic(
-                            nic_name, port,
-                            self.__get_first_provisioning_floating_ip().ip)
-                        logger.info('Configured NIC - %s on VM - %s',
-                                    nic_name, self.instance_settings.name)
-                        return retval
-
     def __get_first_provisioning_floating_ip(self):
         """
         Returns the first floating IP tagged with the Floating IP name if
@@ -527,31 +496,6 @@ class OpenStackVmInstance(OpenStackComputeObject):
         if len(self.__floating_ip_dict) > 0:
             for key, fip in self.__floating_ip_dict.items():
                 return fip
-
-    def __config_nic(self, nic_name, port, ip):
-        """
-        Although ports/NICs can contain multiple IPs, this code currently only
-        supports the first.
-
-        :param nic_name: Name of the interface
-        :param port: The port information containing the expected IP values.
-        :param ip: The IP on which to apply the playbook.
-        :return: the return value from ansible
-        """
-        port_ip = port.ips[0]['ip_address']
-        variables = {
-            'floating_ip': ip,
-            'nic_name': nic_name,
-            'nic_ip': port_ip
-        }
-
-        if self.image_settings.nic_config_pb_loc and self.keypair_settings:
-            return self.apply_ansible_playbook(
-                self.image_settings.nic_config_pb_loc, variables)
-        else:
-            logger.warning(
-                'VM %s cannot self configure NICs eth1++. No playbook or '
-                'keypairs found.', self.instance_settings.name)
 
     def apply_ansible_playbook(self, pb_file_loc, variables=None,
                                fip_name=None):
@@ -720,6 +664,56 @@ class OpenStackVmInstance(OpenStackComputeObject):
             if ssh:
                 ssh.close()
                 return True
+        return False
+
+    def cloud_init_complete(self, block=False, poll_interval=POLL_INTERVAL):
+        """
+        Returns true when the VM's cloud-init routine has completed.
+        Note: this is currently done via SSH, therefore, if this instance does
+              not have a Floating IP or a running SSH server, this routine
+              will always return False or raise an Exception
+        :param block: When true, thread will block until active or timeout
+                      value in seconds has been exceeded (False)
+        :param poll_interval: The polling interval
+        :return: T/F
+        """
+        # sleep and wait for VM status change
+        logger.info('Checking if cloud-init has completed')
+
+        timeout = CLOUD_INIT_TIMEOUT
+
+        if self.vm_active(block=True) and self.vm_ssh_active(block=True):
+            if block:
+                start = time.time()
+            else:
+                start = time.time() - timeout
+
+            while timeout > time.time() - start:
+                status = self.__cloud_init_complete()
+                if status:
+                    logger.info('cloud-init complete for VM instance')
+                    return True
+
+                logger.debug('Retry cloud-init query in ' + str(
+                    poll_interval) + ' seconds')
+                time.sleep(poll_interval)
+                logger.debug('cloud-init complete timeout in ' + str(
+                    timeout - (time.time() - start)))
+
+        logger.error('Timeout waiting for cloud-init to complete')
+        return False
+
+    def __cloud_init_complete(self):
+        """
+        Returns True when can create a SSH session else False
+        :return: T/F
+        """
+        if len(self.__floating_ip_dict) > 0:
+            ssh = self.ssh_client()
+            if ssh:
+                stdin1, stdout1, sterr1 = ssh.exec_command(
+                    'ls -l /var/lib/cloud/instance/boot-finished')
+                return stdout1.channel.recv_exit_status() == 0
         return False
 
     def get_floating_ip(self, fip_name=None):

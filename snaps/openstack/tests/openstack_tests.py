@@ -271,15 +271,12 @@ def centos_image_settings(name, url=None, image_metadata=None,
     else:
         metadata = image_metadata
 
-    pb_path = pkg_resources.resource_filename(
-        'snaps.provisioning.ansible_pb.centos-network-setup.playbooks',
-        'configure_host.yml')
     return create_image_settings(
         image_name=name, image_user=CENTOS_USER,
         image_format=DEFAULT_IMAGE_FORMAT, metadata=metadata, disk_url=url,
         default_url=CENTOS_DEFAULT_IMAGE_URL,
         kernel_settings=kernel_settings, ramdisk_settings=ramdisk_settings,
-        public=public, nic_config_pb_loc=pb_path)
+        public=public)
 
 
 def ubuntu_image_settings(name, url=None, image_metadata=None,
@@ -304,15 +301,12 @@ def ubuntu_image_settings(name, url=None, image_metadata=None,
     else:
         metadata = image_metadata
 
-    pb_path = pkg_resources.resource_filename(
-        'snaps.provisioning.ansible_pb.ubuntu-network-setup.playbooks',
-        'configure_host.yml')
     return create_image_settings(
         image_name=name, image_user=UBUNTU_USER,
         image_format=DEFAULT_IMAGE_FORMAT, metadata=metadata, disk_url=url,
         default_url=UBUNTU_DEFAULT_IMAGE_URL,
         kernel_settings=kernel_settings, ramdisk_settings=ramdisk_settings,
-        public=public, nic_config_pb_loc=pb_path)
+        public=public)
 
 
 def get_priv_net_config(net_name, subnet_name, router_name=None,

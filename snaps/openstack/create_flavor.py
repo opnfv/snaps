@@ -71,8 +71,6 @@ class OpenStackFlavor(OpenStackComputeObject):
             if self.flavor_settings.metadata:
                 nova_utils.set_flavor_keys(self._nova, self.__flavor,
                                            self.flavor_settings.metadata)
-        else:
-            logger.info('Did not create flavor due to cleanup mode')
 
         return self.__flavor
 

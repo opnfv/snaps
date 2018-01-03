@@ -57,6 +57,7 @@ class OpenStackImage(OpenStackCloudObject):
         self.__glance = glance_utils.glance_client(self._os_creds)
         self.__image = glance_utils.get_image(
             self.__glance, image_settings=self.image_settings)
+
         if self.__image:
             logger.info('Found image with name - ' + self.image_settings.name)
             return self.__image
@@ -70,6 +71,7 @@ class OpenStackImage(OpenStackCloudObject):
             self.__kernel_image = glance_utils.get_image(
                 self.__glance,
                 image_settings=self.image_settings.kernel_image_settings)
+
         if self.image_settings.ramdisk_image_settings:
             self.__ramdisk_image = glance_utils.get_image(
                 self.__glance,
@@ -97,6 +99,7 @@ class OpenStackImage(OpenStackCloudObject):
                         self.__glance,
                         self.image_settings.kernel_image_settings)
                 extra_properties['kernel_id'] = self.__kernel_image.id
+
             if self.image_settings.ramdisk_image_settings:
                 if not self.__ramdisk_image:
                     logger.info(
@@ -113,6 +116,7 @@ class OpenStackImage(OpenStackCloudObject):
 
             logger.info(
                 'Created image with name - %s', self.image_settings.name)
+
             if self.__image and self.image_active(block=True):
                 logger.info(
                     'Image is now active with name - %s',
@@ -122,8 +126,6 @@ class OpenStackImage(OpenStackCloudObject):
                 raise ImageCreationError(
                     'Image was not created or activated in the alloted amount'
                     'of time')
-        else:
-            logger.info('Did not create image due to cleanup mode')
 
         return self.__image
 

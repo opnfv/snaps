@@ -606,16 +606,6 @@ create_instance_tests.py - CreateInstanceFromThreePartImage
 |                                                     | Neutron 2     | delete it when using a 3-part image                       |
 +-----------------------------------------------------+---------------+-----------------------------------------------------------+
 
-create_instance_tests.py - CreateInstancePubPrivNetTests (Staging)
-------------------------------------------------------------------
-
-+---------------------------------------+---------------+-----------------------------------------------------------+
-| Test Name                             | API Versions  | Description                                               |
-+=======================================+===============+===========================================================+
-| test_dual_ports_dhcp                  | Nova 2        | Ensures that a VM with two ports/NICs can have its second |
-|                                       | Neutron 2     | NIC configured via SSH/Ansible after startup              |
-+---------------------------------------+---------------+-----------------------------------------------------------+
-
 create_instance_tests.py - CreateInstanceIPv6NetworkTests (Staging)
 -------------------------------------------------------------------
 
