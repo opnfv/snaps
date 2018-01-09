@@ -117,6 +117,9 @@ def create_stack(heat_cli, stack_settings):
     if stack_settings.env_values:
         args['parameters'] = stack_settings.env_values
 
+    if stack_settings.files:
+        args['files'] = stack_settings.files
+
     stack = heat_cli.stacks.create(**args)
 
     return get_stack_by_id(heat_cli, stack_id=stack['stack']['id'])

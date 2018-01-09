@@ -37,12 +37,18 @@ class StackConfig(object):
                               if template attribute is None)
         :param env_values: dict() of strings for substitution of template
                            default values (optional)
+        :param files: Supplies the contents of files referenced in the template
+                      or the environment. This object must be a dict() of
+                      strings where the key is the file URI or filename and the
+                      value contains the file's contents (optional)
         """
 
         self.name = kwargs.get('name')
         self.template = kwargs.get('template')
         self.template_path = kwargs.get('template_path')
         self.env_values = kwargs.get('env_values')
+        self.files = kwargs.get('files')
+
         if 'stack_create_timeout' in kwargs:
             self.stack_create_timeout = kwargs['stack_create_timeout']
         else:
