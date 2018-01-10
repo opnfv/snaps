@@ -499,7 +499,8 @@ def get_port(neutron, port_settings=None, port_name=None):
         if port_settings.network_name:
             network = get_network(neutron,
                                   network_name=port_settings.network_name)
-            port_filter['network_id'] = network.id
+            if network:
+                port_filter['network_id'] = network.id
     elif port_name:
         port_filter['name'] = port_name
 

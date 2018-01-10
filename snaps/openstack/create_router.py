@@ -64,20 +64,21 @@ class OpenStackRouter(OpenStackNetworkObject):
         self.__router = neutron_utils.get_router(
             self._neutron, router_settings=self.router_settings)
 
-        for internal_subnet_name in self.router_settings.internal_subnets:
-            internal_subnet = neutron_utils.get_subnet(
-                self._neutron, subnet_name=internal_subnet_name)
-            if internal_subnet:
-                self.__internal_subnets.append(internal_subnet)
-            else:
-                raise RouterCreationError(
-                    'Subnet not found with name ' + internal_subnet_name)
+        if self.__router:
+            for internal_subnet_name in self.router_settings.internal_subnets:
+                internal_subnet = neutron_utils.get_subnet(
+                    self._neutron, subnet_name=internal_subnet_name)
+                if internal_subnet:
+                    self.__internal_subnets.append(internal_subnet)
+                else:
+                    raise RouterCreationError(
+                        'Subnet not found with name ' + internal_subnet_name)
 
-        for port_setting in self.router_settings.port_settings:
-            port = neutron_utils.get_port(
-                self._neutron, port_settings=port_setting)
-            if port:
-                self.__ports.append(port)
+            for port_setting in self.router_settings.port_settings:
+                port = neutron_utils.get_port(
+                    self._neutron, port_settings=port_setting)
+                if port:
+                    self.__ports.append(port)
 
         return self.__router
 

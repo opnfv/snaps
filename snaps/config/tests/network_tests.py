@@ -274,6 +274,7 @@ class PortConfigUnitTests(unittest.TestCase):
         self.assertIsNone(settings.mac_address)
         self.assertIsNone(settings.ip_addrs)
         self.assertIsNone(settings.security_groups)
+        self.assertIsNone(settings.port_security_enabled)
         self.assertIsNone(settings.allowed_address_pairs)
         self.assertIsNone(settings.opt_value)
         self.assertIsNone(settings.opt_name)
@@ -287,7 +288,7 @@ class PortConfigUnitTests(unittest.TestCase):
         settings = PortConfig(
             name='foo', network_name='bar', admin_state_up=False,
             project_name='foo-project', mac_address='1234', ip_addrs=ip_addrs,
-            security_groups=['foo_grp_id'],
+            security_groups=['foo_grp_id'], port_security_enabled=False,
             allowed_address_pairs=allowed_address_pairs, opt_value='opt value',
             opt_name='opt name', device_owner='owner',
             device_id='device number')
@@ -298,7 +299,9 @@ class PortConfigUnitTests(unittest.TestCase):
         self.assertEqual('1234', settings.mac_address)
         self.assertEqual(ip_addrs, settings.ip_addrs)
         self.assertEqual(1, len(settings.security_groups))
+        self.assertFalse(settings.port_security_enabled)
         self.assertEqual('foo_grp_id', settings.security_groups[0])
+        self.assertFalse(settings.port_security_enabled)
         self.assertEqual(allowed_address_pairs, settings.allowed_address_pairs)
         self.assertEqual('opt value', settings.opt_value)
         self.assertEqual('opt name', settings.opt_name)
@@ -313,6 +316,7 @@ class PortConfigUnitTests(unittest.TestCase):
             **{'name': 'foo', 'network_name': 'bar', 'admin_state_up': False,
                'project_name': 'foo-project', 'mac_address': '1234',
                'ip_addrs': ip_addrs, 'security_groups': ['foo_grp_id'],
+               'port_security_enabled': 'false',
                'allowed_address_pairs': allowed_address_pairs,
                'opt_value': 'opt value', 'opt_name': 'opt name',
                'device_owner': 'owner', 'device_id': 'device number'})
@@ -323,6 +327,7 @@ class PortConfigUnitTests(unittest.TestCase):
         self.assertEqual('1234', settings.mac_address)
         self.assertEqual(ip_addrs, settings.ip_addrs)
         self.assertEqual(1, len(settings.security_groups))
+        self.assertFalse(settings.port_security_enabled)
         self.assertEqual('foo_grp_id', settings.security_groups[0])
         self.assertEqual(allowed_address_pairs, settings.allowed_address_pairs)
         self.assertEqual('opt value', settings.opt_value)

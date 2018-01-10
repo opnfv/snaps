@@ -352,6 +352,9 @@ class PortConfig(object):
                          self.fixed_ips. These values will be directly
                          translated into the fixed_ips dict (optional)
         :param security_groups: One or more security group IDs.
+        :param port_security_enabled: When True, security groups will be
+                                      applied to the port else not
+                                      (default - True)
         :param allowed_address_pairs: A dictionary containing a set of zero or
                                       more allowed address pairs. An address
                                       pair contains an IP address and MAC
@@ -362,6 +365,7 @@ class PortConfig(object):
                              For example, a DHCP agent (optional)
         :param device_id: The ID of the device that uses this port.
                           For example, a virtual server (optional)
+        :param extra_dhcp_opts: k/v of options to use with your DHCP (optional)
         :return:
         """
         if 'port' in kwargs:
@@ -379,11 +383,19 @@ class PortConfig(object):
         self.mac_address = kwargs.get('mac_address')
         self.ip_addrs = kwargs.get('ip_addrs')
         self.security_groups = kwargs.get('security_groups')
+
+        if kwargs.get('port_security_enabled') is not None:
+            self.port_security_enabled = str2bool(
+                str(kwargs['port_security_enabled']))
+        else:
+            self.port_security_enabled = None
+
         self.allowed_address_pairs = kwargs.get('allowed_address_pairs')
         self.opt_value = kwargs.get('opt_value')
         self.opt_name = kwargs.get('opt_name')
         self.device_owner = kwargs.get('device_owner')
         self.device_id = kwargs.get('device_id')
+        self.extra_dhcp_opts = kwargs.get('extra_dhcp_opts')
 
         if not self.network_name:
             raise PortConfigError(
@@ -461,7 +473,15 @@ class PortConfig(object):
             out['fixed_ips'] = fixed_ips
 
         if self.security_groups:
-            out['security_groups'] = self.security_groups
+            sec_grp_ids = list()
+            for sec_grp_name in self.security_groups:
+                sec_grp = neutron_utils.get_security_group(
+                    neutron, sec_grp_name=sec_grp_name)
+                if sec_grp:
+                    sec_grp_ids.append(sec_grp.id)
+            out['security_groups'] = sec_grp_ids
+        if self.port_security_enabled is not None:
+            out['port_security_enabled'] = self.port_security_enabled
         if self.allowed_address_pairs and len(self.allowed_address_pairs) > 0:
             out['allowed_address_pairs'] = self.allowed_address_pairs
         if self.opt_value:
@@ -472,6 +492,8 @@ class PortConfig(object):
             out['device_owner'] = self.device_owner
         if self.device_id:
             out['device_id'] = self.device_id
+        if self.extra_dhcp_opts:
+            out['extra_dhcp_opts'] = self.extra_dhcp_opts
         return {'port': out}
 
     def __eq__(self, other):
