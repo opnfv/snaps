@@ -1,0 +1,110 @@
+##############################################################################
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+##############################################################################
+heat_template_version: 2013-05-23
+
+parameters:
+  flavor:
+    type: string
+    default: test
+  image:
+    type: string
+    default: 'Ubuntu 16.04'
+  key_name:
+    type: string
+    default: test_key
+  username:
+    type: string
+    default: test_user
+  open_security_group:
+    type: string
+  volume_size:
+    type: number
+    description: Size of the volume to be created.
+    default: 1
+    constraints:
+      - range: { min: 1, max: 1024 }
+        description: must be between 1 and 1024 Gb.
+  agent_network:
+    type: string
+    constraints:
+        - custom_constraint: neutron.network
+  public_network:
+    type: string
+    constraints:
+        - custom_constraint: neutron.network
+  availability_zone:
+    type: string
+    default: nova
+
+resources:
+  agent:
+    type: "OS::Nova::Server"
+    properties:
+      name: agent
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      networks:
+        - port: { get_resource: agent_port }
+      user_data: { get_resource: agent_config }
+      user_data_format: RAW
+      availability_zone: { get_param: availability_zone}
+
+  agent_config:
+    type: "OS::Heat::CloudConfig"
+    properties:
+      cloud_config:
+        users:
+        - name: { get_param: username }
+          groups: users
+          shell: /bin/bash
+          sudo: "ALL=(ALL) NOPASSWD:ALL"
+          ssh_authorized_keys:
+          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDEbnDiqZ8RjQJJzJPf074J41XlYED+zYBzaUZ5UkkUquXzymyUmoWaFBXJP+XPu4Ns44U/S8614+JxGk96tjUdJlIjL0Ag8HP6KLtTNCabucKcEASpgJIVWqJvE3E9upZLIEiTGsF8I8S67T2qq1J1uvtxyeZmyjm7NMamjyFXE53dhR2EHqSutyKK1CK74NkRY9wr3qWUIt35kLdKSVSfrr4gOOicDALbIRu77skHIvrjt+wK1VWphBdMg6ytuq5mIE6pjWAU3Gwl4aTxOU0z43ARzCLq8HVf8s/dKjYMj8plNqaIfceMbaEUqpNHv/xbvtGNG7N0aB/a4pkUQL07
+        - default
+        package_update: false
+        package_upgrade: false
+        manage_etc_hosts: localhost
+
+  agent_port:
+    type: "OS::Neutron::Port"
+    properties:
+      network_id: { get_param: agent_network }
+      security_groups:
+        - { get_param: open_security_group }
+
+  floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public_network }
+      port_id: { get_resource: agent_port }
+
+  agent_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: volume_size }
+
+  agent_volume_att:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      instance_uuid: { get_resource: agent }
+      volume_id: { get_resource: agent_volume}
+
+outputs:
+  agent_ip:
+    description: The floating IP address of the agent on the public network
+    value: { get_attr: [ floating_ip, floating_ip_address ] }

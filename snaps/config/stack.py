@@ -35,19 +35,17 @@ class StackConfig(object):
                          template_path attribute is None)
         :param template_path: the location of the heat template file (required
                               if template attribute is None)
+        :param resource_files: List of file paths to the resources referred to
+                               by the template
         :param env_values: dict() of strings for substitution of template
                            default values (optional)
-        :param files: Supplies the contents of files referenced in the template
-                      or the environment. This object must be a dict() of
-                      strings where the key is the file URI or filename and the
-                      value contains the file's contents (optional)
         """
 
         self.name = kwargs.get('name')
         self.template = kwargs.get('template')
         self.template_path = kwargs.get('template_path')
+        self.resource_files = kwargs.get('resource_files')
         self.env_values = kwargs.get('env_values')
-        self.files = kwargs.get('files')
 
         if 'stack_create_timeout' in kwargs:
             self.stack_create_timeout = kwargs['stack_create_timeout']
@@ -59,6 +57,10 @@ class StackConfig(object):
 
         if not self.template and not self.template_path:
             raise StackConfigError('A Heat template is required')
+
+        if self.resource_files and not isinstance(self.resource_files, list):
+            raise StackConfigError(
+                'resource_files must be a list when not None')
 
     def __eq__(self, other):
         return (self.name == other.name and
