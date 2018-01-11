@@ -467,7 +467,8 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
             return False
 
         if fail_status and status == fail_status:
-            resources = heat_utils.get_resources(self.__heat_cli, self.__stack)
+            resources = heat_utils.get_resources(
+                self.__heat_cli, self.__stack.id)
             logger.error('Stack %s failed', self.__stack.name)
             for resource in resources:
                 if (resource.status !=

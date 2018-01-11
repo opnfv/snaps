@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import os
 
 import yaml
 from heatclient.client import Client
@@ -117,8 +118,15 @@ def create_stack(heat_cli, stack_settings):
     if stack_settings.env_values:
         args['parameters'] = stack_settings.env_values
 
-    if stack_settings.files:
-        args['files'] = stack_settings.files
+    if stack_settings.resource_files:
+        resources = dict()
+        for res_file in stack_settings.resource_files:
+            heat_resource_contents = file_utils.read_file(res_file)
+            base_filename = os.path.basename(res_file)
+
+            if heat_resource_contents and base_filename:
+                resources[base_filename] = heat_resource_contents
+        args['files'] = resources
 
     stack = heat_cli.stacks.create(**args)
 
@@ -134,25 +142,25 @@ def delete_stack(heat_cli, stack):
     heat_cli.stacks.delete(stack.id)
 
 
-def __get_os_resources(heat_cli, stack):
+def __get_os_resources(heat_cli, res_id):
     """
     Returns all of the OpenStack resource objects for a given stack
     :param heat_cli: the OpenStack heat client
-    :param stack: the SNAPS-OO Stack domain object
+    :param res_id: the resource ID
     :return: a list
     """
-    return heat_cli.resources.list(stack.id)
+    return heat_cli.resources.list(res_id)
 
 
-def get_resources(heat_cli, stack, res_type=None):
+def get_resources(heat_cli, res_id, res_type=None):
     """
     Returns all of the OpenStack resource objects for a given stack
     :param heat_cli: the OpenStack heat client
-    :param stack: the SNAPS-OO Stack domain object
+    :param res_id: the SNAPS-OO Stack domain object
     :param res_type: the type name to filter
     :return: a list of Resource domain objects
     """
-    os_resources = __get_os_resources(heat_cli, stack)
+    os_resources = __get_os_resources(heat_cli, res_id)
 
     if os_resources:
         out = list()
@@ -201,7 +209,7 @@ def get_stack_networks(heat_cli, neutron, stack):
     """
 
     out = list()
-    resources = get_resources(heat_cli, stack, 'OS::Neutron::Net')
+    resources = get_resources(heat_cli, stack.id, 'OS::Neutron::Net')
     for resource in resources:
         network = neutron_utils.get_network_by_id(neutron, resource.id)
         if network:
@@ -220,7 +228,7 @@ def get_stack_routers(heat_cli, neutron, stack):
     """
 
     out = list()
-    resources = get_resources(heat_cli, stack, 'OS::Neutron::Router')
+    resources = get_resources(heat_cli, stack.id, 'OS::Neutron::Router')
     for resource in resources:
         router = neutron_utils.get_router_by_id(neutron, resource.id)
         if router:
@@ -239,7 +247,7 @@ def get_stack_security_groups(heat_cli, neutron, stack):
     """
 
     out = list()
-    resources = get_resources(heat_cli, stack, 'OS::Neutron::SecurityGroup')
+    resources = get_resources(heat_cli, stack.id, 'OS::Neutron::SecurityGroup')
     for resource in resources:
         security_group = neutron_utils.get_security_group_by_id(
             neutron, resource.id)
@@ -260,8 +268,8 @@ def get_stack_servers(heat_cli, nova, neutron, stack):
     """
 
     out = list()
-    resources = get_resources(heat_cli, stack, 'OS::Nova::Server')
-    for resource in resources:
+    srvr_res = get_resources(heat_cli, stack.id, 'OS::Nova::Server')
+    for resource in srvr_res:
         try:
             server = nova_utils.get_server_object_by_id(
                 nova, neutron, resource.id)
@@ -269,6 +277,18 @@ def get_stack_servers(heat_cli, nova, neutron, stack):
                 out.append(server)
         except NotFound:
             logger.warn('VmInst cannot be located with ID %s', resource.id)
+
+    res_grps = get_resources(heat_cli, stack.id, 'OS::Heat::ResourceGroup')
+    for res_grp in res_grps:
+        res_ress = get_resources(heat_cli, res_grp.id)
+        for res_res in res_ress:
+            res_res_srvrs = get_resources(
+                heat_cli, res_res.id, 'OS::Nova::Server')
+            for res_srvr in res_res_srvrs:
+                server = nova_utils.get_server_object_by_id(
+                    nova, neutron, res_srvr.id)
+                if server:
+                    out.append(server)
 
     return out
 
@@ -283,7 +303,7 @@ def get_stack_keypairs(heat_cli, nova, stack):
     """
 
     out = list()
-    resources = get_resources(heat_cli, stack, 'OS::Nova::KeyPair')
+    resources = get_resources(heat_cli, stack.id, 'OS::Nova::KeyPair')
     for resource in resources:
         try:
             keypair = nova_utils.get_keypair_by_id(nova, resource.id)
@@ -305,7 +325,7 @@ def get_stack_volumes(heat_cli, cinder, stack):
     """
 
     out = list()
-    resources = get_resources(heat_cli, stack, 'OS::Cinder::Volume')
+    resources = get_resources(heat_cli, stack.id, 'OS::Cinder::Volume')
     for resource in resources:
         try:
             server = cinder_utils.get_volume_by_id(cinder, resource.id)
@@ -327,7 +347,7 @@ def get_stack_volume_types(heat_cli, cinder, stack):
     """
 
     out = list()
-    resources = get_resources(heat_cli, stack, 'OS::Cinder::VolumeType')
+    resources = get_resources(heat_cli, stack.id, 'OS::Cinder::VolumeType')
     for resource in resources:
         try:
             vol_type = cinder_utils.get_volume_type_by_id(cinder, resource.id)
@@ -350,7 +370,7 @@ def get_stack_flavors(heat_cli, nova, stack):
     """
 
     out = list()
-    resources = get_resources(heat_cli, stack, 'OS::Nova::Flavor')
+    resources = get_resources(heat_cli, stack.id, 'OS::Nova::Flavor')
     for resource in resources:
         try:
             flavor = nova_utils.get_flavor_by_id(nova, resource.id)

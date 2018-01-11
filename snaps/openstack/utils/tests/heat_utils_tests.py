@@ -164,7 +164,7 @@ class HeatUtilsCreateSimpleStackTests(OSComponentTestCase):
                                                    self.stack1.id)
         self.assertEqual(self.stack1, stack_query_3)
 
-        resources = heat_utils.get_resources(self.heat_client, self.stack1)
+        resources = heat_utils.get_resources(self.heat_client, self.stack1.id)
         self.assertIsNotNone(resources)
         self.assertEqual(4, len(resources))
 
@@ -359,7 +359,7 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
         Tests that a heat template with floating IPs and can have the proper
         settings derived from settings_utils.py.
         """
-        resources = heat_utils.get_resources(self.heat_client, self.stack)
+        resources = heat_utils.get_resources(self.heat_client, self.stack.id)
         self.assertIsNotNone(resources)
         self.assertEqual(12, len(resources))
 
