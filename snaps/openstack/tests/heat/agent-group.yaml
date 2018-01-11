@@ -1,0 +1,117 @@
+##############################################################################
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
+#                    and others.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+##############################################################################
+heat_template_version: 2013-05-23
+
+parameters:
+  public_network:
+    type: string
+    constraints:
+        - custom_constraint: neutron.network
+  agent_flavor:
+    type: string
+  agent_image:
+    type: string
+  volume_size:
+    type: number
+    description: Size of the volume to be created.
+    default: 1
+    constraints:
+      - range: { min: 1, max: 1024 }
+        description: must be between 1 and 1024 Gb.
+  agent_count:
+    type: number
+    default: 1
+    constraints:
+      - range: { min: 1, max: 512 }
+        description: must be between 1 and 512 agents.
+  availability_zone:
+    type: string
+    default: nova
+
+resources:
+  slaves:
+    type: OS::Heat::ResourceGroup
+    depends_on: [subnet, network_router_interface,
+      open_security_group, key_pair]
+    properties:
+      count: {get_param: agent_count}
+      resource_def: {
+        type: "agent.yaml",
+        properties: {
+          public_network: {get_param: public_network},
+          agent_network: {get_resource: network},
+          flavor: {get_param: agent_flavor},
+          image: {get_param: agent_image},
+          availability_zone: {get_param: availability_zone},
+          open_security_group: {get_resource: open_security_group},
+          key_name: {get_resource: key_pair},
+          volume_size: {get_param: volume_size}
+        }
+      }
+
+  network:
+        type: OS::Neutron::Net
+        properties:
+          name: network
+
+  subnet:
+        type: OS::Neutron::Subnet
+        properties:
+          network_id: { get_resource: network }
+          cidr: 172.16.0.0/16
+          gateway_ip: 172.16.0.1
+
+  network_router:
+        type: OS::Neutron::Router
+        properties:
+          external_gateway_info:
+                network: { get_param: public_network }
+
+  network_router_interface:
+        type: OS::Neutron::RouterInterface
+        properties:
+          router_id: { get_resource: network_router }
+          subnet_id: { get_resource: subnet }
+
+  key_pair:
+    type: OS::Nova::KeyPair
+    properties:
+      save_private_key: true
+      name: agent_keypair
+
+  open_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: An open security group to allow all access to the slaves
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+
+
+
+outputs:
+  slave_ips: {
+      description: "Slave addresses",
+      value: { get_attr: [ slaves, agent_ip] }
+  }
+  private_key:
+    description: "SSH Private Key"
+    value: { get_attr: [ key_pair, private_key ]}

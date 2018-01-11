@@ -39,11 +39,16 @@ class StackConfigUnitTests(unittest.TestCase):
         with self.assertRaises(StackConfigError):
             StackConfig(**{'name': 'foo'})
 
+    def test_resource_not_list(self):
+        with self.assertRaises(StackConfigError):
+            StackConfig(**{'name': 'foo', 'resource_files': 'bar'})
+
     def test_config_minimum_template(self):
         settings = StackConfig(**{'name': 'stack', 'template': 'foo'})
         self.assertEqual('stack', settings.name)
         self.assertEqual('foo', settings.template)
         self.assertIsNone(settings.template_path)
+        self.assertIsNone(settings.resource_files)
         self.assertIsNone(settings.env_values)
         self.assertEqual(snaps.config.stack.STACK_COMPLETE_TIMEOUT,
                          settings.stack_create_timeout)
@@ -53,6 +58,7 @@ class StackConfigUnitTests(unittest.TestCase):
         self.assertEqual('stack', settings.name)
         self.assertIsNone(settings.template)
         self.assertEqual('foo', settings.template_path)
+        self.assertIsNone(settings.resource_files)
         self.assertIsNone(settings.env_values)
         self.assertEqual(snaps.config.stack.STACK_COMPLETE_TIMEOUT,
                          settings.stack_create_timeout)
@@ -62,6 +68,7 @@ class StackConfigUnitTests(unittest.TestCase):
         self.assertEqual('stack', settings.name)
         self.assertEqual('foo', settings.template)
         self.assertIsNone(settings.template_path)
+        self.assertIsNone(settings.resource_files)
         self.assertIsNone(settings.env_values)
         self.assertEqual(snaps.config.stack.STACK_COMPLETE_TIMEOUT,
                          settings.stack_create_timeout)
@@ -71,6 +78,18 @@ class StackConfigUnitTests(unittest.TestCase):
         self.assertEqual('stack', settings.name)
         self.assertEqual('foo', settings.template_path)
         self.assertIsNone(settings.template)
+        self.assertIsNone(settings.resource_files)
+        self.assertIsNone(settings.env_values)
+        self.assertEqual(snaps.config.stack.STACK_COMPLETE_TIMEOUT,
+                         settings.stack_create_timeout)
+
+    def test_resource(self):
+        settings = StackConfig(
+            name='stack', template_path='foo', resource_files=['foo', 'bar'])
+        self.assertEqual('stack', settings.name)
+        self.assertEqual('foo', settings.template_path)
+        self.assertIsNone(settings.template)
+        self.assertEqual(['foo', 'bar'], settings.resource_files)
         self.assertIsNone(settings.env_values)
         self.assertEqual(snaps.config.stack.STACK_COMPLETE_TIMEOUT,
                          settings.stack_create_timeout)

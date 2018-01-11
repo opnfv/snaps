@@ -419,6 +419,18 @@ create_stack_tests.py - CreateStackFloatingIpTests
 |                                       |               | OpenStackVmInstance                                       |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_stack_tests.py - CreateStackNestedResourceTests
+------------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             |   Heat API    | Description                                               |
++=======================================+===============+===========================================================+
+| test_nested                           | 1             | Ensures that an OpenStackHeatStack with an external       |
+|                                       |               | resource file with VMs with floating IPs can be accessed  |
+|                                       |               | in the class OpenStackVmInstance and return the associated|
+|                                       |               | initialized OpenStackVmInstance objects                   |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_stack_tests.py - CreateStackRouterTests
 ----------------------------------------------
 

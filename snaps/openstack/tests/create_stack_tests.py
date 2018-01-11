@@ -506,6 +506,112 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
                 self.assertEqual(0, len(vm_settings.floating_ip_settings))
 
 
+class CreateStackNestedResourceTests(OSIntegrationTestCase):
+    """
+    Tests to ensure that nested heat templates work
+    """
+
+    def setUp(self):
+
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+
+        self.heat_creds = self.admin_os_creds
+        self.heat_creds.project_name = self.admin_os_creds.project_name
+
+        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.stack_creator = None
+
+        self.image_creator = OpenStackImage(
+            self.heat_creds, openstack_tests.cirros_image_settings(
+                name=self.guid + '-image',
+                image_metadata=self.image_metadata))
+        self.image_creator.create()
+
+        self.flavor_creator = OpenStackFlavor(
+            self.admin_os_creds,
+            FlavorConfig(
+                name=self.guid + '-flavor-name', ram=256, disk=10, vcpus=1))
+        self.flavor_creator.create()
+
+        env_values = {
+            'public_network': self.ext_net_name,
+            'agent_image': self.image_creator.image_settings.name,
+            'agent_flavor': self.flavor_creator.flavor_settings.name,
+        }
+
+        heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'agent-group.yaml')
+        heat_resource_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'agent.yaml')
+
+        stack_settings = StackConfig(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template_path=heat_tmplt_path,
+            resource_files=[heat_resource_path],
+            env_values=env_values)
+
+        self.stack_creator = OpenStackHeatStack(
+            self.heat_creds, stack_settings,
+            [self.image_creator.image_settings])
+
+        self.vm_inst_creators = list()
+
+    def tearDown(self):
+        """
+        Cleans the stack and downloaded stack file
+        """
+        if self.stack_creator:
+            try:
+                self.stack_creator.clean()
+            except:
+                pass
+
+        if self.image_creator:
+            try:
+                self.image_creator.clean()
+            except:
+                pass
+
+        if self.flavor_creator:
+            try:
+                self.flavor_creator.clean()
+            except:
+                pass
+
+        for vm_inst_creator in self.vm_inst_creators:
+            try:
+                keypair_settings = vm_inst_creator.keypair_settings
+                if keypair_settings and keypair_settings.private_filepath:
+                    expanded_path = os.path.expanduser(
+                        keypair_settings.private_filepath)
+                    os.chmod(expanded_path, 0o755)
+                    os.remove(expanded_path)
+            except:
+                pass
+
+        super(self.__class__, self).__clean__()
+
+    def test_nested(self):
+        """
+        Tests the creation of an OpenStack stack from Heat template file and
+        the retrieval of two VM instance creators and attempt to connect via
+        SSH to the first one with a floating IP.
+        """
+        created_stack = self.stack_creator.create()
+        self.assertIsNotNone(created_stack)
+
+        self.vm_inst_creators = self.stack_creator.get_vm_inst_creators(
+            heat_keypair_option='private_key')
+        self.assertIsNotNone(self.vm_inst_creators)
+        self.assertEqual(1, len(self.vm_inst_creators))
+
+        for vm_inst_creator in self.vm_inst_creators:
+            self.assertTrue(
+                create_instance_tests.validate_ssh_client(vm_inst_creator))
+
+
 class CreateStackRouterTests(OSIntegrationTestCase):
     """
     Tests for the CreateStack class defined in create_stack.py where the
