@@ -21,6 +21,7 @@ import socket
 import struct
 
 import os
+import time
 from keystoneauth1.exceptions import Unauthorized
 
 from snaps.config.flavor import FlavorConfig
@@ -466,9 +467,19 @@ def __apply_ansible_playbook(ansible_config, os_creds, vm_dict, image_dict,
                 proxy_setting=proxy_settings)
             if retval != 0:
                 # Not a fatal type of event
-                logger.warning(
+                raise Exception(
                     'Unable to apply playbook found at location - %s',
                     ansible_config.get('playbook_location'))
+            elif ansible_config.get('post_processing'):
+                post_proc_config = ansible_config['post_processing']
+                if 'sleep' in post_proc_config:
+                    time.sleep(post_proc_config['sleep'])
+                if 'reboot' in post_proc_config:
+                    for vm_name in post_proc_config['reboot']:
+                        if vm_name in vm_dict:
+                            logger.info('Rebooting VM - %s', vm_name)
+                            vm_dict[vm_name].reboot()
+
             return retval
 
 
