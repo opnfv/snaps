@@ -468,7 +468,7 @@ def __apply_ansible_playbook(ansible_config, os_creds, vm_dict, image_dict,
             if retval != 0:
                 # Not a fatal type of event
                 raise Exception(
-                    'Unable to apply playbook found at location - %s',
+                    'Error applying playbook found at location - %s',
                     ansible_config.get('playbook_location'))
             elif ansible_config.get('post_processing'):
                 post_proc_config = ansible_config['post_processing']
