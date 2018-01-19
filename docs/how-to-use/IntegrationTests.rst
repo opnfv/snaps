@@ -144,7 +144,7 @@ create_keypairs_tests.py - CreateKeypairsCleanupTests
 | test_create_keypair_gen_files_delete_1| 2             | Ensures that new keypair files are deleted by default     |
 |                                       |               | by OpenStackKeypair#clean()                               |
 +---------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_keypair_gen_files_delete_2| 2             | Ensures that new keypair files are deleted by         |
+| test_create_keypair_gen_files_delete_2| 2             | Ensures that new keypair files are deleted by             |
 |                                       |               | OpenStackKeypair#clean() when the settings delete_on_clean|
 |                                       |               | attribute is set to True                                  |
 +---------------------------------------+---------------+-----------------------------------------------------------+
