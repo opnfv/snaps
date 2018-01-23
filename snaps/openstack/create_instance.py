@@ -380,7 +380,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
                     logger.error('Cannot add floating IP [%s]', bre)
                     raise
                 except Exception as e:
-                    logger.debug(
+                    logger.warn(
                         'Retry adding floating IP to instance. Last attempt '
                         'failed with - %s', e)
                     time.sleep(poll_interval)
@@ -509,8 +509,9 @@ class OpenStackVmInstance(OpenStackComputeObject):
         """
         return ansible_utils.apply_playbook(
             pb_file_loc, [self.get_floating_ip(fip_name=fip_name).ip],
-            self.get_image_user(), self.keypair_settings.private_filepath,
-            variables, self._os_creds.proxy_settings)
+            self.get_image_user(),
+            ssh_priv_key_file_path=self.keypair_settings.private_filepath,
+            variables=variables, proxy_setting=self._os_creds.proxy_settings)
 
     def get_image_user(self):
         """
@@ -619,7 +620,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
             status)
         return status == expected_status_code
 
-    def vm_ssh_active(self, block=False, poll_interval=POLL_INTERVAL):
+    def vm_ssh_active(self, user_override=None, password=None, block=False,
+                      timeout=None, poll_interval=POLL_INTERVAL):
         """
         Returns true when the VM can be accessed via SSH
         :param block: When true, thread will block until active or timeout
@@ -630,7 +632,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
         # sleep and wait for VM status change
         logger.info('Checking if VM is active')
 
-        timeout = self.instance_settings.ssh_connect_timeout
+        if not timeout:
+            timeout = self.instance_settings.ssh_connect_timeout
 
         if self.vm_active(block=True):
             if block:
@@ -639,7 +642,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
                 start = time.time() - timeout
 
             while timeout > time.time() - start:
-                status = self.__ssh_active()
+                status = self.__ssh_active(
+                    user_override=user_override, password=password)
                 if status:
                     logger.info('SSH is active for VM instance')
                     return True
@@ -653,13 +657,14 @@ class OpenStackVmInstance(OpenStackComputeObject):
         logger.error('Timeout attempting to connect with VM via SSH')
         return False
 
-    def __ssh_active(self):
+    def __ssh_active(self, user_override=None, password=None):
         """
         Returns True when can create a SSH session else False
         :return: T/F
         """
         if len(self.__floating_ip_dict) > 0:
-            ssh = self.ssh_client()
+            ssh = self.ssh_client(
+                user_override=user_override, password=password)
             if ssh:
                 ssh.close()
                 return True
@@ -727,19 +732,32 @@ class OpenStackVmInstance(OpenStackComputeObject):
         else:
             return self.__get_first_provisioning_floating_ip()
 
-    def ssh_client(self, fip_name=None):
+    def ssh_client(self, fip_name=None, user_override=None, password=None):
         """
         Returns an SSH client using the name or the first known floating IP if
         exists, else None
         :param fip_name: the name of the floating IP to return
+        :param user_override: the username to use instead of the default
+        :param password: the password to use instead of the private key
         :return: the SSH client or None
         """
         fip = self.get_floating_ip(fip_name)
+
+        ansible_user = self.get_image_user()
+        if user_override:
+            ansible_user = user_override
+
+        if password:
+            private_key = None
+        else:
+            private_key = self.keypair_settings.private_filepath
+
         if fip:
             return ansible_utils.ssh_client(
                 self.__get_first_provisioning_floating_ip().ip,
-                self.get_image_user(),
-                self.keypair_settings.private_filepath,
+                ansible_user,
+                private_key_filepath=private_key,
+                password=password,
                 proxy_settings=self._os_creds.proxy_settings)
         else:
             FloatingIPAllocationError(

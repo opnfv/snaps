@@ -462,7 +462,7 @@ def __apply_ansible_playbook(ansible_config, os_creds, vm_dict, image_dict,
 
             retval = ansible_utils.apply_playbook(
                 ansible_config['playbook_location'], floating_ips, remote_user,
-                private_key_filepath,
+                ssh_priv_key_file_path=private_key_filepath,
                 variables=variables,
                 proxy_setting=proxy_settings)
             if retval != 0:

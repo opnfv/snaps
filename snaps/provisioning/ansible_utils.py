@@ -32,8 +32,9 @@ __author__ = 'spisarski'
 logger = logging.getLogger('ansible_utils')
 
 
-def apply_playbook(playbook_path, hosts_inv, host_user, ssh_priv_key_file_path,
-                   variables=None, proxy_setting=None):
+def apply_playbook(playbook_path, hosts_inv, host_user,
+                   ssh_priv_key_file_path=None, password=None, variables=None,
+                   proxy_setting=None):
     """
     Executes an Ansible playbook to the given host
     :param playbook_path: the (relative) path to the Ansible playbook
@@ -41,7 +42,10 @@ def apply_playbook(playbook_path, hosts_inv, host_user, ssh_priv_key_file_path,
                       Ansible playbook
     :param host_user: A user for the host instances (must be a password-less
                       sudo user if playbook has "sudo: yes"
-    :param ssh_priv_key_file_path: the file location of the ssh key
+    :param ssh_priv_key_file_path: the file location of the ssh key. Required
+                                   if password is None
+    :param password: the file location of the ssh key. Required if
+                     ssh_priv_key_file_path is None
     :param variables: a dictionary containing any substitution variables needed
                       by the Jinga 2 templates
     :param proxy_setting: instance of os_credentials.ProxySettings class
@@ -50,10 +54,20 @@ def apply_playbook(playbook_path, hosts_inv, host_user, ssh_priv_key_file_path,
     if not os.path.isfile(playbook_path):
         raise AnsibleException('Requested playbook not found - ' + playbook_path)
 
-    pk_file_path = os.path.expanduser(ssh_priv_key_file_path)
-    if not os.path.isfile(pk_file_path):
-        raise AnsibleException('Requested private SSH key not found - ' +
-                        pk_file_path)
+    pk_file_path = None
+    if ssh_priv_key_file_path:
+        pk_file_path = os.path.expanduser(ssh_priv_key_file_path)
+        if not password:
+            if not os.path.isfile(pk_file_path):
+                raise AnsibleException('Requested private SSH key not found - ' +
+                                pk_file_path)
+
+    if not ssh_priv_key_file_path and not password:
+        raise AnsibleException('Invalid credentials, no priv key or password')
+
+    passwords = None
+    if password:
+        passwords = {'conn_pass': password, 'become_pass': password}
 
     import ansible.constants
     ansible.constants.HOST_KEY_CHECKING = False
@@ -93,18 +107,20 @@ def apply_playbook(playbook_path, hosts_inv, host_user, ssh_priv_key_file_path,
         variable_manager=variable_manager,
         loader=loader,
         options=ansible_opts,
-        passwords=None)
+        passwords=passwords)
 
     logger.debug('Executing Ansible Playbook - ' + playbook_path)
     return executor.run()
 
 
-def ssh_client(ip, user, private_key_filepath, proxy_settings=None):
+def ssh_client(ip, user, private_key_filepath=None, password=None,
+               proxy_settings=None):
     """
     Retrieves and attemts an SSH connection
     :param ip: the IP of the host to connect
     :param user: the user with which to connect
-    :param private_key_filepath: the path to the private key file
+    :param private_key_filepath: when None, password is required
+    :param password: when None, private_key_filepath is required
     :param proxy_settings: instance of os_credentials.ProxySettings class
                            (optional)
     :return: the SSH client if can connect else false
@@ -120,9 +136,13 @@ def ssh_client(ip, user, private_key_filepath, proxy_settings=None):
             proxy_cmd_str = proxy_cmd_str.replace("%p", '22')
             proxy_cmd = paramiko.ProxyCommand(proxy_cmd_str)
 
-        pk_abs_path = os.path.expanduser(private_key_filepath)
-        ssh.connect(ip, username=user, key_filename=pk_abs_path,
-                    sock=proxy_cmd)
+        pk_abs_path = None
+        if not password and private_key_filepath:
+            pk_abs_path = os.path.expanduser(private_key_filepath)
+
+        ssh.connect(
+            ip, username=user, key_filename=pk_abs_path, password=password,
+            sock=proxy_cmd)
         return ssh
     except Exception as e:
         logger.warning('Unable to connect via SSH with message - ' + str(e))

@@ -14,7 +14,7 @@
 # limitations under the License.
 import logging
 
-from neutronclient.common.exceptions import NotFound
+from neutronclient.common.exceptions import NotFound, Unauthorized
 
 from snaps.config.router import RouterConfig
 from snaps.openstack.openstack_creator import OpenStackNetworkObject
@@ -61,8 +61,12 @@ class OpenStackRouter(OpenStackNetworkObject):
         """
         super(self.__class__, self).initialize()
 
-        self.__router = neutron_utils.get_router(
-            self._neutron, router_settings=self.router_settings)
+        try:
+            self.__router = neutron_utils.get_router(
+                self._neutron, router_settings=self.router_settings)
+        except Unauthorized as e:
+            logger.warn('Unable to lookup router with name %s - %s',
+                        self.router_settings.name, e)
 
         if self.__router:
             for internal_subnet_name in self.router_settings.internal_subnets:
