@@ -18,6 +18,7 @@ import logging
 
 import re
 
+from snaps import file_utils
 from snaps.openstack.os_credentials import ProxySettings
 from snaps.provisioning import ansible_utils
 
@@ -41,20 +42,29 @@ def main(parsed_args):
                                        ssh_proxy_cmd=parsed_args.ssh_proxy_cmd)
 
     # Ensure can get an SSH client
-    ssh = ansible_utils.ssh_client(parsed_args.ip_addr, parsed_args.host_user,
-                                   parsed_args.priv_key, proxy_settings)
+    ssh = ansible_utils.ssh_client(
+        parsed_args.ip_addr, parsed_args.host_user,
+        private_key_filepath=parsed_args.priv_key,
+        proxy_settings=proxy_settings)
     if ssh:
         ssh.close()
 
     vars = dict()
+    env_file_dict = None
+    if parsed_args.env_file:
+        env_file_dict = file_utils.read_yaml(parsed_args.env_file)
+    if env_file_dict and isinstance(env_file_dict, dict):
+        vars = env_file_dict
+
     if args.vars:
-        vars = ast.literal_eval(args.vars)
-        if not isinstance(vars, dict):
-            vars = dict()
+        arg_vars_dict = ast.literal_eval(args.vars)
+        if arg_vars_dict and isinstance(vars, dict):
+            vars.update(arg_vars_dict)
 
     retval = ansible_utils.apply_playbook(
         parsed_args.playbook, [parsed_args.ip_addr], parsed_args.host_user,
-        parsed_args.priv_key, variables=vars,
+        ssh_priv_key_file_path=parsed_args.priv_key,
+        password=parsed_args.password, variables=vars,
         proxy_setting=proxy_settings)
     exit(retval)
 
@@ -63,17 +73,25 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--ip-addr', dest='ip_addr', required=True,
                         help='The Host IP Address')
-    parser.add_argument('-k', '--priv-key', dest='priv_key', required=True,
-                        help='The location of the private key file')
     parser.add_argument('-u', '--host-user', dest='host_user', required=True,
                         help='Host user account')
+    parser.add_argument('-k', '--priv-key', dest='priv_key', required=False,
+                        help='The location of the private key file')
+    parser.add_argument('-pw', '--password', dest='password', required=False,
+                        help='The host-user password')
     parser.add_argument('-b', '--playbook', dest='playbook', required=True,
                         help='Playbook Location')
     parser.add_argument('-p', '--http-proxy', dest='http_proxy',
                         required=False, help='<host>:<port>')
     parser.add_argument('-s', '--ssh-proxy-cmd', dest='ssh_proxy_cmd',
                         required=False)
+    parser.add_argument('-e', '--env-file', dest='env_file',
+                        help='Yaml file containing playbook substitution vals',
+                        required=False)
     parser.add_argument('-v', '--vars', dest='vars',
+                        help='String renditon of a dict to pass into '
+                             'playbook for additional subtitution values not '
+                             'found in env_file',
                         required=False)
     args = parser.parse_args()
 

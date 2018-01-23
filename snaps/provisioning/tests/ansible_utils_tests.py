@@ -266,8 +266,9 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         retval = self.inst_creator.apply_ansible_playbook(relative_pb_path)
         self.assertEqual(0, retval)
 
-        ssh = ansible_utils.ssh_client(ip, user, priv_key,
-                                       self.os_creds.proxy_settings)
+        ssh = ansible_utils.ssh_client(
+            ip, user, private_key_filepath=priv_key,
+            proxy_settings=self.os_creds.proxy_settings)
         self.assertIsNotNone(ssh)
         scp = None
         try:
@@ -329,13 +330,13 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         relative_pb_path = pkg_resources.resource_filename(
             'snaps.provisioning.tests.playbooks',
             'template_playbook.yml')
-        retval = self.inst_creator.apply_ansible_playbook(relative_pb_path,
-                                                          variables={
-                                                              'name': 'Foo'})
+        retval = self.inst_creator.apply_ansible_playbook(
+            relative_pb_path, variables={'name': 'Foo'})
         self.assertEqual(0, retval)
 
-        ssh = ansible_utils.ssh_client(ip, user, priv_key,
-                                       self.os_creds.proxy_settings)
+        ssh = ansible_utils.ssh_client(
+            ip, user, private_key_filepath=priv_key,
+            proxy_settings=self.os_creds.proxy_settings)
         self.assertIsNotNone(ssh)
         scp = None
 
