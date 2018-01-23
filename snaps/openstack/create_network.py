@@ -15,7 +15,7 @@
 import logging
 
 import enum
-from neutronclient.common.exceptions import NetworkNotFoundClient
+from neutronclient.common.exceptions import NetworkNotFoundClient, Unauthorized
 
 from snaps.config.network import NetworkConfig, SubnetConfig, PortConfig
 from snaps.openstack.openstack_creator import OpenStackNetworkObject
@@ -51,9 +51,14 @@ class OpenStackNetwork(OpenStackNetworkObject):
         """
         super(self.__class__, self).initialize()
 
-        self.__network = neutron_utils.get_network(
-            self._neutron, network_settings=self.network_settings,
-            project_id=self.network_settings.get_project_id(self._os_creds))
+        try:
+            self.__network = neutron_utils.get_network(
+                self._neutron, network_settings=self.network_settings,
+                project_id=self.network_settings.get_project_id(
+                    self._os_creds))
+        except Unauthorized as e:
+            logger.warn('Unable to lookup network with name %s - %s',
+                        self.network_settings.name, e)
 
         return self.__network
 

@@ -69,8 +69,11 @@ def create_server(nova, neutron, glance, instance_config, image_config,
     ports = list()
 
     for port_setting in instance_config.port_settings:
-        ports.append(neutron_utils.get_port(
-            neutron, port_settings=port_setting))
+        port = neutron_utils.get_port(neutron, port_settings=port_setting)
+        if port:
+            ports.append(port)
+        else:
+            raise Exception('Cannot find port named - ' + port_setting.name)
     nics = []
     for port in ports:
         kv = dict()
