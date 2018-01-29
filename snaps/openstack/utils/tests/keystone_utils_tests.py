@@ -122,10 +122,11 @@ class KeystoneUtilsTests(OSComponentTestCase):
         self.assertIsNotNone(project)
         self.assertEqual(self.project_name, self.project.name)
 
-        domain = keystone_utils.get_domain_by_id(
-            self.keystone, project.domain_id)
-        self.assertIsNotNone(domain)
-        self.assertEqual(domain.id, project.domain_id)
+        if not self.keystone.version == keystone_utils.V2_VERSION_STR:
+            domain = keystone_utils.get_domain_by_id(
+                self.keystone, project.domain_id)
+            self.assertIsNotNone(domain)
+            self.assertEqual(domain.id, project.domain_id)
 
     def test_get_endpoint_success(self):
         """
