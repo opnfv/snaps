@@ -676,18 +676,6 @@ def remove_security_group(nova, vm, security_group):
     nova.servers.remove_security_group(str(vm.id), security_group.name)
 
 
-def add_floating_ip_to_server(nova, vm, floating_ip, ip_addr):
-    """
-    Adds a floating IP to a server instance
-    :param nova: the nova client
-    :param vm: VmInst domain object
-    :param floating_ip: FloatingIp domain object
-    :param ip_addr: the IP to which to bind the floating IP to
-    """
-    vm = __get_latest_server_os_object(nova, vm)
-    vm.add_floating_ip(floating_ip.ip, ip_addr)
-
-
 def get_compute_quotas(nova, project_id):
     """
     Returns a list of all available keypairs

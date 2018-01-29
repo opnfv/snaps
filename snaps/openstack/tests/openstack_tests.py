@@ -15,7 +15,6 @@
 import logging
 import re
 
-import pkg_resources
 from snaps import file_utils
 from snaps.config.image import ImageConfig
 from snaps.config.network import NetworkConfig, SubnetConfig
@@ -138,6 +137,10 @@ def get_credentials(os_env_file=None, proxy_settings_str=None,
 
     if overrides and isinstance(overrides, dict):
         creds_dict.update(overrides)
+
+    for key, value in creds_dict.items():
+        if value is not None and isinstance(value, str):
+            creds_dict[key] = value.replace('"', '').replace('\'', '')
 
     os_creds = OSCreds(**creds_dict)
     logger.info('OS Credentials = %s', os_creds.__str__)
@@ -336,11 +339,10 @@ class OSNetworkConfig:
                  router_name=None, external_gateway=None,
                  netconf_override=None):
         """
-        :param netconf_override: dict() containing the reconfigured network_type,
-                                 physical_network and segmentation_id
+        :param netconf_override: dict() containing the reconfigured
+                                 network_type, physical_network and
+                                 segmentation_id
         """
-
-        network_conf = None
         if subnet_name and subnet_cidr:
             network_conf = NetworkConfig(
                 name=net_name, subnet_settings=[
