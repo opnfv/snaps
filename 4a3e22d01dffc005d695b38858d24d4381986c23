@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_e26f56fa",
+        "filename": "snaps/openstack/utils/tests/keystone_utils_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-01-29T16:51:52Z",
+      "side": 1,
+      "message": "change this line to:\nself.assertIsNone(domain)",
+      "revId": "4a3e22d01dffc005d695b38858d24d4381986c23",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_427a82bd",
+        "filename": "snaps/openstack/utils/tests/keystone_utils_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-01-29T16:51:52Z",
+      "side": 1,
+      "message": "Remove this check",
+      "revId": "4a3e22d01dffc005d695b38858d24d4381986c23",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
