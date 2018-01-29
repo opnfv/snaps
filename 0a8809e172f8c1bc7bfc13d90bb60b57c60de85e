@@ -16,6 +16,24 @@
       "revId": "0a8809e172f8c1bc7bfc13d90bb60b57c60de85e",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_428c42da",
+        "filename": "snaps/openstack/utils/tests/keystone_utils_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 585
+      },
+      "writtenOn": "2018-01-29T16:44:23Z",
+      "side": 1,
+      "message": "sure, makes sense.",
+      "parentUuid": "9a3d3df0_029fda03",
+      "revId": "0a8809e172f8c1bc7bfc13d90bb60b57c60de85e",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
