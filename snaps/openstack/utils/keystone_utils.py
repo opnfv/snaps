@@ -374,9 +374,10 @@ def get_domain_by_id(keystone, domain_id):
     :param domain_id: the domain ID to retrieve
     :return: the SNAPS-OO Domain domain object
     """
-    domain = keystone.domains.get(domain_id)
-    if domain:
-        return Domain(name=domain.name, domain_id=domain.id)
+    if keystone.version != V2_VERSION_STR:
+        domain = keystone.domains.get(domain_id)
+        if domain:
+            return Domain(name=domain.name, domain_id=domain.id)
 
 
 def __get_os_domain_by_name(keystone, domain_name):
