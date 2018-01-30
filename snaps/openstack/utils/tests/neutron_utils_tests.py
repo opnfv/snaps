@@ -455,7 +455,7 @@ class NeutronUtilsIPv6Tests(OSComponentTestCase):
         """
         sub_setting = SubnetConfig(
             name=self.guid + '-subnet', cidr='1:1::/48', ip_version=6,
-            gateway_ip='1:2::1')
+            gateway_ip='192.168.0.1')
         self.network_settings = NetworkConfig(
             name=self.guid + '-net', subnet_settings=[sub_setting])
 
