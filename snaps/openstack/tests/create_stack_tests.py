@@ -536,9 +536,11 @@ class CreateStackNestedResourceTests(OSIntegrationTestCase):
         self.flavor_creator.create()
 
         env_values = {
+            'network_name': self.guid + '-network',
             'public_network': self.ext_net_name,
             'agent_image': self.image_creator.image_settings.name,
             'agent_flavor': self.flavor_creator.flavor_settings.name,
+            'key_name': self.guid + '-key',
         }
 
         heat_tmplt_path = pkg_resources.resource_filename(

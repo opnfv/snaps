@@ -25,7 +25,6 @@ parameters:
     default: 'Ubuntu 16.04'
   key_name:
     type: string
-    default: test_key
   username:
     type: string
     default: test_user

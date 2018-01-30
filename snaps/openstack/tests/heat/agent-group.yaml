@@ -41,6 +41,10 @@ parameters:
   availability_zone:
     type: string
     default: nova
+  network_name:
+    type: string
+  key_name:
+    type: string
 
 resources:
   slaves:
@@ -66,7 +70,7 @@ resources:
   network:
         type: OS::Neutron::Net
         properties:
-          name: network
+          name: { get_param: agent_count }
 
   subnet:
         type: OS::Neutron::Subnet
@@ -91,7 +95,7 @@ resources:
     type: OS::Nova::KeyPair
     properties:
       save_private_key: true
-      name: agent_keypair
+      name: { get_param: key_name }
 
   open_security_group:
     type: OS::Neutron::SecurityGroup
