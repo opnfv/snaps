@@ -15,7 +15,7 @@
 import logging
 import time
 
-from novaclient.exceptions import NotFound, BadRequest
+from novaclient.exceptions import NotFound
 
 from snaps.config.vm_inst import VmInstanceConfig, FloatingIpConfig
 from snaps.openstack.openstack_creator import OpenStackComputeObject
@@ -213,18 +213,15 @@ class OpenStackVmInstance(OpenStackComputeObject):
         # gateway
         ext_gateway = self.__ext_gateway_by_router(
             floating_ip_setting.router_name)
-        if ext_gateway:
-            subnet = neutron_utils.get_subnet(
-                self.__neutron,
-                subnet_name=floating_ip_setting.subnet_name)
+        if ext_gateway and self.vm_active(block=True):
             floating_ip = neutron_utils.create_floating_ip(
-                self.__neutron, ext_gateway)
+                self.__neutron, ext_gateway, port.id)
             self.__floating_ip_dict[floating_ip_setting.name] = floating_ip
 
             logger.info(
                 'Created floating IP %s via router - %s', floating_ip.ip,
                 floating_ip_setting.router_name)
-            self.__add_floating_ip(floating_ip, port, subnet)
+
             return floating_ip
         else:
             raise VmInstanceCreationError(
@@ -345,54 +342,6 @@ class OpenStackVmInstance(OpenStackComputeObject):
                     ports.append((port_setting.name, port))
 
         return ports
-
-    def __add_floating_ip(self, floating_ip, port, subnet, timeout=30,
-                          poll_interval=POLL_INTERVAL):
-        """
-        Returns True when active else False
-        TODO - Make timeout and poll_interval configurable...
-        """
-        ip = None
-
-        if subnet:
-            # Take IP of subnet if there is one configured on which to place
-            # the floating IP
-            for fixed_ip in port.ips:
-                if fixed_ip['subnet_id'] == subnet.id:
-                    ip = fixed_ip['ip_address']
-                    break
-        else:
-            # Simply take the first
-            ip = port.ips[0]['ip_address']
-
-        if ip:
-            count = timeout / poll_interval
-            while count > 0:
-                logger.debug('Attempting to add floating IP to instance')
-                try:
-                    nova_utils.add_floating_ip_to_server(
-                        self._nova, self.__vm, floating_ip, ip)
-                    logger.info(
-                        'Added floating IP %s to port IP %s on instance %s',
-                        floating_ip.ip, ip, self.instance_settings.name)
-                    return
-                except BadRequest as bre:
-                    logger.error('Cannot add floating IP [%s]', bre)
-                    raise
-                except Exception as e:
-                    logger.warn(
-                        'Retry adding floating IP to instance. Last attempt '
-                        'failed with - %s', e)
-                    time.sleep(poll_interval)
-                    count -= 1
-                    pass
-        else:
-            raise VmInstanceCreationError(
-                'Unable find IP address on which to place the floating IP')
-
-        logger.error('Timeout attempting to add the floating IP to instance.')
-        raise VmInstanceCreationError(
-            'Timeout while attempting add floating IP to instance')
 
     def get_os_creds(self):
         """
@@ -624,8 +573,15 @@ class OpenStackVmInstance(OpenStackComputeObject):
                       timeout=None, poll_interval=POLL_INTERVAL):
         """
         Returns true when the VM can be accessed via SSH
+        :param user_override: overrides the user with which to create the
+                              connection
+        :param password: overrides the use of a password instead of a private
+                         key with which to create the connection
         :param block: When true, thread will block until active or timeout
                       value in seconds has been exceeded (False)
+        :param timeout: the number of seconds to retry obtaining the connection
+                        and overrides the ssh_connect_timeout member of the
+                        self.instance_settings object
         :param poll_interval: The polling interval
         :return: T/F
         """

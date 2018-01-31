@@ -20,8 +20,8 @@ import unittest
 import uuid
 
 import os
-from neutronclient.common.exceptions import InvalidIpForSubnetClient
-from novaclient.exceptions import BadRequest
+from neutronclient.common.exceptions import (
+    InvalidIpForSubnetClient, BadRequest)
 
 from snaps import file_utils
 from snaps.config.flavor import FlavorConfig

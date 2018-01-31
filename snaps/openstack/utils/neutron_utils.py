@@ -744,20 +744,24 @@ def get_floating_ips(neutron, ports=None):
     return out
 
 
-def create_floating_ip(neutron, ext_net_name):
+def create_floating_ip(neutron, ext_net_name, port_id=None):
     """
     Returns the floating IP object that was created with this call
     :param neutron: the Neutron client
     :param ext_net_name: the name of the external network on which to apply the
                          floating IP address
+    :param port_id: the ID of the port to which the floating IP will be
+                    associated
     :return: the SNAPS FloatingIp object
     """
     logger.info('Creating floating ip to external network - ' + ext_net_name)
     ext_net = get_network(neutron, network_name=ext_net_name)
     if ext_net:
-        fip = neutron.create_floatingip(
-            body={'floatingip':
-                  {'floating_network_id': ext_net.id}})
+        body = {'floatingip': {'floating_network_id': ext_net.id}}
+        if port_id:
+            body['floatingip']['port_id'] = port_id
+
+        fip = neutron.create_floatingip(body=body)
 
         return FloatingIp(id=fip['floatingip']['id'],
                           ip=fip['floatingip']['floating_ip_address'])
