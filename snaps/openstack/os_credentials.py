@@ -169,7 +169,6 @@ class OSCreds:
 
         return new_url
 
-    @property
     def __str__(self):
         """Converts object to a string"""
         return ('OSCreds - username=' + str(self.username) +
