@@ -451,9 +451,7 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         neutron = neutron_utils.neutron_client(self.os_creds)
         nova_utils.attach_volume(
             self.nova, neutron, self.instance_creator.get_vm_inst(),
-            self.volume_creator.get_volume())
-
-        time.sleep(10)
+            self.volume_creator.get_volume(), 120)
 
         vol_attach = cinder_utils.get_volume_by_id(
             self.cinder, self.volume_creator.get_volume().id)
@@ -463,9 +461,7 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         # Detach volume to VM
         nova_utils.detach_volume(
             self.nova, neutron, self.instance_creator.get_vm_inst(),
-            self.volume_creator.get_volume())
-
-        time.sleep(10)
+            self.volume_creator.get_volume(), 120)
 
         vol_detach = cinder_utils.get_volume_by_id(
             self.cinder, self.volume_creator.get_volume().id)
