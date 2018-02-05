@@ -91,6 +91,9 @@ class OpenStackUser(OpenStackIdentityObject):
                              credentials
         :return:
         """
+        if not project_name:
+            project_name = self._os_creds.project_name
+
         return OSCreds(
             username=self.user_settings.name,
             password=self.user_settings.password,
