@@ -724,17 +724,30 @@ def attach_volume(nova, neutron, server, volume, timeout=None):
     """
     nova.volumes.create_server_volume(server.id, volume.id)
 
+    vm = None
+    found = False
     if timeout:
         start_time = time.time()
         while time.time() < start_time + timeout:
             vm = get_server_object_by_id(nova, neutron, server.id)
             for vol_dict in vm.volume_ids:
                 if volume.id == vol_dict['id']:
-                    return vm
+                    found = True
+                    break
+            if found:
+                break
 
-        return None
     else:
-        return get_server_object_by_id(nova, neutron, server.id)
+        vm = get_server_object_by_id(nova, neutron, server.id)
+        for vol_dict in vm.volume_ids:
+            if volume.id == vol_dict['id']:
+                found = True
+                break
+
+    if not found:
+        raise Exception('Unable to find attached volume with id ' + volume.id)
+
+    return vm
 
 
 def detach_volume(nova, neutron, server, volume, timeout=None):
@@ -750,21 +763,35 @@ def detach_volume(nova, neutron, server, volume, timeout=None):
     """
     nova.volumes.delete_server_volume(server.id, volume.id)
 
+    vm = None
+    found = True
     if timeout:
         start_time = time.time()
         while time.time() < start_time + timeout:
             vm = get_server_object_by_id(nova, neutron, server.id)
+            if len(vm.volume_ids) == 0:
+                found = False
+                break
+            else:
+                for vol_dict in vm.volume_ids:
+                    if volume.id != vol_dict['id']:
+                        found = False
+                        break
+                if not found:
+                    break
+    else:
+        vm = get_server_object_by_id(nova, neutron, server.id)
+        if len(vm.volume_ids) == 0:
             found = False
+        else:
             for vol_dict in vm.volume_ids:
                 if volume.id == vol_dict['id']:
-                    found = True
+                    break
 
-            if not found:
-                return vm
+    if found:
+        raise Exception('Volume never detached with ID ' + volume.id)
 
-        return None
-    else:
-        return get_server_object_by_id(nova, neutron, server.id)
+    return vm
 
 
 class RebootType(enum.Enum):
