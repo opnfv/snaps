@@ -35,6 +35,8 @@ __author__ = 'spisarski'
 
 logger = logging.getLogger('nova_utils')
 
+POLL_INTERVAL = 3
+
 """
 Utilities for basic OpenStack Nova API calls
 """
@@ -711,60 +713,67 @@ def update_quotas(nova, project_id, compute_quotas):
     return nova.quotas.update(project_id, **update_values)
 
 
-def attach_volume(nova, neutron, server, volume, timeout=None):
+def attach_volume(nova, neutron, server, volume, timeout=120):
     """
-    Attaches a volume to a server
+    Attaches a volume to a server. When the timeout parameter is used, a VmInst
+    object with the proper volume updates is returned unless it has not been
+    updated in the allotted amount of time then an Exception will be raised.
     :param nova: the nova client
     :param neutron: the neutron client
     :param server: the VMInst domain object
     :param volume: the Volume domain object
     :param timeout: denotes the amount of time to block to determine if the
-                    has been properly attached. When None, do not wait.
-    :return: the value from the nova call
+                    has been properly attached.
+    :return: updated VmInst object
     """
     nova.volumes.create_server_volume(server.id, volume.id)
 
-    if timeout:
-        start_time = time.time()
-        while time.time() < start_time + timeout:
-            vm = get_server_object_by_id(nova, neutron, server.id)
-            for vol_dict in vm.volume_ids:
-                if volume.id == vol_dict['id']:
-                    return vm
+    start_time = time.time()
+    while time.time() < start_time + timeout:
+        vm = get_server_object_by_id(nova, neutron, server.id)
+        for vol_dict in vm.volume_ids:
+            if volume.id == vol_dict['id']:
+                return vm
+        time.sleep(POLL_INTERVAL)
 
-        return None
-    else:
-        return get_server_object_by_id(nova, neutron, server.id)
+    raise NovaException(
+        'Attach failed on volume - {} and server - {}'.format(
+            volume.id, server.id))
 
 
-def detach_volume(nova, neutron, server, volume, timeout=None):
+def detach_volume(nova, neutron, server, volume, timeout=120):
     """
-    Attaches a volume to a server
+    Detaches a volume to a server. When the timeout parameter is used, a VmInst
+    object with the proper volume updates is returned unless it has not been
+    updated in the allotted amount of time then an Exception will be raised.
     :param nova: the nova client
     :param neutron: the neutron client
     :param server: the VMInst domain object
     :param volume: the Volume domain object
     :param timeout: denotes the amount of time to block to determine if the
-                    has been properly detached. When None, do not wait.
-    :return: the value from the nova call
+                    has been properly detached.
+    :return: updated VmInst object
     """
     nova.volumes.delete_server_volume(server.id, volume.id)
 
-    if timeout:
-        start_time = time.time()
-        while time.time() < start_time + timeout:
-            vm = get_server_object_by_id(nova, neutron, server.id)
-            found = False
+    detached = False
+    start_time = time.time()
+    while time.time() < start_time + timeout:
+        vm = get_server_object_by_id(nova, neutron, server.id)
+        if len(vm.volume_ids) == 0:
+            return vm
+        else:
+            ids = list()
             for vol_dict in vm.volume_ids:
-                if volume.id == vol_dict['id']:
-                    found = True
-
-            if not found:
+                ids.append(vol_dict['id'])
+            if volume.id not in ids:
                 return vm
+        time.sleep(POLL_INTERVAL)
 
-        return None
-    else:
-        return get_server_object_by_id(nova, neutron, server.id)
+    if not detached:
+        raise NovaException(
+            'Detach failed on volume - {} server - {}'.format(
+                volume.id, server.id))
 
 
 class RebootType(enum.Enum):
