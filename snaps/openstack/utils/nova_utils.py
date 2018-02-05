@@ -724,17 +724,31 @@ def attach_volume(nova, neutron, server, volume, timeout=None):
     """
     nova.volumes.create_server_volume(server.id, volume.id)
 
+    vm = None
+    attached = False
     if timeout:
         start_time = time.time()
         while time.time() < start_time + timeout:
             vm = get_server_object_by_id(nova, neutron, server.id)
             for vol_dict in vm.volume_ids:
                 if volume.id == vol_dict['id']:
-                    return vm
+                    attached = True
+                    break
+            if attached:
+                break
+            time.sleep(3)
 
-        return None
     else:
-        return get_server_object_by_id(nova, neutron, server.id)
+        vm = get_server_object_by_id(nova, neutron, server.id)
+        for vol_dict in vm.volume_ids:
+            if volume.id == vol_dict['id']:
+                attached = True
+                break
+
+    if not attached and timeout:
+        raise Exception('Unable to find attached volume with id ' + volume.id)
+
+    return vm
 
 
 def detach_volume(nova, neutron, server, volume, timeout=None):
@@ -750,21 +764,39 @@ def detach_volume(nova, neutron, server, volume, timeout=None):
     """
     nova.volumes.delete_server_volume(server.id, volume.id)
 
+    vm = None
+    detached = False
     if timeout:
         start_time = time.time()
         while time.time() < start_time + timeout:
             vm = get_server_object_by_id(nova, neutron, server.id)
-            found = False
-            for vol_dict in vm.volume_ids:
-                if volume.id == vol_dict['id']:
-                    found = True
-
-            if not found:
-                return vm
-
-        return None
+            if len(vm.volume_ids) == 0:
+                detached = True
+                break
+            else:
+                ids = list()
+                for vol_dict in vm.volume_ids:
+                    ids.append(vol_dict['id'])
+                if volume.id not in ids:
+                    detached = True
+                    break
+            time.sleep(3)
     else:
-        return get_server_object_by_id(nova, neutron, server.id)
+        vm = get_server_object_by_id(nova, neutron, server.id)
+        if len(vm.volume_ids) == 0:
+            detached = True
+        else:
+            ids = list()
+            for vol_dict in vm.volume_ids:
+                ids.append(vol_dict['id'])
+
+            if volume.id not in ids:
+                detached = True
+
+    if not detached and timeout:
+        raise Exception('Volume never detached with ID ' + volume.id)
+
+    return vm
 
 
 class RebootType(enum.Enum):

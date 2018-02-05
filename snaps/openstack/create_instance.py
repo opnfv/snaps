@@ -164,7 +164,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
                     cinder, volume_name=volume_name)
 
                 if volume and self.vm_active(block=True):
-                    timeout = 30
+                    timeout = 120
                     vm = nova_utils.attach_volume(
                         self._nova, self.__neutron, self.__vm, volume, timeout)
 
@@ -271,7 +271,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
                     cinder, volume_rec['id'])
                 if volume:
                     vm = nova_utils.detach_volume(
-                        self._nova, self.__neutron, self.__vm, volume, 30)
+                        self._nova, self.__neutron, self.__vm, volume, 120)
                     if vm:
                         self.__vm = vm
                     else:
