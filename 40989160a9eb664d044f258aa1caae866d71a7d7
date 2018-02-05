@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_63f4de5a",
+        "filename": "snaps/openstack/utils/nova_utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 789,
+      "author": {
+        "id": 334
+      },
+      "writtenOn": "2018-02-05T20:42:56Z",
+      "side": 1,
+      "message": "if the volume id is never found in this for loop, then found needs to be set to False",
+      "range": {
+        "startLine": 787,
+        "startChar": 12,
+        "endLine": 789,
+        "endChar": 25
+      },
+      "revId": "40989160a9eb664d044f258aa1caae866d71a7d7",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
