@@ -440,7 +440,71 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
 
     def test_add_remove_volume(self):
         """
-        Tests the nova_utils.create_server() method
+        Tests the nova_utils.attach_volume() and detach_volume functions with
+        a timeout value
+        :return:
+        """
+
+        self.assertIsNotNone(self.volume_creator.get_volume())
+        self.assertEqual(0, len(self.volume_creator.get_volume().attachments))
+
+        # Attach volume to VM
+        neutron = neutron_utils.neutron_client(self.os_creds)
+        self.assertIsNotNone(nova_utils.attach_volume(
+            self.nova, neutron, self.instance_creator.get_vm_inst(),
+            self.volume_creator.get_volume(), 120))
+
+        vol_attach = None
+        attached = False
+        start_time = time.time()
+        while time.time() < start_time + 30:
+            vol_attach = cinder_utils.get_volume_by_id(
+                self.cinder, self.volume_creator.get_volume().id)
+
+            if len(vol_attach.attachments) > 0:
+                attached = True
+                break
+
+            time.sleep(3)
+
+        self.assertTrue(attached)
+        self.assertIsNotNone(vol_attach)
+
+        vm_attach = nova_utils.get_server_object_by_id(
+            self.nova, neutron, self.instance_creator.get_vm_inst().id)
+
+        # Validate Attachment
+        self.assertIsNotNone(vol_attach)
+        self.assertEqual(self.volume_creator.get_volume().id, vol_attach.id)
+        self.assertEqual(1, len(vol_attach.attachments))
+        self.assertEqual(vm_attach.volume_ids[0]['id'],
+                         vol_attach.attachments[0]['volume_id'])
+
+        # Detach volume to VM
+        self.assertIsNotNone(nova_utils.detach_volume(
+            self.nova, neutron, self.instance_creator.get_vm_inst(),
+            self.volume_creator.get_volume(), 120))
+
+        vol_detach = cinder_utils.get_volume_by_id(
+            self.cinder, self.volume_creator.get_volume().id)
+        vm_detach = nova_utils.get_server_object_by_id(
+            self.nova, neutron, self.instance_creator.get_vm_inst().id)
+
+        # Validate Detachment
+        self.assertIsNotNone(vol_detach)
+        self.assertEqual(self.volume_creator.get_volume().id, vol_detach.id)
+
+        if len(vol_detach.attachments) > 0:
+            vol_detach = cinder_utils.get_volume_by_id(
+                self.cinder, self.volume_creator.get_volume().id)
+
+        self.assertEqual(0, len(vol_detach.attachments))
+        self.assertEqual(0, len(vm_detach.volume_ids))
+
+    def test_add_volume_nowait(self):
+        """
+        Tests the nova_utils.attach_volume() and detach_volume functions
+        without a timeout value
         :return:
         """
 
@@ -451,32 +515,65 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         neutron = neutron_utils.neutron_client(self.os_creds)
         nova_utils.attach_volume(
             self.nova, neutron, self.instance_creator.get_vm_inst(),
-            self.volume_creator.get_volume(), 120)
+            self.volume_creator.get_volume())
 
-        vol_attach = cinder_utils.get_volume_by_id(
-            self.cinder, self.volume_creator.get_volume().id)
-        vm_attach = nova_utils.get_server_object_by_id(
+        attached = False
+        start_time = time.time()
+        while time.time() < start_time + 120:
+            vm = nova_utils.get_server_object_by_id(
+                self.nova, neutron, self.instance_creator.get_vm_inst().id)
+            for vol_dict in vm.volume_ids:
+                if self.volume_creator.get_volume().id == vol_dict['id']:
+                    attached = True
+                    break
+            if attached:
+                break
+            time.sleep(3)
+        self.assertTrue(attached)
+
+        # Check VmInst for attachment
+        latest_vm = nova_utils.get_server_object_by_id(
             self.nova, neutron, self.instance_creator.get_vm_inst().id)
+        self.assertEqual(1, len(latest_vm.volume_ids))
 
-        # Detach volume to VM
+        # Check Volume for attachment
+        vol_attach = None
+        attached = False
+        start_time = time.time()
+        while time.time() < start_time + 30:
+            vol_attach = cinder_utils.get_volume_by_id(
+                self.cinder, self.volume_creator.get_volume().id)
+
+            if len(vol_attach.attachments) > 0:
+                attached = True
+                break
+
+            time.sleep(3)
+
+        self.assertTrue(attached)
+        self.assertIsNotNone(vol_attach)
+
+        # Detach volume
         nova_utils.detach_volume(
             self.nova, neutron, self.instance_creator.get_vm_inst(),
-            self.volume_creator.get_volume(), 120)
+            self.volume_creator.get_volume())
 
-        vol_detach = cinder_utils.get_volume_by_id(
-            self.cinder, self.volume_creator.get_volume().id)
-        vm_detach = nova_utils.get_server_object_by_id(
-            self.nova, neutron, self.instance_creator.get_vm_inst().id)
+        detached = False
+        start_time = time.time()
+        while time.time() < start_time + 120:
+            vm = nova_utils.get_server_object_by_id(
+                self.nova, neutron, self.instance_creator.get_vm_inst().id)
+            if len(vm.volume_ids) == 0:
+                detached = True
+            else:
+                ids = list()
+                for vol_dict in vm.volume_ids:
+                    ids.append(vol_dict['id'])
 
-        # Validate Attachment
-        self.assertIsNotNone(vol_attach)
-        self.assertEqual(self.volume_creator.get_volume().id, vol_attach.id)
-        self.assertEqual(1, len(vol_attach.attachments))
-        self.assertEqual(vm_attach.volume_ids[0]['id'],
-                         vol_attach.attachments[0]['volume_id'])
-
-        # Validate Detachment
-        self.assertIsNotNone(vol_detach)
-        self.assertEqual(self.volume_creator.get_volume().id, vol_detach.id)
-        self.assertEqual(0, len(vol_detach.attachments))
-        self.assertEqual(0, len(vm_detach.volume_ids))
+                if self.volume_creator.get_volume().id not in ids:
+                    detached = True
+                    break
+            if detached:
+                break
+            time.sleep(3)
+        self.assertTrue(detached)

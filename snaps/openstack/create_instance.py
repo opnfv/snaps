@@ -30,6 +30,7 @@ __author__ = 'spisarski'
 logger = logging.getLogger('create_instance')
 
 POLL_INTERVAL = 3
+VOL_DETACH_TIMEOUT = 120
 STATUS_ACTIVE = 'ACTIVE'
 STATUS_DELETED = 'DELETED'
 
@@ -164,15 +165,15 @@ class OpenStackVmInstance(OpenStackComputeObject):
                     cinder, volume_name=volume_name)
 
                 if volume and self.vm_active(block=True):
-                    timeout = 30
                     vm = nova_utils.attach_volume(
-                        self._nova, self.__neutron, self.__vm, volume, timeout)
+                        self._nova, self.__neutron, self.__vm, volume,
+                        VOL_DETACH_TIMEOUT)
 
                     if vm:
                         self.__vm = vm
                     else:
                         logger.warn('Volume [%s] not attached within timeout '
-                                    'of [%s]', volume.name, timeout)
+                                    'of [%s]', volume.name, VOL_DETACH_TIMEOUT)
                 else:
                     logger.warn('Unable to attach volume named [%s]',
                                 volume_name)
@@ -271,7 +272,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
                     cinder, volume_rec['id'])
                 if volume:
                     vm = nova_utils.detach_volume(
-                        self._nova, self.__neutron, self.__vm, volume, 30)
+                        self._nova, self.__neutron, self.__vm, volume,
+                        VOL_DETACH_TIMEOUT)
                     if vm:
                         self.__vm = vm
                     else:
