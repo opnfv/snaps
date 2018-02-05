@@ -435,7 +435,12 @@ nova_utils_tests.py - NovaUtilsInstanceVolumeTests
 | Test Name                             | Nova API      | Description                                               |
 +=======================================+===============+===========================================================+
 | test_add_remove_volume                | 2             | Ensures that a VM instance can properly attach and detach |
-|                                       |               | a volume using the nova interface                         |
+|                                       |               | a volume using the nova interface while waiting for       |
+|                                       |               | the update to fully occur                                 |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_add_volume_nowait                | 2             | Ensures that a VM instance can properly attach and detach |
+|                                       |               | a volume using the nova interface without waiting for the |
+|                                       |               | update to fully occur                                     |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
 create_flavor_tests.py - CreateFlavorTests
