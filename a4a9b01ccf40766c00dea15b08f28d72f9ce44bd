@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_e610fc4f",
+        "filename": "snaps/openstack/utils/nova_utils.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 779,
+      "author": {
+        "id": 334
+      },
+      "writtenOn": "2018-02-05T22:15:13Z",
+      "side": 1,
+      "message": "not in ids?",
+      "range": {
+        "startLine": 779,
+        "startChar": 16,
+        "endLine": 779,
+        "endChar": 35
+      },
+      "revId": "a4a9b01ccf40766c00dea15b08f28d72f9ce44bd",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
