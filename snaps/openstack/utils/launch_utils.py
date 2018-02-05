@@ -675,6 +675,12 @@ def __get_network_variable_value(var_config_values, networks_dict):
                                 return subnet.gateway_ip
                             if 'ip_range' == var_config_values['value']:
                                 return subnet.start + ' ' + subnet.end
+                            if 'ip_range_start' == var_config_values['value']:
+                                return subnet.start
+                            if 'ip_range_end' == var_config_values['value']:
+                                return subnet.end
+                            if 'cidr' == var_config_values['value']:
+                                return subnet.cidr
                             if 'cidr_ip' == var_config_values['value']:
                                 cidr_split = subnet.cidr.split('/')
                                 return cidr_split[0]
