@@ -35,6 +35,8 @@ __author__ = 'spisarski'
 
 logger = logging.getLogger('nova_utils')
 
+POLL_INTERVAL = 3
+
 """
 Utilities for basic OpenStack Nova API calls
 """
@@ -714,6 +716,12 @@ def update_quotas(nova, project_id, compute_quotas):
 def attach_volume(nova, neutron, server, volume, timeout=None):
     """
     Attaches a volume to a server
+    Attaches a volume to a server. When the timeout parameter is used, a VmInst
+    object with the proper volume updates is returned unless it has not been
+    updated in the allotted amount of time then an Exception will be raised.
+    When timeout is None, the call to OpenStack to add the association will
+    be made but the latest VmInst object will be returned which probably will
+    not reflect the newly attached volume
     :param nova: the nova client
     :param neutron: the neutron client
     :param server: the VMInst domain object
@@ -724,22 +732,37 @@ def attach_volume(nova, neutron, server, volume, timeout=None):
     """
     nova.volumes.create_server_volume(server.id, volume.id)
 
+    vm = None
+    attached = False
     if timeout:
         start_time = time.time()
         while time.time() < start_time + timeout:
             vm = get_server_object_by_id(nova, neutron, server.id)
             for vol_dict in vm.volume_ids:
                 if volume.id == vol_dict['id']:
-                    return vm
+                    attached = True
+                    break
+            if attached:
+                return vm
+            time.sleep(POLL_INTERVAL)
 
-        return None
+        if not attached:
+            raise Exception(
+                'Unable to find attached volume with ID - {} on server with'
+                ' ID - {}', volume.id, server.id)
+        return vm
     else:
         return get_server_object_by_id(nova, neutron, server.id)
 
 
 def detach_volume(nova, neutron, server, volume, timeout=None):
     """
-    Attaches a volume to a server
+    Detaches a volume to a server. When the timeout parameter is used, a VmInst
+    object with the proper volume updates is returned unless it has not been
+    updated in the allotted amount of time then an Exception will be raised.
+    When timeout is None, the call to OpenStack to remove the association will
+    be made but the latest VmInst object will be returned which probably will
+    not reflect the newly detached volume
     :param nova: the nova client
     :param neutron: the neutron client
     :param server: the VMInst domain object
@@ -750,19 +773,26 @@ def detach_volume(nova, neutron, server, volume, timeout=None):
     """
     nova.volumes.delete_server_volume(server.id, volume.id)
 
+    vm = None
     if timeout:
+        detached = False
         start_time = time.time()
         while time.time() < start_time + timeout:
             vm = get_server_object_by_id(nova, neutron, server.id)
-            found = False
-            for vol_dict in vm.volume_ids:
-                if volume.id == vol_dict['id']:
-                    found = True
-
-            if not found:
+            if len(vm.volume_ids) == 0:
                 return vm
+            else:
+                ids = list()
+                for vol_dict in vm.volume_ids:
+                    ids.append(vol_dict['id'])
+                if volume.id not in ids:
+                    return vm
+            time.sleep(POLL_INTERVAL)
 
-        return None
+        if not detached:
+            raise Exception('Volume never detached with ID - '
+                            + volume.id + ' to server with ID - ', server.id)
+        return vm
     else:
         return get_server_object_by_id(nova, neutron, server.id)
 
