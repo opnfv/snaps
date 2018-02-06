@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_0ccd3f66",
+        "filename": "snaps/openstack/utils/nova_utils.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 745,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-02-06T19:31:29Z",
+      "side": 1,
+      "message": "I believe they are str objects but like the format you suggested instead.",
+      "parentUuid": "9a3d3df0_ec79fb2f",
+      "range": {
+        "startLine": 745,
+        "startChar": 30,
+        "endLine": 745,
+        "endChar": 39
+      },
+      "revId": "7b3f9afc90c9f4c0fb90660b80bf252cd8646393",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_ac9b7364",
         "filename": "snaps/openstack/utils/nova_utils.py",
         "patchSetId": 6
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_acb253e2",
+        "filename": "snaps/openstack/utils/nova_utils.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-02-06T19:31:29Z",
+      "side": 1,
+      "message": "Agree, will remove",
+      "parentUuid": "9a3d3df0_ac9b7364",
+      "range": {
+        "startLine": 748,
+        "startChar": 0,
+        "endLine": 750,
+        "endChar": 25
+      },
+      "revId": "7b3f9afc90c9f4c0fb90660b80bf252cd8646393",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_cc98776c",
         "filename": "snaps/openstack/utils/nova_utils.py",
         "patchSetId": 6
@@ -59,6 +107,30 @@
       "writtenOn": "2018-02-06T19:11:27Z",
       "side": 1,
       "message": "this logic doesn\u0027t do anything, because you always return vm on line 797.  You can just delete lines 789-796\n\nI haven\u0027t looked at the function calling this, but if a VM is always returned how does the calling function know if the detach was successful?",
+      "range": {
+        "startLine": 787,
+        "startChar": 0,
+        "endLine": 796,
+        "endChar": 25
+      },
+      "revId": "7b3f9afc90c9f4c0fb90660b80bf252cd8646393",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_ecc73b43",
+        "filename": "snaps/openstack/utils/nova_utils.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-02-06T19:31:29Z",
+      "side": 1,
+      "message": "I was struggling a bit with this block too as the VmInst object being returned in this block would probably be stale without the timeout. I will change the block to just return the latest VmInst object without the following checks.",
+      "parentUuid": "9a3d3df0_cc98776c",
       "range": {
         "startLine": 787,
         "startChar": 0,
