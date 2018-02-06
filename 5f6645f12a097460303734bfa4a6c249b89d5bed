@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_899e61b7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 5473
+      },
+      "writtenOn": "2018-02-06T11:48:41Z",
+      "side": 1,
+      "message": "why was it not correct? Could you expand your commit message a little bit because it took me a while to understand the issue given I am not very familiar with the test cases.",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 15
+      },
+      "revId": "5f6645f12a097460303734bfa4a6c249b89d5bed",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_69a15df7",
+        "filename": "snaps/openstack/utils/nova_utils.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 5473
+      },
+      "writtenOn": "2018-02-06T11:48:41Z",
+      "side": 1,
+      "message": "why is this needed here?",
+      "range": {
+        "startLine": 739,
+        "startChar": 12,
+        "endLine": 739,
+        "endChar": 24
+      },
+      "revId": "5f6645f12a097460303734bfa4a6c249b89d5bed",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_c9a4e909",
+        "filename": "snaps/openstack/utils/nova_utils.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 783,
+      "author": {
+        "id": 5473
+      },
+      "writtenOn": "2018-02-06T11:48:41Z",
+      "side": 1,
+      "message": "same question",
+      "range": {
+        "startLine": 783,
+        "startChar": 12,
+        "endLine": 783,
+        "endChar": 25
+      },
+      "revId": "5f6645f12a097460303734bfa4a6c249b89d5bed",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
