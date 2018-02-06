@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_cc59978f",
+        "filename": "snaps/openstack/utils/nova_utils.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 334
+      },
+      "writtenOn": "2018-02-06T21:13:18Z",
+      "side": 1,
+      "message": "minor nit you dont need this since it never changes value",
+      "range": {
+        "startLine": 759,
+        "startChar": 4,
+        "endLine": 759,
+        "endChar": 20
+      },
+      "revId": "9ea5df83ef48df9097530cb79c3f3009deab5d28",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_ac5c137e",
+        "filename": "snaps/openstack/utils/nova_utils.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 773,
+      "author": {
+        "id": 334
+      },
+      "writtenOn": "2018-02-06T21:13:18Z",
+      "side": 1,
+      "message": "dont need this, just raise exception",
+      "range": {
+        "startLine": 773,
+        "startChar": 4,
+        "endLine": 773,
+        "endChar": 20
+      },
+      "revId": "9ea5df83ef48df9097530cb79c3f3009deab5d28",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
