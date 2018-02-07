@@ -221,10 +221,7 @@ class SubnetConfig(object):
         if 'dns_nameservers' in kwargs:
             self.dns_nameservers = kwargs.get('dns_nameservers')
         else:
-            if self.ip_version == 4:
-                self.dns_nameservers = ['8.8.8.8']
-            else:
-                self.dns_nameservers = list()
+            self.dns_nameservers = list()
 
         self.host_routes = kwargs.get('host_routes')
         self.destination = kwargs.get('destination')
