@@ -136,8 +136,7 @@ class SubnetSettingsUnitTests(unittest.TestCase):
         self.assertIsNone(settings.start)
         self.assertIsNone(settings.end)
         self.assertIsNone(settings.enable_dhcp)
-        self.assertEqual(1, len(settings.dns_nameservers))
-        self.assertEqual('8.8.8.8', settings.dns_nameservers[0])
+        self.assertEqual(0, len(settings.dns_nameservers))
         self.assertIsNone(settings.host_routes)
         self.assertIsNone(settings.destination)
         self.assertIsNone(settings.nexthop)
@@ -154,8 +153,7 @@ class SubnetSettingsUnitTests(unittest.TestCase):
         self.assertIsNone(settings.end)
         self.assertIsNone(settings.gateway_ip)
         self.assertIsNone(settings.enable_dhcp)
-        self.assertEqual(1, len(settings.dns_nameservers))
-        self.assertEqual('8.8.8.8', settings.dns_nameservers[0])
+        self.assertEqual(0, len(settings.dns_nameservers))
         self.assertIsNone(settings.host_routes)
         self.assertIsNone(settings.destination)
         self.assertIsNone(settings.nexthop)
@@ -540,7 +538,7 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
 
 class CreateNetworkIPv6Tests(OSIntegrationTestCase):
     """
-    Test for the CreateNetwork class defined in create_nework.py when 
+    Test for the CreateNetwork class defined in create_nework.py when
     """
 
     def setUp(self):
@@ -627,7 +625,7 @@ class CreateNetworkIPv6Tests(OSIntegrationTestCase):
         self.assertEqual(subnet4_settings.name, subnet4.name)
         self.assertEqual(subnet4_settings.cidr, subnet4.cidr)
         self.assertEqual(4, subnet4.ip_version)
-        self.assertEqual(1, len(subnet4.dns_nameservers))
+        self.assertEqual(0, len(subnet4.dns_nameservers))
 
         # Validate IPv6 subnet
         self.assertEqual(network.id, subnet6.network_id)
