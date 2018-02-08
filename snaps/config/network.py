@@ -182,7 +182,7 @@ class SubnetConfig(object):
                                 Specify each name server as an IP address
                                 and separate multiple entries with a space.
                                 For example [8.8.8.7 8.8.8.8]
-                                (default '8.8.8.8')
+                                (default [])
         :param host_routes: A list of host route dictionaries for the subnet.
                             For example:
                                 "host_routes":[
