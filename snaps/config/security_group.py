@@ -59,7 +59,7 @@ class SecurityGroupConfig(object):
                     'Rule settings must correspond with the name of this '
                     'security group')
 
-    def dict_for_neutron(self, keystone):
+    def dict_for_neutron(self, keystone, project_id):
         """
         Returns a dictionary object representing this object.
         This is meant to be converted into JSON designed for use by the Neutron
@@ -67,6 +67,7 @@ class SecurityGroupConfig(object):
 
         TODO - expand automated testing to exercise all parameters
         :param keystone: the Keystone client
+        :param project_id: the default project ID
         :return: the dictionary object
         """
         out = dict()
@@ -87,6 +88,8 @@ class SecurityGroupConfig(object):
                 raise SecurityGroupConfigError(
                     'Could not find project ID for project named - ' +
                     self.project_name)
+        else:
+            out['tenant_id'] = project_id
 
         return {'security_group': out}
 
@@ -204,13 +207,13 @@ class SecurityGroupRuleConfig(object):
             raise SecurityGroupRuleConfigError(
                 'direction and sec_grp_name are required')
 
-    def dict_for_neutron(self, neutron):
+    def dict_for_neutron(self, neutron, project_id):
         """
         Returns a dictionary object representing this object.
         This is meant to be converted into JSON designed for use by the Neutron
         API
-
         :param neutron: the neutron client for performing lookups
+        :param project_id: the ID of the project associated with the group
         :return: the dictionary object
         """
         out = dict()
@@ -229,7 +232,7 @@ class SecurityGroupRuleConfig(object):
             out['protocol'] = self.protocol.value
         if self.sec_grp_name:
             sec_grp = neutron_utils.get_security_group(
-                neutron, sec_grp_name=self.sec_grp_name)
+                neutron, sec_grp_name=self.sec_grp_name, project_id=project_id)
             if sec_grp:
                 out['security_group_id'] = sec_grp.id
             else:

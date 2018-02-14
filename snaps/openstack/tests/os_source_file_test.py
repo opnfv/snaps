@@ -61,6 +61,10 @@ class OSComponentTestCase(unittest.TestCase):
 
         self.image_metadata = image_metadata
 
+        keystone = keystone_utils.keystone_client(self.os_creds)
+        self.project_id = keystone_utils.get_project(
+            keystone=keystone, project_name=self.os_creds.project_name)
+
     @staticmethod
     def parameterize(testcase_klass, os_creds, ext_net_name,
                      image_metadata=None, log_level=logging.DEBUG):

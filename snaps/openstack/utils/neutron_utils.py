@@ -547,18 +547,19 @@ def get_ports(neutron, network, ips=None):
     return out
 
 
-def create_security_group(neutron, keystone, sec_grp_settings):
+def create_security_group(neutron, keystone, sec_grp_settings, project_id):
     """
     Creates a security group object in OpenStack
     :param neutron: the Neutron client
     :param keystone: the Keystone client
     :param sec_grp_settings: the security group settings
+    :param project_id: the default project to associated the security group
     :return: a SNAPS-OO SecurityGroup domain object
     """
     logger.info('Creating security group with name - %s',
                 sec_grp_settings.name)
     os_group = neutron.create_security_group(
-        sec_grp_settings.dict_for_neutron(keystone))
+        sec_grp_settings.dict_for_neutron(keystone, project_id))
     return __map_os_security_group(neutron, os_group['security_group'])
 
 
@@ -635,17 +636,18 @@ def get_security_group_by_id(neutron, sec_grp_id):
     return None
 
 
-def create_security_group_rule(neutron, sec_grp_rule_settings):
+def create_security_group_rule(neutron, sec_grp_rule_settings, proj_id):
     """
     Creates a security group rule in OpenStack
     :param neutron: the client
     :param sec_grp_rule_settings: the security group rule settings
+    :param proj_id: the default project to apply to the rule settings
     :return: a SNAPS-OO SecurityGroupRule domain object
     """
     logger.info('Creating security group to security group - %s',
                 sec_grp_rule_settings.sec_grp_name)
     os_rule = neutron.create_security_group_rule(
-        sec_grp_rule_settings.dict_for_neutron(neutron))
+        sec_grp_rule_settings.dict_for_neutron(neutron, proj_id))
     return SecurityGroupRule(**os_rule['security_group_rule'])
 
 
