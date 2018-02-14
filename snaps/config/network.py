@@ -473,7 +473,7 @@ class PortConfig(object):
             sec_grp_ids = list()
             for sec_grp_name in self.security_groups:
                 sec_grp = neutron_utils.get_security_group(
-                    neutron, sec_grp_name=sec_grp_name)
+                    neutron, sec_grp_name=sec_grp_name, project_id=project_id)
                 if sec_grp:
                     sec_grp_ids.append(sec_grp.id)
             out['security_groups'] = sec_grp_ids

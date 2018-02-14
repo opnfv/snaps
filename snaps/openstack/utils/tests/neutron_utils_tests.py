@@ -842,9 +842,8 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         Tests the neutron_utils.create_security_group() function
         """
         sec_grp_settings = SecurityGroupConfig(name=self.sec_grp_name)
-        security_group = neutron_utils.create_security_group(self.neutron,
-                                                             self.keystone,
-                                                             sec_grp_settings)
+        security_group = neutron_utils.create_security_group(
+            self.neutron, self.keystone, sec_grp_settings, self.project_id)
 
         self.assertTrue(sec_grp_settings.name, security_group.name)
 
@@ -869,9 +868,9 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         with self.assertRaises(Exception):
             sec_grp_settings = SecurityGroupConfig()
             self.security_groups.append(
-                neutron_utils.create_security_group(self.neutron,
-                                                    self.keystone,
-                                                    sec_grp_settings))
+                neutron_utils.create_security_group(
+                    self.neutron, self.keystone, sec_grp_settings,
+                    self.project_id))
 
     def test_create_sec_grp_no_rules(self):
         """
@@ -880,8 +879,9 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         sec_grp_settings = SecurityGroupConfig(
             name=self.sec_grp_name, description='hello group')
         self.security_groups.append(
-            neutron_utils.create_security_group(self.neutron, self.keystone,
-                                                sec_grp_settings))
+            neutron_utils.create_security_group(
+                self.neutron, self.keystone, sec_grp_settings,
+                self.project_id))
 
         self.assertTrue(sec_grp_settings.name, self.security_groups[0].name)
         self.assertEqual(sec_grp_settings.name, self.security_groups[0].name)
@@ -903,16 +903,20 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
             rule_settings=[sec_grp_rule_settings])
 
         self.security_groups.append(
-            neutron_utils.create_security_group(self.neutron, self.keystone,
-                                                sec_grp_settings))
+            neutron_utils.create_security_group(
+                self.neutron, self.keystone, sec_grp_settings,
+                self.project_id))
         free_rules = neutron_utils.get_rules_by_security_group(
             self.neutron, self.security_groups[0])
         for free_rule in free_rules:
             self.security_group_rules.append(free_rule)
 
+        keystone = keystone_utils.keystone_client(self.os_creds)
+        project_id = keystone_utils.get_project(
+            keystone, self.os_creds.project_name)
         self.security_group_rules.append(
             neutron_utils.create_security_group_rule(
-                self.neutron, sec_grp_settings.rule_settings[0]))
+                self.neutron, sec_grp_settings.rule_settings[0], project_id))
 
         # Refresh object so it is populated with the newly added rule
         security_group = neutron_utils.get_security_group(
@@ -940,11 +944,13 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         self.security_groups.append(neutron_utils.create_security_group(
             self.neutron, self.keystone,
             SecurityGroupConfig(
-                name=self.sec_grp_name + '-1', description='hello group')))
+                name=self.sec_grp_name + '-1', description='hello group'),
+            self.project_id))
         self.security_groups.append(neutron_utils.create_security_group(
             self.neutron, self.keystone,
             SecurityGroupConfig(
-                name=self.sec_grp_name + '-2', description='hello group')))
+                name=self.sec_grp_name + '-2', description='hello group'),
+            self.project_id))
 
         sec_grp_1b = neutron_utils.get_security_group_by_id(
             self.neutron, self.security_groups[0].id)
