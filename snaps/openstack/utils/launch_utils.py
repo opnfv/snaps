@@ -118,7 +118,7 @@ def launch_config(config, tmplt_file, deploy, clean, clean_image):
             users_dict)
         creators.append(vol_type_dict)
 
-        # Create volume types
+        # Create volumes
         vol_dict = __create_instances(
             os_creds_dict, OpenStackVolume, VolumeConfig,
             os_config.get('volumes'), 'volume', clean, users_dict)
