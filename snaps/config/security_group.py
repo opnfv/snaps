@@ -54,7 +54,7 @@ class SecurityGroupConfig(object):
             raise SecurityGroupConfigError('The attribute name is required')
 
         for rule_setting in self.rule_settings:
-            if rule_setting.sec_grp_name is not self.name:
+            if rule_setting.sec_grp_name != self.name:
                 raise SecurityGroupConfigError(
                     'Rule settings must correspond with the name of this '
                     'security group')
