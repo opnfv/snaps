@@ -21,7 +21,7 @@ from snaps.config.security_group import (
 from snaps.openstack import create_security_group
 from snaps.openstack.create_security_group import (
     SecurityGroupSettings, SecurityGroupRuleSettings, Direction, Ethertype,
-    Protocol)
+    Protocol, OpenStackSecurityGroup)
 from snaps.openstack.tests import validation_utils
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import neutron_utils
@@ -657,3 +657,68 @@ def validate_sec_grp_rules(neutron, rule_settings, rules):
                 return False
 
     return True
+
+
+class CreateMultipleSecurityGroupTests(OSIntegrationTestCase):
+    """
+    Test for the CreateSecurityGroup class and how it interacts with security
+    groups within other projects with the same name
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateSecurityGroup object that is responsible for
+        downloading and creating an OS image file within OpenStack
+        """
+        super(self.__class__, self).__start__()
+
+        guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.sec_grp_name = guid + 'name'
+        self.neutron = neutron_utils.neutron_client(self.os_creds)
+
+        # Initialize for cleanup
+        self.admin_sec_grp_config = SecurityGroupConfig(
+            name=self.sec_grp_name, description='hello group')
+        self.sec_grp_creator_admin = OpenStackSecurityGroup(
+            self.admin_os_creds, self.admin_sec_grp_config)
+        self.sec_grp_creator_admin.create()
+        self.sec_grp_creator_proj = None
+
+    def tearDown(self):
+        """
+        Cleans the image and downloaded image file
+        """
+        if self.sec_grp_creator_admin:
+            self.sec_grp_creator_admin.clean()
+        if self.sec_grp_creator_proj:
+            self.sec_grp_creator_proj.clean()
+
+        super(self.__class__, self).__clean__()
+
+    def test_sec_grp_same_name_diff_proj(self):
+        """
+        Tests the creation of an OpenStack Security Group with the same name
+        within a different project/tenant.
+        """
+        # Create Image
+        sec_grp_config = SecurityGroupConfig(
+            name=self.sec_grp_name, description='hello group')
+        self.sec_grp_creator_proj = OpenStackSecurityGroup(
+            self.os_creds, sec_grp_config)
+        self.sec_grp_creator_proj.create()
+
+        self.assertNotEqual(
+            self.sec_grp_creator_admin.get_security_group().id,
+            self.sec_grp_creator_proj.get_security_group().id)
+
+        admin_sec_grp_creator = OpenStackSecurityGroup(
+            self.admin_os_creds, self.admin_sec_grp_config)
+        admin_sec_grp_creator.create()
+        self.assertEqual(self.sec_grp_creator_admin.get_security_group().id,
+                         admin_sec_grp_creator.get_security_group().id)
+
+        proj_sec_grp_creator = OpenStackSecurityGroup(
+            self.os_creds, sec_grp_config)
+        proj_sec_grp_creator.create()
+        self.assertEqual(self.sec_grp_creator_proj.get_security_group().id,
+                         proj_sec_grp_creator.get_security_group().id)

@@ -57,7 +57,8 @@ class OpenStackSecurityGroup(OpenStackNetworkObject):
         super(self.__class__, self).initialize()
 
         self.__security_group = neutron_utils.get_security_group(
-            self._neutron, sec_grp_settings=self.sec_grp_settings)
+            self._neutron, sec_grp_settings=self.sec_grp_settings,
+            project_id=self.project_id)
         if self.__security_group:
             # Populate rules
             existing_rules = neutron_utils.get_rules_by_security_group(
@@ -111,7 +112,8 @@ class OpenStackSecurityGroup(OpenStackNetworkObject):
 
             # Refresh security group object to reflect the new rules added
             self.__security_group = neutron_utils.get_security_group(
-                self._neutron, sec_grp_settings=self.sec_grp_settings)
+                self._neutron, sec_grp_settings=self.sec_grp_settings,
+                project_id=self.project_id)
 
         return self.__security_group
 

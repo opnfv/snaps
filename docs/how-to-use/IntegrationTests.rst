@@ -46,6 +46,17 @@ create_security_group_tests.py - CreateSecurityGroupTests
 |                                       |               | setting object                                            |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_security_group_tests.py - CreateMultipleSecurityGroupTests
+-----------------------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | API Versions  | Description                                               |
++=======================================+===============+===========================================================+
+| test_sec_grp_same_name_diff_proj      | Keysone 2 & 3 | Ensures the OpenStackSecurityGroup class does not         |
+|                                       | Neutron 2     | initialize security groups with the same name from other  |
+|                                       |               | project/tenants                                           |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_image_tests.py - CreateImageSuccessTests
 -----------------------------------------------
 

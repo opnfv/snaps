@@ -29,8 +29,10 @@ class OpenStackCloudObject(CloudObject):
         Constructor
         :param os_creds: the OpenStack credentials object
         """
-        # super(self.__class__, self, os_creds)
         self._os_creds = os_creds
+        keystone = keystone_utils.keystone_client(os_creds)
+        self.project_id = keystone_utils.get_project(
+            keystone=keystone, project_name=os_creds.project_name).id
 
     def initialize(self):
         raise NotImplementedError('Do not override abstract method')
