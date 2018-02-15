@@ -105,6 +105,7 @@ class OpenStackUser(OpenStackIdentityObject):
             compute_api_version=self._os_creds.compute_api_version,
             heat_api_version=self._os_creds.heat_api_version,
             volume_api_version=self._os_creds.volume_api_version,
+            region_name=self._os_creds.region_name,
             user_domain_name=self._os_creds.user_domain_name,
             user_domain_id=self._os_creds.user_domain_id,
             project_domain_name=self._os_creds.project_domain_name,
