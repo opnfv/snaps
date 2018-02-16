@@ -396,7 +396,8 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
 
         # Validate network was created
         self.assertTrue(neutron_utils_tests.validate_network(
-            self.neutron, self.net_creator.network_settings.name, True))
+            self.neutron, self.net_creator.network_settings.name, True,
+            project_id=self.project_id))
 
         # Validate subnets
         self.assertTrue(neutron_utils_tests.validate_subnet(
@@ -415,12 +416,14 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
 
         # Validate network was created
         self.assertTrue(neutron_utils_tests.validate_network(
-            self.neutron, self.net_creator.network_settings.name, True))
+            self.neutron, self.net_creator.network_settings.name, True,
+            self.project_id))
 
         neutron_utils.delete_network(self.neutron,
                                      self.net_creator.get_network())
         self.assertIsNone(neutron_utils.get_network(
-            self.neutron, network_settings=self.net_creator.network_settings))
+            self.neutron, network_settings=self.net_creator.network_settings,
+            os_creds=self.os_creds, project_id=self.project_id))
 
         # This shall not throw an exception here
         self.net_creator.clean()
@@ -441,7 +444,8 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
 
         # Validate network was created
         self.assertTrue(neutron_utils_tests.validate_network(
-            self.neutron, self.net_creator.network_settings.name, True))
+            self.neutron, self.net_creator.network_settings.name, True,
+            self.project_id))
 
         # Validate subnets
         self.assertTrue(neutron_utils_tests.validate_subnet(
@@ -490,7 +494,8 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         self.net_creator.create()
 
         retrieved_net = neutron_utils.get_network(
-            self.neutron, network_settings=self.net_config.network_settings)
+            self.neutron, network_settings=self.net_config.network_settings,
+            os_creds=self.os_creds, project_id=self.project_id)
 
         self.assertEqual(self.net_creator.get_network().id, retrieved_net.id)
 
@@ -520,7 +525,8 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         self.net_creator.create()
 
         retrieved_net = neutron_utils.get_network(
-            self.neutron, network_settings=self.net_config.network_settings)
+            self.neutron, network_settings=self.net_config.network_settings,
+            os_creds=self.os_creds, project_id=self.project_id)
 
         self.assertEqual(self.net_creator.get_network().id, retrieved_net.id)
 
@@ -578,7 +584,8 @@ class CreateNetworkIPv6Tests(OSIntegrationTestCase):
 
         # Validate network was created
         self.assertTrue(neutron_utils_tests.validate_network(
-            self.neutron, self.net_creator.network_settings.name, True))
+            self.neutron, self.net_creator.network_settings.name, True,
+            self.project_id))
 
         network = self.net_creator.get_network()
         self.assertEqual(1, len(network.subnets))
@@ -678,7 +685,8 @@ class CreateNetworkTypeTests(OSComponentTestCase):
 
         # Validate network was created
         self.assertTrue(neutron_utils_tests.validate_network(
-            self.neutron, net_settings.name, True))
+            self.neutron, net_settings.name, True,
+            self.net_creator.project_id))
 
         self.assertEquals(network_type, network.type)
 
@@ -707,7 +715,8 @@ class CreateNetworkTypeTests(OSComponentTestCase):
 
         # Validate network was created
         self.assertTrue(neutron_utils_tests.validate_network(
-            self.neutron, net_settings.name, True))
+            self.neutron, net_settings.name, True,
+            self.net_creator.project_id))
 
         self.assertEquals(network_type, network.type)
 
@@ -728,7 +737,7 @@ class CreateNetworkTypeTests(OSComponentTestCase):
 
         # Validate network was created
         self.assertTrue(neutron_utils_tests.validate_network(
-            self.neutron, net_settings.name, True))
+            self.neutron, net_settings.name, True, project_id=self.project_id))
 
         self.assertEqual(network_type, network.type)
 
@@ -769,3 +778,92 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         self.net_creator = OpenStackNetwork(self.os_creds, net_settings)
         with self.assertRaises(Exception):
             self.net_creator.create()
+
+
+class CreateMultipleNetworkTests(OSIntegrationTestCase):
+    """
+    Test for the CreateNetwork class and how it interacts with networks
+    groups within other projects with the same name
+    """
+
+    def setUp(self):
+        """
+        Sets up object for test
+        """
+        super(self.__class__, self).__start__()
+
+        guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.net_config = openstack_tests.get_pub_net_config(
+            net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet')
+
+        self.neutron = neutron_utils.neutron_client(self.os_creds)
+
+        # Initialize for cleanup
+        self.admin_net_creator = None
+        self.proj_net_creator = None
+
+    def tearDown(self):
+        """
+        Cleans the network
+        """
+        if self.admin_net_creator:
+            self.admin_net_creator.clean()
+        if self.proj_net_creator:
+            self.proj_net_creator.clean()
+
+        super(self.__class__, self).__clean__()
+
+    def test_network_same_name_diff_proj(self):
+        """
+        Tests the creation of an OpenStackNetwork with the same name
+        within a different project/tenant when not configured but implied by
+        the OSCreds.
+        """
+        # Create Network
+
+        self.admin_net_creator = OpenStackNetwork(
+            self.admin_os_creds, self.net_config.network_settings)
+        self.admin_net_creator.create()
+
+        self.proj_net_creator = OpenStackNetwork(
+            self.os_creds, self.net_config.network_settings)
+        self.proj_net_creator.create()
+
+        self.assertNotEqual(
+            self.admin_net_creator.get_network().id,
+            self.proj_net_creator.get_network().id)
+
+        admin_creator2 = OpenStackNetwork(
+            self.admin_os_creds, self.net_config.network_settings)
+        admin_creator2.create()
+        self.assertEqual(
+            self.admin_net_creator.get_network(), admin_creator2.get_network())
+
+        proj_creator2 = OpenStackNetwork(
+            self.os_creds, self.net_config.network_settings)
+        proj_creator2.create()
+        self.assertEqual(self.proj_net_creator.get_network(),
+                         proj_creator2.get_network())
+
+    def test_network_create_by_admin_to_different_project(self):
+        """
+        Tests the creation of an OpenStackNetwork by the admin user and
+        initialize again with tenant credentials.
+        """
+        # Create Network
+
+        net_settings = self.net_config.network_settings
+
+        net_settings.project_name = self.os_creds.project_name
+
+        self.admin_net_creator = OpenStackNetwork(
+            self.admin_os_creds, net_settings)
+        self.admin_net_creator.create()
+
+        self.proj_net_creator = OpenStackNetwork(
+            self.os_creds, self.net_config.network_settings)
+        self.proj_net_creator.create()
+
+        self.assertEqual(
+            self.admin_net_creator.get_network().id,
+            self.proj_net_creator.get_network().id)

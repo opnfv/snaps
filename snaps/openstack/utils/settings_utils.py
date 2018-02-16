@@ -224,7 +224,7 @@ def create_keypair_config(heat_cli, stack, keypair, pk_output_key):
     return KeypairConfig(name=keypair.name)
 
 
-def create_vm_inst_config(nova, neutron, server):
+def create_vm_inst_config(nova, neutron, server, project_id):
     """
     Returns a VmInstanceConfig object
     note: if the server instance is not active, the PortSettings objects will
@@ -232,6 +232,7 @@ def create_vm_inst_config(nova, neutron, server):
     :param nova: the nova client
     :param neutron: the neutron client
     :param server: a SNAPS-OO VmInst domain object
+    :param project_id: the associated project ID
     :return:
     """
 
@@ -244,7 +245,7 @@ def create_vm_inst_config(nova, neutron, server):
     kwargs['port_settings'] = __create_port_configs(neutron, server.ports)
     kwargs['security_group_names'] = server.sec_grp_names
     kwargs['floating_ip_settings'] = __create_floatingip_config(
-        neutron, kwargs['port_settings'])
+        neutron, kwargs['port_settings'], project_id)
 
     return VmInstanceConfig(**kwargs)
 
@@ -281,7 +282,7 @@ def __create_port_configs(neutron, ports):
     return out
 
 
-def __create_floatingip_config(neutron, port_settings):
+def __create_floatingip_config(neutron, port_settings, project_id):
     """
     Returns a list of FloatingIpConfig objects as they pertain to an
     existing deployed server instance
@@ -296,7 +297,8 @@ def __create_floatingip_config(neutron, port_settings):
 
     fip_ports = list()
     for port_setting in port_settings:
-        setting_port = neutron_utils.get_port(neutron, port_setting)
+        setting_port = neutron_utils.get_port(
+            neutron, port_setting, project_id=project_id)
         if setting_port:
             network = neutron_utils.get_network(
                 neutron, network_name=port_setting.network_name)
@@ -307,7 +309,7 @@ def __create_floatingip_config(neutron, port_settings):
                         fip_ports.append((port_setting.name, setting_port))
                         break
 
-    floating_ips = neutron_utils.get_floating_ips(neutron, fip_ports)
+    floating_ips = neutron_utils.get_port_floating_ips(neutron, fip_ports)
 
     for port_id, floating_ip in floating_ips:
         router = neutron_utils.get_router_by_id(neutron, floating_ip.router_id)

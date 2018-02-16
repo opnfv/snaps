@@ -109,7 +109,8 @@ class NeutronUtilsNetworkTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
         self.assertEqual(len(self.net_config.network_settings.subnet_settings),
                          len(self.network.subnets))
 
@@ -167,7 +168,8 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
         self.assertTrue(validate_subnet(
@@ -193,7 +195,8 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
 
         with self.assertRaises(Exception):
             SubnetConfig(cidr=self.net_config.subnet_cidr)
@@ -208,7 +211,8 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
         self.assertTrue(validate_subnet(
@@ -525,7 +529,8 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         Tests the neutron_utils.create_router()
         """
         self.router = neutron_utils.create_router(
-            self.neutron, self.os_creds, self.net_config.router_settings)
+            self.neutron, self.os_creds, self.net_config.router_settings,
+            self.project_id)
         validate_router(self.neutron, self.net_config.router_settings.name,
                         True)
 
@@ -541,7 +546,8 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
             self.net_config.router_settings.name,
             self.ext_net_name)
         self.router = neutron_utils.create_router(
-            self.neutron, self.os_creds, self.net_config.router_settings)
+            self.neutron, self.os_creds, self.net_config.router_settings,
+            self.project_id)
         validate_router(self.neutron, self.net_config.router_settings.name,
                         True)
 
@@ -558,14 +564,16 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
         self.assertTrue(validate_subnet(
             self.neutron, subnet_setting.name, subnet_setting.cidr, True))
 
         self.router = neutron_utils.create_router(
-            self.neutron, self.os_creds, self.net_config.router_settings)
+            self.neutron, self.os_creds, self.net_config.router_settings,
+            self.project_id)
         validate_router(self.neutron, self.net_config.router_settings.name,
                         True)
 
@@ -584,7 +592,8 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
         self.assertTrue(validate_subnet(
@@ -604,10 +613,12 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
 
         self.router = neutron_utils.create_router(
-            self.neutron, self.os_creds, self.net_config.router_settings)
+            self.neutron, self.os_creds, self.net_config.router_settings,
+            self.project_id)
         validate_router(self.neutron, self.net_config.router_settings.name,
                         True)
 
@@ -625,10 +636,12 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
 
         self.router = neutron_utils.create_router(
-            self.neutron, self.os_creds, self.net_config.router_settings)
+            self.neutron, self.os_creds, self.net_config.router_settings,
+            self.project_id)
         validate_router(self.neutron, self.net_config.router_settings.name,
                         True)
 
@@ -648,7 +661,8 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
         self.assertTrue(validate_subnet(
@@ -672,7 +686,8 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
         self.assertTrue(validate_subnet(self.neutron, subnet_setting.name,
@@ -696,7 +711,8 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
         self.assertTrue(validate_subnet(
@@ -740,7 +756,8 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
         self.assertTrue(validate_subnet(
@@ -766,7 +783,8 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
         self.assertTrue(validate_subnet(
@@ -792,7 +810,8 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.assertEqual(self.net_config.network_settings.name,
                          self.network.name)
         self.assertTrue(validate_network(
-            self.neutron, self.net_config.network_settings.name, True))
+            self.neutron, self.net_config.network_settings.name, True,
+            self.project_id))
 
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
         self.assertTrue(validate_subnet(
@@ -1007,7 +1026,7 @@ Validation routines
 """
 
 
-def validate_network(neutron, name, exists):
+def validate_network(neutron, name, exists, project_id):
     """
     Returns true if a network for a given name DOES NOT exist if the exists
     parameter is false conversely true. Returns false if a network for a given
@@ -1015,9 +1034,11 @@ def validate_network(neutron, name, exists):
     :param neutron: The neutron client
     :param name: The expected network name
     :param exists: Whether or not the network name should exist or not
+    :param project_id: the associated project ID
     :return: True/False
     """
-    network = neutron_utils.get_network(neutron, network_name=name)
+    network = neutron_utils.get_network(neutron, network_name=name,
+                                        project_id=project_id)
     if exists and network:
         return True
     if not exists and not network:

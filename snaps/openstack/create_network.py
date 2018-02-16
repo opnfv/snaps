@@ -54,8 +54,7 @@ class OpenStackNetwork(OpenStackNetworkObject):
         try:
             self.__network = neutron_utils.get_network(
                 self._neutron, network_settings=self.network_settings,
-                project_id=self.network_settings.get_project_id(
-                    self._os_creds))
+                project_id=self.project_id, os_creds=self._os_creds)
         except Unauthorized as e:
             logger.warn('Unable to lookup network with name %s - %s',
                         self.network_settings.name, e)

@@ -816,19 +816,19 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         # Test default reboot which should be 'SOFT'
         inst_creator.reboot()
         # Lag time to allow for shutdown routine to take effect
-        time.sleep(10)
+        time.sleep(15)
         self.assertTrue(check_dhcp_lease(inst_creator, ip))
         self.assertTrue(validate_ssh_client(inst_creator))
 
         # Test 'SOFT' reboot
         inst_creator.reboot(reboot_type=RebootType.soft)
-        time.sleep(10)
+        time.sleep(15)
         self.assertTrue(check_dhcp_lease(inst_creator, ip))
         self.assertTrue(validate_ssh_client(inst_creator))
 
         # Test 'HARD' reboot
         inst_creator.reboot(reboot_type=RebootType.hard)
-        time.sleep(10)
+        time.sleep(15)
         self.assertTrue(check_dhcp_lease(inst_creator, ip))
         self.assertTrue(validate_ssh_client(inst_creator))
 
@@ -899,7 +899,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
 
         derived_inst_creator = create_instance.generate_creator(
             self.os_creds, vm_inst, self.image_creator.image_settings,
-            self.keypair_creator.keypair_settings)
+            self.project_id, self.keypair_creator.keypair_settings)
 
         derived_inst_creator.add_floating_ip(FloatingIpConfig(
             name=self.floating_ip_name, port_name=self.port_1_name,

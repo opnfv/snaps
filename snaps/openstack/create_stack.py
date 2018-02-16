@@ -287,13 +287,13 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         neutron = neutron_utils.neutron_client(self._os_creds)
 
         stack_servers = heat_utils.get_stack_servers(
-            self.__heat_cli, nova, neutron, self.__stack)
+            self.__heat_cli, nova, neutron, self.__stack, self.project_id)
 
         glance = glance_utils.glance_client(self._os_creds)
 
         for stack_server in stack_servers:
             vm_inst_settings = settings_utils.create_vm_inst_config(
-                nova, neutron, stack_server)
+                nova, neutron, stack_server, self.project_id)
             image_settings = settings_utils.determine_image_config(
                 glance, stack_server, self.image_settings)
             keypair_settings = settings_utils.determine_keypair_config(

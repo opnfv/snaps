@@ -323,7 +323,7 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
 
         self.vm_inst = nova_utils.create_server(
             self.nova, self.neutron, self.glance, self.instance_settings,
-            self.image_creator.image_settings)
+            self.image_creator.image_settings, self.project_id)
 
         self.assertIsNotNone(self.vm_inst)
 
@@ -341,7 +341,7 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
 
         self.assertTrue(active)
         vm_inst = nova_utils.get_latest_server_object(
-            self.nova, self.neutron, self.vm_inst)
+            self.nova, self.neutron, self.vm_inst, self.project_id)
 
         self.assertEqual(self.vm_inst.name, vm_inst.name)
         self.assertEqual(self.vm_inst.id, vm_inst.id)
@@ -453,7 +453,7 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         neutron = neutron_utils.neutron_client(self.os_creds)
         self.assertIsNotNone(nova_utils.attach_volume(
             self.nova, neutron, self.instance_creator.get_vm_inst(),
-            self.volume_creator.get_volume()))
+            self.volume_creator.get_volume(), self.project_id))
 
         vol_attach = None
         attached = False
@@ -472,7 +472,8 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         self.assertIsNotNone(vol_attach)
 
         vm_attach = nova_utils.get_server_object_by_id(
-            self.nova, neutron, self.instance_creator.get_vm_inst().id)
+            self.nova, neutron, self.instance_creator.get_vm_inst().id,
+            self.project_id)
 
         # Validate Attachment
         self.assertIsNotNone(vol_attach)
@@ -484,12 +485,13 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         # Detach volume to VM
         self.assertIsNotNone(nova_utils.detach_volume(
             self.nova, neutron, self.instance_creator.get_vm_inst(),
-            self.volume_creator.get_volume()))
+            self.volume_creator.get_volume(), self.project_id))
 
         vol_detach = cinder_utils.get_volume_by_id(
             self.cinder, self.volume_creator.get_volume().id)
         vm_detach = nova_utils.get_server_object_by_id(
-            self.nova, neutron, self.instance_creator.get_vm_inst().id)
+            self.nova, neutron, self.instance_creator.get_vm_inst().id,
+            self.project_id)
 
         # Validate Detachment
         self.assertIsNotNone(vol_detach)
@@ -517,7 +519,7 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         with self.assertRaises(NovaException):
             nova_utils.attach_volume(
                 self.nova, neutron, self.instance_creator.get_vm_inst(),
-                self.volume_creator.get_volume(), 0)
+                self.volume_creator.get_volume(), self.project_id, 0)
 
     def test_detach_volume_nowait(self):
         """
@@ -533,11 +535,12 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         neutron = neutron_utils.neutron_client(self.os_creds)
         nova_utils.attach_volume(
             self.nova, neutron, self.instance_creator.get_vm_inst(),
-            self.volume_creator.get_volume())
+            self.volume_creator.get_volume(), self.project_id)
 
         # Check VmInst for attachment
         latest_vm = nova_utils.get_server_object_by_id(
-            self.nova, neutron, self.instance_creator.get_vm_inst().id)
+            self.nova, neutron, self.instance_creator.get_vm_inst().id,
+            self.project_id)
         self.assertEqual(1, len(latest_vm.volume_ids))
 
         # Check Volume for attachment
@@ -561,4 +564,4 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         with self.assertRaises(NovaException):
             nova_utils.detach_volume(
                 self.nova, neutron, self.instance_creator.get_vm_inst(),
-                self.volume_creator.get_volume(), 0)
+                self.volume_creator.get_volume(), self.project_id, 0)

@@ -80,7 +80,8 @@ class OpenStackRouter(OpenStackNetworkObject):
 
             for port_setting in self.router_settings.port_settings:
                 port = neutron_utils.get_port(
-                    self._neutron, port_settings=port_setting)
+                    self._neutron, port_settings=port_setting,
+                    project_id=self.project_id)
                 if port:
                     self.__ports.append(port)
 
@@ -95,7 +96,8 @@ class OpenStackRouter(OpenStackNetworkObject):
 
         if not self.__router:
             self.__router = neutron_utils.create_router(
-                self._neutron, self._os_creds, self.router_settings)
+                self._neutron, self._os_creds, self.router_settings,
+                self.project_id)
 
             for internal_subnet_name in self.router_settings.internal_subnets:
                 internal_subnet = neutron_utils.get_subnet(
@@ -114,7 +116,8 @@ class OpenStackRouter(OpenStackNetworkObject):
 
             for port_setting in self.router_settings.port_settings:
                 port = neutron_utils.get_port(
-                    self._neutron, port_settings=port_setting)
+                    self._neutron, port_settings=port_setting,
+                    project_id=self.project_id)
                 logger.info(
                     'Retrieved port %s for router - %s', port_setting.name,
                     self.router_settings.name)

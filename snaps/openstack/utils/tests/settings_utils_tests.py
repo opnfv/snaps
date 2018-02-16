@@ -327,7 +327,7 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
             self.nova, self.neutron,
             vm_inst_settings=self.inst_creator.instance_settings)
         derived_vm_settings = settings_utils.create_vm_inst_config(
-            self.nova, self.neutron, server)
+            self.nova, self.neutron, server, self.project_id)
         self.assertIsNotNone(derived_vm_settings)
         self.assertIsNotNone(derived_vm_settings.port_settings)
         self.assertIsNotNone(derived_vm_settings.floating_ip_settings)

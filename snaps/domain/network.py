@@ -24,6 +24,7 @@ class Network:
         Constructor
         :param name: the network's name
         :param id: the network's ID
+        :param project_id: the associated project ID
         :param admin_state_up: T/F - network is up when True
         :param shared: T/F - network can be shared amongst other project's
         :param external: T/F - network is deemed to be external
@@ -32,6 +33,7 @@ class Network:
         """
         self.name = kwargs.get('name')
         self.id = kwargs.get('id')
+        self.project_id = kwargs.get('project_id')
         self.admin_state_up = kwargs.get('admin_state_up')
         self.shared = kwargs.get('shared')
         self.external = kwargs.get('router:external', kwargs.get('external'))
@@ -40,6 +42,7 @@ class Network:
 
     def __eq__(self, other):
         return (self.name == other.name and self.id == other.id and
+                self.project_id == other.project_id and
                 self.admin_state_up == other.admin_state_up and
                 self.shared == other.shared and
                 self.external == other.external and
@@ -57,6 +60,7 @@ class Subnet:
         Constructor
         :param name: the network's name
         :param id: the subnet's ID
+        :param project_id: the associated project ID
         :param network_id: the network's ID
         :param cidr: the CIDR
         :param ip_version: the IP version
@@ -71,6 +75,7 @@ class Subnet:
         """
         self.name = kwargs.get('name')
         self.id = kwargs.get('id')
+        self.project_id = kwargs.get('project_id')
         self.network_id = kwargs.get('network_id')
         self.cidr = kwargs.get('cidr')
         self.ip_version = kwargs.get('ip_version')
@@ -95,6 +100,7 @@ class Subnet:
     def __eq__(self, other):
         return (self.name == other.name and
                 self.id == other.id and
+                self.project_id == other.project_id and
                 self.network_id == other.network_id and
                 self.cidr == other.cidr and
                 self.ip_version == other.ip_version and

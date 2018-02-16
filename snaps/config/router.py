@@ -61,7 +61,7 @@ class RouterConfig(object):
         if not self.name:
             raise RouterConfigError('Name is required')
 
-    def dict_for_neutron(self, neutron, os_creds):
+    def dict_for_neutron(self, neutron, os_creds, project_id):
         """
         Returns a dictionary object representing this object.
         This is meant to be converted into JSON designed for use by the Neutron
@@ -70,7 +70,11 @@ class RouterConfig(object):
         TODO - expand automated testing to exercise all parameters
         :param neutron: The neutron client to retrieve external network
                         information if necessary
-        :param os_creds: The OpenStack credentials
+        :param os_creds: The OpenStack credentials for retrieving the keystone
+                         client for looking up the project ID when the
+                         self.project_name is not None
+        :param project_id: the associated project ID to use when
+                           self.project_name is None
         :return: the dictionary object
         """
         out = dict()
@@ -82,7 +86,6 @@ class RouterConfig(object):
             keystone = keystone_utils.keystone_client(os_creds)
             project = keystone_utils.get_project(
                 keystone=keystone, project_name=self.project_name)
-            project_id = None
             if project:
                 project_id = project.id
             if project_id:

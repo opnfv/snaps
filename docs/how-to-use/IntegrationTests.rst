@@ -208,6 +208,21 @@ create_network_tests.py - CreateNetworkIPv6Tests
 |                                       |               | IPv6 subnet                                               |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_network_tests.py - CreateMultipleNetworkTests
+----------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Neutron API   | Description                                               |
++=======================================+===============+===========================================================+
+| test_network_same_name_diff_proj      | 2             | Ensures that a network with the same name can be created  |
+|                                       |               | against different projects                                |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_network_create_by_admin_to       | 2             | Ensures that a network can be created by the admin user   |
+| _different_project                    |               | to another project and that a creator with the credentials|
+|                                       |               | to the other project will not create a new network with   |
+|                                       |               | the same name                                             |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_router_tests.py - CreateRouterSuccessTests
 -------------------------------------------------
 

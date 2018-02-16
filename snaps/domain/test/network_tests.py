@@ -26,13 +26,15 @@ class NetworkObjectTests(unittest.TestCase):
 
     def test_construction_kwargs_1(self):
         subnet = Subnet(
-            **{'name': 'foo', 'id': 'bar', 'network_id': 'foo-bar'})
+            **{'name': 'foo', 'id': 'bar', 'project_id': 'proj1',
+               'network_id': 'foo-bar'})
         network = Network(
-            **{'name': 'foo', 'id': 'bar', 'provider:network_type': 'flat',
-               'admin_state_up': False, 'shared': True,
-               'router:external': False, 'subnets': [subnet]})
+            **{'name': 'foo', 'id': 'bar', 'project_id': 'proj1',
+               'provider:network_type': 'flat', 'admin_state_up': False,
+               'shared': True, 'router:external': False, 'subnets': [subnet]})
         self.assertEqual('foo', network.name)
         self.assertEqual('bar', network.id)
+        self.assertEqual('proj1', network.project_id)
         self.assertEqual('flat', network.type)
         self.assertFalse(network.admin_state_up)
         self.assertFalse(network.external)
@@ -41,13 +43,15 @@ class NetworkObjectTests(unittest.TestCase):
 
     def test_construction_kwargs_2(self):
         subnet = Subnet(
-            **{'name': 'foo', 'id': 'bar', 'network_id': 'foo-bar'})
+            **{'name': 'foo', 'id': 'bar', 'project_id': 'proj1',
+               'network_id': 'foo-bar'})
         network = Network(
-            **{'name': 'foo', 'id': 'bar', 'type': 'flat',
-               'admin_state_up': False, 'shared': True, 'external': False,
-               'subnets': [subnet]})
+            **{'name': 'foo', 'id': 'bar', 'project_id': 'proj1',
+               'type': 'flat', 'admin_state_up': False, 'shared': True,
+               'external': False, 'subnets': [subnet]})
         self.assertEqual('foo', network.name)
         self.assertEqual('bar', network.id)
+        self.assertEqual('proj1', network.project_id)
         self.assertEqual('flat', network.type)
         self.assertFalse(network.admin_state_up)
         self.assertFalse(network.external)
@@ -56,12 +60,15 @@ class NetworkObjectTests(unittest.TestCase):
 
     def test_construction_named(self):
         subnet = Subnet(
-            **{'name': 'foo', 'id': 'bar', 'network_id': 'foo-bar'})
+            **{'name': 'foo', 'id': 'bar', 'project_id': 'proj1',
+               'network_id': 'foo-bar'})
         network = Network(
-            name='foo', id='bar', type='flat', admin_state_up=False,
-            shared=True, external=False, subnets=[subnet])
+            name='foo', id='bar', project_id='proj1', type='flat',
+            admin_state_up=False, shared=True, external=False,
+            subnets=[subnet])
         self.assertEqual('foo', network.name)
         self.assertEqual('bar', network.id)
+        self.assertEqual('proj1', network.project_id)
         self.assertEqual('flat', network.type)
         self.assertFalse(network.admin_state_up)
         self.assertFalse(network.external)
@@ -76,12 +83,14 @@ class SubnetObjectTests(unittest.TestCase):
 
     def test_construction_kwargs(self):
         subnet = Subnet(
-            **{'name': 'foo', 'id': 'bar', 'cidr': '10.0.0.0/24',
-               'ip_version': 4, 'gateway_ip': '10.0.0.1', 'enable_dhcp': True,
+            **{'name': 'foo', 'id': 'bar', 'project_id': 'proj1',
+               'cidr': '10.0.0.0/24', 'ip_version': 4,
+               'gateway_ip': '10.0.0.1', 'enable_dhcp': True,
                'dns_nameservers': ['8.8.8.8'], 'host_routes': list(),
                'ipv6_ra_mode': 'hello', 'ipv6_address_mode': 'world'})
         self.assertEqual('foo', subnet.name)
         self.assertEqual('bar', subnet.id)
+        self.assertEqual('proj1', subnet.project_id)
         self.assertEqual('10.0.0.0/24', subnet.cidr)
         self.assertEqual(4, subnet.ip_version)
         self.assertEqual('10.0.0.1', subnet.gateway_ip)
@@ -94,12 +103,13 @@ class SubnetObjectTests(unittest.TestCase):
 
     def test_construction_named(self):
         subnet = Subnet(
-            name='foo', id='bar', cidr='10.0.0.0/24',
+            name='foo', id='bar', project_id='proj1', cidr='10.0.0.0/24',
             ip_version=4, gateway_ip='10.0.0.1', enable_dhcp=True,
             dns_nameservers=['8.8.8.8'], host_routes=list(),
             ipv6_ra_mode='hello', ipv6_address_mode='world')
         self.assertEqual('foo', subnet.name)
         self.assertEqual('bar', subnet.id)
+        self.assertEqual('proj1', subnet.project_id)
         self.assertEqual('10.0.0.0/24', subnet.cidr)
         self.assertEqual(4, subnet.ip_version)
         self.assertEqual('10.0.0.1', subnet.gateway_ip)

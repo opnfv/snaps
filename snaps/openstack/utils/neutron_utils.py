@@ -102,7 +102,7 @@ def delete_network(neutron, network):
 
 
 def get_network(neutron, network_settings=None, network_name=None,
-                project_id=None):
+                project_id=None, os_creds=None):
     """
     Returns Network SNAPS-OO domain object the first network found with
     either the given attributes from the network_settings object if not None,
@@ -112,6 +112,7 @@ def get_network(neutron, network_settings=None, network_name=None,
     :param network_settings: the NetworkConfig object used to create filter
     :param network_name: the name of the network to retrieve
     :param project_id: the id of the network's project
+    :param os_creds: the OpenStack credentials for retrieving the project
     :return: a SNAPS-OO Network domain object
     """
     net_filter = dict()
@@ -120,7 +121,10 @@ def get_network(neutron, network_settings=None, network_name=None,
     elif network_name:
         net_filter['name'] = network_name
 
-    if project_id:
+    if network_settings and network_settings.project_name and os_creds:
+        net_filter['project_id'] = keystone_utils.get_project(
+            os_creds=os_creds, project_name=network_settings.project_name).id
+    elif project_id:
         net_filter['project_id'] = project_id
 
     networks = neutron.list_networks(**net_filter)
@@ -278,7 +282,7 @@ def get_subnets_by_network_id(neutron, network_id):
     return out
 
 
-def create_router(neutron, os_creds, router_settings):
+def create_router(neutron, os_creds, router_settings, project_id):
     """
     Creates a router for OpenStack
     :param neutron: the client
@@ -286,10 +290,16 @@ def create_router(neutron, os_creds, router_settings):
     :param router_settings: A dictionary containing the router configuration
                             and is responsible for creating the subnet request
                             JSON body
+    :param project_id: the associated project ID
     :return: a SNAPS-OO Router domain object
     """
     if neutron:
-        json_body = router_settings.dict_for_neutron(neutron, os_creds)
+        if router_settings and router_settings.project_name:
+            keystone = keystone_utils.keystone_client(os_creds)
+            project_id = keystone_utils.get_project(
+                keystone=keystone, project_name=router_settings.project_name)
+        json_body = router_settings.dict_for_neutron(
+            neutron, os_creds, project_id)
         logger.info('Creating router with name - ' + router_settings.name)
         os_router = neutron.create_router(json_body)
         return __map_router(neutron, os_router['router'])
@@ -460,10 +470,7 @@ def create_port(neutron, os_creds, port_settings):
     logger.info('Creating port for network with name - %s',
                 port_settings.network_name)
     os_port = neutron.create_port(body=json_body)['port']
-    return Port(name=os_port['name'], id=os_port['id'],
-                ips=os_port['fixed_ips'],
-                mac_address=os_port['mac_address'],
-                allowed_address_pairs=os_port['allowed_address_pairs'])
+    return Port(**os_port)
 
 
 def delete_port(neutron, port):
@@ -476,13 +483,14 @@ def delete_port(neutron, port):
     neutron.delete_port(port.id)
 
 
-def get_port(neutron, port_settings=None, port_name=None):
+def get_port(neutron, port_settings=None, port_name=None, project_id=None):
     """
     Returns the first port object (dictionary) found for the given query
     :param neutron: the client
     :param port_settings: the PortConfig object used for generating the query
     :param port_name: if port_settings is None, this name is the value to place
                       into the query
+    :param project_id: the associated project ID
     :return: a SNAPS-OO Port domain object
     """
     port_filter = dict()
@@ -497,12 +505,16 @@ def get_port(neutron, port_settings=None, port_name=None):
         if port_settings.mac_address:
             port_filter['mac_address'] = port_settings.mac_address
         if port_settings.network_name:
-            network = get_network(neutron,
-                                  network_name=port_settings.network_name)
+            network = get_network(
+                neutron, network_name=port_settings.network_name,
+                project_id=project_id)
             if network:
                 port_filter['network_id'] = network.id
     elif port_name:
         port_filter['name'] = port_name
+
+    if project_id:
+        port_filter['project_id'] = project_id
 
     ports = neutron.list_ports(**port_filter)
     for port in ports['ports']:
@@ -718,14 +730,11 @@ def get_external_networks(neutron):
     return out
 
 
-def get_floating_ips(neutron, ports=None):
+def get_port_floating_ips(neutron, ports):
     """
-    Returns all of the floating IPs
-    When ports is not None, FIPs returned must be associated with one of the
-    ports in the list and a tuple 2 where the first element being the port's
-    ID and the second being the FloatingIp SNAPS-OO domain object.
-    When ports is None, all known FloatingIp SNAPS-OO domain objects will be
-    returned in a list
+    Returns all of the floating IPs associated with the ports returned in a
+    list of tuples where the port object is in the first position and the
+    floating IP object is in the second
     :param neutron: the Neutron client
     :param ports: a list of tuple 2 where index 0 is the port name and index 1
                   is the SNAPS-OO Port object
@@ -735,14 +744,22 @@ def get_floating_ips(neutron, ports=None):
     out = list()
     fips = neutron.list_floatingips()
     for fip in fips['floatingips']:
-        if ports:
-            for port_name, port in ports:
-                if port and port.id == fip['port_id']:
-                    out.append((port.id, FloatingIp(**fip)))
-                    break
-        else:
-            out.append(FloatingIp(**fip))
+        for port_name, port in ports:
+            if port and port.id == fip['port_id']:
+                out.append((port.id, FloatingIp(**fip)))
+                break
+    return out
 
+
+def get_floating_ips(neutron):
+    """
+    Returns a list of all of the floating IPs
+    :param neutron: the Neutron client
+    """
+    out = list()
+    fips = neutron.list_floatingips()
+    for fip in fips['floatingips']:
+        out.append(FloatingIp(**fip))
     return out
 
 

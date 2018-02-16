@@ -63,7 +63,7 @@ class OSComponentTestCase(unittest.TestCase):
 
         keystone = keystone_utils.keystone_client(self.os_creds)
         self.project_id = keystone_utils.get_project(
-            keystone=keystone, project_name=self.os_creds.project_name)
+            keystone=keystone, project_name=self.os_creds.project_name).id
 
     @staticmethod
     def parameterize(testcase_klass, os_creds, ext_net_name,
@@ -170,6 +170,7 @@ class OSIntegrationTestCase(OSComponentTestCase):
 
             # add user to project
             self.project_creator.assoc_user(self.user_creator.get_user())
+            self.project_id = self.project_creator.get_project().id
 
     def __clean__(self):
         """
