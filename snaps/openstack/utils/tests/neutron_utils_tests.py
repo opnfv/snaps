@@ -511,7 +511,8 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         if self.router:
             try:
                 neutron_utils.delete_router(self.neutron, self.router)
-                validate_router(self.neutron, self.router.name, False)
+                validate_router(
+                    self.neutron, self.router.name, self.project_id, False)
             except:
                 pass
 
@@ -531,8 +532,9 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.router = neutron_utils.create_router(
             self.neutron, self.os_creds, self.net_config.router_settings,
             self.project_id)
-        validate_router(self.neutron, self.net_config.router_settings.name,
-                        True)
+        validate_router(
+            self.neutron, self.net_config.router_settings.name,
+            self.project_id, True)
 
     def test_create_router_with_public_interface(self):
         """
@@ -548,8 +550,9 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.router = neutron_utils.create_router(
             self.neutron, self.os_creds, self.net_config.router_settings,
             self.project_id)
-        validate_router(self.neutron, self.net_config.router_settings.name,
-                        True)
+        validate_router(
+            self.neutron, self.net_config.router_settings.name,
+            self.project_id, True)
 
         ext_net = neutron_utils.get_network(
             self.neutron, network_name=self.ext_net_name)
@@ -574,8 +577,9 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.router = neutron_utils.create_router(
             self.neutron, self.os_creds, self.net_config.router_settings,
             self.project_id)
-        validate_router(self.neutron, self.net_config.router_settings.name,
-                        True)
+        validate_router(
+            self.neutron, self.net_config.router_settings.name,
+            self.project_id, True)
 
         self.interface_router = neutron_utils.add_interface_router(
             self.neutron, self.router, self.network.subnets[0])
@@ -619,8 +623,9 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.router = neutron_utils.create_router(
             self.neutron, self.os_creds, self.net_config.router_settings,
             self.project_id)
-        validate_router(self.neutron, self.net_config.router_settings.name,
-                        True)
+        validate_router(
+            self.neutron, self.net_config.router_settings.name,
+            self.project_id, True)
 
         with self.assertRaises(NeutronException):
             self.interface_router = neutron_utils.add_interface_router(
@@ -642,8 +647,9 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         self.router = neutron_utils.create_router(
             self.neutron, self.os_creds, self.net_config.router_settings,
             self.project_id)
-        validate_router(self.neutron, self.net_config.router_settings.name,
-                        True)
+        validate_router(
+            self.neutron, self.net_config.router_settings.name,
+            self.project_id, True)
 
         for subnet in self.network.subnets:
             neutron_utils.delete_subnet(self.neutron, subnet)
@@ -1065,17 +1071,19 @@ def validate_subnet(neutron, name, cidr, exists):
     return False
 
 
-def validate_router(neutron, name, exists):
+def validate_router(neutron, name, project_id, exists):
     """
     Returns true if a router for a given name DOES NOT exist if the exists
     parameter is false conversely true. Returns false if a router for a given
     name DOES exist if the exists parameter is true conversely false.
     :param neutron: The neutron client
     :param name: The expected router name
+    :param project_id: The associated project ID
     :param exists: Whether or not the network name should exist or not
     :return: True/False
     """
-    router = neutron_utils.get_router(neutron, router_name=name)
+    router = neutron_utils.get_router(
+        neutron, router_name=name, project_id=project_id)
     if exists and router:
         return True
     return False

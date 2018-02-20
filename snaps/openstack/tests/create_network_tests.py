@@ -455,7 +455,8 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
 
         # Validate routers
         neutron_utils_tests.validate_router(
-            self.neutron, self.router_creator.router_settings.name, True)
+            self.neutron, self.router_creator.router_settings.name,
+            self.project_id, True)
 
         neutron_utils_tests.validate_interface_router(
             self.router_creator.get_internal_router_interface(),
@@ -506,7 +507,9 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         self.router_creator.create()
 
         retrieved_router = neutron_utils.get_router(
-            self.neutron, router_settings=self.router_creator.router_settings)
+            self.neutron, os_creds=self.os_creds,
+            router_settings=self.router_creator.router_settings,
+            project_id=self.project_id)
         self.assertEqual(
             self.router_creator.get_router().id, retrieved_router.id)
 
@@ -537,7 +540,9 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         self.router_creator.create()
 
         retrieved_router = neutron_utils.get_router(
-            self.neutron, router_settings=self.router_creator.router_settings)
+            self.neutron, os_creds=self.os_creds,
+            router_settings=self.router_creator.router_settings,
+            project_id=self.project_id)
         self.assertEqual(
             self.router_creator.get_router().id, retrieved_router.id)
 
@@ -760,7 +765,7 @@ class CreateNetworkTypeTests(OSComponentTestCase):
 
         # Validate network was created
         self.assertTrue(neutron_utils_tests.validate_network(
-            self.neutron, net_settings.name, True))
+            self.neutron, net_settings.name, True, self.project_id))
 
         self.assertEquals(network_type, network.type)
 
@@ -782,7 +787,7 @@ class CreateNetworkTypeTests(OSComponentTestCase):
 
 class CreateMultipleNetworkTests(OSIntegrationTestCase):
     """
-    Test for the CreateNetwork class and how it interacts with networks
+    Test for the OpenStackNetwork class and how it interacts with networks
     groups within other projects with the same name
     """
 
