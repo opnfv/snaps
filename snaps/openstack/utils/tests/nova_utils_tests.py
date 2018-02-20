@@ -458,7 +458,7 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         vol_attach = None
         attached = False
         start_time = time.time()
-        while time.time() < start_time + 30:
+        while time.time() < start_time + 120:
             vol_attach = cinder_utils.get_volume_by_id(
                 self.cinder, self.volume_creator.get_volume().id)
 
@@ -547,7 +547,7 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         vol_attach = None
         attached = False
         start_time = time.time()
-        while time.time() < start_time + 30:
+        while time.time() < start_time + 120:
             vol_attach = cinder_utils.get_volume_by_id(
                 self.cinder, self.volume_creator.get_volume().id)
 
