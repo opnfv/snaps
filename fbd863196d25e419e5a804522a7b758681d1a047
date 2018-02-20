@@ -16,6 +16,24 @@
       "revId": "fbd863196d25e419e5a804522a7b758681d1a047",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_b0443975",
+        "filename": "snaps/openstack/utils/neutron_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-02-20T21:49:26Z",
+      "side": 1,
+      "message": "I was ok with an exception being raised here but I agree that I should be checking for None and raising an exception with a proper message.",
+      "parentUuid": "5a3f45e8_9072dde3",
+      "revId": "fbd863196d25e419e5a804522a7b758681d1a047",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
