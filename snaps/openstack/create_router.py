@@ -63,7 +63,8 @@ class OpenStackRouter(OpenStackNetworkObject):
 
         try:
             self.__router = neutron_utils.get_router(
-                self._neutron, router_settings=self.router_settings)
+                self._neutron, router_settings=self.router_settings,
+                os_creds=self._os_creds, project_id=self.project_id)
         except Unauthorized as e:
             logger.warn('Unable to lookup router with name %s - %s',
                         self.router_settings.name, e)

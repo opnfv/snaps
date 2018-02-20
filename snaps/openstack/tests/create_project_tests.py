@@ -151,7 +151,8 @@ class CreateProjectSuccessTests(OSComponentTestCase):
         self.assertIsNotNone(created_project)
 
         retrieved_project = keystone_utils.get_project(
-            keystone=self.keystone, project_settings=self.project_settings)
+            keystone=self.keystone, project_settings=self.project_settings,
+            os_creds=self.os_creds)
         self.assertIsNotNone(retrieved_project)
         self.assertEqual(created_project, retrieved_project)
 
