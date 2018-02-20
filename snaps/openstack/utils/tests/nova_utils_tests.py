@@ -456,6 +456,7 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
             self.volume_creator.get_volume(), self.project_id))
 
         vol_attach = None
+        vol_detach = None
         attached = False
         start_time = time.time()
         while time.time() < start_time + 120:
@@ -487,8 +488,19 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
             self.nova, neutron, self.instance_creator.get_vm_inst(),
             self.volume_creator.get_volume(), self.project_id))
 
-        vol_detach = cinder_utils.get_volume_by_id(
-            self.cinder, self.volume_creator.get_volume().id)
+        start_time = time.time()
+        while time.time() < start_time + 120:
+            vol_detach = cinder_utils.get_volume_by_id(
+                self.cinder, self.volume_creator.get_volume().id)
+            if len(vol_detach.attachments) == 0:
+                attached = False
+                break
+
+            time.sleep(3)
+
+        self.assertFalse(attached)
+        self.assertIsNotNone(vol_detach)
+
         vm_detach = nova_utils.get_server_object_by_id(
             self.nova, neutron, self.instance_creator.get_vm_inst().id,
             self.project_id)
@@ -496,10 +508,6 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         # Validate Detachment
         self.assertIsNotNone(vol_detach)
         self.assertEqual(self.volume_creator.get_volume().id, vol_detach.id)
-
-        if len(vol_detach.attachments) > 0:
-            vol_detach = cinder_utils.get_volume_by_id(
-                self.cinder, self.volume_creator.get_volume().id)
 
         self.assertEqual(0, len(vol_detach.attachments))
         self.assertEqual(0, len(vm_detach.volume_ids))
