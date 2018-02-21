@@ -31,8 +31,11 @@ class OpenStackCloudObject(CloudObject):
         """
         self._os_creds = os_creds
         keystone = keystone_utils.keystone_client(os_creds)
-        self.project_id = keystone_utils.get_project(
-            keystone=keystone, project_name=os_creds.project_name).id
+        if os_creds.project_id is not None:
+            self.project_id = os_creds.project_id
+        else:
+            self.project_id = keystone_utils.get_project(
+                keystone=keystone, project_name=os_creds.project_name).id
 
     def initialize(self):
         raise NotImplementedError('Do not override abstract method')

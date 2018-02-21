@@ -32,6 +32,7 @@ class OSCreds:
         :param password: The user's password (required)
         :param auth_url: The OpenStack cloud's authorization URL (required)
         :param project_name: The project/tenant name
+        :param project_id: The project/tenant id
         :param identity_api_version: The OpenStack's API version to use for
                                      Keystone clients
         :param image_api_version: The OpenStack's API version to use for Glance
@@ -61,6 +62,7 @@ class OSCreds:
         self.password = kwargs.get('password')
         self.auth_url = kwargs.get('auth_url')
         self.project_name = kwargs.get('project_name')
+        self.project_id = kwargs.get('project_id', None)
 
         if kwargs.get('identity_api_version') is None:
             self.identity_api_version = keystone_utils.V2_VERSION_NUM
@@ -175,6 +177,7 @@ class OSCreds:
                 ', password=' + str(self.password) +
                 ', auth_url=' + str(self.auth_url) +
                 ', project_name=' + str(self.project_name) +
+                ', project_id=' + str(self.project_id) +
                 ', identity_api_version=' + str(self.identity_api_version) +
                 ', image_api_version=' + str(self.image_api_version) +
                 ', network_api_version=' + str(self.network_api_version) +
