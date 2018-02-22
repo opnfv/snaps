@@ -18,7 +18,7 @@ from neutronclient.common.exceptions import NotFound, Unauthorized
 
 from snaps.config.router import RouterConfig
 from snaps.openstack.openstack_creator import OpenStackNetworkObject
-from snaps.openstack.utils import neutron_utils
+from snaps.openstack.utils import neutron_utils, keystone_utils
 
 __author__ = 'spisarski'
 
@@ -78,10 +78,11 @@ class OpenStackRouter(OpenStackNetworkObject):
                     raise RouterCreationError(
                         'Subnet not found with name ' + internal_subnet_name)
 
+            keystone = keystone_utils.keystone_client(self._os_creds)
             for port_setting in self.router_settings.port_settings:
                 port = neutron_utils.get_port(
-                    self._neutron, port_settings=port_setting,
-                    project_id=self.project_id)
+                    self._neutron, keystone, port_settings=port_setting,
+                    project_name=self._os_creds.project_name)
                 if port:
                     self.__ports.append(port)
 
@@ -96,8 +97,7 @@ class OpenStackRouter(OpenStackNetworkObject):
 
         if not self.__router:
             self.__router = neutron_utils.create_router(
-                self._neutron, self._os_creds, self.router_settings,
-                self.project_id)
+                self._neutron, self._os_creds, self.router_settings)
 
             for internal_subnet_name in self.router_settings.internal_subnets:
                 internal_subnet = neutron_utils.get_subnet(
@@ -114,10 +114,11 @@ class OpenStackRouter(OpenStackNetworkObject):
                     raise RouterCreationError(
                         'Subnet not found with name ' + internal_subnet_name)
 
+            keystone = keystone_utils.keystone_client(self._os_creds)
             for port_setting in self.router_settings.port_settings:
                 port = neutron_utils.get_port(
-                    self._neutron, port_settings=port_setting,
-                    project_id=self.project_id)
+                    self._neutron, keystone, port_settings=port_setting,
+                    project_name=self._os_creds.project_name)
                 logger.info(
                     'Retrieved port %s for router - %s', port_setting.name,
                     self.router_settings.name)
@@ -133,9 +134,8 @@ class OpenStackRouter(OpenStackNetworkObject):
                             port_setting.name,
                             self.router_settings.name)
                         self.__ports.append(port)
-                        neutron_utils.add_interface_router(self._neutron,
-                                                           self.__router,
-                                                           port=port)
+                        neutron_utils.add_interface_router(
+                            self._neutron, self.__router, port=port)
                     else:
                         raise RouterCreationError(
                             'Error creating port with name - '

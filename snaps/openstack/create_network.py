@@ -19,7 +19,7 @@ from neutronclient.common.exceptions import NetworkNotFoundClient, Unauthorized
 
 from snaps.config.network import NetworkConfig, SubnetConfig, PortConfig
 from snaps.openstack.openstack_creator import OpenStackNetworkObject
-from snaps.openstack.utils import neutron_utils
+from snaps.openstack.utils import neutron_utils, keystone_utils
 
 __author__ = 'spisarski'
 
@@ -52,9 +52,11 @@ class OpenStackNetwork(OpenStackNetworkObject):
         super(self.__class__, self).initialize()
 
         try:
+            keystone = keystone_utils.keystone_client(self._os_creds)
             self.__network = neutron_utils.get_network(
-                self._neutron, network_settings=self.network_settings,
-                project_id=self.project_id, os_creds=self._os_creds)
+                self._neutron, keystone,
+                network_settings=self.network_settings,
+                project_name=self._os_creds.project_name)
         except Unauthorized as e:
             logger.warn('Unable to lookup network with name %s - %s',
                         self.network_settings.name, e)

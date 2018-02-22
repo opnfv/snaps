@@ -304,7 +304,7 @@ class CreateVolumeWithTypeTests(OSIntegrationTestCase):
         self.volume_type_name = guid + '-vol-type'
 
         self.volume_type_creator = OpenStackVolumeType(
-            self.os_creds, VolumeTypeConfig(name=self.volume_type_name))
+            self.admin_os_creds, VolumeTypeConfig(name=self.volume_type_name))
         self.volume_type_creator.create()
         self.volume_creator = None
 
@@ -332,8 +332,7 @@ class CreateVolumeWithTypeTests(OSIntegrationTestCase):
         Expect a NotFound to be raised when the volume type does not exist
         """
         self.volume_creator = OpenStackVolume(
-            self.os_creds,
-            VolumeConfig(
+            self.admin_os_creds, VolumeConfig(
                 name=self.volume_name, type_name=self.volume_type_name))
 
         created_volume = self.volume_creator.create(block=True)

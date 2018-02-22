@@ -122,12 +122,13 @@ class CreateQoSTests(OSIntegrationTestCase):
         super(self.__class__, self).__start__()
 
         guid = uuid.uuid4()
-        self.qos_settings = QoSConfig(
+        qos_settings = QoSConfig(
             name=self.__class__.__name__ + '-' + str(guid),
             consumer=Consumer.both)
 
-        self.cinder = cinder_utils.cinder_client(self.os_creds)
-        self.qos_creator = None
+        self.cinder = cinder_utils.cinder_client(self.admin_os_creds)
+        self.qos_creator = create_qos.OpenStackQoS(
+            self.admin_os_creds, qos_settings)
 
     def tearDown(self):
         """
@@ -143,13 +144,11 @@ class CreateQoSTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack qos.
         """
         # Create QoS
-        self.qos_creator = create_qos.OpenStackQoS(
-            self.os_creds, self.qos_settings)
         created_qos = self.qos_creator.create()
         self.assertIsNotNone(created_qos)
 
         retrieved_qos = cinder_utils.get_qos(
-            self.cinder, qos_settings=self.qos_settings)
+            self.cinder, qos_settings=self.qos_creator.qos_settings)
 
         self.assertIsNotNone(retrieved_qos)
         self.assertEqual(created_qos, retrieved_qos)
@@ -160,13 +159,11 @@ class CreateQoSTests(OSIntegrationTestCase):
         clean() does not raise an Exception.
         """
         # Create QoS
-        self.qos_creator = create_qos.OpenStackQoS(
-            self.os_creds, self.qos_settings)
         created_qos = self.qos_creator.create()
         self.assertIsNotNone(created_qos)
 
         retrieved_qos = cinder_utils.get_qos(
-            self.cinder, qos_settings=self.qos_settings)
+            self.cinder, qos_settings=self.qos_creator.qos_settings)
         self.assertIsNotNone(retrieved_qos)
         self.assertEqual(created_qos, retrieved_qos)
 
@@ -174,7 +171,7 @@ class CreateQoSTests(OSIntegrationTestCase):
         cinder_utils.delete_qos(self.cinder, created_qos)
 
         self.assertIsNone(cinder_utils.get_qos(
-            self.cinder, qos_settings=self.qos_settings))
+            self.cinder, qos_settings=self.qos_creator.qos_settings))
 
         # Must not raise an exception when attempting to cleanup non-existent
         # qos
@@ -186,16 +183,14 @@ class CreateQoSTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack qos when one already exists.
         """
         # Create QoS
-        self.qos_creator = create_qos.OpenStackQoS(
-            self.os_creds, self.qos_settings)
         qos1 = self.qos_creator.create()
 
         retrieved_qos = cinder_utils.get_qos(
-            self.cinder, qos_settings=self.qos_settings)
+            self.cinder, qos_settings=self.qos_creator.qos_settings)
         self.assertEqual(qos1, retrieved_qos)
 
         # Should be retrieving the instance data
         os_qos_2 = create_qos.OpenStackQoS(
-            self.os_creds, self.qos_settings)
+            self.admin_os_creds, self.qos_creator.qos_settings)
         qos2 = os_qos_2.create()
         self.assertEqual(qos1, qos2)

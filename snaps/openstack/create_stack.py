@@ -29,7 +29,7 @@ from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.create_volume_type import OpenStackVolumeType
 from snaps.openstack.openstack_creator import OpenStackCloudObject
 from snaps.openstack.utils import (
-    nova_utils, settings_utils, glance_utils, cinder_utils)
+    nova_utils, settings_utils, glance_utils, cinder_utils, keystone_utils)
 
 from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.utils import heat_utils, neutron_utils
@@ -283,17 +283,20 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         """
 
         out = list()
-        nova = nova_utils.nova_client(self._os_creds)
-        neutron = neutron_utils.neutron_client(self._os_creds)
 
+        nova = nova_utils.nova_client(self._os_creds)
+        keystone = keystone_utils.keystone_client(self._os_creds)
+        neutron = neutron_utils.neutron_client(self._os_creds)
         stack_servers = heat_utils.get_stack_servers(
-            self.__heat_cli, nova, neutron, self.__stack, self.project_id)
+            self.__heat_cli, nova, neutron, keystone, self.__stack,
+            self._os_creds.project_name)
 
         glance = glance_utils.glance_client(self._os_creds)
 
         for stack_server in stack_servers:
             vm_inst_settings = settings_utils.create_vm_inst_config(
-                nova, neutron, stack_server, self.project_id)
+                nova, keystone, neutron, stack_server,
+                self._os_creds.project_name)
             image_settings = settings_utils.determine_image_config(
                 glance, stack_server, self.image_settings)
             keypair_settings = settings_utils.determine_keypair_config(

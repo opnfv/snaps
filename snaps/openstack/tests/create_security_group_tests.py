@@ -228,7 +228,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         """
         Tests the creation of an OpenStack Security Group without custom rules.
         """
-        # Create Image
+        # Create Security Group
         sec_grp_settings = SecurityGroupConfig(name=self.sec_grp_name,
                                                description='hello group')
         self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(
@@ -236,7 +236,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         self.sec_grp_creator.create()
 
         sec_grp = neutron_utils.get_security_group(
-            self.neutron, sec_grp_settings=sec_grp_settings)
+            self.neutron, self.keystone, sec_grp_settings=sec_grp_settings)
         self.assertIsNotNone(sec_grp)
 
         validation_utils.objects_equivalent(
@@ -249,23 +249,24 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
         self.assertTrue(
             validate_sec_grp(
-                self.neutron, self.sec_grp_creator.sec_grp_settings,
+                self.neutron, self.keystone,
+                self.sec_grp_creator.sec_grp_settings,
                 self.sec_grp_creator.get_security_group()))
 
     def test_create_group_admin_user_to_new_project(self):
         """
         Tests the creation of an OpenStack Security Group without custom rules.
         """
-        # Create Image
+        # Create Security Group
         sec_grp_settings = SecurityGroupConfig(
             name=self.sec_grp_name, description='hello group',
-            project_name=self.admin_os_creds.project_name)
-        self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(
-            self.os_creds, sec_grp_settings)
+            project_name=self.os_creds.project_name)
+        self.sec_grp_creator = OpenStackSecurityGroup(
+            self.admin_os_creds, sec_grp_settings)
         self.sec_grp_creator.create()
 
         sec_grp = neutron_utils.get_security_group(
-            self.neutron, sec_grp_settings=sec_grp_settings)
+            self.neutron, self.keystone, sec_grp_settings=sec_grp_settings)
         self.assertIsNotNone(sec_grp)
 
         validation_utils.objects_equivalent(
@@ -278,14 +279,25 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
         self.assertTrue(
             validate_sec_grp(
-                self.neutron, self.sec_grp_creator.sec_grp_settings,
+                self.neutron, self.keystone,
+                self.sec_grp_creator.sec_grp_settings,
                 self.sec_grp_creator.get_security_group(), rules))
+
+        self.assertEqual(self.sec_grp_creator.get_security_group().id,
+                         sec_grp.id)
+
+        proj_creator = OpenStackSecurityGroup(
+            self.os_creds, SecurityGroupConfig(name=self.sec_grp_name))
+        proj_creator.create()
+
+        self.assertEqual(self.sec_grp_creator.get_security_group().id,
+                         proj_creator.get_security_group().id)
 
     def test_create_group_new_user_to_admin_project(self):
         """
         Tests the creation of an OpenStack Security Group without custom rules.
         """
-        # Create Image
+        # Create Security Group
         sec_grp_settings = SecurityGroupConfig(
             name=self.sec_grp_name, description='hello group',
             project_name=self.os_creds.project_name)
@@ -294,7 +306,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         self.sec_grp_creator.create()
 
         sec_grp = neutron_utils.get_security_group(
-            self.neutron, sec_grp_settings=sec_grp_settings)
+            self.neutron, self.keystone, sec_grp_settings=sec_grp_settings)
         self.assertIsNotNone(sec_grp)
 
         validation_utils.objects_equivalent(
@@ -307,14 +319,15 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
         self.assertTrue(
             validate_sec_grp(
-                self.neutron, self.sec_grp_creator.sec_grp_settings,
+                self.neutron, self.keystone,
+                self.sec_grp_creator.sec_grp_settings,
                 self.sec_grp_creator.get_security_group(), rules))
 
     def test_create_delete_group(self):
         """
         Tests the creation of an OpenStack Security Group without custom rules.
         """
-        # Create Image
+        # Create Security Group
         sec_grp_settings = SecurityGroupConfig(name=self.sec_grp_name,
                                                description='hello group')
         self.sec_grp_creator = create_security_group.OpenStackSecurityGroup(
@@ -324,12 +337,13 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
         self.assertTrue(
             validate_sec_grp(
-                self.neutron, self.sec_grp_creator.sec_grp_settings,
+                self.neutron, self.keystone,
+                self.sec_grp_creator.sec_grp_settings,
                 self.sec_grp_creator.get_security_group()))
 
         neutron_utils.delete_security_group(self.neutron, created_sec_grp)
         self.assertIsNone(neutron_utils.get_security_group(
-            self.neutron,
+            self.neutron, self.keystone,
             sec_grp_settings=self.sec_grp_creator.sec_grp_settings))
 
         self.sec_grp_creator.clean()
@@ -339,7 +353,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack Security Group with one simple
         custom rule.
         """
-        # Create Image
+        # Create Security Group
         sec_grp_rule_settings = list()
         sec_grp_rule_settings.append(
             SecurityGroupRuleConfig(
@@ -353,7 +367,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         self.sec_grp_creator.create()
 
         sec_grp = neutron_utils.get_security_group(
-            self.neutron, sec_grp_settings=sec_grp_settings)
+            self.neutron, self.keystone, sec_grp_settings=sec_grp_settings)
         validation_utils.objects_equivalent(
             self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(
@@ -364,7 +378,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
         self.assertTrue(
             validate_sec_grp(
-                self.neutron, self.sec_grp_creator.sec_grp_settings,
+                self.neutron, self.keystone,
+                self.sec_grp_creator.sec_grp_settings,
                 self.sec_grp_creator.get_security_group(), rules))
 
     def test_create_group_with_one_complex_rule(self):
@@ -372,7 +387,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack Security Group with one simple
         custom rule.
         """
-        # Create Image
+        # Create Security Group
         sec_grp_rule_settings = list()
         sec_grp_rule_settings.append(
             SecurityGroupRuleConfig(
@@ -388,7 +403,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         self.sec_grp_creator.create()
 
         sec_grp = neutron_utils.get_security_group(
-            self.neutron, sec_grp_settings=sec_grp_settings)
+            self.neutron, self.keystone, sec_grp_settings=sec_grp_settings)
         validation_utils.objects_equivalent(
             self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(
@@ -399,7 +414,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
         self.assertTrue(
             validate_sec_grp(
-                self.neutron, self.sec_grp_creator.sec_grp_settings,
+                self.neutron, self.keystone,
+                self.sec_grp_creator.sec_grp_settings,
                 self.sec_grp_creator.get_security_group(), rules))
 
     def test_create_group_with_several_rules(self):
@@ -407,7 +423,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack Security Group with one simple
         custom rule.
         """
-        # Create Image
+        # Create Security Group
         sec_grp_rule_settings = list()
         sec_grp_rule_settings.append(
             SecurityGroupRuleConfig(
@@ -432,7 +448,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         self.sec_grp_creator.create()
 
         sec_grp = neutron_utils.get_security_group(
-            self.neutron, sec_grp_settings=sec_grp_settings)
+            self.neutron, self.keystone, sec_grp_settings=sec_grp_settings)
         validation_utils.objects_equivalent(
             self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(
@@ -443,7 +459,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
         self.assertTrue(
             validate_sec_grp(
-                self.neutron, self.sec_grp_creator.sec_grp_settings,
+                self.neutron, self.keystone,
+                self.sec_grp_creator.sec_grp_settings,
                 self.sec_grp_creator.get_security_group(), rules))
 
     def test_add_rule(self):
@@ -451,7 +468,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack Security Group with one simple
         custom rule then adds one after creation.
         """
-        # Create Image
+        # Create Security Group
         sec_grp_rule_settings = list()
         sec_grp_rule_settings.append(
             SecurityGroupRuleConfig(
@@ -465,7 +482,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         self.sec_grp_creator.create()
 
         sec_grp = neutron_utils.get_security_group(
-            self.neutron, sec_grp_settings=sec_grp_settings)
+            self.neutron, self.keystone, sec_grp_settings=sec_grp_settings)
         validation_utils.objects_equivalent(
             self.sec_grp_creator.get_security_group(), sec_grp)
 
@@ -474,7 +491,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
         self.assertTrue(
             validate_sec_grp(
-                self.neutron, self.sec_grp_creator.sec_grp_settings,
+                self.neutron, self.keystone,
+                self.sec_grp_creator.sec_grp_settings,
                 self.sec_grp_creator.get_security_group(), rules))
 
         rules = neutron_utils.get_rules_by_security_group(
@@ -496,7 +514,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack Security Group with two simple
         custom rules then removes one by the rule ID.
         """
-        # Create Image
+        # Create Security Group
         sec_grp_rule_settings = list()
         sec_grp_rule_settings.append(
             SecurityGroupRuleConfig(
@@ -521,7 +539,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         self.sec_grp_creator.create()
 
         sec_grp = neutron_utils.get_security_group(
-            self.neutron, sec_grp_settings=sec_grp_settings)
+            self.neutron, self.keystone, sec_grp_settings=sec_grp_settings)
         validation_utils.objects_equivalent(
             self.sec_grp_creator.get_security_group(), sec_grp)
         rules = neutron_utils.get_rules_by_security_group(
@@ -532,7 +550,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
         self.assertTrue(
             validate_sec_grp(
-                self.neutron, self.sec_grp_creator.sec_grp_settings,
+                self.neutron, self.keystone,
+                self.sec_grp_creator.sec_grp_settings,
                 self.sec_grp_creator.get_security_group(), rules))
 
         self.sec_grp_creator.remove_rule(
@@ -547,7 +566,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack Security Group with two simple
         custom rules then removes one by the rule setting object
         """
-        # Create Image
+        # Create Security Group
         sec_grp_rule_settings = list()
         sec_grp_rule_settings.append(
             SecurityGroupRuleConfig(
@@ -572,7 +591,7 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         self.sec_grp_creator.create()
 
         sec_grp = neutron_utils.get_security_group(
-            self.neutron, sec_grp_settings=sec_grp_settings)
+            self.neutron, self.keystone, sec_grp_settings=sec_grp_settings)
         validation_utils.objects_equivalent(
             self.sec_grp_creator.get_security_group(), sec_grp)
 
@@ -584,7 +603,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
         self.assertTrue(
             validate_sec_grp(
-                self.neutron, self.sec_grp_creator.sec_grp_settings,
+                self.neutron, self.keystone,
+                self.sec_grp_creator.sec_grp_settings,
                 self.sec_grp_creator.get_security_group(), rules))
 
         self.sec_grp_creator.remove_rule(rule_setting=sec_grp_rule_settings[0])
@@ -594,11 +614,13 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
         self.assertEqual(len(rules) - 1, len(rules_after_del))
 
 
-def validate_sec_grp(neutron, sec_grp_settings, sec_grp, rules=list()):
+def validate_sec_grp(neutron, keystone, sec_grp_settings, sec_grp,
+                     rules=list()):
     """
     Returns True is the settings on a security group are properly contained
     on the SNAPS SecurityGroup domain object
     :param neutron: the neutron client
+    :param keystone: the keystone client
     :param sec_grp_settings: the security group configuration
     :param sec_grp: the SNAPS-OO security group object
     :param rules: collection of SNAPS-OO security group rule objects
@@ -607,10 +629,10 @@ def validate_sec_grp(neutron, sec_grp_settings, sec_grp, rules=list()):
     return (sec_grp.description == sec_grp_settings.description and
             sec_grp.name == sec_grp_settings.name and
             validate_sec_grp_rules(
-                neutron, sec_grp_settings.rule_settings, rules))
+                neutron, keystone, sec_grp_settings.rule_settings, rules))
 
 
-def validate_sec_grp_rules(neutron, rule_settings, rules):
+def validate_sec_grp_rules(neutron, keystone, rule_settings, rules):
     """
     Returns True is the settings on a security group rule are properly
     contained on the SNAPS SecurityGroupRule domain object.
@@ -618,6 +640,7 @@ def validate_sec_grp_rules(neutron, rule_settings, rules):
     this is the only means to tell if the rule is custom or defaulted by
     OpenStack
     :param neutron: the neutron client
+    :param keystone: the keystone client
     :param rule_settings: collection of SecurityGroupRuleConfig objects
     :param rules: a collection of SecurityGroupRule domain objects
     :return: T/F
@@ -628,7 +651,7 @@ def validate_sec_grp_rules(neutron, rule_settings, rules):
             match = False
             for rule in rules:
                 sec_grp = neutron_utils.get_security_group(
-                    neutron, sec_grp_name=rule_setting.sec_grp_name)
+                    neutron, keystone, sec_grp_name=rule_setting.sec_grp_name)
 
                 setting_eth_type = create_security_group.Ethertype.IPv4
                 if rule_setting.ethertype:
@@ -700,7 +723,7 @@ class CreateMultipleSecurityGroupTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack Security Group with the same name
         within a different project/tenant.
         """
-        # Create Image
+        # Create Security Group
         sec_grp_config = SecurityGroupConfig(
             name=self.sec_grp_name, description='hello group')
         self.sec_grp_creator_proj = OpenStackSecurityGroup(

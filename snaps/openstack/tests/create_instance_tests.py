@@ -515,14 +515,16 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
 
         vm_inst = self.inst_creator.create()
         self.assertIsNotNone(nova_utils.get_server(
-            self.nova, self.neutron, vm_inst_settings=instance_settings))
+            self.nova, self.neutron, self.keystone,
+            vm_inst_settings=instance_settings))
 
         # Delete instance
         nova_utils.delete_vm_instance(self.nova, vm_inst)
 
         self.assertTrue(self.inst_creator.vm_deleted(block=True))
         self.assertIsNone(nova_utils.get_server(
-            self.nova, self.neutron, vm_inst_settings=instance_settings))
+            self.nova, self.neutron, self.keystone,
+            vm_inst_settings=instance_settings))
 
         # Exception should not be thrown
         self.inst_creator.clean()
@@ -899,7 +901,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
 
         derived_inst_creator = create_instance.generate_creator(
             self.os_creds, vm_inst, self.image_creator.image_settings,
-            self.project_id, self.keypair_creator.keypair_settings)
+            self.os_creds.project_name, self.keypair_creator.keypair_settings)
 
         derived_inst_creator.add_floating_ip(FloatingIpConfig(
             name=self.floating_ip_name, port_name=self.port_1_name,
@@ -2616,13 +2618,14 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
 
         try:
             # Create Image
-            self.image_creator = OpenStackImage(self.os_creds,
-                                                os_image_settings)
+            self.image_creator = OpenStackImage(
+                self.os_creds, os_image_settings)
             self.image_creator.create()
 
             # First network is public
             self.network_creators.append(OpenStackNetwork(
                 self.os_creds, self.net_config_1))
+
             # Second network is private
             self.network_creators.append(OpenStackNetwork(
                 self.os_creds, self.net_config_2))
@@ -2630,32 +2633,29 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
                 network_creator.create()
 
             port_settings = [
-                create_network.PortConfig(
+                PortConfig(
                     name=self.guid + '-router-port1',
                     ip_addrs=[{
                         'subnet_name':
                             self.net_config_1.subnet_settings[0].name,
                         'ip': static_gateway_ip1
                     }],
-                    network_name=self.net_config_1.name,
-                    project_name=self.os_creds.project_name),
-                create_network.PortConfig(
+                    network_name=self.net_config_1.name),
+                PortConfig(
                     name=self.guid + '-router-port2',
                     ip_addrs=[{
                         'subnet_name':
                             self.net_config_2.subnet_settings[0].name,
                         'ip': static_gateway_ip2
                     }],
-                    network_name=self.net_config_2.name,
-                    project_name=self.os_creds.project_name)]
+                    network_name=self.net_config_2.name)]
 
             router_settings = RouterConfig(
                 name=self.guid + '-pub-router', port_settings=port_settings)
-            self.router_creator = create_router.OpenStackRouter(
+            self.router_creator = OpenStackRouter(
                 self.os_creds, router_settings)
             self.router_creator.create()
 
-            # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
                 FlavorConfig(name=self.guid + '-flavor-name', ram=512,
@@ -2933,7 +2933,8 @@ class CreateInstanceVolumeTests(OSIntegrationTestCase):
 
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(nova_utils.get_server(
-            self.nova, self.neutron, vm_inst_settings=instance_settings))
+            self.nova, self.neutron, self.keystone,
+            vm_inst_settings=instance_settings))
 
         self.assertIsNotNone(vm_inst)
         self.assertEqual(1, len(vm_inst.volume_ids))
@@ -2957,7 +2958,8 @@ class CreateInstanceVolumeTests(OSIntegrationTestCase):
 
         vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(nova_utils.get_server(
-            self.nova, self.neutron, vm_inst_settings=instance_settings))
+            self.nova, self.neutron, self.keystone,
+            vm_inst_settings=instance_settings))
 
         self.assertIsNotNone(vm_inst)
         self.assertEqual(2, len(vm_inst.volume_ids))

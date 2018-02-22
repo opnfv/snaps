@@ -257,14 +257,15 @@ def get_stack_security_groups(heat_cli, neutron, stack):
     return out
 
 
-def get_stack_servers(heat_cli, nova, neutron, stack, project_id):
+def get_stack_servers(heat_cli, nova, neutron, keystone, stack, project_name):
     """
     Returns a list of VMInst domain objects associated with a Stack
     :param heat_cli: the OpenStack heat client object
     :param nova: the OpenStack nova client object
     :param neutron: the OpenStack neutron client object
+    :param keystone: the OpenStack keystone client object
     :param stack: the SNAPS-OO Stack domain object
-    :param project_id: the associated project ID
+    :param project_name: the associated project ID
     :return: a list of VMInst domain objects
     """
 
@@ -273,7 +274,7 @@ def get_stack_servers(heat_cli, nova, neutron, stack, project_id):
     for resource in srvr_res:
         try:
             server = nova_utils.get_server_object_by_id(
-                nova, neutron, resource.id, project_id)
+                nova, neutron, keystone, resource.id, project_name)
             if server:
                 out.append(server)
         except NotFound:
@@ -287,7 +288,7 @@ def get_stack_servers(heat_cli, nova, neutron, stack, project_id):
                 heat_cli, res_res.id, 'OS::Nova::Server')
             for res_srvr in res_res_srvrs:
                 server = nova_utils.get_server_object_by_id(
-                    nova, neutron, res_srvr.id, project_id)
+                    nova, neutron, keystone, res_srvr.id, project_name)
                 if server:
                     out.append(server)
 

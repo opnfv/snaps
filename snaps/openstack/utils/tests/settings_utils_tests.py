@@ -37,7 +37,7 @@ from snaps.openstack.create_security_group import OpenStackSecurityGroup
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import (
-    neutron_utils, settings_utils, nova_utils, glance_utils)
+    neutron_utils, settings_utils, nova_utils, glance_utils, keystone_utils)
 
 __author__ = 'spisarski'
 
@@ -155,6 +155,7 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
         and creating an OS image file within OpenStack
         """
         self.nova = nova_utils.nova_client(self.os_creds)
+        self.keystone = keystone_utils.keystone_client(self.os_creds)
         self.glance = glance_utils.glance_client(self.os_creds)
         self.neutron = neutron_utils.neutron_client(self.os_creds)
 
@@ -324,10 +325,11 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
         self.inst_creator.create(block=True)
 
         server = nova_utils.get_server(
-            self.nova, self.neutron,
+            self.nova, self.neutron, self.keystone,
             vm_inst_settings=self.inst_creator.instance_settings)
         derived_vm_settings = settings_utils.create_vm_inst_config(
-            self.nova, self.neutron, server, self.project_id)
+            self.nova, self.keystone, self.neutron, server,
+            self.os_creds.project_name)
         self.assertIsNotNone(derived_vm_settings)
         self.assertIsNotNone(derived_vm_settings.port_settings)
         self.assertIsNotNone(derived_vm_settings.floating_ip_settings)
@@ -340,7 +342,7 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
         self.inst_creator.create(block=True)
 
         server = nova_utils.get_server(
-            self.nova, self.neutron,
+            self.nova, self.neutron, self.keystone,
             vm_inst_settings=self.inst_creator.instance_settings)
         derived_image_settings = settings_utils.determine_image_config(
             self.glance, server, [self.image_creator.image_settings])

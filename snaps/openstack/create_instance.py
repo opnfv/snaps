@@ -19,7 +19,8 @@ from novaclient.exceptions import NotFound
 
 from snaps.config.vm_inst import VmInstanceConfig, FloatingIpConfig
 from snaps.openstack.openstack_creator import OpenStackComputeObject
-from snaps.openstack.utils import glance_utils, cinder_utils, settings_utils
+from snaps.openstack.utils import (
+    glance_utils, cinder_utils, settings_utils, keystone_utils)
 from snaps.openstack.utils import neutron_utils
 from snaps.openstack.utils import nova_utils
 from snaps.openstack.utils.nova_utils import RebootType
@@ -30,7 +31,6 @@ __author__ = 'spisarski'
 logger = logging.getLogger('create_instance')
 
 POLL_INTERVAL = 3
-VOL_DETACH_TIMEOUT = 120
 STATUS_ACTIVE = 'ACTIVE'
 STATUS_DELETED = 'DELETED'
 
@@ -74,6 +74,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
         super(self.__class__, self).initialize()
 
         self.__neutron = neutron_utils.neutron_client(self._os_creds)
+        self.__keystone = keystone_utils.keystone_client(self._os_creds)
 
         self.__ports = self.__query_ports(self.instance_settings.port_settings)
         self.__lookup_existing_vm_by_name()
@@ -104,7 +105,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
         within the project
         """
         server = nova_utils.get_server(
-            self._nova, self.__neutron,
+            self._nova, self.__neutron, self.__keystone,
             vm_inst_settings=self.instance_settings)
         if server:
             if server.name == self.instance_settings.name:
@@ -135,8 +136,9 @@ class OpenStackVmInstance(OpenStackComputeObject):
         """
         glance = glance_utils.glance_client(self._os_creds)
         self.__vm = nova_utils.create_server(
-            self._nova, self.__neutron, glance, self.instance_settings,
-            self.image_settings, self.project_id, self.keypair_settings)
+            self._nova, self.__keystone, self.__neutron, glance,
+            self.instance_settings, self.image_settings,
+            self._os_creds.project_name, self.keypair_settings)
         logger.info('Created instance with name - %s',
                     self.instance_settings.name)
 
@@ -166,14 +168,14 @@ class OpenStackVmInstance(OpenStackComputeObject):
 
                 if volume and self.vm_active(block=True):
                     vm = nova_utils.attach_volume(
-                        self._nova, self.__neutron, self.__vm, volume,
-                        self.project_id, timeout=VOL_DETACH_TIMEOUT)
+                        self._nova, self.__neutron, self.__keystone, self.__vm,
+                        volume, self._os_creds.project_name)
 
                     if vm:
                         self.__vm = vm
                     else:
-                        logger.warn('Volume [%s] not attached within timeout '
-                                    'of [%s]', volume.name, VOL_DETACH_TIMEOUT)
+                        logger.warn(
+                            'Volume [%s] attachment timeout ', volume.name)
                 else:
                     logger.warn('Unable to attach volume named [%s]',
                                 volume_name)
@@ -216,7 +218,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
             floating_ip_setting.router_name)
         if ext_gateway and self.vm_active(block=True):
             floating_ip = neutron_utils.create_floating_ip(
-                self.__neutron, ext_gateway, port.id)
+                self.__neutron, self.__keystone, ext_gateway, port.id)
             self.__floating_ip_dict[floating_ip_setting.name] = floating_ip
 
             logger.info(
@@ -272,8 +274,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
                     cinder, volume_rec['id'])
                 if volume:
                     vm = nova_utils.detach_volume(
-                        self._nova, self.__neutron, self.__vm, volume,
-                        self.project_id, timeout=VOL_DETACH_TIMEOUT)
+                        self._nova, self.__neutron, self.__keystone, self.__vm,
+                        volume, self._os_creds.project_name)
                     if vm:
                         self.__vm = vm
                     else:
@@ -318,8 +320,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
 
         for port_setting in port_settings:
             port = neutron_utils.get_port(
-                self.__neutron, port_settings=port_setting,
-                project_id=self.project_id)
+                self.__neutron, self.__keystone, port_settings=port_setting,
+                project_name=self._os_creds.project_name)
             if port:
                 ports.append((port_setting.name, port))
 
@@ -337,7 +339,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
 
         for port_setting in port_settings:
             port = neutron_utils.get_port(
-                self.__neutron, port_settings=port_setting)
+                self.__neutron, self.__keystone, port_settings=port_setting)
             if not port:
                 port = neutron_utils.create_port(
                     self.__neutron, self._os_creds, port_setting)
@@ -359,7 +361,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
         :return: Server object
         """
         return nova_utils.get_server_object_by_id(
-            self._nova, self.__neutron, self.__vm.id, self.project_id)
+            self._nova, self.__neutron, self.__keystone, self.__vm.id,
+            self._os_creds.project_name)
 
     def get_console_output(self):
         """
@@ -507,7 +510,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
                 STATUS_ACTIVE, block, self.instance_settings.vm_boot_timeout,
                 poll_interval):
             self.__vm = nova_utils.get_server_object_by_id(
-                self._nova, self.__neutron, self.__vm.id, self.project_id)
+                self._nova, self.__neutron, self.__keystone, self.__vm.id,
+                self._os_creds.project_name)
             return True
         return False
 
@@ -774,21 +778,22 @@ class OpenStackVmInstance(OpenStackComputeObject):
             self._nova, self.__vm, reboot_type=reboot_type)
 
 
-def generate_creator(os_creds, vm_inst, image_config, project_id,
+def generate_creator(os_creds, vm_inst, image_config, project_name,
                      keypair_config=None):
     """
     Initializes an OpenStackVmInstance object
     :param os_creds: the OpenStack credentials
     :param vm_inst: the SNAPS-OO VmInst domain object
     :param image_config: the associated ImageConfig object
-    :param project_id: the associated project ID
+    :param project_name: the associated project ID
     :param keypair_config: the associated KeypairConfig object (optional)
     :return: an initialized OpenStackVmInstance object
     """
     nova = nova_utils.nova_client(os_creds)
+    keystone = keystone_utils.keystone_client(os_creds)
     neutron = neutron_utils.neutron_client(os_creds)
     derived_inst_config = settings_utils.create_vm_inst_config(
-        nova, neutron, vm_inst, project_id)
+        nova, keystone, neutron, vm_inst, project_name)
 
     derived_inst_creator = OpenStackVmInstance(
         os_creds, derived_inst_config, image_config, keypair_config)

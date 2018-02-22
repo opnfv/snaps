@@ -31,7 +31,7 @@ from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import (
     heat_utils, neutron_utils, nova_utils, settings_utils, glance_utils,
-    cinder_utils)
+    cinder_utils, keystone_utils)
 
 __author__ = 'spisarski'
 
@@ -186,8 +186,10 @@ class HeatUtilsCreateSimpleStackTests(OSComponentTestCase):
         self.assertEqual(self.subnet_name, subnets[0].name)
 
         nova = nova_utils.nova_client(self.os_creds)
+        keystone = keystone_utils.keystone_client(self.os_creds)
         servers = heat_utils.get_stack_servers(
-            self.heat_client, nova, neutron, self.stack1, self.project_id)
+            self.heat_client, nova, neutron, keystone, self.stack1,
+            self.os_creds.project_name)
         self.assertIsNotNone(servers)
         self.assertEqual(1, len(servers))
         self.assertEqual(self.vm_inst_name, servers[0].name)
@@ -308,14 +310,16 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
 
                 if not is_deleted:
                     nova = nova_utils.nova_client(self.os_creds)
+                    keystone = keystone_utils.keystone_client(self.os_creds)
                     neutron = neutron_utils.neutron_client(self.os_creds)
                     glance = glance_utils.glance_client(self.os_creds)
                     servers = heat_utils.get_stack_servers(
-                        self.heat_client, nova, neutron, self.stack,
-                        self.project_id)
+                        self.heat_client, nova, neutron, keystone, self.stack,
+                        self.os_creds.project_name)
                     for server in servers:
                         vm_settings = settings_utils.create_vm_inst_config(
-                            nova, neutron, server, self.project_id)
+                            nova, keystone, neutron, server,
+                            self.os_creds.project_name)
                         img_settings = settings_utils.determine_image_config(
                             glance, server,
                             [self.image_creator1.image_settings,
@@ -382,9 +386,10 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
 
         nova = nova_utils.nova_client(self.os_creds)
         glance = glance_utils.glance_client(self.os_creds)
-
+        keystone = keystone_utils.keystone_client(self.os_creds)
         servers = heat_utils.get_stack_servers(
-            self.heat_client, nova, neutron, self.stack, self.project_id)
+            self.heat_client, nova, neutron, keystone, self.stack,
+            self.os_creds.project_name)
         self.assertIsNotNone(servers)
         self.assertEqual(2, len(servers))
 
@@ -499,8 +504,9 @@ class HeatUtilsRouterTests(OSComponentTestCase):
         router = routers[0]
         self.assertEqual(self.router_name, router.name)
 
+        keystone = keystone_utils.keystone_client(self.os_creds)
         ext_net = neutron_utils.get_network(
-            self.neutron, network_name=self.ext_net_name)
+            self.neutron, keystone, network_name=self.ext_net_name)
         self.assertEqual(ext_net.id, router.external_network_id)
 
 

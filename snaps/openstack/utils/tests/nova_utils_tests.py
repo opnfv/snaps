@@ -32,7 +32,7 @@ from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.tests import openstack_tests
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import (
-    nova_utils, neutron_utils, glance_utils, cinder_utils)
+    nova_utils, neutron_utils, glance_utils, cinder_utils, keystone_utils)
 from snaps.openstack.utils.nova_utils import NovaException
 
 __author__ = 'spisarski'
@@ -243,6 +243,7 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
         self.nova = nova_utils.nova_client(self.os_creds)
+        self.keystone = keystone_utils.keystone_client(self.os_creds)
         self.neutron = neutron_utils.neutron_client(self.os_creds)
         self.glance = glance_utils.glance_client(self.os_creds)
 
@@ -322,8 +323,9 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
         """
 
         self.vm_inst = nova_utils.create_server(
-            self.nova, self.neutron, self.glance, self.instance_settings,
-            self.image_creator.image_settings, self.project_id)
+            self.nova, self.keystone, self.neutron, self.glance,
+            self.instance_settings, self.image_creator.image_settings,
+            self.os_creds.project_name)
 
         self.assertIsNotNone(self.vm_inst)
 
@@ -341,7 +343,8 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
 
         self.assertTrue(active)
         vm_inst = nova_utils.get_latest_server_object(
-            self.nova, self.neutron, self.vm_inst, self.project_id)
+            self.nova, self.neutron, self.keystone, self.vm_inst,
+            self.os_creds.project_name)
 
         self.assertEqual(self.vm_inst.name, vm_inst.name)
         self.assertEqual(self.vm_inst.id, vm_inst.id)
@@ -451,9 +454,10 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
 
         # Attach volume to VM
         neutron = neutron_utils.neutron_client(self.os_creds)
+        keystone = keystone_utils.keystone_client(self.os_creds)
         self.assertIsNotNone(nova_utils.attach_volume(
-            self.nova, neutron, self.instance_creator.get_vm_inst(),
-            self.volume_creator.get_volume(), self.project_id))
+            self.nova, neutron, keystone, self.instance_creator.get_vm_inst(),
+            self.volume_creator.get_volume(), self.os_creds.project_name))
 
         vol_attach = None
         vol_detach = None
@@ -472,9 +476,10 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         self.assertTrue(attached)
         self.assertIsNotNone(vol_attach)
 
+        keystone = keystone_utils.keystone_client(self.os_creds)
         vm_attach = nova_utils.get_server_object_by_id(
-            self.nova, neutron, self.instance_creator.get_vm_inst().id,
-            self.project_id)
+            self.nova, neutron, keystone,
+            self.instance_creator.get_vm_inst().id, self.os_creds.project_name)
 
         # Validate Attachment
         self.assertIsNotNone(vol_attach)
@@ -485,8 +490,8 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
 
         # Detach volume to VM
         self.assertIsNotNone(nova_utils.detach_volume(
-            self.nova, neutron, self.instance_creator.get_vm_inst(),
-            self.volume_creator.get_volume(), self.project_id))
+            self.nova, neutron, keystone, self.instance_creator.get_vm_inst(),
+            self.volume_creator.get_volume(), self.os_creds.project_name))
 
         start_time = time.time()
         while time.time() < start_time + 120:
@@ -502,8 +507,8 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         self.assertIsNotNone(vol_detach)
 
         vm_detach = nova_utils.get_server_object_by_id(
-            self.nova, neutron, self.instance_creator.get_vm_inst().id,
-            self.project_id)
+            self.nova, neutron, keystone,
+            self.instance_creator.get_vm_inst().id, self.os_creds.project_name)
 
         # Validate Detachment
         self.assertIsNotNone(vol_detach)
@@ -524,10 +529,13 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
 
         # Attach volume to VM
         neutron = neutron_utils.neutron_client(self.os_creds)
+        keystone = keystone_utils.keystone_client(self.os_creds)
         with self.assertRaises(NovaException):
             nova_utils.attach_volume(
-                self.nova, neutron, self.instance_creator.get_vm_inst(),
-                self.volume_creator.get_volume(), self.project_id, 0)
+                self.nova, neutron, keystone,
+                self.instance_creator.get_vm_inst(),
+                self.volume_creator.get_volume(), self.os_creds.project_name,
+                0)
 
     def test_detach_volume_nowait(self):
         """
@@ -541,14 +549,16 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
 
         # Attach volume to VM
         neutron = neutron_utils.neutron_client(self.os_creds)
+        keystone = keystone_utils.keystone_client(self.os_creds)
         nova_utils.attach_volume(
-            self.nova, neutron, self.instance_creator.get_vm_inst(),
-            self.volume_creator.get_volume(), self.project_id)
+            self.nova, neutron, keystone, self.instance_creator.get_vm_inst(),
+            self.volume_creator.get_volume(), self.os_creds.project_name)
 
         # Check VmInst for attachment
+        keystone = keystone_utils.keystone_client(self.os_creds)
         latest_vm = nova_utils.get_server_object_by_id(
-            self.nova, neutron, self.instance_creator.get_vm_inst().id,
-            self.project_id)
+            self.nova, neutron, keystone,
+            self.instance_creator.get_vm_inst().id, self.os_creds.project_name)
         self.assertEqual(1, len(latest_vm.volume_ids))
 
         # Check Volume for attachment
@@ -571,5 +581,7 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         # Detach volume
         with self.assertRaises(NovaException):
             nova_utils.detach_volume(
-                self.nova, neutron, self.instance_creator.get_vm_inst(),
-                self.volume_creator.get_volume(), self.project_id, 0)
+                self.nova, neutron, keystone,
+                self.instance_creator.get_vm_inst(),
+                self.volume_creator.get_volume(), self.os_creds.project_name,
+                0)

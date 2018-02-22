@@ -18,6 +18,7 @@ from keystoneclient.client import Client
 from keystoneauth1.identity import v3, v2
 from keystoneauth1 import session
 import requests
+from keystoneclient.exceptions import NotFound
 
 from snaps.domain.project import Project, Domain
 from snaps.domain.role import Role
@@ -105,26 +106,16 @@ def get_endpoint(os_creds, service_type, interface='public'):
         interface=interface)
 
 
-def get_project(keystone=None, os_creds=None, project_settings=None,
-                project_name=None):
+def get_project(keystone=None, project_settings=None, project_name=None):
     """
     Returns the first project where the project_settings is used for the query
     if not None, else the project_name parameter is used for the query. If both
     parameters are None, None is returned
     :param keystone: the Keystone client
-    :param os_creds: the OpenStack credentials used to obtain the Keystone
-                     client if the keystone parameter is None
     :param project_settings: a ProjectConfig object
     :param project_name: the name to query
     :return: the SNAPS-OO Project domain object or None
     """
-    if not keystone:
-        if os_creds:
-            keystone = keystone_client(os_creds)
-        else:
-            raise KeystoneException(
-                'Cannot lookup project without the proper credentials')
-
     proj_filter = dict()
 
     if project_name:
@@ -150,6 +141,26 @@ def get_project(keystone=None, os_creds=None, project_settings=None,
 
             return Project(name=project.name, project_id=project.id,
                            domain_id=domain_id)
+
+
+def get_project_by_id(keystone, proj_id):
+    """
+    Returns the first project where the project_settings is used for the query
+    if not None, else the project_name parameter is used for the query. If both
+    parameters are None, None is returned
+    :param keystone: the Keystone client
+    :param proj_id: the project ID
+    """
+    if proj_id and len(proj_id) > 0:
+        try:
+            os_proj = keystone.projects.get(proj_id)
+            if os_proj:
+                return Project(name=os_proj.name, project_id=os_proj.id,
+                               domain_id=os_proj)
+        except NotFound:
+            pass
+        except KeyError:
+            pass
 
 
 def create_project(keystone, project_settings):
@@ -237,8 +248,8 @@ def create_user(keystone, user_settings):
     """
     project = None
     if user_settings.project_name:
-        project = get_project(keystone=keystone,
-                              project_name=user_settings.project_name)
+        project = get_project(
+            keystone=keystone, project_name=user_settings.project_name)
 
     if keystone.version == V2_VERSION_STR:
         project_id = None

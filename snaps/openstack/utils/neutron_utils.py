@@ -101,18 +101,18 @@ def delete_network(neutron, network):
         neutron.delete_network(network.id)
 
 
-def get_network(neutron, network_settings=None, network_name=None,
-                project_id=None, os_creds=None):
+def get_network(neutron, keystone, network_settings=None, network_name=None,
+                project_name=None):
     """
     Returns Network SNAPS-OO domain object the first network found with
     either the given attributes from the network_settings object if not None,
     else the query will use just the name from the network_name parameter.
-    When the project_id is included, that will be added to the query filter.
-    :param neutron: the client
+    When the project_name is included, that will be added to the query filter.
+    :param neutron: the Neutron client
+    :param keystone: the Keystone client
     :param network_settings: the NetworkConfig object used to create filter
     :param network_name: the name of the network to retrieve
-    :param project_id: the id of the network's project
-    :param os_creds: the OpenStack credentials for retrieving the project
+    :param project_name: the name of the network's project
     :return: a SNAPS-OO Network domain object
     """
     net_filter = dict()
@@ -121,16 +121,16 @@ def get_network(neutron, network_settings=None, network_name=None,
     elif network_name:
         net_filter['name'] = network_name
 
-    if network_settings and network_settings.project_name and os_creds:
-        net_filter['project_id'] = keystone_utils.get_project(
-            os_creds=os_creds, project_name=network_settings.project_name).id
-    elif project_id:
-        net_filter['project_id'] = project_id
-
     networks = neutron.list_networks(**net_filter)
     for network, netInsts in networks.items():
         for inst in netInsts:
-            return __map_network(neutron, inst)
+            if project_name:
+                project = keystone_utils.get_project_by_id(
+                    keystone, inst['project_id'])
+                if project and project.name == project_name:
+                    return __map_network(neutron, inst)
+            else:
+                return __map_network(neutron, inst)
 
 
 def __get_os_network_by_id(neutron, network_id):
@@ -282,7 +282,7 @@ def get_subnets_by_network_id(neutron, network_id):
     return out
 
 
-def create_router(neutron, os_creds, router_settings, project_id):
+def create_router(neutron, os_creds, router_settings):
     """
     Creates a router for OpenStack
     :param neutron: the client
@@ -290,16 +290,10 @@ def create_router(neutron, os_creds, router_settings, project_id):
     :param router_settings: A dictionary containing the router configuration
                             and is responsible for creating the subnet request
                             JSON body
-    :param project_id: the associated project ID
     :return: a SNAPS-OO Router domain object
     """
     if neutron:
-        if router_settings and router_settings.project_name:
-            keystone = keystone_utils.keystone_client(os_creds)
-            project_id = keystone_utils.get_project(
-                keystone=keystone, project_name=router_settings.project_name)
-        json_body = router_settings.dict_for_neutron(
-            neutron, os_creds, project_id)
+        json_body = router_settings.dict_for_neutron(neutron, os_creds)
         logger.info('Creating router with name - ' + router_settings.name)
         os_router = neutron.create_router(json_body)
         return __map_router(neutron, os_router['router'])
@@ -483,14 +477,16 @@ def delete_port(neutron, port):
     neutron.delete_port(port.id)
 
 
-def get_port(neutron, port_settings=None, port_name=None, project_id=None):
+def get_port(neutron, keystone, port_settings=None, port_name=None,
+             project_name=None):
     """
     Returns the first port object (dictionary) found for the given query
-    :param neutron: the client
+    :param neutron: the Neutron client
+    :param keystone: the Keystone client
     :param port_settings: the PortConfig object used for generating the query
     :param port_name: if port_settings is None, this name is the value to place
                       into the query
-    :param project_id: the associated project ID
+    :param project_name: the associated project name
     :return: a SNAPS-OO Port domain object
     """
     port_filter = dict()
@@ -504,21 +500,26 @@ def get_port(neutron, port_settings=None, port_name=None, project_id=None):
             port_filter['device_id'] = port_settings.device_id
         if port_settings.mac_address:
             port_filter['mac_address'] = port_settings.mac_address
+        if port_settings.project_name:
+            project_name = port_settings.project_name
         if port_settings.network_name:
             network = get_network(
-                neutron, network_name=port_settings.network_name,
-                project_id=project_id)
+                neutron, keystone, network_name=port_settings.network_name,
+                project_name=project_name)
             if network:
                 port_filter['network_id'] = network.id
     elif port_name:
         port_filter['name'] = port_name
 
-    if project_id:
-        port_filter['project_id'] = project_id
-
     ports = neutron.list_ports(**port_filter)
     for port in ports['ports']:
-        return Port(**port)
+        if project_name:
+            project = keystone_utils.get_project_by_id(
+                keystone, port['project_id'])
+            if project and project.name == project_name:
+                return Port(**port)
+        else:
+            return Port(**port)
     return None
 
 
@@ -559,19 +560,18 @@ def get_ports(neutron, network, ips=None):
     return out
 
 
-def create_security_group(neutron, keystone, sec_grp_settings, project_id):
+def create_security_group(neutron, keystone, sec_grp_settings):
     """
     Creates a security group object in OpenStack
     :param neutron: the Neutron client
     :param keystone: the Keystone client
     :param sec_grp_settings: the security group settings
-    :param project_id: the default project to associated the security group
     :return: a SNAPS-OO SecurityGroup domain object
     """
     logger.info('Creating security group with name - %s',
                 sec_grp_settings.name)
     os_group = neutron.create_security_group(
-        sec_grp_settings.dict_for_neutron(keystone, project_id))
+        sec_grp_settings.dict_for_neutron(keystone))
     return __map_os_security_group(neutron, os_group['security_group'])
 
 
@@ -585,37 +585,47 @@ def delete_security_group(neutron, sec_grp):
     neutron.delete_security_group(sec_grp.id)
 
 
-def get_security_group(neutron, sec_grp_settings=None, sec_grp_name=None,
-                       project_id=None):
+def get_security_group(neutron, keystone, sec_grp_settings=None,
+                       sec_grp_name=None, project_name=None):
     """
     Returns the first security group for a given query. The query gets built
     from the sec_grp_settings parameter if not None, else only the name of
     the security group will be used, else if the query parameters are None then
     None will be returned
-    :param neutron: the client
+    :param neutron: the neutron client
+    :param keystone: the keystone client
     :param sec_grp_settings: an instance of SecurityGroupConfig object
     :param sec_grp_name: the name of security group object to retrieve
-    :param project_id: the ID of the project/tentant object that owns the
+    :param project_name: the name of the project/tentant object that owns the
                        secuity group to retrieve
     :return: a SNAPS-OO SecurityGroup domain object or None if not found
     """
 
     sec_grp_filter = dict()
-    if project_id:
-        sec_grp_filter['tenant_id'] = project_id
 
     if sec_grp_settings:
         sec_grp_filter['name'] = sec_grp_settings.name
 
         if sec_grp_settings.description:
             sec_grp_filter['description'] = sec_grp_settings.description
+        if sec_grp_settings.project_name:
+            project_name = sec_grp_settings.project_name
     elif sec_grp_name:
         sec_grp_filter['name'] = sec_grp_name
     else:
         return None
 
     groups = neutron.list_security_groups(**sec_grp_filter)
+    group = None
     for group in groups['security_groups']:
+        if project_name:
+            project = keystone_utils.get_project_by_id(
+                keystone, group['tenant_id'])
+            if project and project_name == project.name:
+                break
+        else:
+            break
+    if group:
         return __map_os_security_group(neutron, group)
 
 
@@ -648,18 +658,20 @@ def get_security_group_by_id(neutron, sec_grp_id):
     return None
 
 
-def create_security_group_rule(neutron, sec_grp_rule_settings, proj_id):
+def create_security_group_rule(neutron, keystone, sec_grp_rule_settings,
+                               proj_name):
     """
     Creates a security group rule in OpenStack
-    :param neutron: the client
+    :param neutron: the neutron client
+    :param keystone: the keystone client
     :param sec_grp_rule_settings: the security group rule settings
-    :param proj_id: the default project to apply to the rule settings
+    :param proj_name: the default project name
     :return: a SNAPS-OO SecurityGroupRule domain object
     """
     logger.info('Creating security group to security group - %s',
                 sec_grp_rule_settings.sec_grp_name)
     os_rule = neutron.create_security_group_rule(
-        sec_grp_rule_settings.dict_for_neutron(neutron, proj_id))
+        sec_grp_rule_settings.dict_for_neutron(neutron, keystone, proj_name))
     return SecurityGroupRule(**os_rule['security_group_rule'])
 
 
@@ -763,10 +775,11 @@ def get_floating_ips(neutron):
     return out
 
 
-def create_floating_ip(neutron, ext_net_name, port_id=None):
+def create_floating_ip(neutron, keystone, ext_net_name, port_id=None):
     """
     Returns the floating IP object that was created with this call
     :param neutron: the Neutron client
+    :param keystone: the Keystone client
     :param ext_net_name: the name of the external network on which to apply the
                          floating IP address
     :param port_id: the ID of the port to which the floating IP will be
@@ -774,7 +787,7 @@ def create_floating_ip(neutron, ext_net_name, port_id=None):
     :return: the SNAPS FloatingIp object
     """
     logger.info('Creating floating ip to external network - ' + ext_net_name)
-    ext_net = get_network(neutron, network_name=ext_net_name)
+    ext_net = get_network(neutron, keystone, network_name=ext_net_name)
     if ext_net:
         body = {'floatingip': {'floating_network_id': ext_net.id}}
         if port_id:

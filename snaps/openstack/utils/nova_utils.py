@@ -55,16 +55,17 @@ def nova_client(os_creds):
                   region_name=os_creds.region_name)
 
 
-def create_server(nova, neutron, glance, instance_config, image_config,
-                  project_id, keypair_config=None):
+def create_server(nova, keystone, neutron, glance, instance_config,
+                  image_config, project_name, keypair_config=None):
     """
     Creates a VM instance
     :param nova: the nova client (required)
+    :param keystone: the keystone client for retrieving projects (required)
     :param neutron: the neutron client for retrieving ports (required)
     :param glance: the glance client (required)
     :param instance_config: the VMInstConfig object (required)
     :param image_config: the VM's ImageConfig object (required)
-    :param project_id: the associated project ID (required)
+    :param project_name: the associated project name (required)
     :param keypair_config: the VM's KeypairConfig object (optional)
     :return: a snaps.domain.VmInst object
     """
@@ -73,7 +74,8 @@ def create_server(nova, neutron, glance, instance_config, image_config,
 
     for port_setting in instance_config.port_settings:
         port = neutron_utils.get_port(
-            neutron, port_settings=port_setting, project_id=project_id)
+            neutron, keystone, port_settings=port_setting,
+            project_name=project_name)
         if port:
             ports.append(port)
         else:
@@ -122,19 +124,21 @@ def create_server(nova, neutron, glance, instance_config, image_config,
 
         server = nova.servers.create(**args)
 
-        return __map_os_server_obj_to_vm_inst(neutron, server, project_id)
+        return __map_os_server_obj_to_vm_inst(
+            neutron, keystone, server, project_name)
     else:
         raise NovaException(
             'Cannot create instance, image cannot be located with name %s',
             image_config.name)
 
 
-def get_server(nova, neutron, vm_inst_settings=None, server_name=None,
-               project_id=None):
+def get_server(nova, neutron, keystone, vm_inst_settings=None,
+               server_name=None, project_id=None):
     """
     Returns a VmInst object for the first server instance found.
     :param nova: the Nova client
     :param neutron: the Neutron client
+    :param keystone: the Keystone client
     :param vm_inst_settings: the VmInstanceConfig object from which to build
                              the query if not None
     :param server_name: the server with this name to return if vm_inst_settings
@@ -150,7 +154,8 @@ def get_server(nova, neutron, vm_inst_settings=None, server_name=None,
 
     servers = nova.servers.list(search_opts=search_opts)
     for server in servers:
-        return __map_os_server_obj_to_vm_inst(neutron, server, project_id)
+        return __map_os_server_obj_to_vm_inst(
+            neutron, keystone, server, project_id)
 
 
 def get_server_connection(nova, vm_inst_settings=None, server_name=None):
@@ -174,11 +179,14 @@ def get_server_connection(nova, vm_inst_settings=None, server_name=None):
         return server.links[0]
 
 
-def __map_os_server_obj_to_vm_inst(neutron, os_server, project_id):
+def __map_os_server_obj_to_vm_inst(neutron, keystone, os_server,
+                                   project_name=None):
     """
     Returns a VmInst object for an OpenStack Server object
-    :param neutron: the Neutron client (when None, ports will be empty)
+    :param neutron: the Neutron client
+    :param keystone: the Keystone client
     :param os_server: the OpenStack server object
+    :param project_name: the associated project name
     :return: an equivalent SNAPS-OO VmInst domain object
     """
     sec_grp_names = list()
@@ -192,7 +200,8 @@ def __map_os_server_obj_to_vm_inst(neutron, os_server, project_id):
     if len(os_server.networks) > 0:
         for net_name, ips in os_server.networks.items():
             network = neutron_utils.get_network(
-                neutron, network_name=net_name, project_id=project_id)
+                neutron, keystone, network_name=net_name,
+                project_name=project_name)
             ports = neutron_utils.get_ports(neutron, network, ips)
             for port in ports:
                 out_ports.append(port)
@@ -254,30 +263,35 @@ def get_server_console_output(nova, server):
     return None
 
 
-def get_latest_server_object(nova, neutron, server, project_id):
+def get_latest_server_object(nova, neutron, keystone, server, project_name):
     """
     Returns a server with a given id
     :param nova: the Nova client
     :param neutron: the Neutron client
+    :param keystone: the Keystone client
     :param server: the old server object
-    :param project_id: the associated project ID
+    :param project_name: the associated project name
     :return: the list of servers or None if not found
     """
     server = __get_latest_server_os_object(nova, server)
-    return __map_os_server_obj_to_vm_inst(neutron, server, project_id)
+    return __map_os_server_obj_to_vm_inst(
+        neutron, keystone, server, project_name)
 
 
-def get_server_object_by_id(nova, neutron, server_id, project_id):
+def get_server_object_by_id(nova, neutron, keystone, server_id,
+                            project_name=None):
     """
     Returns a server with a given id
     :param nova: the Nova client
     :param neutron: the Neutron client
+    :param keystone: the Keystone client
     :param server_id: the server's id
-    :param project_id: the associated project ID
+    :param project_name: the associated project name
     :return: an SNAPS-OO VmInst object or None if not found
     """
     server = __get_latest_server_os_object_by_id(nova, server_id)
-    return __map_os_server_obj_to_vm_inst(neutron, server, project_id)
+    return __map_os_server_obj_to_vm_inst(
+        neutron, keystone, server, project_name)
 
 
 def get_server_security_group_names(nova, server):
@@ -720,16 +734,18 @@ def update_quotas(nova, project_id, compute_quotas):
     return nova.quotas.update(project_id, **update_values)
 
 
-def attach_volume(nova, neutron, server, volume, project_id, timeout=120):
+def attach_volume(nova, neutron, keystone, server, volume, project_name,
+                  timeout=120):
     """
     Attaches a volume to a server. When the timeout parameter is used, a VmInst
     object with the proper volume updates is returned unless it has not been
     updated in the allotted amount of time then an Exception will be raised.
     :param nova: the nova client
     :param neutron: the neutron client
+    :param keystone: the neutron client
     :param server: the VMInst domain object
     :param volume: the Volume domain object
-    :param project_id: the associated project ID
+    :param project_name: the associated project name
     :param timeout: denotes the amount of time to block to determine if the
                     has been properly attached.
     :return: updated VmInst object
@@ -738,7 +754,8 @@ def attach_volume(nova, neutron, server, volume, project_id, timeout=120):
 
     start_time = time.time()
     while time.time() < start_time + timeout:
-        vm = get_server_object_by_id(nova, neutron, server.id, project_id)
+        vm = get_server_object_by_id(
+            nova, neutron, keystone, server.id, project_name)
         for vol_dict in vm.volume_ids:
             if volume.id == vol_dict['id']:
                 return vm
@@ -749,16 +766,18 @@ def attach_volume(nova, neutron, server, volume, project_id, timeout=120):
             volume.id, server.id))
 
 
-def detach_volume(nova, neutron, server, volume, project_id, timeout=120):
+def detach_volume(nova, neutron, keystone, server, volume, project_name,
+                  timeout=120):
     """
     Detaches a volume to a server. When the timeout parameter is used, a VmInst
     object with the proper volume updates is returned unless it has not been
     updated in the allotted amount of time then an Exception will be raised.
     :param nova: the nova client
     :param neutron: the neutron client
+    :param keystone: the keystone client
     :param server: the VMInst domain object
     :param volume: the Volume domain object
-    :param project_id: the associated project ID
+    :param project_name: the associated project name
     :param timeout: denotes the amount of time to block to determine if the
                     has been properly detached.
     :return: updated VmInst object
@@ -767,7 +786,8 @@ def detach_volume(nova, neutron, server, volume, project_id, timeout=120):
 
     start_time = time.time()
     while time.time() < start_time + timeout:
-        vm = get_server_object_by_id(nova, neutron, server.id, project_id)
+        vm = get_server_object_by_id(
+            nova, neutron, keystone, server.id, project_name)
         if len(vm.volume_ids) == 0:
             return vm
         else:

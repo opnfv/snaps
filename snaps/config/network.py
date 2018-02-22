@@ -435,16 +435,10 @@ class PortConfig(object):
 
         out = dict()
 
-        project_id = None
-        if self.project_name:
-            keystone = keystone_utils.keystone_client(os_creds)
-            project = keystone_utils.get_project(
-                keystone=keystone, project_name=self.project_name)
-            if project:
-                project_id = project.id
-
+        keystone = keystone_utils.keystone_client(os_creds)
         network = neutron_utils.get_network(
-            neutron, network_name=self.network_name, project_id=project_id)
+            neutron, keystone, network_name=self.network_name,
+            project_name=self.project_name)
         if not network:
             raise PortConfigError(
                 'Cannot locate network with name - ' + self.network_name)
@@ -456,6 +450,11 @@ class PortConfig(object):
         if self.name:
             out['name'] = self.name
         if self.project_name:
+            project = keystone_utils.get_project(
+                keystone=keystone, project_name=self.project_name)
+            project_id = None
+            if project:
+                project_id = project.id
             if project_id:
                 out['tenant_id'] = project_id
             else:
@@ -473,7 +472,8 @@ class PortConfig(object):
             sec_grp_ids = list()
             for sec_grp_name in self.security_groups:
                 sec_grp = neutron_utils.get_security_group(
-                    neutron, sec_grp_name=sec_grp_name, project_id=project_id)
+                    neutron, sec_grp_name=sec_grp_name,
+                    project_name=self.project_name)
                 if sec_grp:
                     sec_grp_ids.append(sec_grp.id)
             out['security_groups'] = sec_grp_ids

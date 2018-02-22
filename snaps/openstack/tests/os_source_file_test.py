@@ -61,10 +61,6 @@ class OSComponentTestCase(unittest.TestCase):
 
         self.image_metadata = image_metadata
 
-        keystone = keystone_utils.keystone_client(self.os_creds)
-        self.project_id = keystone_utils.get_project(
-            keystone=keystone, project_name=self.os_creds.project_name).id
-
     @staticmethod
     def parameterize(testcase_klass, os_creds, ext_net_name,
                      image_metadata=None, log_level=logging.DEBUG):
@@ -161,8 +157,7 @@ class OSIntegrationTestCase(OSComponentTestCase):
             self.user_creator = deploy_utils.create_user(
                 self.admin_os_creds, UserConfig(
                     name=guid + '-user', password=guid,
-                    project_name=project_name, roles={
-                        'admin': self.project_creator.project_settings.name},
+                    project_name=project_name,
                     domain_name=self.admin_os_creds.user_domain_name))
 
             self.os_creds = self.user_creator.get_os_creds(
@@ -170,7 +165,6 @@ class OSIntegrationTestCase(OSComponentTestCase):
 
             # add user to project
             self.project_creator.assoc_user(self.user_creator.get_user())
-            self.project_id = self.project_creator.get_project().id
 
     def __clean__(self):
         """

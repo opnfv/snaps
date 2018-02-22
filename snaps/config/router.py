@@ -61,7 +61,7 @@ class RouterConfig(object):
         if not self.name:
             raise RouterConfigError('Name is required')
 
-    def dict_for_neutron(self, neutron, os_creds, project_id):
+    def dict_for_neutron(self, neutron, os_creds):
         """
         Returns a dictionary object representing this object.
         This is meant to be converted into JSON designed for use by the Neutron
@@ -73,23 +73,20 @@ class RouterConfig(object):
         :param os_creds: The OpenStack credentials for retrieving the keystone
                          client for looking up the project ID when the
                          self.project_name is not None
-        :param project_id: the associated project ID to use when
-                           self.project_name is None
         :return: the dictionary object
         """
         out = dict()
         ext_gw = dict()
 
+        keystone = keystone_utils.keystone_client(os_creds)
+
         if self.name:
             out['name'] = self.name
         if self.project_name:
-            keystone = keystone_utils.keystone_client(os_creds)
             project = keystone_utils.get_project(
                 keystone=keystone, project_name=self.project_name)
             if project:
-                project_id = project.id
-            if project_id:
-                out['tenant_id'] = project_id
+                    out['tenant_id'] = project.id
             else:
                 raise RouterConfigError(
                     'Could not find project ID for project named - ' +
@@ -98,7 +95,7 @@ class RouterConfig(object):
             out['admin_state_up'] = self.admin_state_up
         if self.external_gateway:
             ext_net = neutron_utils.get_network(
-                neutron, network_name=self.external_gateway)
+                neutron, keystone, network_name=self.external_gateway)
             if ext_net:
                 ext_gw['network_id'] = ext_net.id
                 out['external_gateway_info'] = ext_gw

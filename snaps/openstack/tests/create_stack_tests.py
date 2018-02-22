@@ -39,8 +39,8 @@ from snaps.openstack.create_stack import (
     StackSettings, StackCreationError, StackError, OpenStackHeatStack)
 from snaps.openstack.tests import openstack_tests, create_instance_tests
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
-from snaps.openstack.utils import (heat_utils, neutron_utils, nova_utils,
-    keystone_utils)
+from snaps.openstack.utils import (
+    heat_utils, neutron_utils, nova_utils, keystone_utils)
 
 __author__ = 'spisarski'
 
@@ -351,12 +351,12 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertEqual(1, len(net_creators))
         self.assertEqual(self.network_name, net_creators[0].get_network().name)
 
-        neutron = neutron_utils.neutron_client(self.os_creds)
-        admin_proj_id = keystone_utils.get_project(
-            self.keystone, self.admin_os_creds.project_name)
+        # Need to use 'admin' creds as heat creates objects under it's own
+        # project/tenant
+        neutron = neutron_utils.neutron_client(self.admin_os_creds)
+        keystone = keystone_utils.keystone_client(self.admin_os_creds)
         net_by_name = neutron_utils.get_network(
-            neutron, network_name=net_creators[0].get_network().name,
-            project_id=admin_proj_id)
+            neutron, keystone, network_name=net_creators[0].get_network().name)
         self.assertEqual(net_creators[0].get_network(), net_by_name)
         self.assertIsNotNone(neutron_utils.get_network_by_id(
             neutron, net_creators[0].get_network().id))
@@ -393,12 +393,14 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
 
         nova = nova_utils.nova_client(self.admin_os_creds)
         neutron = neutron_utils.neutron_client(self.admin_os_creds)
+        keystone = keystone_utils.keystone_client(self.admin_os_creds)
         vm_inst_by_name = nova_utils.get_server(
-            nova, neutron, server_name=vm_inst_creators[0].get_vm_inst().name)
+            nova, neutron, keystone,
+            server_name=vm_inst_creators[0].get_vm_inst().name)
+
         self.assertEqual(vm_inst_creators[0].get_vm_inst(), vm_inst_by_name)
         self.assertIsNotNone(nova_utils.get_server_object_by_id(
-            nova, neutron, vm_inst_creators[0].get_vm_inst().id,
-            vm_inst_creators[0].project_id))
+            nova, neutron, keystone, vm_inst_creators[0].get_vm_inst().id))
 
 
 class CreateStackFloatingIpTests(OSIntegrationTestCase):
@@ -689,8 +691,7 @@ class CreateStackRouterTests(OSIntegrationTestCase):
         router = creator.get_router()
 
         ext_net = neutron_utils.get_network(
-            self.neutron, network_name=self.ext_net_name,
-            project_id=self.project_id)
+            self.neutron, self.keystone, network_name=self.ext_net_name)
         self.assertEqual(ext_net.id, router.external_network_id)
 
 

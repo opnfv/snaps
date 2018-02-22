@@ -224,15 +224,16 @@ def create_keypair_config(heat_cli, stack, keypair, pk_output_key):
     return KeypairConfig(name=keypair.name)
 
 
-def create_vm_inst_config(nova, neutron, server, project_id):
+def create_vm_inst_config(nova, keystone, neutron, server, project_name):
     """
     Returns a VmInstanceConfig object
     note: if the server instance is not active, the PortSettings objects will
     not be generated resulting in an invalid configuration
     :param nova: the nova client
+    :param keystone: the keystone client
     :param neutron: the neutron client
     :param server: a SNAPS-OO VmInst domain object
-    :param project_id: the associated project ID
+    :param project_name: the associated project name
     :return:
     """
 
@@ -245,7 +246,7 @@ def create_vm_inst_config(nova, neutron, server, project_id):
     kwargs['port_settings'] = __create_port_configs(neutron, server.ports)
     kwargs['security_group_names'] = server.sec_grp_names
     kwargs['floating_ip_settings'] = __create_floatingip_config(
-        neutron, kwargs['port_settings'], project_id)
+        neutron, keystone, kwargs['port_settings'], project_name)
 
     return VmInstanceConfig(**kwargs)
 
@@ -282,11 +283,12 @@ def __create_port_configs(neutron, ports):
     return out
 
 
-def __create_floatingip_config(neutron, port_settings, project_id):
+def __create_floatingip_config(neutron, keystone, port_settings, project_name):
     """
     Returns a list of FloatingIpConfig objects as they pertain to an
     existing deployed server instance
     :param neutron: the neutron client
+    :param keystone: the keystone client
     :param port_settings: list of SNAPS-OO PortConfig objects
     :return: a list of FloatingIpConfig objects or an empty list if no
              floating IPs have been created
@@ -298,10 +300,10 @@ def __create_floatingip_config(neutron, port_settings, project_id):
     fip_ports = list()
     for port_setting in port_settings:
         setting_port = neutron_utils.get_port(
-            neutron, port_setting, project_id=project_id)
+            neutron, keystone, port_setting, project_name=project_name)
         if setting_port:
             network = neutron_utils.get_network(
-                neutron, network_name=port_setting.network_name)
+                neutron, keystone, network_name=port_setting.network_name)
             network_ports = neutron_utils.get_ports(neutron, network)
             if network_ports:
                 for setting_port in network_ports:
