@@ -325,14 +325,17 @@ def get_router_by_id(neutron, router_id):
         return __map_router(neutron, router['router'])
 
 
-def get_router(neutron, router_settings=None, router_name=None):
+def get_router(neutron, keystone, router_settings=None, router_name=None,
+               project_name=None):
     """
     Returns the first router object (dictionary) found the given the settings
     values if not None, else finds the first with the value of the router_name
     parameter, else None
-    :param neutron: the client
+    :param neutron: the Neutron client
+    :param keystone: the Keystone client
     :param router_settings: the RouterConfig object
     :param router_name: the name of the network to retrieve
+    :param project_name: the name of the router's project
     :return: a SNAPS-OO Router domain object
     """
     router_filter = dict()
@@ -345,12 +348,13 @@ def get_router(neutron, router_settings=None, router_name=None):
     else:
         return None
 
-    routers = neutron.list_routers(**router_filter)
-
-    for routerInst in routers['routers']:
-        return __map_router(neutron, routerInst)
-
-    return None
+    os_routers = neutron.list_routers(**router_filter)
+    for os_router in os_routers['routers']:
+        if project_name:
+            project = keystone_utils.get_project_by_id(
+                keystone, os_router['project_id'])
+            if project and project.name == project_name:
+                return __map_router(neutron, os_router)
 
 
 def __map_router(neutron, os_router):
