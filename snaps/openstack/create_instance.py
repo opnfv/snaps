@@ -239,7 +239,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
         :return: the external network name or None
         """
         router = neutron_utils.get_router(
-            self.__neutron, router_name=router_name)
+            self.__neutron, self.__keystone, router_name=router_name,
+            project_name=self._os_creds.project_name)
         if router and router.external_network_id:
             network = neutron_utils.get_network_by_id(
                 self.__neutron, router.external_network_id)
