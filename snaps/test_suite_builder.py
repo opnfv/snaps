@@ -76,7 +76,8 @@ from snaps.openstack.tests.create_keypairs_tests import (
     CreateKeypairsTests, KeypairSettingsUnitTests, CreateKeypairsCleanupTests)
 from snaps.openstack.tests.create_network_tests import (
     CreateNetworkSuccessTests, NetworkSettingsUnitTests, PortSettingsUnitTests,
-    SubnetSettingsUnitTests, CreateNetworkTypeTests, CreateNetworkIPv6Tests)
+    SubnetSettingsUnitTests, CreateNetworkTypeTests, CreateNetworkIPv6Tests,
+    CreateMultipleNetworkTests)
 from snaps.openstack.tests.create_project_tests import (
     CreateProjectSuccessTests, ProjectSettingsUnitTests,
     CreateProjectUserTests)
@@ -84,7 +85,8 @@ from snaps.openstack.tests.create_qos_tests import (
     QoSSettingsUnitTests, CreateQoSTests)
 from snaps.openstack.tests.create_router_tests import (
     CreateRouterSuccessTests, CreateRouterNegativeTests,
-    RouterSettingsUnitTests)
+    RouterSettingsUnitTests, CreateMultipleRouterTests,
+    CreateRouterSecurityGroupTests)
 from snaps.openstack.tests.create_security_group_tests import (
     CreateSecurityGroupTests, SecurityGroupRuleSettingsUnitTests,
     SecurityGroupSettingsUnitTests, CreateMultipleSecurityGroupTests)
@@ -509,12 +511,27 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateMultipleNetworkTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
         CreateRouterSuccessTests, os_creds=os_creds, ext_net_name=ext_net_name,
         use_keystone=use_keystone,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
         CreateRouterNegativeTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateMultipleRouterTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateRouterSecurityGroupTests, os_creds=os_creds,
         ext_net_name=ext_net_name, use_keystone=use_keystone,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))

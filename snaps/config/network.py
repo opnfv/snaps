@@ -441,7 +441,8 @@ class PortConfig(object):
             project_name=self.project_name)
         if not network:
             raise PortConfigError(
-                'Cannot locate network with name - ' + self.network_name)
+                'Cannot locate network with name - ' + self.network_name
+                + ' in project - ' + str(self.project_name))
 
         out['network_id'] = network.id
 
@@ -472,7 +473,7 @@ class PortConfig(object):
             sec_grp_ids = list()
             for sec_grp_name in self.security_groups:
                 sec_grp = neutron_utils.get_security_group(
-                    neutron, sec_grp_name=sec_grp_name,
+                    neutron, keystone, sec_grp_name=sec_grp_name,
                     project_name=self.project_name)
                 if sec_grp:
                     sec_grp_ids.append(sec_grp.id)
