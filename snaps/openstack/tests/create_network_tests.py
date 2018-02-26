@@ -459,7 +459,9 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
 
         # Validate routers
         neutron_utils_tests.validate_router(
-            self.neutron, self.router_creator.router_settings.name, True)
+            self.neutron, self.keystone,
+            self.router_creator.router_settings.name,
+            self.os_creds.project_name, True)
 
         neutron_utils_tests.validate_interface_router(
             self.router_creator.get_internal_router_interface(),
@@ -518,7 +520,9 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         self.router_creator.create()
 
         retrieved_router = neutron_utils.get_router(
-            self.neutron, router_settings=self.router_creator.router_settings)
+            self.neutron, self.keystone,
+            router_settings=self.router_creator.router_settings,
+            project_name=self.os_creds.project_name)
         self.assertEqual(
             self.router_creator.get_router().id, retrieved_router.id)
 
@@ -550,7 +554,9 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         self.router_creator.create()
 
         retrieved_router = neutron_utils.get_router(
-            self.neutron, router_settings=self.router_creator.router_settings)
+            self.neutron, self.keystone,
+            router_settings=self.router_creator.router_settings,
+            project_name=self.os_creds.project_name)
         self.assertEqual(
             self.router_creator.get_router().id, retrieved_router.id)
 

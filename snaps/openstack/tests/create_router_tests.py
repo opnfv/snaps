@@ -20,7 +20,7 @@ from snaps.config.router import RouterConfigError, RouterConfig
 from snaps.openstack import create_network
 from snaps.openstack import create_router
 from snaps.openstack.create_network import OpenStackNetwork
-from snaps.openstack.create_router import RouterSettings
+from snaps.openstack.create_router import RouterSettings, OpenStackRouter
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import neutron_utils, settings_utils
 
@@ -152,12 +152,13 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         router_settings = RouterConfig(
             name=self.guid + '-pub-router', external_gateway=self.ext_net_name)
 
-        self.router_creator = create_router.OpenStackRouter(self.os_creds,
-                                                            router_settings)
+        self.router_creator = create_router.OpenStackRouter(
+            self.os_creds, router_settings)
         self.router_creator.create()
 
-        router = neutron_utils.get_router(self.neutron,
-                                          router_settings=router_settings)
+        router = neutron_utils.get_router(
+            self.neutron, self.keystone, router_settings=router_settings,
+            project_name=self.os_creds.project_name)
         self.assertIsNotNone(router)
 
         self.assertEqual(self.router_creator.get_router(), router)
@@ -178,7 +179,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         self.router_creator.create()
 
         router = neutron_utils.get_router(
-            self.neutron, router_settings=router_settings)
+            self.neutron, self.keystone, router_settings=router_settings,
+            project_name=self.os_creds.project_name)
         self.assertIsNotNone(router)
 
         self.assertEqual(self.router_creator.get_router().id, router.id)
@@ -199,7 +201,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         self.router_creator.create()
 
         router = neutron_utils.get_router(
-            self.neutron, router_settings=router_settings)
+            self.neutron, self.keystone, router_settings=router_settings,
+            project_name=self.os_creds.project_name)
         self.assertIsNotNone(router)
 
         self.assertEqual(self.router_creator.get_router().id, router.id)
@@ -219,13 +222,15 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         created_router = self.router_creator.create()
         self.assertIsNotNone(created_router)
         retrieved_router = neutron_utils.get_router(
-            self.neutron, router_settings=self.router_settings)
+            self.neutron, self.keystone, router_settings=self.router_settings,
+            project_name=self.os_creds.project_name)
         self.assertIsNotNone(retrieved_router)
 
         neutron_utils.delete_router(self.neutron, created_router)
 
         retrieved_router = neutron_utils.get_router(
-            self.neutron, router_settings=self.router_settings)
+            self.neutron, self.keystone, router_settings=self.router_settings,
+            project_name=self.os_creds.project_name)
         self.assertIsNone(retrieved_router)
 
         # Should not raise an exception
@@ -242,8 +247,9 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
                                                             router_settings)
         self.router_creator.create()
 
-        router = neutron_utils.get_router(self.neutron,
-                                          router_settings=router_settings)
+        router = neutron_utils.get_router(
+            self.neutron, self.keystone, router_settings=router_settings,
+            project_name=self.os_creds.project_name)
         self.assertIsNotNone(router)
 
         self.assertEqual(self.router_creator.get_router(), router)
@@ -262,7 +268,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         self.router_creator.create()
 
         router = neutron_utils.get_router(
-            self.neutron, router_settings=router_settings)
+            self.neutron, self.keystone, router_settings=router_settings,
+            project_name=self.os_creds.project_name)
         self.assertIsNotNone(router)
 
         self.assertEqual(self.router_creator.get_router(), router)
@@ -319,7 +326,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         self.router_creator.create()
 
         router = neutron_utils.get_router(
-            self.neutron, router_settings=router_settings)
+            self.neutron, self.keystone, router_settings=router_settings,
+            project_name=self.os_creds.project_name)
 
         self.assertEqual(router, self.router_creator.get_router())
 
@@ -363,7 +371,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         self.router_creator.create()
 
         router = neutron_utils.get_router(
-            self.neutron, router_settings=router_settings)
+            self.neutron, self.keystone, router_settings=router_settings,
+            project_name=self.os_creds.project_name)
 
         self.assertEquals(router, self.router_creator.get_router())
 
@@ -451,3 +460,104 @@ class CreateRouterNegativeTests(OSIntegrationTestCase):
             self.router_creator = create_router.OpenStackRouter(
                 self.os_creds, router_settings)
             self.router_creator.create()
+
+
+class CreateMultipleRouterTests(OSIntegrationTestCase):
+    """
+    Test for the OpenStackRouter class and how it interacts with routers
+    groups within other projects with the same name
+    """
+
+    def setUp(self):
+        """
+        Initializes objects used for router testing
+        """
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.admin_router_creator = None
+        self.proj_router_creator = None
+        self.neutron = neutron_utils.neutron_client(self.os_creds)
+
+        network_settings = NetworkConfig(
+            name=self.guid + '-pub-net', shared=True,
+            subnet_settings=[
+                create_network.SubnetConfig(
+                    cidr=cidr1, name=self.guid + '-pub-subnet',
+                    gateway_ip=static_gateway_ip1)])
+
+        self.network_creator = OpenStackNetwork(
+            self.admin_os_creds, network_settings)
+        self.network_creator.create()
+
+    def tearDown(self):
+        """
+        Cleans the remote OpenStack objects used for router testing
+        """
+        if self.admin_router_creator:
+            self.admin_router_creator.clean()
+
+        if self.proj_router_creator:
+            self.proj_router_creator.clean()
+
+        if self.network_creator:
+            self.network_creator.clean()
+
+        super(self.__class__, self).__clean__()
+
+    def test_router_same_name_diff_proj(self):
+        """
+        Tests the creation of an OpenStackNetwork with the same name
+        within a different project/tenant when not configured but implied by
+        the OSCreds.
+        """
+        # Create Router
+
+        router_config = RouterConfig(
+            name=self.guid + '-router')
+        self.admin_router_creator = OpenStackRouter(
+            self.admin_os_creds, router_config)
+        self.admin_router_creator.create()
+
+        self.proj_router_creator = OpenStackRouter(
+            self.os_creds, router_config)
+        self.proj_router_creator.create()
+
+        self.assertNotEqual(
+            self.admin_router_creator.get_router().id,
+            self.proj_router_creator.get_router().id)
+
+        admin_creator2 = OpenStackRouter(
+            self.admin_os_creds, router_config)
+        admin_creator2.create()
+        self.assertEqual(
+            self.admin_router_creator.get_router(),
+            admin_creator2.get_router())
+
+        proj_creator2 = OpenStackRouter(self.os_creds, router_config)
+        proj_creator2.create()
+        self.assertEqual(self.proj_router_creator.get_router(),
+                         proj_creator2.get_router())
+
+    def test_router_create_by_admin_to_different_project(self):
+        """
+        Tests the creation of an OpenStackRouter by the admin user and
+        initialize again with tenant credentials.
+        """
+        # Create Network
+
+        router_config = RouterConfig(
+            name=self.guid + '-router',
+            project_name=self.os_creds.project_name)
+
+        self.admin_router_creator = OpenStackRouter(
+            self.admin_os_creds, router_config)
+        self.admin_router_creator.create()
+
+        self.proj_router_creator = OpenStackRouter(
+            self.os_creds, router_config)
+        self.proj_router_creator.create()
+
+        self.assertEqual(
+            self.admin_router_creator.get_router().id,
+            self.proj_router_creator.get_router().id)
