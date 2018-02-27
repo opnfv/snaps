@@ -196,6 +196,22 @@ create_network_tests.py - CreateNetworkSuccessTests
 |                                       |               | 'admin' project ID                                        |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_network_tests.py - CreateNetworkGatewayTests
+---------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Neutron API   | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_subnet_default_gateway_ip | 2             | Ensures that a network can be created with a Subnet that  |
+|                                       |               | has the gateway_ip automatically assigned                 |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_subnet_valid_gateway_ip   | 2             | Ensures that a network can be created with a Subnet that  |
+|                                       |               | has the gateway_ip statically assigned with a valid IP    |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_subnet_invalid_gateway_ip | 2             | Ensures that a network cannot be created with a Subnet    |
+|                                       |               | has an invalid gateway_ip value such as 'foo'             |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_network_tests.py - CreateNetworkIPv6Tests
 ------------------------------------------------
 

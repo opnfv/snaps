@@ -15,6 +15,8 @@
 import unittest
 import uuid
 
+from neutronclient.common.exceptions import BadRequest
+
 from snaps.config.network import (
     NetworkConfig, SubnetConfig, SubnetConfigError, NetworkConfigError,
     PortConfigError, IPv6Mode)
@@ -553,6 +555,110 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
             self.neutron, router_settings=self.router_creator.router_settings)
         self.assertEqual(
             self.router_creator.get_router().id, retrieved_router.id)
+
+
+class CreateNetworkGatewayTests(OSIntegrationTestCase):
+    """
+    Test for the CreateNetwork class defined in create_nework.py
+    """
+
+    def setUp(self):
+        """
+        Sets up object for test
+        """
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+
+        self.neutron = neutron_utils.neutron_client(self.os_creds)
+
+        self.ip_prfx = '10.1.0.'
+
+        # Initialize for cleanup
+        self.net_creator = None
+
+    def tearDown(self):
+        """
+        Cleans the network
+        """
+        if self.net_creator:
+            self.net_creator.clean()
+
+        super(self.__class__, self).__clean__()
+
+    def test_create_subnet_default_gateway_ip(self):
+        """
+        Tests the creation of an OpenStack network with a subnet that has a
+        default value assigned to the gateway IP.
+        """
+        # Create Network
+        subnet_config = SubnetConfig(
+            name=self.guid + '-subnet', cidr=self.ip_prfx + '0/24')
+        net_config = NetworkConfig(
+            name=self.guid + '-net', subnets=[subnet_config])
+        self.net_creator = OpenStackNetwork(
+            self.os_creds, net_config)
+        out_net = self.net_creator.create()
+
+        # Validate network was created
+        self.assertTrue(neutron_utils_tests.validate_network(
+            self.neutron, self.keystone,
+            self.net_creator.network_settings.name, True,
+            self.os_creds.project_name))
+
+        # Validate subnets
+        self.assertTrue(neutron_utils_tests.validate_subnet(
+            self.neutron,
+            self.net_creator.network_settings.subnet_settings[0].name,
+            self.net_creator.network_settings.subnet_settings[0].cidr, True))
+
+        self.assertEqual(self.ip_prfx + '1', out_net.subnets[0].gateway_ip)
+
+    def test_create_subnet_valid_gateway_ip(self):
+        """
+        Tests the creation of an OpenStack network with a subnet that has a
+        valid value assigned to the gateway IP.
+        """
+        # Create Network
+        subnet_config = SubnetConfig(
+            name=self.guid + '-subnet', cidr=self.ip_prfx + '0/24',
+            gateway_ip=self.ip_prfx + '2')
+        net_config = NetworkConfig(
+            name=self.guid + '-net', subnets=[subnet_config])
+        self.net_creator = OpenStackNetwork(
+            self.os_creds, net_config)
+        out_net = self.net_creator.create()
+
+        # Validate network was created
+        self.assertTrue(neutron_utils_tests.validate_network(
+            self.neutron, self.keystone,
+            self.net_creator.network_settings.name, True,
+            self.os_creds.project_name))
+
+        # Validate subnets
+        self.assertTrue(neutron_utils_tests.validate_subnet(
+            self.neutron,
+            self.net_creator.network_settings.subnet_settings[0].name,
+            self.net_creator.network_settings.subnet_settings[0].cidr, True))
+
+        self.assertEqual(self.ip_prfx + '2', out_net.subnets[0].gateway_ip)
+
+    def test_create_subnet_invalid_gateway_ip(self):
+        """
+        Tests the creation of an OpenStack network with a subnet that has an
+        invalid value assigned to the gateway IP.
+        """
+        # Create Network
+        subnet_config = SubnetConfig(
+            name=self.guid + '-subnet', cidr=self.ip_prfx + '0/24',
+            gateway_ip='foo')
+        net_config = NetworkConfig(
+            name=self.guid + '-net', subnets=[subnet_config])
+        self.net_creator = OpenStackNetwork(
+            self.os_creds, net_config)
+
+        with self.assertRaises(BadRequest):
+            self.net_creator.create()
 
 
 class CreateNetworkIPv6Tests(OSIntegrationTestCase):
