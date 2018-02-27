@@ -175,7 +175,10 @@ class SubnetConfig(object):
                              through authorization policies (optional)
         :param start: The start address for the allocation pools (optional)
         :param end: The end address for the allocation pools (optional)
-        :param gateway_ip: The gateway IP address (optional)
+        :param gateway_ip: The gateway IP address (optional). When not
+                           configured, the IP address will be automatically
+                           assigned; when 'none', no gateway address will be
+                           assigned, else the value must be valid
         :param enable_dhcp: Set to true if DHCP is enabled and false if DHCP is
                             disabled (optional)
         :param dns_nameservers: A list of DNS name servers for the subnet.
@@ -267,7 +270,10 @@ class SubnetConfig(object):
         if self.start and self.end:
             out['allocation_pools'] = [{'start': self.start, 'end': self.end}]
         if self.gateway_ip:
-            out['gateway_ip'] = self.gateway_ip
+            if self.gateway_ip == 'none':
+                out['gateway_ip'] = None
+            else:
+                out['gateway_ip'] = self.gateway_ip
         if self.enable_dhcp is not None:
             out['enable_dhcp'] = self.enable_dhcp
         if self.dns_nameservers and len(self.dns_nameservers) > 0:
