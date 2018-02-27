@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_9ea13eac",
+        "filename": "snaps/config/network.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 7217
+      },
+      "writtenOn": "2018-02-27T21:06:06Z",
+      "side": 1,
+      "message": "Use ; instead of ,",
+      "range": {
+        "startLine": 180,
+        "startChar": 35,
+        "endLine": 180,
+        "endChar": 36
+      },
+      "revId": "bf2b8dc98b22037f1ffc272870ac478b8a3957d3",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_7ea6f2c2",
+        "filename": "snaps/config/network.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 7217
+      },
+      "writtenOn": "2018-02-27T21:06:06Z",
+      "side": 1,
+      "message": "CIDR will be a bit confusing to use here. I would say \"a valid IP address\"",
+      "range": {
+        "startLine": 181,
+        "startChar": 60,
+        "endLine": 182,
+        "endChar": 31
+      },
+      "revId": "bf2b8dc98b22037f1ffc272870ac478b8a3957d3",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_deabc687",
+        "filename": "snaps/openstack/tests/create_network_tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 7217
+      },
+      "writtenOn": "2018-02-27T21:06:06Z",
+      "side": 1,
+      "message": "Add a test case for the \"none\" gateway IP address",
+      "revId": "bf2b8dc98b22037f1ffc272870ac478b8a3957d3",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
