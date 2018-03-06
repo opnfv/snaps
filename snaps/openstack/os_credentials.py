@@ -85,7 +85,9 @@ class OSCreds:
         if kwargs.get('heat_api_version') is None:
             self.heat_api_version = 1
         else:
-            self.heat_api_version = float(kwargs['heat_api_version'])
+            val = kwargs['heat_api_version']
+            ver = float(val)
+            self.heat_api_version = int(ver)
 
         if kwargs.get('volume_api_version') is None:
             self.volume_api_version = cinder_utils.VERSION_2

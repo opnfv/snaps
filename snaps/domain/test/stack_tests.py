@@ -23,14 +23,23 @@ class StackDomainObjectTests(unittest.TestCase):
     """
 
     def test_construction_positional(self):
-        stack = Stack('name', 'id')
+        stack = Stack(
+            'name', 'id', 'stack_proj_id', 'fine', 'good')
         self.assertEqual('name', stack.name)
         self.assertEqual('id', stack.id)
+        self.assertEqual('stack_proj_id', stack.stack_project_id)
+        self.assertEqual('fine', stack.status)
+        self.assertEqual('good', stack.status_reason)
 
     def test_construction_named(self):
-        stack = Stack(stack_id='id', name='name')
+        stack = Stack(
+            stack_id='id', name='name', stack_project_id='stack_proj_id',
+            status='fine', status_reason='good')
         self.assertEqual('name', stack.name)
         self.assertEqual('id', stack.id)
+        self.assertEqual('stack_proj_id', stack.stack_project_id)
+        self.assertEqual('fine', stack.status)
+        self.assertEqual('good', stack.status_reason)
 
 
 class ResourceDomainObjectTests(unittest.TestCase):

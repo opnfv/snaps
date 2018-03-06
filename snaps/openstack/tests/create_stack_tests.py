@@ -133,19 +133,17 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
     """
 
     def setUp(self):
+        self.user_roles = ['heat_stack_owner']
 
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_creds = self.admin_os_creds
-        self.heat_creds.project_name = self.admin_os_creds.project_name
-
-        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds)
         self.stack_creator = None
 
         self.image_creator = OpenStackImage(
-            self.heat_creds, openstack_tests.cirros_image_settings(
+            self.os_creds, openstack_tests.cirros_image_settings(
                 name=self.guid + '-image',
                 image_metadata=self.image_metadata))
         self.image_creator.create()
@@ -207,7 +205,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             template_path=self.heat_tmplt_path,
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         created_stack = self.stack_creator.create()
         self.assertIsNotNone(created_stack)
 
@@ -231,7 +229,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             env_values=self.env_values, stack_create_timeout=0)
 
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         with self.assertRaises(StackCreationError):
             self.stack_creator.create()
 
@@ -249,7 +247,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             template=template_dict,
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         created_stack = self.stack_creator.create()
         self.assertIsNotNone(created_stack)
 
@@ -273,7 +271,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             template=template_dict,
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         created_stack = self.stack_creator.create()
         self.assertIsNotNone(created_stack)
 
@@ -317,7 +315,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             template=template_dict,
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         created_stack1 = self.stack_creator.create()
 
         retrieved_stack = heat_utils.get_stack_by_id(self.heat_cli,
@@ -328,7 +326,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertEqual(0, len(self.stack_creator.get_outputs()))
 
         # Should be retrieving the instance data
-        stack_creator2 = OpenStackHeatStack(self.heat_creds, stack_settings)
+        stack_creator2 = OpenStackHeatStack(self.os_creds, stack_settings)
         stack2 = stack_creator2.create()
         self.assertEqual(created_stack1.id, stack2.id)
 
@@ -342,7 +340,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             template_path=self.heat_tmplt_path,
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         created_stack = self.stack_creator.create()
         self.assertIsNotNone(created_stack)
 
@@ -353,8 +351,8 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
 
         # Need to use 'admin' creds as heat creates objects under it's own
         # project/tenant
-        neutron = neutron_utils.neutron_client(self.admin_os_creds)
-        keystone = keystone_utils.keystone_client(self.admin_os_creds)
+        neutron = neutron_utils.neutron_client(self.os_creds)
+        keystone = keystone_utils.keystone_client(self.os_creds)
         net_by_name = neutron_utils.get_network(
             neutron, keystone, network_name=net_creators[0].get_network().name)
         self.assertEqual(net_creators[0].get_network(), net_by_name)
@@ -381,7 +379,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             template_path=self.heat_tmplt_path,
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         created_stack = self.stack_creator.create()
         self.assertIsNotNone(created_stack)
 
@@ -391,9 +389,9 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertEqual(self.vm_inst_name,
                          vm_inst_creators[0].get_vm_inst().name)
 
-        nova = nova_utils.nova_client(self.admin_os_creds)
-        neutron = neutron_utils.neutron_client(self.admin_os_creds)
-        keystone = keystone_utils.keystone_client(self.admin_os_creds)
+        nova = nova_utils.nova_client(self.os_creds)
+        neutron = neutron_utils.neutron_client(self.os_creds)
+        keystone = keystone_utils.keystone_client(self.os_creds)
         vm_inst_by_name = nova_utils.get_server(
             nova, neutron, keystone,
             server_name=vm_inst_creators[0].get_vm_inst().name)
@@ -410,19 +408,17 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
     """
 
     def setUp(self):
+        self.user_roles = ['heat_stack_owner', 'admin']
 
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_creds = self.admin_os_creds
-        self.heat_creds.project_name = self.admin_os_creds.project_name
-
-        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds)
         self.stack_creator = None
 
         self.image_creator = OpenStackImage(
-            self.heat_creds, openstack_tests.cirros_image_settings(
+            self.os_creds, openstack_tests.cirros_image_settings(
                 name=self.guid + '-image',
                 image_metadata=self.image_metadata))
         self.image_creator.create()
@@ -494,7 +490,7 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
             template_path=self.heat_tmplt_path,
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings,
+            self.os_creds, stack_settings,
             [self.image_creator.image_settings])
         created_stack = self.stack_creator.create()
         self.assertIsNotNone(created_stack)
@@ -519,19 +515,17 @@ class CreateStackNestedResourceTests(OSIntegrationTestCase):
     """
 
     def setUp(self):
+        self.user_roles = ['heat_stack_owner']
 
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_creds = self.admin_os_creds
-        self.heat_creds.project_name = self.admin_os_creds.project_name
-
-        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds)
         self.stack_creator = None
 
         self.image_creator = OpenStackImage(
-            self.heat_creds, openstack_tests.cirros_image_settings(
+            self.os_creds, openstack_tests.cirros_image_settings(
                 name=self.guid + '-image',
                 image_metadata=self.image_metadata))
         self.image_creator.create()
@@ -562,7 +556,7 @@ class CreateStackNestedResourceTests(OSIntegrationTestCase):
             env_values=env_values)
 
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings,
+            self.os_creds, stack_settings,
             [self.image_creator.image_settings])
 
         self.vm_inst_creators = list()
@@ -632,14 +626,13 @@ class CreateStackRouterTests(OSIntegrationTestCase):
         Instantiates the CreateStack object that is responsible for downloading
         and creating an OS stack file within OpenStack
         """
+        self.user_roles = ['heat_stack_owner']
+
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_creds = self.admin_os_creds
-        self.heat_creds.project_name = self.admin_os_creds.project_name
-
-        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds)
         self.neutron = neutron_utils.neutron_client(self.os_creds)
         self.stack_creator = None
 
@@ -661,7 +654,7 @@ class CreateStackRouterTests(OSIntegrationTestCase):
             template_path=self.heat_tmplt_path,
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         self.created_stack = self.stack_creator.create()
         self.assertIsNotNone(self.created_stack)
 
@@ -703,14 +696,13 @@ class CreateStackVolumeTests(OSIntegrationTestCase):
 
     def setUp(self):
 
+        self.user_roles = ['heat_stack_owner', 'admin']
+
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_creds = self.admin_os_creds
-        self.heat_creds.project_name = self.admin_os_creds.project_name
-
-        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds)
         self.stack_creator = None
 
         self.volume_name = self.guid + '-volume'
@@ -728,7 +720,7 @@ class CreateStackVolumeTests(OSIntegrationTestCase):
             template_path=self.heat_tmplt_path,
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         self.created_stack = self.stack_creator.create()
         self.assertIsNotNone(self.created_stack)
 
@@ -798,14 +790,13 @@ class CreateStackFlavorTests(OSIntegrationTestCase):
 
     def setUp(self):
 
+        self.user_roles = ['heat_stack_owner', 'admin']
+
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_creds = self.admin_os_creds
-        self.heat_creds.project_name = self.admin_os_creds.project_name
-
-        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds)
         self.stack_creator = None
 
         self.heat_tmplt_path = pkg_resources.resource_filename(
@@ -815,7 +806,7 @@ class CreateStackFlavorTests(OSIntegrationTestCase):
             name=self.guid + '-stack',
             template_path=self.heat_tmplt_path)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         self.created_stack = self.stack_creator.create()
         self.assertIsNotNone(self.created_stack)
 
@@ -858,15 +849,14 @@ class CreateStackKeypairTests(OSIntegrationTestCase):
 
     def setUp(self):
 
+        self.user_roles = ['heat_stack_owner']
+
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_creds = self.admin_os_creds
-        self.heat_creds.project_name = self.admin_os_creds.project_name
-
-        self.heat_cli = heat_utils.heat_client(self.heat_creds)
-        self.nova = nova_utils.nova_client(self.heat_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds)
         self.stack_creator = None
 
         self.keypair_name = self.guid + '-kp'
@@ -882,7 +872,7 @@ class CreateStackKeypairTests(OSIntegrationTestCase):
             template_path=self.heat_tmplt_path,
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         self.created_stack = self.stack_creator.create()
         self.assertIsNotNone(self.created_stack)
 
@@ -943,15 +933,14 @@ class CreateStackSecurityGroupTests(OSIntegrationTestCase):
         Instantiates the CreateStack object that is responsible for downloading
         and creating an OS stack file within OpenStack
         """
+        self.user_roles = ['heat_stack_owner']
+
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_creds = self.admin_os_creds
-        self.heat_creds.project_name = self.admin_os_creds.project_name
-
-        self.heat_cli = heat_utils.heat_client(self.heat_creds)
-        self.nova = nova_utils.nova_client(self.heat_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds)
         self.stack_creator = None
 
         self.security_group_name = self.guid + '-sec-grp'
@@ -967,7 +956,7 @@ class CreateStackSecurityGroupTests(OSIntegrationTestCase):
             template_path=self.heat_tmplt_path,
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         self.created_stack = self.stack_creator.create()
         self.assertIsNotNone(self.created_stack)
 
@@ -1033,11 +1022,9 @@ class CreateStackNegativeTests(OSIntegrationTestCase):
     """
 
     def setUp(self):
+        self.user_roles = ['heat_stack_owner']
 
         super(self.__class__, self).__start__()
-
-        self.heat_creds = self.admin_os_creds
-        self.heat_creds.project_name = self.admin_os_creds.project_name
 
         self.stack_name = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.stack_creator = None
@@ -1056,7 +1043,7 @@ class CreateStackNegativeTests(OSIntegrationTestCase):
         stack_settings = StackConfig(name=self.stack_name,
                                      template_path=self.heat_tmplt_path)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         with self.assertRaises(HTTPBadRequest):
             self.stack_creator.create()
 
@@ -1067,7 +1054,7 @@ class CreateStackNegativeTests(OSIntegrationTestCase):
         stack_settings = StackConfig(
             name=self.stack_name, template_path='foo')
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
         with self.assertRaises(IOError):
             self.stack_creator.create()
 
@@ -1080,21 +1067,19 @@ class CreateStackFailureTests(OSIntegrationTestCase):
     """
 
     def setUp(self):
+        self.user_roles = ['heat_stack_owner']
 
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_creds = self.admin_os_creds
-        self.heat_creds.project_name = self.admin_os_creds.project_name
-
-        self.heat_cli = heat_utils.heat_client(self.heat_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds)
         self.stack_creator = None
 
         self.tmp_file = file_utils.save_string_to_file(
             ' ', str(uuid.uuid4()) + '-bad-image')
         self.image_creator = OpenStackImage(
-            self.heat_creds, ImageConfig(
+            self.os_creds, ImageConfig(
                 name=self.guid + 'image', image_file=self.tmp_file.name,
                 image_user='foo', img_format='qcow2'))
         self.image_creator.create()
@@ -1164,7 +1149,7 @@ class CreateStackFailureTests(OSIntegrationTestCase):
             template_path=self.heat_tmplt_path,
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
-            self.heat_creds, stack_settings)
+            self.os_creds, stack_settings)
 
         with self.assertRaises(StackError):
             try:
