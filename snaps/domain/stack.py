@@ -19,14 +19,22 @@ class Stack:
     SNAPS domain object for Heat Stacks. Should contain attributes that
     are shared amongst cloud providers
     """
-    def __init__(self, name, stack_id):
+    def __init__(self, name, stack_id, stack_project_id,
+                 status, status_reason):
         """
         Constructor
         :param name: the stack's name
         :param stack_id: the stack's stack_id
+        :param stack_project_id: the project ID that was spawned from this
+                                 deployment
+        :param status: the stack's last known status code
+        :param status_reason: the stack's last known explaination of the status
         """
         self.name = name
         self.id = stack_id
+        self.stack_project_id = stack_project_id
+        self.status = status
+        self.status_reason = status_reason
 
     def __eq__(self, other):
         return (self.name == other.name and

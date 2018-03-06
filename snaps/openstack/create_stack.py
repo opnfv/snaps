@@ -158,7 +158,8 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         called
         :return: the object
         """
-        return self.__stack
+        if self.__stack:
+            return heat_utils.get_stack_by_id(self.__heat_cli, self.__stack.id)
 
     def get_outputs(self):
         """
@@ -174,7 +175,7 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         object
         :return:
         """
-        return heat_utils.get_stack_status(self.__heat_cli, self.__stack.id)
+        return self.get_stack().status
 
     def stack_complete(self, block=False, timeout=None,
                        poll_interval=snaps.config.stack.POLL_INTERVAL):

@@ -110,6 +110,7 @@ class OSIntegrationTestCase(OSComponentTestCase):
         self.use_keystone = use_keystone
         self.keystone = None
         self.flavor_metadata = flavor_metadata
+        self.user_roles = None
 
     @staticmethod
     def parameterize(testcase_klass, os_creds, ext_net_name,
@@ -143,7 +144,6 @@ class OSIntegrationTestCase(OSComponentTestCase):
         self.project_creator = None
         self.user_creator = None
         self.admin_os_creds = self.os_creds
-        self.role = None
 
         if self.use_keystone:
             self.keystone = keystone_utils.keystone_client(self.admin_os_creds)
@@ -154,10 +154,16 @@ class OSIntegrationTestCase(OSComponentTestCase):
                     name=project_name,
                     domain=self.admin_os_creds.project_domain_name))
 
+            # Set by implementing class for setting the user's roles
+            roles = dict()
+            if self.user_roles:
+                for user_role in self.user_roles:
+                    roles[user_role] = project_name
+
             self.user_creator = deploy_utils.create_user(
                 self.admin_os_creds, UserConfig(
                     name=guid + '-user', password=guid,
-                    project_name=project_name,
+                    project_name=project_name, roles=roles,
                     domain_name=self.admin_os_creds.user_domain_name))
 
             self.os_creds = self.user_creator.get_os_creds(
@@ -173,9 +179,6 @@ class OSIntegrationTestCase(OSComponentTestCase):
         called during setUp() else these objects will persist after the test is
         run
         """
-        if self.role:
-            keystone_utils.delete_role(self.keystone, self.role)
-
         if self.project_creator:
             self.project_creator.clean()
 
