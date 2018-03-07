@@ -65,7 +65,7 @@ def get_stack(heat_cli, stack_settings=None, stack_name=None):
 
     stacks = heat_cli.stacks.list(**stack_filter)
     for stack in stacks:
-        return Stack(name=stack.identifier, stack_id=stack.id)
+        return Stack(name=stack.stack_name, stack_id=stack.id)
 
 
 def get_stack_by_id(heat_cli, stack_id):
@@ -76,7 +76,7 @@ def get_stack_by_id(heat_cli, stack_id):
     :return: the Stack domain object else None
     """
     stack = heat_cli.stacks.get(stack_id)
-    return Stack(name=stack.identifier, stack_id=stack.id)
+    return Stack(name=stack.stack_name, stack_id=stack.id)
 
 
 def get_stack_status(heat_cli, stack_id):

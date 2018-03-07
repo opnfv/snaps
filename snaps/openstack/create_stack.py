@@ -489,6 +489,21 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         return status == expected_status_code
 
 
+def generate_creator(os_creds, stack_inst):
+    """
+    Initializes an OpenStackHeatStack object
+    :param os_creds: the OpenStack credentials
+    :param stack_inst: the SNAPS-OO VmInst domain object
+    :return: an initialized OpenStackHeatStack object
+    """
+
+    heat_config = StackConfig(
+        name=stack_inst.name, template={'place': 'holder'})
+    heat_creator = OpenStackHeatStack(os_creds, heat_config)
+    heat_creator.initialize()
+    return heat_creator
+
+
 class StackSettings(StackConfig):
     """
     Class to hold the configuration settings required for creating OpenStack

@@ -35,6 +35,7 @@ import logging
 import unittest
 import uuid
 
+from snaps.openstack import create_stack
 from snaps.openstack.create_stack import (
     StackSettings, StackCreationError, StackError, OpenStackHeatStack)
 from snaps.openstack.tests import openstack_tests, create_instance_tests
@@ -217,6 +218,11 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertEqual(created_stack.name, retrieved_stack.name)
         self.assertEqual(created_stack.id, retrieved_stack.id)
         self.assertEqual(0, len(self.stack_creator.get_outputs()))
+
+        derived_creator = create_stack.generate_creator(
+            self.heat_creds, retrieved_stack)
+        derived_stack = derived_creator.get_stack()
+        self.assertEqual(retrieved_stack, derived_stack)
 
     def test_create_stack_short_timeout(self):
         """
