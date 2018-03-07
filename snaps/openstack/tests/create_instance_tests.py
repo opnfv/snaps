@@ -48,9 +48,8 @@ from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.tests import openstack_tests, validation_utils
 from snaps.openstack.tests.os_source_file_test import (
     OSIntegrationTestCase, OSComponentTestCase)
-from snaps.openstack.utils import nova_utils
+from snaps.openstack.utils import nova_utils, keystone_utils, neutron_utils
 from snaps.openstack.utils.nova_utils import RebootType
-from snaps.openstack.utils import nova_utils, settings_utils, neutron_utils
 
 __author__ = 'spisarski'
 
@@ -411,23 +410,16 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
 
     def setUp(self):
         """
-        Instantiates the CreateImage object that is responsible for downloading
-        and creating an OS image file
-        within OpenStack
+        Setup the objects required for the test
         """
         super(self.__class__, self).__start__()
 
-        guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        self.vm_inst_name = guid + '-inst'
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.vm_inst_name = self.guid + '-inst'
         self.nova = nova_utils.nova_client(self.os_creds)
         self.neutron = neutron_utils.neutron_client(self.os_creds)
         os_image_settings = openstack_tests.cirros_image_settings(
-            name=guid + '-image', image_metadata=self.image_metadata)
-
-        net_config = openstack_tests.get_priv_net_config(
-            net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
-            router_name=guid + '-pub-router', external_net=self.ext_net_name,
-            netconf_override=self.netconf_override)
+            name=self.guid + '-image', image_metadata=self.image_metadata)
 
         # Initialize for tearDown()
         self.image_creator = None
@@ -445,19 +437,10 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorConfig(name=guid + '-flavor-name', ram=256, disk=10,
+                FlavorConfig(name=self.guid + '-flavor-name', ram=256, disk=10,
                              vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
-
-            # Create Network
-            self.network_creator = OpenStackNetwork(
-                self.os_creds, net_config.network_settings)
-            self.network_creator.create()
-
-            self.port_settings = PortConfig(
-                name=guid + '-port',
-                network_name=net_config.network_settings.name)
-
+            self.network_creator = None
         except Exception as e:
             self.tearDown()
             raise e
@@ -504,6 +487,21 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
         Tests the creation of an OpenStack instance with a single port with a
         static IP without a Floating IP.
         """
+        # Create Network
+        net_config = openstack_tests.get_priv_net_config(
+            net_name=self.guid + '-pub-net',
+            subnet_name=self.guid + '-pub-subnet',
+            router_name=self.guid + '-pub-router',
+            external_net=self.ext_net_name,
+            netconf_override=self.netconf_override)
+        self.network_creator = OpenStackNetwork(
+            self.os_creds, net_config.network_settings)
+        self.network_creator.create()
+
+        self.port_settings = PortConfig(
+            name=self.guid + '-port',
+            network_name=net_config.network_settings.name)
+
         instance_settings = VmInstanceConfig(
             name=self.vm_inst_name,
             flavor=self.flavor_creator.flavor_settings.name,
@@ -513,10 +511,13 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
             self.os_creds, instance_settings,
             self.image_creator.image_settings)
 
-        vm_inst = self.inst_creator.create()
+        vm_inst = self.inst_creator.create(block=True)
         self.assertIsNotNone(nova_utils.get_server(
             self.nova, self.neutron, self.keystone,
             vm_inst_settings=instance_settings))
+
+        self.assertIsNotNone(self.inst_creator.get_availability_zone())
+        self.assertIsNone(self.inst_creator.get_compute_host())
 
         # Delete instance
         nova_utils.delete_vm_instance(self.nova, vm_inst)
@@ -528,6 +529,53 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
 
         # Exception should not be thrown
         self.inst_creator.clean()
+
+    def test_create_admin_instance(self):
+        """
+        Tests the creation of an OpenStack instance with a single port with a
+        static IP without a Floating IP.
+        """
+        # Create Network
+        net_config = openstack_tests.get_priv_net_config(
+            net_name=self.guid + '-pub-net',
+            subnet_name=self.guid + '-pub-subnet',
+            router_name=self.guid + '-pub-router',
+            external_net=self.ext_net_name,
+            netconf_override=self.netconf_override)
+        self.network_creator = OpenStackNetwork(
+            self.admin_os_creds, net_config.network_settings)
+        self.network_creator.create()
+
+        self.port_settings = PortConfig(
+            name=self.guid + '-port',
+            network_name=net_config.network_settings.name)
+
+        instance_settings = VmInstanceConfig(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
+
+        self.inst_creator = OpenStackVmInstance(
+            self.admin_os_creds, instance_settings,
+            self.image_creator.image_settings)
+
+        admin_nova = nova_utils.nova_client(self.admin_os_creds)
+        admin_neutron = neutron_utils.neutron_client(self.admin_os_creds)
+        admin_key = keystone_utils.keystone_client(self.admin_os_creds)
+        vm_inst = self.inst_creator.create(block=True)
+
+        self.assertIsNotNone(vm_inst)
+        vm_inst_get = nova_utils.get_server(
+            admin_nova, admin_neutron, admin_key,
+            vm_inst_settings=instance_settings)
+        self.assertEqual(vm_inst, vm_inst_get)
+
+        self.assertIsNone(nova_utils.get_server(
+            self.nova, self.neutron, self.keystone,
+            vm_inst_settings=instance_settings))
+
+        self.assertIsNotNone(self.inst_creator.get_availability_zone())
+        self.assertIsNotNone(self.inst_creator.get_compute_host())
 
 
 class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
@@ -1594,7 +1642,11 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
                 self.admin_os_creds, instance_settings,
                 self.image_creator.image_settings)
             self.inst_creators.append(inst_creator)
-            inst_creator.create()
+            inst_creator.create(block=True)
+            avail_zone = inst_creator.get_availability_zone()
+            self.assertTrue(avail_zone in zone)
+            compute_host = inst_creator.get_compute_host()
+            self.assertTrue(compute_host in zone)
 
         # Validate instances to ensure they've been deployed to the correct
         # server

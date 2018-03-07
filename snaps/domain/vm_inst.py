@@ -49,7 +49,6 @@ class VmInst:
                 self.flavor_id == other.flavor_id and
                 self.ports == other.ports and
                 self.keypair_name == other.keypair_name and
-                self.sec_grp_names == other.sec_grp_names and
                 self.volume_ids == other.volume_ids)
 
 

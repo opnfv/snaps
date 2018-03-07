@@ -430,7 +430,32 @@ class OpenStackVmInstance(OpenStackComputeObject):
         Returns a dictionary of a VMs info as returned by OpenStack
         :return: a dict()
         """
+        from warnings import warn
+        warn('Do not use the returned dict() structure',
+             DeprecationWarning)
+
         return nova_utils.get_server_info(self._nova, self.__vm)
+
+    def get_availability_zone(self):
+        """
+        Returns the name of the availability zone to which this VM is running.
+        :return:
+        """
+        info = nova_utils.get_server_info(self._nova, self.__vm)
+        if info:
+            return info.get('OS-EXT-AZ:availability_zone')
+
+    def get_compute_host(self):
+        """
+        Returns the name of the name of the compute host on which this VM is
+        running.
+        Note: if the user of this object is not part of the 'admin' role, this
+        method will return None
+        :return:
+        """
+        info = nova_utils.get_server_info(self._nova, self.__vm)
+        if info:
+            return info.get('OS-EXT-SRV-ATTR:host')
 
     def __get_first_provisioning_floating_ip(self):
         """
