@@ -32,7 +32,7 @@ import uuid
 from snaps.openstack.create_volume import (
     VolumeSettings, OpenStackVolume)
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
-from snaps.openstack.utils import cinder_utils
+from snaps.openstack.utils import cinder_utils, keystone_utils
 
 __author__ = 'spisarski'
 
@@ -130,6 +130,7 @@ class CreateSimpleVolumeSuccessTests(OSIntegrationTestCase):
             name=self.__class__.__name__ + '-' + str(guid))
 
         self.cinder = cinder_utils.cinder_client(self.os_creds)
+        self.keystone = keystone_utils.keystone_client(self.os_creds)
         self.volume_creator = None
 
     def tearDown(self):
@@ -152,7 +153,8 @@ class CreateSimpleVolumeSuccessTests(OSIntegrationTestCase):
         self.assertIsNotNone(created_volume)
 
         retrieved_volume = cinder_utils.get_volume(
-            self.cinder, volume_settings=self.volume_settings)
+            self.cinder, self.keystone, volume_settings=self.volume_settings,
+            project_name=self.os_creds.project_name)
 
         self.assertIsNotNone(retrieved_volume)
         self.assertEqual(created_volume.id, retrieved_volume.id)
@@ -170,7 +172,8 @@ class CreateSimpleVolumeSuccessTests(OSIntegrationTestCase):
         self.assertIsNotNone(created_volume)
 
         retrieved_volume = cinder_utils.get_volume(
-            self.cinder, volume_settings=self.volume_settings)
+            self.cinder, self.keystone, volume_settings=self.volume_settings,
+            project_name=self.os_creds.project_name)
         self.assertIsNotNone(retrieved_volume)
         self.assertEqual(created_volume, retrieved_volume)
 
@@ -178,7 +181,8 @@ class CreateSimpleVolumeSuccessTests(OSIntegrationTestCase):
         self.volume_creator.clean()
 
         self.assertIsNone(cinder_utils.get_volume(
-            self.cinder, volume_settings=self.volume_settings))
+            self.cinder, self.keystone, volume_settings=self.volume_settings,
+            project_name=self.os_creds.project_name))
 
         # Must not throw an exception when attempting to cleanup non-existent
         # volume
@@ -195,7 +199,8 @@ class CreateSimpleVolumeSuccessTests(OSIntegrationTestCase):
         volume1 = self.volume_creator.create(block=True)
 
         retrieved_volume = cinder_utils.get_volume(
-            self.cinder, volume_settings=self.volume_settings)
+            self.cinder, self.keystone, volume_settings=self.volume_settings,
+            project_name=self.os_creds.project_name)
         self.assertEqual(volume1, retrieved_volume)
 
         # Should be retrieving the instance data
@@ -407,3 +412,83 @@ class CreateVolumeWithImageTests(OSIntegrationTestCase):
             self.cinder, created_volume.id)
 
         self.assertEqual(created_volume, retrieved_volume)
+
+
+class CreateVolMultipleCredsTests(OSIntegrationTestCase):
+    """
+    Test for the OpenStackVolume class and how it interacts with volumes
+    created with differenct credentials and to other projects with the same
+    name
+    """
+    def setUp(self):
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.volume_creators = list()
+
+    def tearDown(self):
+        for volume_creator in self.volume_creators:
+            volume_creator.clean()
+
+        super(self.__class__, self).__clean__()
+
+    # TODO - activate after cinder API bug has been fixed
+    # see https://bugs.launchpad.net/cinder/+bug/1641982 as to why this test
+    # is not activated
+    # def test_create_by_admin_to_other_proj(self):
+    #     """
+    #     Creates a volume as admin to the project of os_creds then instantiates
+    #     a creator object with the os_creds project to ensure it initializes
+    #     without creation
+    #     """
+    #     self.volume_creators.append(OpenStackVolume(
+    #         self.admin_os_creds, VolumeConfig(
+    #             name=self.guid + '-vol',
+    #             project_name=self.os_creds.project_name)))
+    #     admin_vol = self.volume_creators[0].create(block=True)
+    #
+    #     self.volume_creators.append(OpenStackVolume(
+    #         self.os_creds, VolumeConfig(name=self.guid + '-vol')))
+    #     proj_vol = self.volume_creators[1].create(block=True)
+    #
+    #     self.assertEqual(admin_vol, proj_vol)
+
+    def test_create_two_vol_same_name_diff_proj(self):
+        """
+        Creates a volume as admin to the project of os_creds then instantiates
+        a creator object with the os_creds project to ensure it initializes
+        without creation
+        """
+        vol_name = self.guid + '-vol'
+        self.volume_creators.append(OpenStackVolume(
+            self.admin_os_creds, VolumeConfig(name=vol_name)))
+        admin_vol = self.volume_creators[0].create(block=True)
+        self.assertIsNotNone(admin_vol)
+
+        admin_key = keystone_utils.keystone_client(self.admin_os_creds)
+        admin_proj = keystone_utils.get_project(
+            admin_key, project_name=self.admin_os_creds.project_name)
+        self.assertEqual(admin_vol.project_id, admin_proj.id)
+
+        admin_cinder = cinder_utils.cinder_client(self.admin_os_creds)
+        admin_vol_get = cinder_utils.get_volume(
+            admin_cinder, admin_key, volume_name=vol_name,
+            project_name=self.admin_os_creds.project_name)
+        self.assertIsNotNone(admin_vol_get)
+        self.assertEqual(admin_vol, admin_vol_get)
+
+        self.volume_creators.append(OpenStackVolume(
+            self.os_creds, VolumeConfig(name=vol_name)))
+        proj_vol = self.volume_creators[1].create(block=True)
+        self.assertIsNotNone(proj_vol)
+
+        self.assertNotEqual(admin_vol, proj_vol)
+
+        proj_key = keystone_utils.keystone_client(self.os_creds)
+        proj_cinder = cinder_utils.cinder_client(self.os_creds)
+        proj_vol_get = cinder_utils.get_volume(
+            proj_cinder, proj_key, volume_name=vol_name,
+            project_name=self.os_creds.project_name)
+
+        self.assertIsNotNone(proj_vol_get)
+        self.assertEqual(proj_vol, proj_vol_get)

@@ -442,6 +442,25 @@ create_volume_tests.py - CreateVolumeWithImageTests
 |                                        |               | volume when associating with a valid image                |
 +----------------------------------------+---------------+-----------------------------------------------------------+
 
+create_volume_tests.py - CreateVolMultipleCredsTests
+----------------------------------------------------
+
++----------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                              |  Cinder API   | Description                                               |
++========================================+===============+===========================================================+
+| test_create_by_admin_to_other_proj     | 2 & 3         | Tests to ensure the creation of a Volume as a user with   |
+|                                        |               | an 'admin' role can create a volume to another project    |
+|                                        |               | and a creator with the credentails to that project will   |
+|                                        |               | not create another with the same name                     |
+|                                        |               | Currently inactive due to                                 |
+|                                        |               | https://bugs.launchpad.net/cinder/+bug/1641982            |
++----------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_two_vol_same_name_diff_proj| 2 & 3         | Tests to ensure the creation of a Volume with the same    |
+|                                        |               | name by two different creators with different credentials |
+|                                        |               | will create two different volumes with the same name      |
+|                                        |               | that are applied to each project in question              |
++----------------------------------------+---------------+-----------------------------------------------------------+
+
 create_stack_tests.py - CreateStackSuccessTests
 -----------------------------------------------
 
