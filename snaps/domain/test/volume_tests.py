@@ -24,10 +24,12 @@ class VolumeDomainObjectTests(unittest.TestCase):
     """
 
     def test_construction_positional(self):
-        volume = Volume('name1', 'id1', 'desc_val1', 2, 'type_val1',
-                        'avail_zone1', False, [{'attached_at': 'foo'}])
+        volume = Volume('name1', 'id1', 'proj_id1', 'desc_val1', 2,
+                        'type_val1', 'avail_zone1', False,
+                        [{'attached_at': 'foo'}])
         self.assertEqual('name1', volume.name)
         self.assertEqual('id1', volume.id)
+        self.assertEqual('proj_id1', volume.project_id)
         self.assertEqual('desc_val1', volume.description)
         self.assertEqual(2, volume.size)
         self.assertEqual('type_val1', volume.type)
@@ -41,9 +43,10 @@ class VolumeDomainObjectTests(unittest.TestCase):
         volume = Volume(attachments=[{'attached_at': 'foo'}],
                         multi_attach=True, availability_zone='avail_zone2',
                         vol_type='type_val2', size=3, description='desc_val2',
-                        volume_id='id2', name='name2')
+                        volume_id='id2', name='name2', project_id='proj_id1')
         self.assertEqual('name2', volume.name)
         self.assertEqual('id2', volume.id)
+        self.assertEqual('proj_id1', volume.project_id)
         self.assertEqual('desc_val2', volume.description)
         self.assertEqual(3, volume.size)
         self.assertEqual('type_val2', volume.type)

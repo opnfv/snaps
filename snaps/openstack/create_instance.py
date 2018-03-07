@@ -164,7 +164,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
             for volume_name in self.instance_settings.volume_names:
                 cinder = cinder_utils.cinder_client(self._os_creds)
                 volume = cinder_utils.get_volume(
-                    cinder, volume_name=volume_name)
+                    cinder, self.__keystone, volume_name=volume_name,
+                    project_name=self._os_creds.project_name)
 
                 if volume and self.vm_active(block=True):
                     vm = nova_utils.attach_volume(

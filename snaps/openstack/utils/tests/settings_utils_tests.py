@@ -358,8 +358,9 @@ class SettingsUtilsUnitTests(unittest.TestCase):
 
     def test_vol_settings_from_vol(self):
         volume = Volume(
-            name='vol-name', volume_id='vol-id', description='desc', size=99,
-            vol_type='vol-type', availability_zone='zone1', multi_attach=True)
+            name='vol-name', volume_id='vol-id', project_id='proj-id',
+            description='desc', size=99, vol_type='vol-type',
+            availability_zone='zone1', multi_attach=True)
         settings = settings_utils.create_volume_config(volume)
         self.assertEqual(volume.name, settings.name)
         self.assertEqual(volume.description, settings.description)
