@@ -431,6 +431,10 @@ class OpenStackVmInstance(OpenStackComputeObject):
         Returns a dictionary of a VMs info as returned by OpenStack
         :return: a dict()
         """
+        from warnings import warn
+        warn('Do not use the returned dict() structure',
+             DeprecationWarning)
+
         return nova_utils.get_server_info(self._nova, self.__vm)
 
     def __get_first_provisioning_floating_ip(self):

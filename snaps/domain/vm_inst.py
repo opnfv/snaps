@@ -20,7 +20,8 @@ class VmInst:
     are shared amongst cloud providers
     """
     def __init__(self, name, inst_id, image_id, flavor_id, ports,
-                 keypair_name, sec_grp_names, volume_ids):
+                 keypair_name, sec_grp_names, volume_ids, compute_host,
+                 availability_zone):
         """
         Constructor
         :param name: the image's name
@@ -32,6 +33,11 @@ class VmInst:
         :param keypair_name: the name of the associated keypair
         :param sec_grp_names: list of security group names
         :param volume_ids: list of attached volume IDs
+        :param compute_host: the name of the host on which this VM is running
+                             When the user requesting this query is not part of
+                             the 'admin' role, this value will be None
+        :param availability_zone: the name of the availability zone to which
+                                  this VM has been assigned
         """
         self.name = name
         self.id = inst_id
@@ -41,6 +47,8 @@ class VmInst:
         self.keypair_name = keypair_name
         self.sec_grp_names = sec_grp_names
         self.volume_ids = volume_ids
+        self.compute_host = compute_host
+        self.availability_zone = availability_zone
 
     def __eq__(self, other):
         return (self.name == other.name and
@@ -49,7 +57,6 @@ class VmInst:
                 self.flavor_id == other.flavor_id and
                 self.ports == other.ports and
                 self.keypair_name == other.keypair_name and
-                self.sec_grp_names == other.sec_grp_names and
                 self.volume_ids == other.volume_ids)
 
 

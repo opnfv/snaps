@@ -24,7 +24,7 @@ class VmInstDomainObjectTests(unittest.TestCase):
 
     def test_construction_positional(self):
         vm_inst = VmInst('name', 'id', '456', '123', list(), 'kp-name',
-                         ['foo', 'bar'], ['123', '456'])
+                         ['foo', 'bar'], ['123', '456'], 'host1', 'zone1')
         self.assertEqual('name', vm_inst.name)
         self.assertEqual('id', vm_inst.id)
         self.assertEqual('456', vm_inst.image_id)
@@ -33,9 +33,12 @@ class VmInstDomainObjectTests(unittest.TestCase):
         self.assertEqual('kp-name', vm_inst.keypair_name)
         self.assertEqual(['foo', 'bar'], vm_inst.sec_grp_names)
         self.assertEqual(['123', '456'], vm_inst.volume_ids)
+        self.assertEqual('host1', vm_inst.compute_host)
+        self.assertEqual('zone1', vm_inst.availability_zone)
 
     def test_construction_named(self):
         vm_inst = VmInst(
+            availability_zone='zone1', compute_host='host1',
             volume_ids=['123', '456'], sec_grp_names=['foo', 'bar'],
             ports=list(), inst_id='id', name='name', flavor_id='123',
             image_id='456', keypair_name='kp-name')
@@ -47,6 +50,8 @@ class VmInstDomainObjectTests(unittest.TestCase):
         self.assertEqual('kp-name', vm_inst.keypair_name)
         self.assertEqual(['foo', 'bar'], vm_inst.sec_grp_names)
         self.assertEqual(['123', '456'], vm_inst.volume_ids)
+        self.assertEqual('host1', vm_inst.compute_host)
+        self.assertEqual('zone1', vm_inst.availability_zone)
 
 
 class FloatingIpDomainObjectTests(unittest.TestCase):
