@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_55182281",
+        "filename": "snaps/domain/stack.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-03-07T16:59:57Z",
+      "side": 1,
+      "message": "heh",
+      "parentUuid": "5a3f45e8_554ae280",
+      "revId": "85a4e18d7d6eac6873f0880794f3494a1ffa83d1",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_55414259",
         "filename": "snaps/openstack/create_stack.py",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-03-07T16:51:20Z",
       "side": 1,
       "message": "This needs to handle the case if get_stack() returns None.",
+      "revId": "85a4e18d7d6eac6873f0880794f3494a1ffa83d1",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_b50c0644",
+        "filename": "snaps/openstack/create_stack.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-03-07T16:59:57Z",
+      "side": 1,
+      "message": "good catch, I should have thought of that :)",
+      "parentUuid": "5a3f45e8_55414259",
       "revId": "85a4e18d7d6eac6873f0880794f3494a1ffa83d1",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
