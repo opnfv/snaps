@@ -492,6 +492,12 @@ create_stack_tests.py - CreateStackFloatingIpTests
 |                                       |               | VM with a floating IP that can be accessed via            |
 |                                       |               | OpenStackVmInstance                                       |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_connect_via_ssh_heat_vm_derived  | 1             | Ensures that an OpenStackHeatStack instance can create a  |
+|                                       |               | VM with a floating IP where a generated initialized       |
+|                                       |               | OpenStackHeatStack can return an initialized              |
+|                                       |               | OpenStackVmInstance object that will be used to access the|
+|                                       |               | VM via SSH                                                |
++---------------------------------------+---------------+-----------------------------------------------------------+
 
 create_stack_tests.py - CreateStackNestedResourceTests
 ------------------------------------------------------
