@@ -35,6 +35,7 @@ import logging
 import unittest
 import uuid
 
+from snaps.openstack import create_stack
 from snaps.openstack.create_stack import (
     StackSettings, StackCreationError, StackError, OpenStackHeatStack)
 from snaps.openstack.tests import openstack_tests, create_instance_tests
@@ -215,6 +216,12 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertEqual(created_stack.name, retrieved_stack.name)
         self.assertEqual(created_stack.id, retrieved_stack.id)
         self.assertEqual(0, len(self.stack_creator.get_outputs()))
+
+        derived_creator = create_stack.generate_creator(
+            self.heat_creds, retrieved_stack,
+            [self.image_creator.image_settings])
+        derived_stack = derived_creator.get_stack()
+        self.assertEqual(retrieved_stack, derived_stack)
 
     def test_create_stack_short_timeout(self):
         """
@@ -498,6 +505,39 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
         self.assertIsNotNone(created_stack)
 
         self.vm_inst_creators = self.stack_creator.get_vm_inst_creators(
+            heat_keypair_option='private_key')
+        self.assertIsNotNone(self.vm_inst_creators)
+        self.assertEqual(2, len(self.vm_inst_creators))
+
+        for vm_inst_creator in self.vm_inst_creators:
+            if vm_inst_creator.get_vm_inst().name == self.vm_inst1_name:
+                self.assertTrue(
+                    create_instance_tests.validate_ssh_client(vm_inst_creator))
+            else:
+                vm_settings = vm_inst_creator.instance_settings
+                self.assertEqual(0, len(vm_settings.floating_ip_settings))
+
+    def test_connect_via_ssh_heat_vm_derived(self):
+        """
+        Tests the the retrieval of two VM instance creators from a derived
+        OpenStackHeatStack object and attempt to connect via
+        SSH to the first one with a floating IP.
+        """
+        stack_settings = StackConfig(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template_path=self.heat_tmplt_path,
+            env_values=self.env_values)
+        self.stack_creator = OpenStackHeatStack(
+            self.heat_creds, stack_settings,
+            [self.image_creator.image_settings])
+        created_stack = self.stack_creator.create()
+        self.assertIsNotNone(created_stack)
+
+        derived_stack = create_stack.generate_creator(
+            self.heat_creds, created_stack,
+            [self.image_creator.image_settings])
+
+        self.vm_inst_creators = derived_stack.get_vm_inst_creators(
             heat_keypair_option='private_key')
         self.assertIsNotNone(self.vm_inst_creators)
         self.assertEqual(2, len(self.vm_inst_creators))
