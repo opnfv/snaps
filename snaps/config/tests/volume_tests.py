@@ -33,6 +33,7 @@ class VolumeConfigUnitTests(unittest.TestCase):
     def test_name_only(self):
         settings = VolumeConfig(name='foo')
         self.assertEqual('foo', settings.name)
+        self.assertIsNone(settings.project_name)
         self.assertIsNone(settings.description)
         self.assertEquals(1, settings.size)
         self.assertIsNone(settings.image_name)
@@ -43,6 +44,7 @@ class VolumeConfigUnitTests(unittest.TestCase):
     def test_config_with_name_only(self):
         settings = VolumeConfig(**{'name': 'foo'})
         self.assertEqual('foo', settings.name)
+        self.assertIsNone(settings.project_name)
         self.assertIsNone(settings.description)
         self.assertEquals(1, settings.size)
         self.assertIsNone(settings.image_name)
@@ -52,10 +54,12 @@ class VolumeConfigUnitTests(unittest.TestCase):
 
     def test_all_strings(self):
         settings = VolumeConfig(
-            name='foo', description='desc', size='2', image_name='image',
-            type_name='type', availability_zone='zone1', multi_attach='true')
+            name='foo', project_name='proj-foo', description='desc', size='2',
+            image_name='image', type_name='type', availability_zone='zone1',
+            multi_attach='true')
 
         self.assertEqual('foo', settings.name)
+        self.assertEqual('proj-foo', settings.project_name)
         self.assertEqual('desc', settings.description)
         self.assertEqual(2, settings.size)
         self.assertEqual('image', settings.image_name)
@@ -65,10 +69,12 @@ class VolumeConfigUnitTests(unittest.TestCase):
 
     def test_all_correct_type(self):
         settings = VolumeConfig(
-            name='foo', description='desc', size=2, image_name='image',
-            type_name='bar', availability_zone='zone1', multi_attach=True)
+            name='foo', project_name='proj-foo', description='desc', size=2,
+            image_name='image', type_name='bar', availability_zone='zone1',
+            multi_attach=True)
 
         self.assertEqual('foo', settings.name)
+        self.assertEqual('proj-foo', settings.project_name)
         self.assertEqual('desc', settings.description)
         self.assertEqual(2, settings.size)
         self.assertEqual('image', settings.image_name)
@@ -78,11 +84,13 @@ class VolumeConfigUnitTests(unittest.TestCase):
 
     def test_config_all(self):
         settings = VolumeConfig(
-            **{'name': 'foo', 'description': 'desc', 'size': '2',
+            **{'name': 'foo', 'project_name': 'proj-foo',
+               'description': 'desc', 'size': '2',
                'image_name': 'foo', 'type_name': 'bar',
                'availability_zone': 'zone1', 'multi_attach': 'true'})
 
         self.assertEqual('foo', settings.name)
+        self.assertEqual('proj-foo', settings.project_name)
         self.assertEqual('desc', settings.description)
         self.assertEqual(2, settings.size)
         self.assertEqual('foo', settings.image_name)

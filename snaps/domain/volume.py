@@ -19,12 +19,14 @@ class Volume:
     SNAPS domain object for Volumes. Should contain attributes that
     are shared amongst cloud providers
     """
-    def __init__(self, name, volume_id, description, size, vol_type,
-                 availability_zone, multi_attach, attachments=list()):
+    def __init__(self, name, volume_id, project_id, description, size,
+                 vol_type, availability_zone, multi_attach,
+                 attachments=list()):
         """
         Constructor
         :param name: the volume's name
         :param volume_id: the volume's id
+        :param project_id: the volume's associated project id
         :param description: the volume's description
         :param size: the volume's size in GB
         :param vol_type: the volume's type
@@ -35,6 +37,7 @@ class Volume:
         """
         self.name = name
         self.id = volume_id
+        self.project_id = project_id
         self.description = description
         self.size = size
         self.type = vol_type
@@ -43,7 +46,9 @@ class Volume:
         self.attachments = attachments
 
     def __eq__(self, other):
-        return (self.name == other.name and self.id == other.id
+        return (self.name == other.name
+                and self.id == other.id
+                and self.project_id == other.project_id
                 and self.description == other.description
                 and self.size == other.size
                 and self.type == other.type

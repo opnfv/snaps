@@ -26,7 +26,7 @@ from snaps.openstack import create_volume
 from snaps.openstack.create_qos import Consumer
 from snaps.openstack.tests import validation_utils
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
-from snaps.openstack.utils import cinder_utils
+from snaps.openstack.utils import cinder_utils, keystone_utils
 
 __author__ = 'spisarski'
 
@@ -75,6 +75,7 @@ class CinderUtilsVolumeTests(OSComponentTestCase):
         self.volume_name = self.__class__.__name__ + '-' + str(guid)
         self.volume = None
         self.cinder = cinder_utils.cinder_client(self.os_creds)
+        self.keystone = keystone_utils.keystone_client(self.os_creds)
 
     def tearDown(self):
         """
@@ -94,14 +95,15 @@ class CinderUtilsVolumeTests(OSComponentTestCase):
         """
         volume_settings = VolumeConfig(name=self.volume_name)
         self.volume = cinder_utils.create_volume(
-            self.cinder, volume_settings)
+            self.cinder, self.keystone, volume_settings)
         self.assertIsNotNone(self.volume)
         self.assertEqual(self.volume_name, self.volume.name)
 
         self.assertTrue(volume_active(self.cinder, self.volume))
 
         volume = cinder_utils.get_volume(
-            self.cinder, volume_settings=volume_settings)
+            self.cinder, self.keystone, volume_settings=volume_settings,
+            project_name=self.os_creds.project_name)
         self.assertIsNotNone(volume)
         validation_utils.objects_equivalent(self.volume, volume)
 
@@ -111,21 +113,24 @@ class CinderUtilsVolumeTests(OSComponentTestCase):
         """
         volume_settings = VolumeConfig(name=self.volume_name)
         self.volume = cinder_utils.create_volume(
-            self.cinder, volume_settings)
+            self.cinder, self.keystone, volume_settings)
         self.assertIsNotNone(self.volume)
         self.assertEqual(self.volume_name, self.volume.name)
 
         self.assertTrue(volume_active(self.cinder, self.volume))
 
         volume = cinder_utils.get_volume(
-            self.cinder, volume_settings=volume_settings)
+            self.cinder, self.keystone, volume_settings=volume_settings,
+            project_name=self.os_creds.project_name)
         self.assertIsNotNone(volume)
         validation_utils.objects_equivalent(self.volume, volume)
 
         cinder_utils.delete_volume(self.cinder, self.volume)
         self.assertTrue(volume_deleted(self.cinder, self.volume))
         self.assertIsNone(
-            cinder_utils.get_volume(self.cinder, volume_settings))
+            cinder_utils.get_volume(
+                self.cinder, self.keystone, volume_settings,
+                project_name=self.os_creds.project_name))
 
 
 def volume_active(cinder, volume):

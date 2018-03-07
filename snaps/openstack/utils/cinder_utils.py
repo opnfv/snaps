@@ -43,27 +43,40 @@ def cinder_client(os_creds):
                   region_name=os_creds.region_name)
 
 
-def get_volume(cinder, volume_name=None, volume_settings=None):
+def get_volume(cinder, keystone=None, volume_name=None, volume_settings=None,
+               project_name=None):
     """
     Returns an OpenStack volume object for a given name
     :param cinder: the Cinder client
+    :param keystone: the Keystone client (required if project_name or
+                     volume_settings.project_name is not None
     :param volume_name: the volume name to lookup
     :param volume_settings: the volume settings used for lookups
+    :param project_name: the name of the project associated with the volume
     :return: the volume object or None
     """
     if volume_settings:
         volume_name = volume_settings.name
 
     volumes = cinder.volumes.list()
-    for volume in volumes:
-        if volume.name == volume_name:
-            return Volume(
-                name=volume.name, volume_id=volume.id,
-                description=volume.description, size=volume.size,
-                vol_type=volume.volume_type,
-                availability_zone=volume.availability_zone,
-                multi_attach=volume.multiattach,
-                attachments=volume.attachments)
+    for os_volume in volumes:
+        if os_volume.name == volume_name:
+            project_id = None
+            if hasattr(os_volume, 'os-vol-tenant-attr:tenant_id'):
+                project_id = getattr(
+                    os_volume, 'os-vol-tenant-attr:tenant_id')
+
+            if volume_settings and volume_settings.project_name:
+                project_name = volume_settings.project_name
+
+            if project_name:
+                project = keystone_utils.get_project_by_id(
+                    keystone, project_id)
+
+                if project and project.name == project_name:
+                    return __map_os_volume_to_domain(os_volume)
+            else:
+                return __map_os_volume_to_domain(os_volume)
 
 
 def __get_os_volume_by_id(cinder, volume_id):
@@ -83,12 +96,29 @@ def get_volume_by_id(cinder, volume_id):
     :param volume_id: the volume ID to lookup
     :return: the SNAPS-OO Domain Volume object or None
     """
-    volume = __get_os_volume_by_id(cinder, volume_id)
+    os_volume = __get_os_volume_by_id(cinder, volume_id)
+    return __map_os_volume_to_domain(os_volume)
+
+
+def __map_os_volume_to_domain(os_volume):
+    """
+    Returns a SNAPS-OO domain Volume object that is created by an OpenStack
+    Volume object
+    :param os_volume: the OpenStack volume object
+    :return: Volume domain object
+    """
+    project_id = None
+    if hasattr(os_volume, 'os-vol-tenant-attr:tenant_id'):
+        project_id = getattr(
+            os_volume, 'os-vol-tenant-attr:tenant_id')
+
     return Volume(
-        name=volume.name, volume_id=volume.id, description=volume.description,
-        size=volume.size, vol_type=volume.volume_type,
-        availability_zone=volume.availability_zone,
-        multi_attach=volume.multiattach, attachments=volume.attachments)
+        name=os_volume.name, volume_id=os_volume.id,
+        project_id=project_id, description=os_volume.description,
+        size=os_volume.size, vol_type=os_volume.volume_type,
+        availability_zone=os_volume.availability_zone,
+        multi_attach=os_volume.multiattach,
+        attachments=os_volume.attachments)
 
 
 def get_volume_status(cinder, volume):
@@ -102,27 +132,36 @@ def get_volume_status(cinder, volume):
     return os_volume.status
 
 
-def create_volume(cinder, volume_settings):
+def create_volume(cinder, keystone, volume_settings):
     """
     Creates and returns OpenStack volume object with an external URL
     :param cinder: the cinder client
+    :param keystone: the keystone client
     :param volume_settings: the volume settings object
     :return: the OpenStack volume object
     :raise Exception if using a file and it cannot be found
     """
-    volume = cinder.volumes.create(
-        name=volume_settings.name, description=volume_settings.description,
-        size=volume_settings.size, imageRef=volume_settings.image_name,
+    project_id = None
+    if volume_settings.project_name:
+        project = keystone_utils.get_project(
+            keystone, project_name=volume_settings.project_name)
+        if project:
+            project_id = project.id
+        else:
+            raise KeystoneUtilsException(
+                'Project cannot be found with name - '
+                + volume_settings.project_name)
+    os_volume = cinder.volumes.create(
+        name=volume_settings.name,
+        project_id=project_id,
+        description=volume_settings.description,
+        size=volume_settings.size,
+        imageRef=volume_settings.image_name,
         volume_type=volume_settings.type_name,
         availability_zone=volume_settings.availability_zone,
         multiattach=volume_settings.multi_attach)
 
-    return Volume(
-        name=volume.name, volume_id=volume.id,
-        description=volume.description,
-        size=volume.size, vol_type=volume.volume_type,
-        availability_zone=volume.availability_zone,
-        multi_attach=volume.multiattach, attachments=volume.attachments)
+    return __map_os_volume_to_domain(os_volume)
 
 
 def delete_volume(cinder, volume):
@@ -367,3 +406,9 @@ def delete_qos(cinder, qos):
     """
     logger.info('Deleting QoS named - %s', qos.name)
     cinder.qos_specs.delete(qos.id)
+
+
+class KeystoneUtilsException(Exception):
+    """
+    Exception when calls to the Keystone client cannot be served properly
+    """

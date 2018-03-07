@@ -20,6 +20,9 @@ class VolumeConfig(object):
         """
         Constructor
         :param name: the volume's name (required)
+        :param project_name: the name of the project to associate (optional)
+            note: due to a bug in the Cinder API, this functionality will not
+            work. see https://bugs.launchpad.net/cinder/+bug/1641982
         :param description: the volume's name (optional)
         :param size: the volume's size in GB (default 1)
         :param image_name: when a glance image is used for the image source
@@ -32,6 +35,7 @@ class VolumeConfig(object):
         """
 
         self.name = kwargs.get('name')
+        self.project_name = kwargs.get('project_name')
         self.description = kwargs.get('description')
         self.size = int(kwargs.get('size', 1))
         self.image_name = kwargs.get('image_name')
