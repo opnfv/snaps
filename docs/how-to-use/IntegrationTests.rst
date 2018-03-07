@@ -590,7 +590,11 @@ create_instance_tests.py - CreateInstanceSimpleTests
 | Test Name                             | API Versions  | Description                                               |
 +=======================================+===============+===========================================================+
 | test_create_delete_instance           | Nova 2        | Ensures that the OpenStackVmInstance.clean() method       |
-|                                       | Neutron 2     | deletes the instance                                      |
+|                                       | Neutron 2     | deletes the instance as well as ensuring the VmInst       |
+|                                       |               | availability_zone is populated and compute_host is None   |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_admin_instance            | Nova 2        | Ensures that the VmInst object members availability_zone  |
+|                                       | Neutron 2     | and compute_host return a value                           |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
 create_instance_tests.py - SimpleHealthCheck

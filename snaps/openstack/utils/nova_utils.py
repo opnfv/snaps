@@ -214,7 +214,9 @@ def __map_os_server_obj_to_vm_inst(neutron, keystone, os_server,
         name=os_server.name, inst_id=os_server.id,
         image_id=os_server.image['id'], flavor_id=os_server.flavor['id'],
         ports=out_ports, keypair_name=os_server.key_name,
-        sec_grp_names=sec_grp_names, volume_ids=volumes)
+        sec_grp_names=sec_grp_names, volume_ids=volumes,
+        compute_host=os_server._info.get('OS-EXT-SRV-ATTR:host'),
+        availability_zone=os_server._info.get('OS-EXT-AZ:availability_zone'))
 
 
 def __get_latest_server_os_object(nova, server):
