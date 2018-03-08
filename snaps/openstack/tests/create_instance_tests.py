@@ -530,6 +530,105 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
         self.inst_creator.clean()
 
 
+class CreateInstanceExternalNetTests(OSIntegrationTestCase):
+    """
+    Simple instance creation tests where the network is external
+    """
+
+    def setUp(self):
+        """
+        Instantiates the CreateImage object that is responsible for downloading
+        and creating an OS image file
+        within OpenStack
+        """
+        super(self.__class__, self).__start__()
+
+        guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.vm_inst_name = guid + '-inst'
+        self.nova = nova_utils.nova_client(self.admin_os_creds)
+        self.neutron = neutron_utils.neutron_client(self.admin_os_creds)
+        os_image_settings = openstack_tests.cirros_image_settings(
+            name=guid + '-image', image_metadata=self.image_metadata)
+
+        # Initialize for tearDown()
+        self.image_creator = None
+        self.flavor_creator = None
+        self.inst_creator = None
+
+        try:
+            # Create Image
+            self.image_creator = OpenStackImage(self.os_creds,
+                                                os_image_settings)
+            self.image_creator.create()
+
+            # Create Flavor
+            self.flavor_creator = OpenStackFlavor(
+                self.admin_os_creds,
+                FlavorConfig(name=guid + '-flavor-name', ram=256, disk=10,
+                             vcpus=2, metadata=self.flavor_metadata))
+            self.flavor_creator.create()
+
+            self.port_settings = PortConfig(
+                name=guid + '-port',
+                network_name=self.ext_net_name)
+
+        except Exception as e:
+            self.tearDown()
+            raise e
+
+    def tearDown(self):
+        """
+        Cleans the created object
+        """
+        if self.inst_creator:
+            try:
+                self.inst_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning VM instance with message '
+                    '- %s', e)
+
+        if self.flavor_creator:
+            try:
+                self.flavor_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning flavor with message - %s',
+                    e)
+
+        if self.image_creator and not self.image_creator.image_settings.exists:
+            try:
+                self.image_creator.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning image with message - %s', e)
+
+        super(self.__class__, self).__clean__()
+
+    def test_create_instance_public_net(self):
+        """
+        Tests the creation of an OpenStack instance with a single port to
+        the external network.
+        """
+        instance_settings = VmInstanceConfig(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[self.port_settings])
+
+        self.inst_creator = OpenStackVmInstance(
+            self.admin_os_creds, instance_settings,
+            self.image_creator.image_settings)
+
+        vm_inst = self.inst_creator.create(block=True)
+        vm_inst_get = nova_utils.get_server(
+            self.nova, self.neutron, self.keystone,
+            vm_inst_settings=instance_settings)
+        self.assertEqual(vm_inst, vm_inst_get)
+        ip = self.inst_creator.get_port_ip(self.port_settings.name)
+
+        check_dhcp_lease(self.inst_creator, ip)
+
+
 class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
     """
     Test for the CreateInstance class with a single NIC/Port with Floating IPs
