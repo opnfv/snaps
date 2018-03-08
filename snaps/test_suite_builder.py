@@ -65,13 +65,13 @@ from snaps.openstack.tests.create_image_tests import (
     CreateImageSuccessTests, CreateImageNegativeTests,
     CreateMultiPartImageTests)
 from snaps.openstack.tests.create_instance_tests import (
-    CreateInstanceSingleNetworkTests,  CreateInstanceOnComputeHost,
+    CreateInstanceSingleNetworkTests, CreateInstanceOnComputeHost,
     CreateInstanceSimpleTests, FloatingIpSettingsUnitTests,
     InstanceSecurityGroupTests, VmInstanceSettingsUnitTests,
     CreateInstancePortManipulationTests, SimpleHealthCheck,
     CreateInstanceFromThreePartImage, CreateInstanceMockOfflineTests,
     CreateInstanceTwoNetTests, CreateInstanceVolumeTests,
-    CreateInstanceIPv6NetworkTests)
+    CreateInstanceIPv6NetworkTests, CreateInstanceExternalNetTests)
 from snaps.openstack.tests.create_keypairs_tests import (
     CreateKeypairsTests, KeypairSettingsUnitTests, CreateKeypairsCleanupTests)
 from snaps.openstack.tests.create_network_tests import (
@@ -594,6 +594,11 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
         log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
         CreateInstanceSimpleTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateInstanceExternalNetTests, os_creds=os_creds,
         ext_net_name=ext_net_name, use_keystone=use_keystone,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))

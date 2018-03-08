@@ -622,6 +622,16 @@ create_instance_tests.py - CreateInstanceSimpleTests
 |                                       | Neutron 2     | and compute_host return a value                           |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_instance_tests.py - CreateInstanceExternalNetTests
+---------------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | API Versions  | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_instance_public_net       | Nova 2        | Ensures that an OpenStackVmInstance initialized as a user |
+|                                       | Neutron 2     | of type 'admin' can create a VM against an external net   |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_instance_tests.py - SimpleHealthCheck
 --------------------------------------------
 
