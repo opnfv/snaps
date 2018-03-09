@@ -58,7 +58,7 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         """
         super(self.__class__, self).__start__()
 
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
 
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.keypair_priv_filepath = 'tmp/' + guid

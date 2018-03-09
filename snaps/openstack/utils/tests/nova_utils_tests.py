@@ -49,7 +49,7 @@ class NovaSmokeTests(OSComponentTestCase):
         """
         Tests to ensure that the proper credentials can connect.
         """
-        nova = nova_utils.nova_client(self.os_creds)
+        nova = nova_utils.nova_client(self.os_creds, self.os_session)
 
         # This should not throw an exception
         nova.flavors.list()
@@ -58,7 +58,7 @@ class NovaSmokeTests(OSComponentTestCase):
         """
         Tests to ensure that get_hypervisors() function works.
         """
-        nova = nova_utils.nova_client(self.os_creds)
+        nova = nova_utils.nova_client(self.os_creds, self.os_session)
 
         hosts = nova_utils.get_hypervisor_hosts(nova)
         # This should not throw an exception
@@ -95,7 +95,7 @@ class NovaUtilsKeypairTests(OSComponentTestCase):
         self.priv_key_file_path = 'tmp/' + guid
         self.pub_key_file_path = self.priv_key_file_path + '.pub'
 
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
         self.keys = nova_utils.create_keys()
         self.public_key = nova_utils.public_key_openssh(self.keys)
         self.keypair_name = guid
@@ -122,6 +122,8 @@ class NovaUtilsKeypairTests(OSComponentTestCase):
             os.remove(self.pub_key_file_path)
         except:
             pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_keypair(self):
         """
@@ -176,7 +178,7 @@ class NovaUtilsFlavorTests(OSComponentTestCase):
         self.flavor_settings = FlavorConfig(
             name=guid + '-name', flavor_id=guid + '-id', ram=1, disk=1,
             vcpus=1, ephemeral=1, swap=2, rxtx_factor=3.0, is_public=False)
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
         self.flavor = None
 
     def tearDown(self):
@@ -188,6 +190,8 @@ class NovaUtilsFlavorTests(OSComponentTestCase):
                 nova_utils.delete_flavor(self.nova, self.flavor)
             except:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_flavor(self):
         """
@@ -242,10 +246,14 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
 
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.nova = nova_utils.nova_client(self.os_creds)
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
-        self.glance = glance_utils.glance_client(self.os_creds)
+        self.nova = nova_utils.nova_client(
+            self.os_creds, self.os_session)
+        self.keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
+        self.glance = glance_utils.glance_client(
+            self.os_creds, self.os_session)
 
         self.image_creator = None
         self.network_creator = None
@@ -316,6 +324,8 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
             except:
                 pass
 
+        super(self.__class__, self).__clean__()
+
     def test_create_instance(self):
         """
         Tests the nova_utils.create_server() method
@@ -363,8 +373,9 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
 
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.nova = nova_utils.nova_client(self.os_creds)
-        self.cinder = cinder_utils.cinder_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
+        self.cinder = cinder_utils.cinder_client(
+            self.os_creds, self.os_session)
 
         self.image_creator = None
         self.network_creator = None
@@ -442,6 +453,8 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
             except:
                 pass
 
+        super(self.__class__, self).__clean__()
+
     def test_add_remove_volume(self):
         """
         Tests the nova_utils.attach_volume() and detach_volume functions with
@@ -453,8 +466,10 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         self.assertEqual(0, len(self.volume_creator.get_volume().attachments))
 
         # Attach volume to VM
-        neutron = neutron_utils.neutron_client(self.os_creds)
-        keystone = keystone_utils.keystone_client(self.os_creds)
+        neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
+        keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         self.assertIsNotNone(nova_utils.attach_volume(
             self.nova, neutron, keystone, self.instance_creator.get_vm_inst(),
             self.volume_creator.get_volume(), self.os_creds.project_name))
@@ -476,7 +491,8 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         self.assertTrue(attached)
         self.assertIsNotNone(vol_attach)
 
-        keystone = keystone_utils.keystone_client(self.os_creds)
+        keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         vm_attach = nova_utils.get_server_object_by_id(
             self.nova, neutron, keystone,
             self.instance_creator.get_vm_inst().id, self.os_creds.project_name)
@@ -528,8 +544,9 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         self.assertEqual(0, len(self.volume_creator.get_volume().attachments))
 
         # Attach volume to VM
-        neutron = neutron_utils.neutron_client(self.os_creds)
-        keystone = keystone_utils.keystone_client(self.os_creds)
+        neutron = neutron_utils.neutron_client(self.os_creds, self.os_session)
+        keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         with self.assertRaises(NovaException):
             nova_utils.attach_volume(
                 self.nova, neutron, keystone,
@@ -548,14 +565,16 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
         self.assertEqual(0, len(self.volume_creator.get_volume().attachments))
 
         # Attach volume to VM
-        neutron = neutron_utils.neutron_client(self.os_creds)
-        keystone = keystone_utils.keystone_client(self.os_creds)
+        neutron = neutron_utils.neutron_client(self.os_creds, self.os_session)
+        keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         nova_utils.attach_volume(
             self.nova, neutron, keystone, self.instance_creator.get_vm_inst(),
             self.volume_creator.get_volume(), self.os_creds.project_name)
 
         # Check VmInst for attachment
-        keystone = keystone_utils.keystone_client(self.os_creds)
+        keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         latest_vm = nova_utils.get_server_object_by_id(
             self.nova, neutron, keystone,
             self.instance_creator.get_vm_inst().id, self.os_creds.project_name)

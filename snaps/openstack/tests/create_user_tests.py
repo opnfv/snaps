@@ -109,7 +109,7 @@ class CreateUserSuccessTests(OSComponentTestCase):
             roles={'admin': self.os_creds.project_name},
             domain_name=self.os_creds.user_domain_name)
 
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
+        self.keystone = keystone_utils.keystone_client(self.os_creds, self.os_session)
 
         # Initialize for cleanup
         self.user_creator = None
@@ -120,6 +120,8 @@ class CreateUserSuccessTests(OSComponentTestCase):
         """
         if self.user_creator:
             self.user_creator.clean()
+
+        super(self.__class__, self).__clean__()
 
     def test_create_user(self):
         """

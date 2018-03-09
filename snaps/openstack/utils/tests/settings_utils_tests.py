@@ -58,7 +58,8 @@ class SettingsUtilsNetworkingTests(OSComponentTestCase):
         self.network_name = guid + '-net'
         self.subnet_name = guid + '-subnet'
         self.net_creator = None
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """
@@ -69,6 +70,8 @@ class SettingsUtilsNetworkingTests(OSComponentTestCase):
                 self.net_creator.clean()
             except:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_derive_net_settings_no_subnet(self):
         """
@@ -154,10 +157,14 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
         Instantiates the CreateImage object that is responsible for downloading
         and creating an OS image file within OpenStack
         """
-        self.nova = nova_utils.nova_client(self.os_creds)
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
-        self.glance = glance_utils.glance_client(self.os_creds)
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.nova = nova_utils.nova_client(
+            self.os_creds, self.os_session)
+        self.keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
+        self.glance = glance_utils.glance_client(
+            self.os_creds, self.os_session)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
 
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.keypair_priv_filepath = 'tmp/' + guid
@@ -315,7 +322,7 @@ class SettingsUtilsVmInstTests(OSComponentTestCase):
         if os.path.isfile(self.test_file_local_path):
             os.remove(self.test_file_local_path)
 
-        # super(self.__class__, self).__clean__()
+        super(self.__class__, self).__clean__()
 
     def test_derive_vm_inst_config(self):
         """

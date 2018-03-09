@@ -85,6 +85,8 @@ class OpenStackClusterTemplate(OpenStackMagnumObject):
 
         self.__cluster_template = None
 
+        super(self.__class__, self).clean()
+
     def get_cluster_template(self):
         """
         Returns the domain Volume object as it was populated when create() was

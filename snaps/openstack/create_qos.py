@@ -90,6 +90,8 @@ class OpenStackQoS(OpenStackVolumeObject):
 
         self.__qos = None
 
+        super(self.__class__, self).clean()
+
     def get_qos(self):
         """
         Returns the domain QoS object as it was populated when create() was

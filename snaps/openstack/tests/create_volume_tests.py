@@ -129,8 +129,10 @@ class CreateSimpleVolumeSuccessTests(OSIntegrationTestCase):
         self.volume_settings = VolumeConfig(
             name=self.__class__.__name__ + '-' + str(guid))
 
-        self.cinder = cinder_utils.cinder_client(self.os_creds)
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
+        self.cinder = cinder_utils.cinder_client(
+            self.os_creds, self.os_session)
+        self.keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         self.volume_creator = None
 
     def tearDown(self):
@@ -223,7 +225,8 @@ class CreateSimpleVolumeFailureTests(OSIntegrationTestCase):
         super(self.__class__, self).__start__()
 
         self.guid = uuid.uuid4()
-        self.cinder = cinder_utils.cinder_client(self.os_creds)
+        self.cinder = cinder_utils.cinder_client(
+            self.os_creds, self.os_session)
         self.volume_creator = None
 
     def tearDown(self):
@@ -353,7 +356,8 @@ class CreateVolumeWithImageTests(OSIntegrationTestCase):
     def setUp(self):
         super(self.__class__, self).__start__()
 
-        self.cinder = cinder_utils.cinder_client(self.os_creds)
+        self.cinder = cinder_utils.cinder_client(
+            self.os_creds, self.os_session)
 
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.volume_name = guid + '-vol'
@@ -465,12 +469,14 @@ class CreateVolMultipleCredsTests(OSIntegrationTestCase):
         admin_vol = self.volume_creators[0].create(block=True)
         self.assertIsNotNone(admin_vol)
 
-        admin_key = keystone_utils.keystone_client(self.admin_os_creds)
+        admin_key = keystone_utils.keystone_client(
+            self.admin_os_creds, self.admin_os_session)
         admin_proj = keystone_utils.get_project(
             admin_key, project_name=self.admin_os_creds.project_name)
         self.assertEqual(admin_vol.project_id, admin_proj.id)
 
-        admin_cinder = cinder_utils.cinder_client(self.admin_os_creds)
+        admin_cinder = cinder_utils.cinder_client(
+            self.admin_os_creds, self.admin_os_session)
         admin_vol_get = cinder_utils.get_volume(
             admin_cinder, admin_key, volume_name=vol_name,
             project_name=self.admin_os_creds.project_name)
@@ -484,8 +490,10 @@ class CreateVolMultipleCredsTests(OSIntegrationTestCase):
 
         self.assertNotEqual(admin_vol, proj_vol)
 
-        proj_key = keystone_utils.keystone_client(self.os_creds)
-        proj_cinder = cinder_utils.cinder_client(self.os_creds)
+        proj_key = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
+        proj_cinder = cinder_utils.cinder_client(
+            self.os_creds, self.os_session)
         proj_vol_get = cinder_utils.get_volume(
             proj_cinder, proj_key, volume_name=vol_name,
             project_name=self.os_creds.project_name)

@@ -47,7 +47,7 @@ class HeatSmokeTests(OSComponentTestCase):
         """
         Tests to ensure that the proper credentials can connect.
         """
-        heat = heat_utils.heat_client(self.os_creds)
+        heat = heat_utils.heat_client(self.os_creds, self.os_session)
 
         # This should not throw an exception
         stacks = heat.stacks.list()
@@ -115,7 +115,8 @@ class HeatUtilsCreateSimpleStackTests(OSComponentTestCase):
             env_values=env_values)
         self.stack1 = None
         self.stack2 = None
-        self.heat_client = heat_utils.heat_client(self.os_creds)
+        self.heat_client = heat_utils.heat_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """
@@ -144,6 +145,8 @@ class HeatUtilsCreateSimpleStackTests(OSComponentTestCase):
                 self.flavor_creator.clean()
             except:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_stack(self):
         """
@@ -174,7 +177,7 @@ class HeatUtilsCreateSimpleStackTests(OSComponentTestCase):
 
         self.assertTrue(stack_active(self.heat_client, self.stack1))
 
-        neutron = neutron_utils.neutron_client(self.os_creds)
+        neutron = neutron_utils.neutron_client(self.os_creds, self.os_session)
         networks = heat_utils.get_stack_networks(
             self.heat_client, neutron, self.stack1)
         self.assertIsNotNone(networks)
@@ -185,8 +188,9 @@ class HeatUtilsCreateSimpleStackTests(OSComponentTestCase):
         self.assertEqual(1, len(subnets))
         self.assertEqual(self.subnet_name, subnets[0].name)
 
-        nova = nova_utils.nova_client(self.os_creds)
-        keystone = keystone_utils.keystone_client(self.os_creds)
+        nova = nova_utils.nova_client(self.os_creds, self.os_session)
+        keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         servers = heat_utils.get_stack_servers(
             self.heat_client, nova, neutron, keystone, self.stack1,
             self.os_creds.project_name)
@@ -277,7 +281,8 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
         stack_settings = StackConfig(
             name=stack_name, template_path=heat_tmplt_path,
             env_values=env_values)
-        self.heat_client = heat_utils.heat_client(self.os_creds)
+        self.heat_client = heat_utils.heat_client(
+            self.os_creds, self.os_session)
         self.stack = heat_utils.create_stack(self.heat_client, stack_settings)
 
         self.assertTrue(stack_active(self.heat_client, self.stack))
@@ -309,10 +314,15 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
                     time.sleep(3)
 
                 if not is_deleted:
-                    nova = nova_utils.nova_client(self.os_creds)
-                    keystone = keystone_utils.keystone_client(self.os_creds)
-                    neutron = neutron_utils.neutron_client(self.os_creds)
-                    glance = glance_utils.glance_client(self.os_creds)
+                    nova = nova_utils.nova_client(
+                        self.os_creds, self.os_session)
+                    keystone = keystone_utils.keystone_client(
+                        self.os_creds, self.os_session)
+                    neutron = neutron_utils.neutron_client(
+                        self.os_creds, self.os_session)
+                    glance = glance_utils.glance_client(
+                        self.os_creds, self.os_session)
+
                     servers = heat_utils.get_stack_servers(
                         self.heat_client, nova, neutron, keystone, self.stack,
                         self.os_creds.project_name)
@@ -359,6 +369,8 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
             os.chmod(expanded_path, 0o755)
             os.remove(expanded_path)
 
+        super(self.__class__, self).__clean__()
+
     def test_get_settings_from_stack(self):
         """
         Tests that a heat template with floating IPs and can have the proper
@@ -372,7 +384,7 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
         self.assertIsNotNone(options)
         self.assertEqual(1, len(options))
 
-        neutron = neutron_utils.neutron_client(self.os_creds)
+        neutron = neutron_utils.neutron_client(self.os_creds, self.os_session)
         networks = heat_utils.get_stack_networks(
             self.heat_client, neutron, self.stack)
         self.assertIsNotNone(networks)
@@ -384,9 +396,10 @@ class HeatUtilsCreateComplexStackTests(OSComponentTestCase):
         self.assertIsNotNone(network_settings)
         self.assertEqual(self.network_name, network_settings.name)
 
-        nova = nova_utils.nova_client(self.os_creds)
-        glance = glance_utils.glance_client(self.os_creds)
-        keystone = keystone_utils.keystone_client(self.os_creds)
+        nova = nova_utils.nova_client(self.os_creds, self.os_session)
+        glance = glance_utils.glance_client(self.os_creds, self.os_session)
+        keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         servers = heat_utils.get_stack_servers(
             self.heat_client, nova, neutron, keystone, self.stack,
             self.os_creds.project_name)
@@ -458,8 +471,10 @@ class HeatUtilsRouterTests(OSComponentTestCase):
             name=stack_name, template_path=heat_tmplt_path,
             env_values=env_values)
         self.stack = None
-        self.heat_client = heat_utils.heat_client(self.os_creds)
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.heat_client = heat_utils.heat_client(
+            self.os_creds, self.os_session)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """
@@ -470,6 +485,8 @@ class HeatUtilsRouterTests(OSComponentTestCase):
                 heat_utils.delete_stack(self.heat_client, self.stack)
             except:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_router_with_stack(self):
         """
@@ -504,7 +521,8 @@ class HeatUtilsRouterTests(OSComponentTestCase):
         router = routers[0]
         self.assertEqual(self.router_name, router.name)
 
-        keystone = keystone_utils.keystone_client(self.os_creds)
+        keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         ext_net = neutron_utils.get_network(
             self.neutron, keystone, network_name=self.ext_net_name)
         self.assertEqual(ext_net.id, router.external_network_id)
@@ -534,8 +552,10 @@ class HeatUtilsVolumeTests(OSComponentTestCase):
             name=stack_name, template_path=heat_tmplt_path,
             env_values=env_values)
         self.stack = None
-        self.heat_client = heat_utils.heat_client(self.os_creds)
-        self.cinder = cinder_utils.cinder_client(self.os_creds)
+        self.heat_client = heat_utils.heat_client(
+            self.os_creds, self.os_session)
+        self.cinder = cinder_utils.cinder_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """
@@ -546,6 +566,8 @@ class HeatUtilsVolumeTests(OSComponentTestCase):
                 heat_utils.delete_stack(self.heat_client, self.stack)
             except:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_vol_with_stack(self):
         """
@@ -614,8 +636,10 @@ class HeatUtilsFlavorTests(OSComponentTestCase):
         self.stack_settings = StackConfig(
             name=stack_name, template_path=heat_tmplt_path)
         self.stack = None
-        self.heat_client = heat_utils.heat_client(self.os_creds)
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.heat_client = heat_utils.heat_client(
+            self.os_creds, self.os_session)
+        self.nova = nova_utils.nova_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """
@@ -626,6 +650,8 @@ class HeatUtilsFlavorTests(OSComponentTestCase):
                 heat_utils.delete_stack(self.heat_client, self.stack)
             except:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_flavor_with_stack(self):
         """
@@ -673,8 +699,10 @@ class HeatUtilsKeypairTests(OSComponentTestCase):
             name=stack_name, template_path=heat_tmplt_path,
             env_values=env_values)
         self.stack = None
-        self.heat_client = heat_utils.heat_client(self.os_creds)
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.heat_client = heat_utils.heat_client(
+            self.os_creds, self.os_session)
+        self.nova = nova_utils.nova_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """
@@ -685,6 +713,8 @@ class HeatUtilsKeypairTests(OSComponentTestCase):
                 heat_utils.delete_stack(self.heat_client, self.stack)
             except:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_keypair_with_stack(self):
         """
@@ -736,8 +766,10 @@ class HeatUtilsSecurityGroupTests(OSComponentTestCase):
             name=stack_name, template_path=heat_tmplt_path,
             env_values=env_values)
         self.stack = None
-        self.heat_client = heat_utils.heat_client(self.os_creds)
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.heat_client = heat_utils.heat_client(
+            self.os_creds, self.os_session)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """
@@ -748,6 +780,8 @@ class HeatUtilsSecurityGroupTests(OSComponentTestCase):
                 heat_utils.delete_stack(self.heat_client, self.stack)
             except:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_security_group_with_stack(self):
         """

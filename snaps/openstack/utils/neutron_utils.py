@@ -33,15 +33,18 @@ Utilities for basic neutron API calls
 """
 
 
-def neutron_client(os_creds):
+def neutron_client(os_creds, session=None):
     """
     Instantiates and returns a client for communications with OpenStack's
     Neutron server
     :param os_creds: the credentials for connecting to the OpenStack remote API
+    :param session: the keystone session object (optional)
     :return: the client object
     """
+    if not session:
+        session = keystone_utils.keystone_session(os_creds)
     return Client(api_version=os_creds.network_api_version,
-                  session=keystone_utils.keystone_session(os_creds),
+                  session=session,
                   region_name=os_creds.region_name)
 
 

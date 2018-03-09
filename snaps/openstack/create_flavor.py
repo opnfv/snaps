@@ -87,6 +87,8 @@ class OpenStackFlavor(OpenStackComputeObject):
 
             self.__flavor = None
 
+        super(self.__class__, self).clean()
+
     def get_flavor(self):
         """
         Returns the OpenStack flavor object

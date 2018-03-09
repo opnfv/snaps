@@ -133,6 +133,8 @@ class OpenStackKeypair(OpenStackComputeObject):
                 os.remove(expanded_path)
                 logger.info('Deleted private key file [%s]', expanded_path)
 
+        super(self.__class__, self).clean()
+
     def get_keypair(self):
         """
         Returns the OpenStack keypair object

@@ -265,7 +265,8 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
 
         guid = uuid.uuid4()
         self.image_name = self.__class__.__name__ + '-' + str(guid)
-        self.glance = glance_utils.glance_client(self.os_creds)
+        self.glance = glance_utils.glance_client(
+            self.os_creds, self.os_session)
         self.image_creator = None
 
         if self.image_metadata and 'glance_tests' in self.image_metadata:
@@ -379,8 +380,8 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         clean() does not raise an Exception.
         """
         # Create Image
-        self.image_creator = create_image.OpenStackImage(self.os_creds,
-                                                         self.image_settings)
+        self.image_creator = create_image.OpenStackImage(
+            self.os_creds, self.image_settings)
         created_image = self.image_creator.create()
         self.assertIsNotNone(created_image)
 
@@ -562,7 +563,8 @@ class CreateMultiPartImageTests(OSIntegrationTestCase):
         guid = uuid.uuid4()
         self.image_creators = list()
         self.image_name = self.__class__.__name__ + '-' + str(guid)
-        self.glance = glance_utils.glance_client(self.os_creds)
+        self.glance = glance_utils.glance_client(
+            self.os_creds, self.os_session)
 
         self.tmp_dir = 'tmp/' + str(guid)
         if not os.path.exists(self.tmp_dir):

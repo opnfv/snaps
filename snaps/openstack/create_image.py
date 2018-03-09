@@ -54,7 +54,10 @@ class OpenStackImage(OpenStackCloudObject):
         Loads the existing Image
         :return: The Image domain object or None
         """
-        self.__glance = glance_utils.glance_client(self._os_creds)
+        super(self.__class__, self).initialize()
+
+        self.__glance = glance_utils.glance_client(
+            self._os_creds, self._os_session)
         self.__image = glance_utils.get_image(
             self.__glance, image_settings=self.image_settings)
 
@@ -144,6 +147,11 @@ class OpenStackImage(OpenStackCloudObject):
         self.__image = None
         self.__kernel_image = None
         self.__ramdisk_image = None
+
+        if self.__glance:
+            self.__glance.http_client.session.session.close()
+
+        super(self.__class__, self).clean()
 
     def get_image(self):
         """

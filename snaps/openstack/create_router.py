@@ -43,8 +43,6 @@ class OpenStackRouter(OpenStackNetworkObject):
         if not router_settings:
             raise RouterCreationError('router_settings is required')
 
-        self.__keystone = None
-
         self.router_settings = router_settings
 
         # Attributes instantiated on create()
@@ -63,11 +61,9 @@ class OpenStackRouter(OpenStackNetworkObject):
         """
         super(self.__class__, self).initialize()
 
-        self.__keystone = keystone_utils.keystone_client(self._os_creds)
-
         try:
             self.__router = neutron_utils.get_router(
-                self._neutron, self.__keystone,
+                self._neutron, self._keystone,
                 router_settings=self.router_settings,
                 project_name=self._os_creds.project_name)
         except Unauthorized as e:
@@ -86,7 +82,7 @@ class OpenStackRouter(OpenStackNetworkObject):
 
             for port_setting in self.router_settings.port_settings:
                 port = neutron_utils.get_port(
-                    self._neutron, self.__keystone, port_settings=port_setting,
+                    self._neutron, self._keystone, port_settings=port_setting,
                     project_name=self._os_creds.project_name)
                 if port:
                     self.__ports.append(port)
@@ -121,7 +117,7 @@ class OpenStackRouter(OpenStackNetworkObject):
 
             for port_setting in self.router_settings.port_settings:
                 port = neutron_utils.get_port(
-                    self._neutron, self.__keystone, port_settings=port_setting,
+                    self._neutron, self._keystone, port_settings=port_setting,
                     project_name=self._os_creds.project_name)
                 logger.info(
                     'Retrieved port %s for router - %s', port_setting.name,
@@ -183,6 +179,8 @@ class OpenStackRouter(OpenStackNetworkObject):
             except NotFound:
                 pass
             self.__router = None
+
+        super(self.__class__, self).clean()
 
     def get_router(self):
         """

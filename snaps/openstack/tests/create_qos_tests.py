@@ -126,7 +126,8 @@ class CreateQoSTests(OSIntegrationTestCase):
             name=self.__class__.__name__ + '-' + str(guid),
             consumer=Consumer.both)
 
-        self.cinder = cinder_utils.cinder_client(self.admin_os_creds)
+        self.cinder = cinder_utils.cinder_client(
+            self.admin_os_creds, self.admin_os_session)
         self.qos_creator = create_qos.OpenStackQoS(
             self.admin_os_creds, qos_settings)
 

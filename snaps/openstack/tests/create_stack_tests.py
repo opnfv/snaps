@@ -139,7 +139,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_cli = heat_utils.heat_client(self.os_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds, self.os_session)
         self.stack_creator = None
 
         self.image_creator = OpenStackImage(
@@ -351,8 +351,10 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
 
         # Need to use 'admin' creds as heat creates objects under it's own
         # project/tenant
-        neutron = neutron_utils.neutron_client(self.os_creds)
-        keystone = keystone_utils.keystone_client(self.os_creds)
+        neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
+        keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         net_by_name = neutron_utils.get_network(
             neutron, keystone, network_name=net_creators[0].get_network().name)
         self.assertEqual(net_creators[0].get_network(), net_by_name)
@@ -389,9 +391,9 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertEqual(self.vm_inst_name,
                          vm_inst_creators[0].get_vm_inst().name)
 
-        nova = nova_utils.nova_client(self.os_creds)
-        neutron = neutron_utils.neutron_client(self.os_creds)
-        keystone = keystone_utils.keystone_client(self.os_creds)
+        nova = nova_utils.nova_client(self.os_creds, self.os_session)
+        neutron = neutron_utils.neutron_client(self.os_creds, self.os_session)
+        keystone = keystone_utils.keystone_client(self.os_creds, self.os_session)
         vm_inst_by_name = nova_utils.get_server(
             nova, neutron, keystone,
             server_name=vm_inst_creators[0].get_vm_inst().name)
@@ -414,7 +416,7 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_cli = heat_utils.heat_client(self.os_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds, self.os_session)
         self.stack_creator = None
 
         self.image_creator = OpenStackImage(
@@ -521,7 +523,7 @@ class CreateStackNestedResourceTests(OSIntegrationTestCase):
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_cli = heat_utils.heat_client(self.os_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds, self.os_session)
         self.stack_creator = None
 
         self.image_creator = OpenStackImage(
@@ -632,8 +634,9 @@ class CreateStackRouterTests(OSIntegrationTestCase):
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_cli = heat_utils.heat_client(self.os_creds)
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds, self.os_session)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
         self.stack_creator = None
 
         self.net_name = self.guid + '-net'
@@ -702,7 +705,7 @@ class CreateStackVolumeTests(OSIntegrationTestCase):
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_cli = heat_utils.heat_client(self.os_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds, self.os_session)
         self.stack_creator = None
 
         self.volume_name = self.guid + '-volume'
@@ -796,7 +799,7 @@ class CreateStackFlavorTests(OSIntegrationTestCase):
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_cli = heat_utils.heat_client(self.os_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds, self.os_session)
         self.stack_creator = None
 
         self.heat_tmplt_path = pkg_resources.resource_filename(
@@ -855,8 +858,8 @@ class CreateStackKeypairTests(OSIntegrationTestCase):
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_cli = heat_utils.heat_client(self.os_creds)
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds, self.os_session)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
         self.stack_creator = None
 
         self.keypair_name = self.guid + '-kp'
@@ -939,8 +942,8 @@ class CreateStackSecurityGroupTests(OSIntegrationTestCase):
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_cli = heat_utils.heat_client(self.os_creds)
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds, self.os_session)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
         self.stack_creator = None
 
         self.security_group_name = self.guid + '-sec-grp'
@@ -1034,6 +1037,7 @@ class CreateStackNegativeTests(OSIntegrationTestCase):
     def tearDown(self):
         if self.stack_creator:
             self.stack_creator.clean()
+
         super(self.__class__, self).__clean__()
 
     def test_missing_dependencies(self):
@@ -1073,7 +1077,7 @@ class CreateStackFailureTests(OSIntegrationTestCase):
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.heat_cli = heat_utils.heat_client(self.os_creds)
+        self.heat_cli = heat_utils.heat_client(self.os_creds, self.os_session)
         self.stack_creator = None
 
         self.tmp_file = file_utils.save_string_to_file(

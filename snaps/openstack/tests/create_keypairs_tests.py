@@ -200,7 +200,7 @@ class CreateKeypairsTests(OSIntegrationTestCase):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.priv_file_path = 'tmp/' + guid
         self.pub_file_path = self.priv_file_path + '.pub'
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
         self.keypair_name = guid
 
         self.keypair_creator = None
@@ -370,7 +370,7 @@ class CreateKeypairsCleanupTests(OSIntegrationTestCase):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.priv_file_path = 'tmp/' + guid
         self.pub_file_path = self.priv_file_path + '.pub'
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
         self.keypair_name = guid
 
         self.keypair_creator = None

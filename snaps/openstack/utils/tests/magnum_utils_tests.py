@@ -44,7 +44,8 @@ class MagnumSmokeTests(OSComponentTestCase):
         """
         Tests to ensure that the proper credentials can connect.
         """
-        magnum = magnum_utils.magnum_client(self.os_creds)
+        magnum = magnum_utils.magnum_client(
+            self.os_creds, self.os_session)
 
         # This should not throw an exception
         self.assertIsNotNone(magnum.clusters.list())
@@ -70,7 +71,8 @@ class MagnumUtilsClusterTypeTests(OSComponentTestCase):
     def setUp(self):
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.cluster_type_name = self.guid + '-cluster-type'
-        self.magnum = magnum_utils.magnum_client(self.os_creds)
+        self.magnum = magnum_utils.magnum_client(
+            self.os_creds, self.os_session)
 
         metadata = self.image_metadata
         if not metadata:
@@ -129,6 +131,8 @@ class MagnumUtilsClusterTypeTests(OSComponentTestCase):
                 self.image_creator.clean()
             except:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_cluster_template_simple(self):
         config = ClusterTemplateConfig(
