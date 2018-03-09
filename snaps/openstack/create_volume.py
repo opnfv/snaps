@@ -20,7 +20,7 @@ from cinderclient.exceptions import NotFound
 
 from snaps.config.volume import VolumeConfig
 from snaps.openstack.openstack_creator import OpenStackVolumeObject
-from snaps.openstack.utils import cinder_utils, keystone_utils
+from snaps.openstack.utils import cinder_utils
 
 __author__ = 'spisarski'
 
@@ -51,7 +51,6 @@ class OpenStackVolume(OpenStackVolumeObject):
 
         self.volume_settings = volume_settings
         self.__volume = None
-        self.__keystone = None
 
     def initialize(self):
         """
@@ -60,9 +59,8 @@ class OpenStackVolume(OpenStackVolumeObject):
         """
         super(self.__class__, self).initialize()
 
-        self.__keystone = keystone_utils.keystone_client(self._os_creds)
         self.__volume = cinder_utils.get_volume(
-            self._cinder, self.__keystone,
+            self._cinder, self._keystone,
             volume_settings=self.volume_settings,
             project_name=self._os_creds.project_name)
         return self.__volume
@@ -77,7 +75,7 @@ class OpenStackVolume(OpenStackVolumeObject):
 
         if not self.__volume:
             self.__volume = cinder_utils.create_volume(
-                self._cinder, self.__keystone, self.volume_settings)
+                self._cinder, self._keystone, self.volume_settings)
 
             logger.info(
                 'Created volume with name - %s', self.volume_settings.name)
@@ -127,6 +125,8 @@ class OpenStackVolume(OpenStackVolumeObject):
                     e)
 
         self.__volume = None
+
+        super(self.__class__, self).clean()
 
     def get_volume(self):
         """

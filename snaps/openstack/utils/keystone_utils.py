@@ -78,15 +78,20 @@ def keystone_session(os_creds):
                            verify=os_creds.cacert)
 
 
-def keystone_client(os_creds):
+def keystone_client(os_creds, session=None):
     """
     Returns the keystone client
     :param os_creds: the OpenStack credentials (OSCreds) object
+    :param session: the keystone session object (optional)
     :return: the client
     """
+
+    if not session:
+        session = keystone_session(os_creds)
+
     return Client(
         version=os_creds.identity_api_version,
-        session=keystone_session(os_creds),
+        session=session,
         interface=os_creds.interface,
         region_name=os_creds.region_name)
 

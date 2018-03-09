@@ -87,6 +87,8 @@ class OpenStackVolumeType(OpenStackVolumeObject):
 
         self.__volume_type = None
 
+        super(self.__class__, self).clean()
+
     def get_volume_type(self):
         """
         Returns the domain Volume object as it was populated when create() was

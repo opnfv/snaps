@@ -99,10 +99,13 @@ class NetworkConfig(object):
         else:
             if self.project_name:
                 keystone = keystone_utils.keystone_client(os_creds)
-                project = keystone_utils.get_project(
-                    keystone=keystone, project_name=self.project_name)
-                if project:
-                    return project.id
+                try:
+                    project = keystone_utils.get_project(
+                        keystone=keystone, project_name=self.project_name)
+                    if project:
+                        return project.id
+                finally:
+                    keystone.session.session.close()
 
         return None
 
@@ -256,8 +259,11 @@ class SubnetConfig(object):
             out['name'] = self.name
         if self.project_name:
             keystone = keystone_utils.keystone_client(os_creds)
-            project = keystone_utils.get_project(
-                keystone=keystone, project_name=self.project_name)
+            try:
+                project = keystone_utils.get_project(
+                    keystone=keystone, project_name=self.project_name)
+            finally:
+                keystone.session.session.close()
             project_id = None
             if project:
                 project_id = project.id
@@ -442,9 +448,13 @@ class PortConfig(object):
         out = dict()
 
         keystone = keystone_utils.keystone_client(os_creds)
-        network = neutron_utils.get_network(
-            neutron, keystone, network_name=self.network_name,
-            project_name=self.project_name)
+        try:
+            network = neutron_utils.get_network(
+                neutron, keystone, network_name=self.network_name,
+                project_name=self.project_name)
+        finally:
+            keystone.session.session.close()
+
         if not network:
             raise PortConfigError(
                 'Cannot locate network with name - ' + self.network_name

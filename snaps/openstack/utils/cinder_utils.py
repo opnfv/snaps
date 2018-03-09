@@ -33,13 +33,18 @@ Utilities for basic neutron API calls
 """
 
 
-def cinder_client(os_creds):
+def cinder_client(os_creds, session=None):
     """
     Creates and returns a cinder client object
+    :param os_creds: the credentials for connecting to the OpenStack remote API
+    :param session: the keystone session object (optional)
     :return: the cinder client
     """
+    if not session:
+        session = keystone_utils.keystone_session(os_creds)
+
     return Client(version=os_creds.volume_api_version,
-                  session=keystone_utils.keystone_session(os_creds),
+                  session=session,
                   region_name=os_creds.region_name)
 
 

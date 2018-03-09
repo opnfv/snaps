@@ -32,15 +32,17 @@ __author__ = 'spisarski'
 logger = logging.getLogger('heat_utils')
 
 
-def heat_client(os_creds):
+def heat_client(os_creds, session=None):
     """
     Retrieves the Heat client
     :param os_creds: the OpenStack credentials
     :return: the client
     """
     logger.debug('Retrieving Heat Client')
+    if not session:
+        session = keystone_utils.keystone_session(os_creds)
     return Client(os_creds.heat_api_version,
-                  session=keystone_utils.keystone_session(os_creds),
+                  session=session,
                   region_name=os_creds.region_name)
 
 

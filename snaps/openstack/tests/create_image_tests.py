@@ -379,8 +379,8 @@ class CreateImageSuccessTests(OSIntegrationTestCase):
         clean() does not raise an Exception.
         """
         # Create Image
-        self.image_creator = create_image.OpenStackImage(self.os_creds,
-                                                         self.image_settings)
+        self.image_creator = create_image.OpenStackImage(
+            self.os_creds, self.image_settings)
         created_image = self.image_creator.create()
         self.assertIsNotNone(created_image)
 

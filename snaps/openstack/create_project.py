@@ -83,16 +83,20 @@ class OpenStackProject(OpenStackIdentityObject):
         """
         if self.__project:
             # Delete security group 'default' if exists
-            neutron = neutron_utils.neutron_client(self._os_creds)
-            default_sec_grp = neutron_utils.get_security_group(
-                neutron, self._keystone, sec_grp_name='default',
-                project_name=self.__project.name)
-            if default_sec_grp:
-                try:
-                    neutron_utils.delete_security_group(
-                        neutron, default_sec_grp)
-                except:
-                    pass
+            neutron = neutron_utils.neutron_client(
+                self._os_creds, self._os_session)
+            try:
+                default_sec_grp = neutron_utils.get_security_group(
+                    neutron, self._keystone, sec_grp_name='default',
+                    project_name=self.__project.name)
+                if default_sec_grp:
+                    try:
+                        neutron_utils.delete_security_group(
+                            neutron, default_sec_grp)
+                    except:
+                        pass
+            finally:
+                neutron.httpclient.session.session.close()
 
             # Delete Project
             try:
@@ -113,6 +117,8 @@ class OpenStackProject(OpenStackIdentityObject):
             self._keystone, self.__role_name)
         if role:
             keystone_utils.delete_role(self._keystone, role)
+
+        super(self.__class__, self).clean()
 
     def get_project(self):
         """
@@ -142,32 +148,48 @@ class OpenStackProject(OpenStackIdentityObject):
         Returns the compute quotas as an instance of the ComputeQuotas class
         :return:
         """
-        nova = nova_utils.nova_client(self._os_creds)
-        return nova_utils.get_compute_quotas(nova, self.__project.id)
+        nova = nova_utils.nova_client(self._os_creds, self._os_session)
+
+        try:
+            return nova_utils.get_compute_quotas(nova, self.__project.id)
+        finally:
+            nova.client.session.session.close()
 
     def get_network_quotas(self):
         """
         Returns the network quotas as an instance of the NetworkQuotas class
         :return:
         """
-        neutron = neutron_utils.neutron_client(self._os_creds)
-        return neutron_utils.get_network_quotas(neutron, self.__project.id)
+        neutron = neutron_utils.neutron_client(
+            self._os_creds, self._os_session)
+        try:
+            return neutron_utils.get_network_quotas(neutron, self.__project.id)
+        finally:
+            neutron.httpclient.session.session.close()
 
     def update_compute_quotas(self, compute_quotas):
         """
         Updates the compute quotas for this project
         :param compute_quotas: a ComputeQuotas object.
         """
-        nova = nova_utils.nova_client(self._os_creds)
-        nova_utils.update_quotas(nova, self.__project.id, compute_quotas)
+        nova = nova_utils.nova_client(self._os_creds, self._os_session)
+        try:
+            nova_utils.update_quotas(nova, self.__project.id, compute_quotas)
+        finally:
+            nova.client.session.session.close()
 
     def update_network_quotas(self, network_quotas):
         """
         Updates the network quotas for this project
         :param network_quotas: a NetworkQuotas object.
         """
-        neutron = neutron_utils.neutron_client(self._os_creds)
-        neutron_utils.update_quotas(neutron, self.__project.id, network_quotas)
+        neutron = neutron_utils.neutron_client(
+            self._os_creds, self._os_session)
+        try:
+            neutron_utils.update_quotas(
+                neutron, self.__project.id, network_quotas)
+        finally:
+            neutron.httpclient.session.session.close()
 
 
 class ProjectSettings(ProjectConfig):

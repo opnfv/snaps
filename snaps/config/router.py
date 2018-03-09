@@ -80,29 +80,32 @@ class RouterConfig(object):
 
         keystone = keystone_utils.keystone_client(os_creds)
 
-        if self.name:
-            out['name'] = self.name
-        if self.project_name:
-            project = keystone_utils.get_project(
-                keystone=keystone, project_name=self.project_name)
-            if project:
-                    out['tenant_id'] = project.id
-            else:
-                raise RouterConfigError(
-                    'Could not find project ID for project named - ' +
-                    self.project_name)
-        if self.admin_state_up is not None:
-            out['admin_state_up'] = self.admin_state_up
-        if self.external_gateway:
-            ext_net = neutron_utils.get_network(
-                neutron, keystone, network_name=self.external_gateway)
-            if ext_net:
-                ext_gw['network_id'] = ext_net.id
-                out['external_gateway_info'] = ext_gw
-            else:
-                raise RouterConfigError(
-                    'Could not find the external network named - ' +
-                    self.external_gateway)
+        try:
+            if self.name:
+                out['name'] = self.name
+            if self.project_name:
+                project = keystone_utils.get_project(
+                    keystone=keystone, project_name=self.project_name)
+                if project:
+                        out['tenant_id'] = project.id
+                else:
+                    raise RouterConfigError(
+                        'Could not find project ID for project named - ' +
+                        self.project_name)
+            if self.admin_state_up is not None:
+                out['admin_state_up'] = self.admin_state_up
+            if self.external_gateway:
+                ext_net = neutron_utils.get_network(
+                    neutron, keystone, network_name=self.external_gateway)
+                if ext_net:
+                    ext_gw['network_id'] = ext_net.id
+                    out['external_gateway_info'] = ext_gw
+                else:
+                    raise RouterConfigError(
+                        'Could not find the external network named - ' +
+                        self.external_gateway)
+        finally:
+            keystone.session.session.close()
 
         return {'router': out}
 

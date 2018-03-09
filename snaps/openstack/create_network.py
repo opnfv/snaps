@@ -19,7 +19,7 @@ from neutronclient.common.exceptions import NetworkNotFoundClient, Unauthorized
 
 from snaps.config.network import NetworkConfig, SubnetConfig, PortConfig
 from snaps.openstack.openstack_creator import OpenStackNetworkObject
-from snaps.openstack.utils import neutron_utils, keystone_utils
+from snaps.openstack.utils import neutron_utils
 
 __author__ = 'spisarski'
 
@@ -52,9 +52,8 @@ class OpenStackNetwork(OpenStackNetworkObject):
         super(self.__class__, self).initialize()
 
         try:
-            keystone = keystone_utils.keystone_client(self._os_creds)
             self.__network = neutron_utils.get_network(
-                self._neutron, keystone,
+                self._neutron, self._keystone,
                 network_settings=self.network_settings,
                 project_name=self._os_creds.project_name)
         except Unauthorized as e:
@@ -83,12 +82,13 @@ class OpenStackNetwork(OpenStackNetworkObject):
         """
         Removes and deletes all items created in reverse order.
         """
-        if self.__network:
-            try:
-                neutron_utils.delete_network(self._neutron, self.__network)
-            except NetworkNotFoundClient:
-                pass
-            self.__network = None
+        try:
+            neutron_utils.delete_network(self._neutron, self.__network)
+        except NetworkNotFoundClient:
+            pass
+        self.__network = None
+
+        super(self.__class__, self).clean()
 
     def get_network(self):
         """
