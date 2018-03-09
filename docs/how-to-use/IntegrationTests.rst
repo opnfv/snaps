@@ -689,6 +689,12 @@ create_instance_tests.py - CreateInstancePortManipulationTests
 | test_set_custom_valid_ip_one_subnet   | Nova 2        | Ensures that an instance's can have a valid static IP is  |
 |                                       | Neutron 2     | properly assigned                                         |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_set_one_port_two_ip_one_subnet   | Nova 2        | Ensures that an instance can have two static IPs on a     |
+|                                       | Neutron 2     | single port from a single subnet                          |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_set_one_port_two_ip_two_subnets  | Nova 2        | Ensures that an instance can have two static IPs on a     |
+|                                       | Neutron 2     | single port from different subnets on a network           |
++---------------------------------------+---------------+-----------------------------------------------------------+
 | test_set_custom_invalid_ip_one_subnet | Nova 2        | Ensures that an instance's port with an invalid static IP |
 |                                       | Neutron 2     | raises an exception                                       |
 +---------------------------------------+---------------+-----------------------------------------------------------+

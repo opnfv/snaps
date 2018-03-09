@@ -1224,6 +1224,14 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
                     'Unexpected exception cleaning network with message - %s',
                     e)
 
+        if self.network_creator2:
+            try:
+                self.network_creator2.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
+
         if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
@@ -1340,24 +1348,27 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         """
         super(self.__class__, self).__start__()
 
-        guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        self.vm_inst_name = guid + '-inst'
-        self.port_1_name = guid + 'port-1'
-        self.port_2_name = guid + 'port-2'
-        self.floating_ip_name = guid + 'fip1'
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.vm_inst_name = self.guid + '-inst'
+        self.port_1_name = self.guid + 'port-1'
+        self.port_2_name = self.guid + 'port-2'
+        self.floating_ip_name = self.guid + 'fip1'
 
         # Initialize for tearDown()
         self.image_creator = None
         self.network_creator = None
+        self.network_creator2 = None
         self.flavor_creator = None
         self.inst_creator = None
 
         self.net_config = openstack_tests.get_priv_net_config(
-            net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
-            router_name=guid + '-pub-router', external_net=self.ext_net_name,
+            net_name=self.guid + '-pub-net',
+            subnet_name=self.guid + '-pub-subnet',
+            router_name=self.guid + '-pub-router',
+            external_net=self.ext_net_name,
             netconf_override=self.netconf_override)
         os_image_settings = openstack_tests.cirros_image_settings(
-            name=guid + '-image', image_metadata=self.image_metadata)
+            name=self.guid + '-image', image_metadata=self.image_metadata)
 
         try:
             # Create Image
@@ -1373,7 +1384,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             # Create Flavor
             self.flavor_creator = OpenStackFlavor(
                 self.admin_os_creds,
-                FlavorConfig(name=guid + '-flavor-name', ram=256, disk=10,
+                FlavorConfig(name=self.guid + '-flavor-name', ram=256, disk=10,
                              vcpus=2, metadata=self.flavor_metadata))
             self.flavor_creator.create()
         except Exception as e:
@@ -1443,6 +1454,86 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             self.port_1_name,
             subnet_name=self.net_config.network_settings.subnet_settings[
                 0].name))
+
+    def test_set_one_port_two_ip_one_subnet(self):
+        """
+        Tests the creation of an OpenStack instance with a single port with a
+        two static IPs on a network with one subnet.
+        """
+        ip1 = '10.55.0.101'
+        ip2 = '10.55.0.102'
+        sub_settings = self.net_config.network_settings.subnet_settings
+        port_settings = PortConfig(
+            name=self.port_1_name,
+            network_name=self.net_config.network_settings.name,
+            ip_addrs=[{'subnet_name': sub_settings[0].name, 'ip': ip1},
+                      {'subnet_name': sub_settings[0].name, 'ip': ip2}])
+
+        instance_settings = VmInstanceConfig(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings])
+
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
+        vm_inst = self.inst_creator.create(block=True)
+
+        self.assertEqual(ip1, vm_inst.ports[0].ips[0]['ip_address'])
+        self.assertEqual(self.network_creator.get_network().subnets[0].id,
+                         vm_inst.ports[0].ips[0]['subnet_id'])
+        self.assertEqual(ip2, vm_inst.ports[0].ips[1]['ip_address'])
+        self.assertEqual(self.network_creator.get_network().subnets[0].id,
+                         vm_inst.ports[0].ips[1]['subnet_id'])
+
+    def test_set_one_port_two_ip_two_subnets(self):
+        """
+        Tests the creation of an OpenStack instance with a single port with a
+        two static IPs on a network with one subnet.
+        """
+        net2_config = NetworkConfig(
+            name=self.guid + 'net2', subnets=[
+                SubnetConfig(name=self.guid + '-subnet1', cidr='10.55.0.0/24'),
+                SubnetConfig(name=self.guid + '-subnet2', cidr='10.65.0.0/24'),
+            ])
+
+        # Create Network
+        self.network_creator2 = OpenStackNetwork(self.os_creds, net2_config)
+        net2 = self.network_creator2.create()
+
+        ip1 = '10.55.0.101'
+        ip2 = '10.65.0.101'
+
+        port_settings = PortConfig(
+            name=self.port_1_name,
+            network_name=net2_config.name,
+            ip_addrs=[
+                {'subnet_name': net2_config.subnet_settings[0].name,
+                 'ip': ip1},
+                {'subnet_name': net2_config.subnet_settings[1].name,
+                 'ip': ip2}])
+
+        instance_settings = VmInstanceConfig(
+            name=self.vm_inst_name,
+            flavor=self.flavor_creator.flavor_settings.name,
+            port_settings=[port_settings])
+
+        self.inst_creator = OpenStackVmInstance(
+            self.os_creds, instance_settings,
+            self.image_creator.image_settings)
+        vm_inst = self.inst_creator.create(block=True)
+
+        subnet1_id = None
+        subnet2_id = None
+        for subnet in net2.subnets:
+            if subnet.name == net2_config.subnet_settings[0].name:
+                subnet1_id = subnet.id
+            if subnet.name == net2_config.subnet_settings[1].name:
+                subnet2_id = subnet.id
+        self.assertEqual(ip1, vm_inst.ports[0].ips[0]['ip_address'])
+        self.assertEqual(subnet1_id, vm_inst.ports[0].ips[0]['subnet_id'])
+        self.assertEqual(ip2, vm_inst.ports[0].ips[1]['ip_address'])
+        self.assertEqual(subnet2_id, vm_inst.ports[0].ips[1]['subnet_id'])
 
     def test_set_custom_invalid_ip_one_subnet(self):
         """
