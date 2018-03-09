@@ -31,7 +31,8 @@ class KeystoneSmokeTests(OSComponentTestCase):
         """
         Tests to ensure that the proper credentials can connect.
         """
-        keystone = keystone_utils.keystone_client(self.os_creds)
+        keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
 
         users = keystone.users.list()
         self.assertIsNotNone(users)
@@ -66,14 +67,16 @@ class KeystoneUtilsTests(OSComponentTestCase):
         self.project_name = self.guid + '-projName'
         self.project = None
         self.role = None
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
+        self.keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """
         Cleans the remote OpenStack objects
         """
         if self.project:
-            neutron = neutron_utils.neutron_client(self.os_creds)
+            neutron = neutron_utils.neutron_client(
+                self.os_creds, self.os_session)
             default_sec_grp = neutron_utils.get_security_group(
                 neutron, self.keystone, sec_grp_name='default',
                 project_name=self.os_creds.project_name)
@@ -91,6 +94,8 @@ class KeystoneUtilsTests(OSComponentTestCase):
 
         if self.role:
             keystone_utils.delete_role(self.keystone, self.role)
+
+        super(self.__class__, self).__clean__()
 
     def test_create_user_minimal(self):
         """

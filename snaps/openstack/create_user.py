@@ -77,6 +77,8 @@ class OpenStackUser(OpenStackIdentityObject):
                 pass
             self.__user = None
 
+        super(self.__class__, self).clean()
+
     def get_user(self):
         """
         Returns the OpenStack user object populated in create()

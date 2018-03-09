@@ -53,6 +53,7 @@ class OSComponentTestCase(unittest.TestCase):
             self.os_creds = openstack_tests.get_credentials(
                 dev_os_env_file=dev_os_env_file)
 
+        self.os_session = keystone_utils.keystone_session(self.os_creds)
         self.ext_net_name = ext_net_name
 
         if not self.ext_net_name and file_utils.file_exists(dev_os_env_file):
@@ -74,6 +75,14 @@ class OSComponentTestCase(unittest.TestCase):
             suite.addTest(testcase_klass(name, os_creds, ext_net_name,
                                          image_metadata, log_level))
         return suite
+
+
+    def __clean__(self):
+        """
+        Cleans up keystone session.
+        """
+        if self.os_session:
+            keystone_utils.close_session(self.os_session)
 
 
 class OSIntegrationTestCase(OSComponentTestCase):
@@ -144,9 +153,13 @@ class OSIntegrationTestCase(OSComponentTestCase):
         self.project_creator = None
         self.user_creator = None
         self.admin_os_creds = self.os_creds
+        self.admin_os_session = self.os_session
+        keystone_utils.keystone_session(
+            self.admin_os_creds)
 
         if self.use_keystone:
-            self.keystone = keystone_utils.keystone_client(self.admin_os_creds)
+            self.keystone = keystone_utils.keystone_client(
+                self.admin_os_creds, self.admin_os_session)
             guid = self.__class__.__name__ + '-' + str(uuid.uuid4())[:-19]
             project_name = guid + '-proj'
             self.project_creator = deploy_utils.create_project(
@@ -168,6 +181,7 @@ class OSIntegrationTestCase(OSComponentTestCase):
 
             self.os_creds = self.user_creator.get_os_creds(
                 self.project_creator.project_settings.name)
+            self.os_session = keystone_utils.keystone_session(self.os_creds)
 
             # add user to project
             self.project_creator.assoc_user(self.user_creator.get_user())
@@ -184,3 +198,9 @@ class OSIntegrationTestCase(OSComponentTestCase):
 
         if self.user_creator:
             self.user_creator.clean()
+
+        if self.admin_os_session:
+            keystone_utils.close_session(self.admin_os_session)
+
+        super(OSIntegrationTestCase, self).__clean__()
+

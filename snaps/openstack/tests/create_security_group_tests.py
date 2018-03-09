@@ -210,7 +210,8 @@ class CreateSecurityGroupTests(OSIntegrationTestCase):
 
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.sec_grp_name = guid + 'name'
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
 
         # Initialize for cleanup
         self.sec_grp_creator = None
@@ -697,7 +698,8 @@ class CreateMultipleSecurityGroupTests(OSIntegrationTestCase):
 
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.sec_grp_name = guid + 'name'
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
 
         # Initialize for cleanup
         self.admin_sec_grp_config = SecurityGroupConfig(

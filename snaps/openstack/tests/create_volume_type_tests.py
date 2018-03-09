@@ -127,7 +127,8 @@ class CreateSimpleVolumeTypeSuccessTests(OSIntegrationTestCase):
         self.volume_type_settings = VolumeTypeConfig(
             name=self.__class__.__name__ + '-' + str(guid))
 
-        self.cinder = cinder_utils.cinder_client(self.admin_os_creds)
+        self.cinder = cinder_utils.cinder_client(
+            self.admin_os_creds, self.admin_os_session)
         self.volume_type_creator = OpenStackVolumeType(
             self.admin_os_creds, self.volume_type_settings)
 
@@ -211,7 +212,8 @@ class CreateVolumeTypeComplexTests(OSIntegrationTestCase):
     def setUp(self):
         super(self.__class__, self).__start__()
 
-        self.cinder = cinder_utils.cinder_client(self.admin_os_creds)
+        self.cinder = cinder_utils.cinder_client(
+            self.admin_os_creds, self.admin_os_session)
 
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 

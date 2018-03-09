@@ -30,15 +30,20 @@ class OpenStackCloudObject(CloudObject):
         :param os_creds: the OpenStack credentials object
         """
         self._os_creds = os_creds
+        self._os_session = None
+        self._keystone = None
 
     def initialize(self):
-        raise NotImplementedError('Do not override abstract method')
+        self._os_session = keystone_utils.keystone_session(self._os_creds)
+        self._keystone = keystone_utils.keystone_client(
+            self._os_creds, session=self._os_session)
 
     def create(self):
         raise NotImplementedError('Do not override abstract method')
 
     def clean(self):
-        raise NotImplementedError('Do not override abstract method')
+        if self._os_session:
+            keystone_utils.close_session(self._os_session)
 
 
 class OpenStackComputeObject(OpenStackCloudObject):
@@ -55,12 +60,10 @@ class OpenStackComputeObject(OpenStackCloudObject):
         self._nova = None
 
     def initialize(self):
-        self._nova = nova_utils.nova_client(self._os_creds)
+        super(OpenStackComputeObject, self).initialize()
+        self._nova = nova_utils.nova_client(self._os_creds, self._os_session)
 
     def create(self):
-        raise NotImplementedError('Do not override abstract method')
-
-    def clean(self):
         raise NotImplementedError('Do not override abstract method')
 
 
@@ -78,12 +81,11 @@ class OpenStackNetworkObject(OpenStackCloudObject):
         self._neutron = None
 
     def initialize(self):
-        self._neutron = neutron_utils.neutron_client(self._os_creds)
+        super(OpenStackNetworkObject, self).initialize()
+        self._neutron = neutron_utils.neutron_client(
+            self._os_creds, self._os_session)
 
     def create(self):
-        raise NotImplementedError('Do not override abstract method')
-
-    def clean(self):
         raise NotImplementedError('Do not override abstract method')
 
 
@@ -98,15 +100,11 @@ class OpenStackIdentityObject(OpenStackCloudObject):
         :param os_creds: the OpenStack credentials object
         """
         super(OpenStackIdentityObject, self).__init__(os_creds)
-        self._keystone = None
 
     def initialize(self):
-        self._keystone = keystone_utils.keystone_client(self._os_creds)
+        super(OpenStackIdentityObject, self).initialize()
 
     def create(self):
-        raise NotImplementedError('Do not override abstract method')
-
-    def clean(self):
         raise NotImplementedError('Do not override abstract method')
 
 
@@ -124,12 +122,11 @@ class OpenStackVolumeObject(OpenStackCloudObject):
         self._cinder = None
 
     def initialize(self):
-        self._cinder = cinder_utils.cinder_client(self._os_creds)
+        super(OpenStackVolumeObject, self).initialize()
+        self._cinder = cinder_utils.cinder_client(
+            self._os_creds, self._os_session)
 
     def create(self):
-        raise NotImplementedError('Do not override abstract method')
-
-    def clean(self):
         raise NotImplementedError('Do not override abstract method')
 
 
@@ -147,10 +144,9 @@ class OpenStackMagnumObject(OpenStackCloudObject):
         self._magnum = None
 
     def initialize(self):
-        self._magnum = magnum_utils.magnum_client(self._os_creds)
+        super(OpenStackMagnumObject, self).initialize()
+        self._magnum = magnum_utils.magnum_client(
+            self._os_creds, self._os_session)
 
     def create(self):
-        raise NotImplementedError('Do not override abstract method')
-
-    def clean(self):
         raise NotImplementedError('Do not override abstract method')

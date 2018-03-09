@@ -99,7 +99,8 @@ class CreateProjectSuccessTests(OSComponentTestCase):
             name=guid + '-name',
             domain=self.os_creds.project_domain_name)
 
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
+        self.keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
 
         # Initialize for cleanup
         self.project_creator = None
@@ -110,6 +111,8 @@ class CreateProjectSuccessTests(OSComponentTestCase):
         """
         if self.project_creator:
             self.project_creator.clean()
+
+        super(self.__class__, self).__clean__()
 
     def test_create_project_bad_domain(self):
         """
@@ -214,12 +217,12 @@ class CreateProjectSuccessTests(OSComponentTestCase):
         self.assertEqual(update_network_quotas,
                          self.project_creator.get_network_quotas())
 
-        nova = nova_utils.nova_client(self.os_creds)
+        nova = nova_utils.nova_client(self.os_creds, self.os_session)
         new_compute_quotas = nova_utils.get_compute_quotas(
             nova, self.project_creator.get_project().id)
         self.assertEqual(update_compute_quotas, new_compute_quotas)
 
-        neutron = neutron_utils.neutron_client(self.os_creds)
+        neutron = neutron_utils.neutron_client(self.os_creds, self.os_session)
         new_network_quotas = neutron_utils.get_network_quotas(
             neutron, self.project_creator.get_project().id)
         self.assertEqual(update_network_quotas, new_network_quotas)
@@ -241,7 +244,8 @@ class CreateProjectUserTests(OSComponentTestCase):
             name=self.guid + '-name',
             domain=self.os_creds.project_domain_name)
 
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
+        self.keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
 
         # Initialize for cleanup
         self.project_creator = None
@@ -261,6 +265,8 @@ class CreateProjectUserTests(OSComponentTestCase):
 
         if self.project_creator:
             self.project_creator.clean()
+
+        super(self.__class__, self).__clean__()
 
     def test_create_project_sec_grp_one_user(self):
         """

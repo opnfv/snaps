@@ -50,6 +50,7 @@ from snaps.openstack.tests.os_source_file_test import (
     OSIntegrationTestCase, OSComponentTestCase)
 from snaps.openstack.utils import nova_utils, keystone_utils, neutron_utils
 from snaps.openstack.utils.nova_utils import RebootType
+from snaps.openstack.utils import nova_utils, settings_utils, neutron_utils
 
 __author__ = 'spisarski'
 
@@ -293,7 +294,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         """
         super(self.__class__, self).__start__()
 
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.vm_inst_name = guid + '-inst'
         self.port_1_name = guid + 'port-1'
@@ -512,9 +513,10 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
             self.image_creator.image_settings)
 
         vm_inst = self.inst_creator.create(block=True)
-        self.assertIsNotNone(nova_utils.get_server(
+        vm_inst_get = nova_utils.get_server(
             self.nova, self.neutron, self.keystone,
-            vm_inst_settings=instance_settings))
+            vm_inst_settings=instance_settings)
+        self.assertEqual(vm_inst, vm_inst_get)
 
         self.assertIsNotNone(self.inst_creator.get_vm_inst().availability_zone)
         self.assertIsNone(self.inst_creator.get_vm_inst().compute_host)
@@ -590,7 +592,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         """
         super(self.__class__, self).__start__()
 
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.keypair_priv_filepath = 'tmp/' + guid
         self.keypair_pub_filepath = self.keypair_priv_filepath + '.pub'
@@ -1016,7 +1018,7 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
         """
         super(self.__class__, self).__start__()
 
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.keypair_priv_filepath = 'tmp/' + self.guid
         self.keypair_pub_filepath = self.keypair_priv_filepath + '.pub'
@@ -1621,7 +1623,8 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
         Tests the creation of OpenStack VM instances to each compute node.
         """
         from snaps.openstack.utils import nova_utils
-        nova = nova_utils.nova_client(self.admin_os_creds)
+        nova = nova_utils.nova_client(
+            self.admin_os_creds, self.admin_os_session)
         zone_hosts = nova_utils.get_availability_zone_hosts(nova)
 
         # Create Instance on each server/zone
@@ -1675,7 +1678,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.vm_inst_name = self.guid + '-inst'
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
         os_image_settings = openstack_tests.cirros_image_settings(
             name=self.guid + '-image', image_metadata=self.image_metadata)
 
@@ -2006,7 +2009,7 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.image_name = guid
         self.vm_inst_name = guid + '-inst'
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
 
         net_config = openstack_tests.get_priv_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
@@ -2215,6 +2218,8 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
 
         if os.path.exists(self.tmpDir) and os.path.isdir(self.tmpDir):
             shutil.rmtree(self.tmpDir)
+
+        super(self.__class__, self).__clean__()
 
     def test_inst_from_file_image_simple_flat(self):
         """
@@ -2636,7 +2641,7 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
         self.ip1 = '10.200.201.5'
         self.ip2 = '10.200.202.5'
 
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
 
         # Initialize for tearDown()
         self.image_creator = None
@@ -2858,8 +2863,10 @@ class CreateInstanceVolumeTests(OSIntegrationTestCase):
 
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.vm_inst_name = guid + '-inst'
-        self.nova = nova_utils.nova_client(self.os_creds)
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.nova = nova_utils.nova_client(
+            self.os_creds, self.os_session)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
         os_image_settings = openstack_tests.cirros_image_settings(
             name=guid + '-image', image_metadata=self.image_metadata)
 

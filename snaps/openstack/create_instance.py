@@ -73,8 +73,14 @@ class OpenStackVmInstance(OpenStackComputeObject):
         """
         super(self.__class__, self).initialize()
 
-        self.__neutron = neutron_utils.neutron_client(self._os_creds)
-        self.__keystone = keystone_utils.keystone_client(self._os_creds)
+        self.__neutron = neutron_utils.neutron_client(
+            self._os_creds, self._os_session)
+        self.__keystone = keystone_utils.keystone_client(
+            self._os_creds, self._os_session)
+        self.__cinder = cinder_utils.cinder_client(
+            self._os_creds, self._os_session)
+        self.__glance = glance_utils.glance_client(
+            self._os_creds, self._os_session)
 
         self.__ports = self.__query_ports(self.instance_settings.port_settings)
         self.__lookup_existing_vm_by_name()
@@ -134,9 +140,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
                       active, error, or timeout waiting. Floating IPs will be
                       assigned after active when block=True
         """
-        glance = glance_utils.glance_client(self._os_creds)
         self.__vm = nova_utils.create_server(
-            self._nova, self.__keystone, self.__neutron, glance,
+            self._nova, self.__keystone, self.__neutron, self.__glance,
             self.instance_settings, self.image_settings,
             self._os_creds.project_name, self.keypair_settings)
         logger.info('Created instance with name - %s',
@@ -162,9 +167,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
 
         if self.instance_settings.volume_names:
             for volume_name in self.instance_settings.volume_names:
-                cinder = cinder_utils.cinder_client(self._os_creds)
                 volume = cinder_utils.get_volume(
-                    cinder, self.__keystone, volume_name=volume_name,
+                    self.__cinder, self.__keystone, volume_name=volume_name,
                     project_name=self._os_creds.project_name)
 
                 if volume and self.vm_active(block=True):
@@ -271,9 +275,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
         if self.__vm:
             # Detach Volume
             for volume_rec in self.__vm.volume_ids:
-                cinder = cinder_utils.cinder_client(self._os_creds)
                 volume = cinder_utils.get_volume_by_id(
-                    cinder, volume_rec['id'])
+                    self.__cinder, volume_rec['id'])
                 if volume:
                     vm = nova_utils.detach_volume(
                         self._nova, self.__neutron, self.__keystone, self.__vm,
@@ -309,6 +312,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
                 logger.error(
                     'VM not deleted within the timeout period of %s '
                     'seconds', self.instance_settings.vm_delete_timeout)
+
+        super(self.__class__, self).clean()
 
     def __query_ports(self, port_settings):
         """
@@ -795,16 +800,21 @@ def generate_creator(os_creds, vm_inst, image_config, project_name,
     :param keypair_config: the associated KeypairConfig object (optional)
     :return: an initialized OpenStackVmInstance object
     """
-    nova = nova_utils.nova_client(os_creds)
-    keystone = keystone_utils.keystone_client(os_creds)
-    neutron = neutron_utils.neutron_client(os_creds)
-    derived_inst_config = settings_utils.create_vm_inst_config(
-        nova, keystone, neutron, vm_inst, project_name)
+    session = keystone_utils.keystone_session(os_creds)
+    nova = nova_utils.nova_client(os_creds, session)
+    keystone = keystone_utils.keystone_client(os_creds, session)
+    neutron = neutron_utils.neutron_client(os_creds, session)
 
-    derived_inst_creator = OpenStackVmInstance(
-        os_creds, derived_inst_config, image_config, keypair_config)
-    derived_inst_creator.initialize()
-    return derived_inst_creator
+    try:
+        derived_inst_config = settings_utils.create_vm_inst_config(
+            nova, keystone, neutron, vm_inst, project_name)
+
+        derived_inst_creator = OpenStackVmInstance(
+            os_creds, derived_inst_config, image_config, keypair_config)
+        derived_inst_creator.initialize()
+        return derived_inst_creator
+    finally:
+        keystone_utils.close_session(session)
 
 
 class VmInstanceSettings(VmInstanceConfig):

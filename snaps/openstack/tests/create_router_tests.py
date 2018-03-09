@@ -130,7 +130,8 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         self.router_creator = None
         self.network_creator1 = None
         self.network_creator2 = None
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """
@@ -515,7 +516,8 @@ class CreateMultipleRouterTests(OSIntegrationTestCase):
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.admin_router_creator = None
         self.proj_router_creator = None
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
 
         network_settings = NetworkConfig(
             name=self.guid + '-pub-net', shared=True,
@@ -623,7 +625,8 @@ class CreateRouterSecurityGroupTests(OSIntegrationTestCase):
             self.os_creds, SecurityGroupConfig(name=self.guid + '-sec_grp'))
         self.sec_grp_creator.create()
 
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """

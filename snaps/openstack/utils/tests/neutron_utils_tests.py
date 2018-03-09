@@ -41,7 +41,7 @@ class NeutronSmokeTests(OSComponentTestCase):
         """
         Tests to ensure that the proper credentials can connect.
         """
-        neutron = neutron_utils.neutron_client(self.os_creds)
+        neutron = neutron_utils.neutron_client(self.os_creds, self.os_session)
 
         networks = neutron.list_networks()
 
@@ -70,7 +70,7 @@ class NeutronSmokeTests(OSComponentTestCase):
         configured self.ext_net_name is contained within the returned list
         :return:
         """
-        neutron = neutron_utils.neutron_client(self.os_creds)
+        neutron = neutron_utils.neutron_client(self.os_creds, self.os_session)
         ext_networks = neutron_utils.get_external_networks(neutron)
         found = False
         for network in ext_networks:
@@ -88,8 +88,10 @@ class NeutronUtilsNetworkTests(OSComponentTestCase):
     def setUp(self):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.port_name = str(guid) + '-port'
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
+        self.keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         self.network = None
         self.net_config = openstack_tests.get_pub_net_config(
             net_name=guid + '-pub-net')
@@ -100,6 +102,8 @@ class NeutronUtilsNetworkTests(OSComponentTestCase):
         """
         if self.network:
             neutron_utils.delete_network(self.neutron, self.network)
+
+        super(self.__class__, self).__clean__()
 
     def test_create_network(self):
         """
@@ -145,8 +149,10 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
     def setUp(self):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.port_name = str(guid) + '-port'
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
+        self.keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         self.network = None
         self.net_config = openstack_tests.get_pub_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
@@ -161,6 +167,8 @@ class NeutronUtilsSubnetTests(OSComponentTestCase):
                 neutron_utils.delete_network(self.neutron, self.network)
             except:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_subnet(self):
         """
@@ -264,7 +272,8 @@ class NeutronUtilsIPv6Tests(OSComponentTestCase):
 
     def setUp(self):
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
         self.network = None
 
     def tearDown(self):
@@ -276,6 +285,8 @@ class NeutronUtilsIPv6Tests(OSComponentTestCase):
                 neutron_utils.delete_network(self.neutron, self.network)
             except:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_network_slaac(self):
         """
@@ -497,8 +508,10 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
     def setUp(self):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.port_name = str(guid) + '-port'
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
+        self.keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         self.network = None
         self.port = None
         self.router = None
@@ -532,6 +545,8 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
 
         if self.network:
             neutron_utils.delete_network(self.neutron, self.network)
+
+        super(self.__class__, self).__clean__()
 
     def test_create_router_simple(self):
         """
@@ -856,8 +871,10 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
 
         self.security_groups = list()
         self.security_group_rules = list()
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
+        self.keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """
@@ -872,6 +889,8 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
                                                     security_group)
             except:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_delete_simple_sec_grp(self):
         """
@@ -944,7 +963,8 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         for free_rule in free_rules:
             self.security_group_rules.append(free_rule)
 
-        keystone = keystone_utils.keystone_client(self.os_creds)
+        keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         self.security_group_rules.append(
             neutron_utils.create_security_group_rule(
                 self.neutron, keystone, sec_grp_settings.rule_settings[0],
@@ -1001,8 +1021,10 @@ class NeutronUtilsFloatingIpTests(OSComponentTestCase):
         Instantiates the CreateImage object that is responsible for downloading
         and creating an OS image file within OpenStack
         """
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
+        self.keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         self.floating_ip = None
 
     def tearDown(self):
@@ -1015,6 +1037,8 @@ class NeutronUtilsFloatingIpTests(OSComponentTestCase):
                     self.neutron, self.floating_ip)
             except:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_floating_ips(self):
         """

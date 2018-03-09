@@ -14,6 +14,7 @@
 # limitations under the License.
 import logging
 
+import keystoneauth1
 from keystoneclient.client import Client
 from keystoneauth1.identity import v3, v2
 from keystoneauth1 import session
@@ -78,15 +79,29 @@ def keystone_session(os_creds):
                            verify=os_creds.cacert)
 
 
-def keystone_client(os_creds):
+def close_session(session):
+    """
+    Closes a keystone session
+    :param session: a session.Session object
+    """
+    if isinstance(session, keystoneauth1.session.Session):
+        session.session.close()
+
+
+def keystone_client(os_creds, session=None):
     """
     Returns the keystone client
     :param os_creds: the OpenStack credentials (OSCreds) object
+    :param session: the keystone session object (optional)
     :return: the client
     """
+
+    if not session:
+        session = keystone_session(os_creds)
+
     return Client(
         version=os_creds.identity_api_version,
-        session=keystone_session(os_creds),
+        session=session,
         interface=os_creds.interface,
         region_name=os_creds.region_name)
 

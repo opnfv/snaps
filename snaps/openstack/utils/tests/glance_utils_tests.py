@@ -39,7 +39,7 @@ class GlanceSmokeTests(OSComponentTestCase):
         """
         Tests to ensure that the proper credentials can connect.
         """
-        glance = glance_utils.glance_client(self.os_creds)
+        glance = glance_utils.glance_client(self.os_creds, self.os_session)
         image = glance_utils.get_image(glance, image_name='foo')
         self.assertIsNone(image)
 
@@ -69,7 +69,8 @@ class GlanceUtilsTests(OSComponentTestCase):
         guid = uuid.uuid4()
         self.image_name = self.__class__.__name__ + '-' + str(guid)
         self.image = None
-        self.glance = glance_utils.glance_client(self.os_creds)
+        self.glance = glance_utils.glance_client(
+            self.os_creds, self.os_session)
         if self.image_metadata:
             self.glance_test_meta = self.image_metadata.get('glance_tests')
         else:
@@ -88,6 +89,8 @@ class GlanceUtilsTests(OSComponentTestCase):
 
         if os.path.exists(self.tmp_dir) and os.path.isdir(self.tmp_dir):
             shutil.rmtree(self.tmp_dir)
+
+        super(self.__class__, self).__clean__()
 
     def test_create_image_minimal_url(self):
         """
