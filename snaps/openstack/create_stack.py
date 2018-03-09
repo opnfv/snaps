@@ -29,7 +29,7 @@ from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.create_volume_type import OpenStackVolumeType
 from snaps.openstack.openstack_creator import OpenStackCloudObject
 from snaps.openstack.utils import (
-    nova_utils, settings_utils, glance_utils, cinder_utils, keystone_utils)
+    nova_utils, settings_utils, glance_utils, cinder_utils)
 
 from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.utils import heat_utils, neutron_utils
@@ -73,12 +73,28 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         self.__stack = None
         self.__heat_cli = None
 
+        self.__neutron = None
+        self.__nova = None
+        self.__glance = None
+        self.__cinder = None
+
     def initialize(self):
         """
         Loads the existing heat stack
         :return: The Stack domain object or None
         """
-        self.__heat_cli = heat_utils.heat_client(self._os_creds)
+        super(self.__class__, self).initialize()
+
+        self.__neutron = neutron_utils.neutron_client(
+            self._os_creds, self._os_session)
+        self.__nova = nova_utils.nova_client(self._os_creds, self._os_session)
+        self.__glance = glance_utils.glance_client(
+            self._os_creds, self._os_session)
+        self.__cinder = cinder_utils.cinder_client(
+            self._os_creds, self._os_session)
+
+        self.__heat_cli = heat_utils.heat_client(
+            self._os_creds, self._os_session)
         self.__stack = heat_utils.get_stack(
             self.__heat_cli, stack_settings=self.stack_settings)
         if self.__stack:
@@ -152,6 +168,13 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
 
             self.__stack = None
 
+        self.__neutron.httpclient.session.session.close()
+        self.__nova.client.session.session.close()
+        self.__glance.http_client.session.session.close()
+        self.__cinder.client.session.session.close()
+
+        super(self.__class__, self).clean()
+
     def get_stack(self):
         """
         Returns the domain Stack object as it was populated when create() was
@@ -219,15 +242,13 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         :return: list() of OpenStackNetwork objects
         """
 
-        neutron = neutron_utils.neutron_client(self._os_creds)
-
         out = list()
         stack_networks = heat_utils.get_stack_networks(
-            self.__heat_cli, neutron, self.__stack)
+            self.__heat_cli, self.__neutron, self.__stack)
 
         for stack_network in stack_networks:
             net_settings = settings_utils.create_network_config(
-                neutron, stack_network)
+                self.__neutron, stack_network)
             net_creator = OpenStackNetwork(self._os_creds, net_settings)
             out.append(net_creator)
             net_creator.initialize()
@@ -241,15 +262,13 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         :return: list() of OpenStackNetwork objects
         """
 
-        neutron = neutron_utils.neutron_client(self._os_creds)
-
         out = list()
         stack_security_groups = heat_utils.get_stack_security_groups(
-            self.__heat_cli, neutron, self.__stack)
+            self.__heat_cli, self.__neutron, self.__stack)
 
         for stack_security_group in stack_security_groups:
             settings = settings_utils.create_security_group_config(
-                neutron, stack_security_group)
+                self.__neutron, stack_security_group)
             creator = OpenStackSecurityGroup(self._os_creds, settings)
             out.append(creator)
             creator.initialize()
@@ -263,15 +282,13 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         :return: list() of OpenStackRouter objects
         """
 
-        neutron = neutron_utils.neutron_client(self._os_creds)
-
         out = list()
         stack_routers = heat_utils.get_stack_routers(
-            self.__heat_cli, neutron, self.__stack)
+            self.__heat_cli, self.__neutron, self.__stack)
 
         for routers in stack_routers:
             settings = settings_utils.create_router_config(
-                neutron, routers)
+                self.__neutron, routers)
             creator = OpenStackRouter(self._os_creds, settings)
             out.append(creator)
             creator.initialize()
@@ -287,21 +304,16 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
 
         out = list()
 
-        nova = nova_utils.nova_client(self._os_creds)
-        keystone = keystone_utils.keystone_client(self._os_creds)
-        neutron = neutron_utils.neutron_client(self._os_creds)
         stack_servers = heat_utils.get_stack_servers(
-            self.__heat_cli, nova, neutron, keystone, self.__stack,
-            self._os_creds.project_name)
-
-        glance = glance_utils.glance_client(self._os_creds)
+            self.__heat_cli, self.__nova, self.__neutron, self._keystone,
+            self.__stack, self._os_creds.project_name)
 
         for stack_server in stack_servers:
             vm_inst_settings = settings_utils.create_vm_inst_config(
-                nova, keystone, neutron, stack_server,
+                self.__nova, self._keystone, self.__neutron, stack_server,
                 self._os_creds.project_name)
             image_settings = settings_utils.determine_image_config(
-                glance, stack_server, self.image_settings)
+                self.__glance, stack_server, self.image_settings)
             keypair_settings = settings_utils.determine_keypair_config(
                 self.__heat_cli, self.__stack, stack_server,
                 keypair_settings=self.keypair_settings,
@@ -322,10 +334,8 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         """
 
         out = list()
-        cinder = cinder_utils.cinder_client(self._os_creds)
-
         volumes = heat_utils.get_stack_volumes(
-            self.__heat_cli, cinder, self.__stack)
+            self.__heat_cli, self.__cinder, self.__stack)
 
         for volume in volumes:
             settings = settings_utils.create_volume_config(volume)
@@ -348,10 +358,8 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         """
 
         out = list()
-        cinder = cinder_utils.cinder_client(self._os_creds)
-
         vol_types = heat_utils.get_stack_volume_types(
-            self.__heat_cli, cinder, self.__stack)
+            self.__heat_cli, self.__cinder, self.__stack)
 
         for volume in vol_types:
             settings = settings_utils.create_volume_type_config(volume)
@@ -375,10 +383,9 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         """
 
         out = list()
-        nova = nova_utils.nova_client(self._os_creds)
 
         keypairs = heat_utils.get_stack_keypairs(
-            self.__heat_cli, nova, self.__stack)
+            self.__heat_cli, self.__nova, self.__stack)
 
         for keypair in keypairs:
             settings = settings_utils.create_keypair_config(
@@ -403,10 +410,9 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         """
 
         out = list()
-        nova = nova_utils.nova_client(self._os_creds)
 
         flavors = heat_utils.get_stack_flavors(
-            self.__heat_cli, nova, self.__stack)
+            self.__heat_cli, self.__nova, self.__stack)
 
         for flavor in flavors:
             settings = settings_utils.create_flavor_config(flavor)

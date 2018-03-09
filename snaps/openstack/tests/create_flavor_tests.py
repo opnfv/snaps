@@ -274,7 +274,7 @@ class CreateFlavorTests(OSComponentTestCase):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.flavor_name = guid + 'name'
 
-        self.nova = nova_utils.nova_client(self.os_creds)
+        self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
 
         # Initialize for cleanup
         self.flavor_creator = None
@@ -285,6 +285,8 @@ class CreateFlavorTests(OSComponentTestCase):
         """
         if self.flavor_creator:
             self.flavor_creator.clean()
+
+        super(self.__class__, self).__clean__()
 
     def test_create_flavor(self):
         """

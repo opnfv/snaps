@@ -48,7 +48,7 @@ from snaps.openstack.create_user import OpenStackUser
 from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.create_volume_type import OpenStackVolumeType
 from snaps.openstack.os_credentials import OSCreds, ProxySettings
-from snaps.openstack.utils import deploy_utils, neutron_utils
+from snaps.openstack.utils import deploy_utils, neutron_utils, keystone_utils
 from snaps.provisioning import ansible_utils
 
 logger = logging.getLogger('lanuch_utils')
@@ -713,18 +713,22 @@ def __get_router_variable_value(var_config_values, routers_dict, os_creds):
 
     if router_creator:
         if 'external_fixed_ip' == var_config_values.get('attr'):
-            neutron = neutron_utils.neutron_client(os_creds)
-            ext_nets = neutron_utils.get_external_networks(neutron)
+            session = keystone_utils.keystone_session(os_creds)
+            neutron = neutron_utils.neutron_client(os_creds, session)
+            try:
+                ext_nets = neutron_utils.get_external_networks(neutron)
 
-            subnet_name = var_config_values.get('subnet_name')
+                subnet_name = var_config_values.get('subnet_name')
 
-            for ext_net in ext_nets:
-                for subnet in ext_net.subnets:
-                    if subnet_name == subnet.name:
-                        router = router_creator.get_router()
-                        for fixed_ips in router.external_fixed_ips:
-                            if subnet.id == fixed_ips['subnet_id']:
-                                return fixed_ips['ip_address']
+                for ext_net in ext_nets:
+                    for subnet in ext_net.subnets:
+                        if subnet_name == subnet.name:
+                            router = router_creator.get_router()
+                            for fixed_ips in router.external_fixed_ips:
+                                if subnet.id == fixed_ips['subnet_id']:
+                                    return fixed_ips['ip_address']
+            finally:
+                keystone_utils.close_session(session)
 
 
 def __get_vm_port_variable_value(var_config_values, vm_dict):

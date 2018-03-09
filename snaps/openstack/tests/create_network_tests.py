@@ -369,7 +369,8 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
             router_name=guid + '-pub-router', external_net=self.ext_net_name,
             netconf_override=self.netconf_override)
 
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
 
         # Initialize for cleanup
         self.net_creator = None
@@ -576,7 +577,8 @@ class CreateNetworkGatewayTests(OSIntegrationTestCase):
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
 
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
 
         self.ip_prfx = '10.1.0.'
 
@@ -708,7 +710,8 @@ class CreateNetworkIPv6Tests(OSIntegrationTestCase):
         super(self.__class__, self).__start__()
 
         self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
 
         # Initialize for cleanup
         self.net_creator = None
@@ -811,8 +814,10 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         self.net_config = openstack_tests.get_pub_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet')
 
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
+        self.keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
 
         # Initialize for cleanup
         self.net_creator = None
@@ -823,6 +828,8 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         """
         if self.net_creator:
             self.net_creator.clean()
+
+        super(self.__class__, self).__clean__()
 
     def test_create_network_type_vlan(self):
         """
@@ -954,7 +961,8 @@ class CreateMultipleNetworkTests(OSIntegrationTestCase):
         self.net_config = openstack_tests.get_pub_net_config(
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet')
 
-        self.neutron = neutron_utils.neutron_client(self.os_creds)
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
 
         # Initialize for cleanup
         self.admin_net_creator = None

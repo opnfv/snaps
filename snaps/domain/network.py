@@ -46,7 +46,6 @@ class Network:
                 self.admin_state_up == other.admin_state_up and
                 self.shared == other.shared and
                 self.external == other.external and
-                self.type == other.type and
                 self.subnets == other.subnets)
 
 

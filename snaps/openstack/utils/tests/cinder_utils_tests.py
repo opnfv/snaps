@@ -43,7 +43,7 @@ class CinderSmokeTests(OSComponentTestCase):
         """
         Tests to ensure that the proper credentials can connect.
         """
-        cinder = cinder_utils.cinder_client(self.os_creds)
+        cinder = cinder_utils.cinder_client(self.os_creds, self.os_session)
         volumes = cinder.volumes.list()
         self.assertIsNotNone(volumes)
         self.assertTrue(isinstance(volumes, list))
@@ -74,8 +74,10 @@ class CinderUtilsVolumeTests(OSComponentTestCase):
         guid = uuid.uuid4()
         self.volume_name = self.__class__.__name__ + '-' + str(guid)
         self.volume = None
-        self.cinder = cinder_utils.cinder_client(self.os_creds)
-        self.keystone = keystone_utils.keystone_client(self.os_creds)
+        self.cinder = cinder_utils.cinder_client(
+            self.os_creds, self.os_session)
+        self.keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """
@@ -186,7 +188,8 @@ class CinderUtilsQoSTests(OSComponentTestCase):
         self.qos_name = self.__class__.__name__ + '-' + str(guid)
         self.specs = {'foo': 'bar '}
         self.qos = None
-        self.cinder = cinder_utils.cinder_client(self.os_creds)
+        self.cinder = cinder_utils.cinder_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """
@@ -197,6 +200,8 @@ class CinderUtilsQoSTests(OSComponentTestCase):
                 cinder_utils.delete_qos(self.cinder, self.qos)
             except NotFound:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_qos_both(self):
         """
@@ -283,7 +288,8 @@ class CinderUtilsSimpleVolumeTypeTests(OSComponentTestCase):
         volume_type_name = self.__class__.__name__ + '-' + str(guid)
         self.volume_type_settings = VolumeTypeConfig(name=volume_type_name)
         self.volume_type = None
-        self.cinder = cinder_utils.cinder_client(self.os_creds)
+        self.cinder = cinder_utils.cinder_client(
+            self.os_creds, self.os_session)
 
     def tearDown(self):
         """
@@ -294,6 +300,8 @@ class CinderUtilsSimpleVolumeTypeTests(OSComponentTestCase):
                 cinder_utils.delete_volume_type(self.cinder, self.volume_type)
             except NotFound:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_simple_volume_type(self):
         """
@@ -351,7 +359,8 @@ class CinderUtilsAddEncryptionTests(OSComponentTestCase):
         self.encryption_name = self.__class__.__name__ + '-' + str(guid)
         self.encryption = None
 
-        self.cinder = cinder_utils.cinder_client(self.os_creds)
+        self.cinder = cinder_utils.cinder_client(
+            self.os_creds, self.os_session)
 
         volume_type_name = self.__class__.__name__ + '-' + str(guid) + '-type'
         self.volume_type = cinder_utils.create_volume_type(
@@ -373,6 +382,8 @@ class CinderUtilsAddEncryptionTests(OSComponentTestCase):
                 cinder_utils.delete_volume_type(self.cinder, self.volume_type)
             except NotFound:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_simple_encryption(self):
         """
@@ -468,7 +479,8 @@ class CinderUtilsVolumeTypeCompleteTests(OSComponentTestCase):
         self.qos_name = self.__class__.__name__ + '-' + str(guid) + '-qos'
         self.vol_type_name = self.__class__.__name__ + '-' + str(guid)
         self.specs = {'foo': 'bar'}
-        self.cinder = cinder_utils.cinder_client(self.os_creds)
+        self.cinder = cinder_utils.cinder_client(
+            self.os_creds, self.os_session)
         qos_settings = QoSConfig(
             name=self.qos_name, specs=self.specs, consumer=Consumer.both)
         self.qos = cinder_utils.create_qos(self.cinder, qos_settings)
@@ -495,6 +507,8 @@ class CinderUtilsVolumeTypeCompleteTests(OSComponentTestCase):
                 cinder_utils.delete_qos(self.cinder, self.qos)
             except NotFound:
                 pass
+
+        super(self.__class__, self).__clean__()
 
     def test_create_with_encryption(self):
         """

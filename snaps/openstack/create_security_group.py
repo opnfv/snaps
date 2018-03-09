@@ -20,7 +20,6 @@ from neutronclient.common.exceptions import NotFound, Conflict
 from snaps.config.security_group import (
     SecurityGroupConfig, SecurityGroupRuleConfig)
 from snaps.openstack.openstack_creator import OpenStackNetworkObject
-from snaps.openstack.utils import keystone_utils
 from snaps.openstack.utils import neutron_utils
 
 __author__ = 'spisarski'
@@ -56,9 +55,9 @@ class OpenStackSecurityGroup(OpenStackNetworkObject):
         """
         super(self.__class__, self).initialize()
 
-        keystone = keystone_utils.keystone_client(self._os_creds)
         self.__security_group = neutron_utils.get_security_group(
-            self._neutron, keystone, sec_grp_settings=self.sec_grp_settings,
+            self._neutron, self._keystone,
+            sec_grp_settings=self.sec_grp_settings,
             project_name=self._os_creds.project_name)
         if self.__security_group:
             # Populate rules
@@ -86,9 +85,8 @@ class OpenStackSecurityGroup(OpenStackNetworkObject):
             logger.info(
                 'Creating security group %s...' % self.sec_grp_settings.name)
 
-            keystone = keystone_utils.keystone_client(self._os_creds)
             self.__security_group = neutron_utils.create_security_group(
-                self._neutron, keystone, self.sec_grp_settings)
+                self._neutron, self._keystone, self.sec_grp_settings)
 
             # Get the rules added for free
             auto_rules = neutron_utils.get_rules_by_security_group(
@@ -104,7 +102,7 @@ class OpenStackSecurityGroup(OpenStackNetworkObject):
             for sec_grp_rule_setting in self.sec_grp_settings.rule_settings:
                 try:
                     custom_rule = neutron_utils.create_security_group_rule(
-                        self._neutron, keystone, sec_grp_rule_setting,
+                        self._neutron, self._keystone, sec_grp_rule_setting,
                         self._os_creds.project_name)
                     self.__rules[sec_grp_rule_setting] = custom_rule
                 except Conflict as e:
@@ -161,6 +159,8 @@ class OpenStackSecurityGroup(OpenStackNetworkObject):
 
             self.__security_group = None
 
+        super(self.__class__, self).clean()
+
     def get_security_group(self):
         """
         Returns the OpenStack security group object
@@ -181,9 +181,9 @@ class OpenStackSecurityGroup(OpenStackNetworkObject):
         :param rule_setting: the rule configuration
         """
         rule_setting.sec_grp_name = self.sec_grp_settings.name
-        keystone = keystone_utils.keystone_client(self._os_creds)
         new_rule = neutron_utils.create_security_group_rule(
-            self._neutron, keystone, rule_setting, self._os_creds.project_name)
+            self._neutron, self._keystone, rule_setting,
+            self._os_creds.project_name)
         self.__rules[rule_setting] = new_rule
         self.sec_grp_settings.rule_settings.append(rule_setting)
 

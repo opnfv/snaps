@@ -24,15 +24,18 @@ __author__ = 'spisarski'
 logger = logging.getLogger('magnum_utils')
 
 
-def magnum_client(os_creds):
+def magnum_client(os_creds, session=None):
     """
     Retrieves the Magnum client
     :param os_creds: the OpenStack credentialsf
+    :param session: the keystone session object (optional)
     :return: the client
     """
     logger.debug('Retrieving Magnum Client')
-    return Client(str(os_creds.magnum_api_version),
-                  session=keystone_utils.keystone_session(os_creds))
+    if not session:
+        session = keystone_utils.keystone_session(os_creds)
+
+    return Client(str(os_creds.magnum_api_version), session=session)
 
 
 def get_cluster_template(magnum, template_config=None, template_name=None):

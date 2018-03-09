@@ -42,16 +42,20 @@ Utilities for basic OpenStack Nova API calls
 """
 
 
-def nova_client(os_creds):
+def nova_client(os_creds, session=None):
     """
     Instantiates and returns a client for communications with OpenStack's Nova
     server
     :param os_creds: The connection credentials to the OpenStack API
+    :param session: the keystone session object (optional)
     :return: the client object
     """
     logger.debug('Retrieving Nova Client')
+    if not session:
+        session = keystone_utils.keystone_session(os_creds)
+
     return Client(os_creds.compute_api_version,
-                  session=keystone_utils.keystone_session(os_creds),
+                  session=session,
                   region_name=os_creds.region_name)
 
 
