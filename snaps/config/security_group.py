@@ -210,6 +210,7 @@ class SecurityGroupRuleConfig(object):
         This is meant to be converted into JSON designed for use by the Neutron
         API
         :param neutron: the neutron client for performing lookups
+        :param keystone: the keystone client for performing lookups
         :param project_name: the name of the project associated with the group
         :return: the dictionary object
         """
@@ -313,12 +314,15 @@ def map_direction(direction):
     :return: the Direction enum object
     :raise: Exception if value is invalid
     """
-    if not direction:
+    if not direction or 'None' == str(direction):
         return None
-    if isinstance(direction, Direction):
-        return direction
-    elif (isinstance(direction, str) or isinstance(direction, unicode)
-            or isinstance(direction, unicode)):
+    if isinstance(direction, enum.Enum):
+        if direction.__class__.__name__ == 'Direction':
+            return direction
+        else:
+            raise SecurityGroupRuleConfigError(
+                'Invalid class - ' + direction.__class__.__name__)
+    elif isinstance(direction, str):
         dir_str = str(direction)
         if dir_str == 'egress':
             return Direction.egress
@@ -328,7 +332,7 @@ def map_direction(direction):
             raise SecurityGroupRuleConfigError(
                 'Invalid Direction - ' + dir_str)
     else:
-        return map_direction(direction.value)
+        return map_direction(str(direction))
 
 
 def map_protocol(protocol):
@@ -341,19 +345,22 @@ def map_protocol(protocol):
     """
     if not protocol:
         return None
-    elif isinstance(protocol, Protocol):
-        return protocol
-    elif (isinstance(protocol, str) or isinstance(protocol, unicode)
-            or isinstance(protocol, int)):
+    elif isinstance(protocol, enum.Enum):
+        if protocol.__class__.__name__ == 'Protocol':
+            return protocol
+        else:
+            raise SecurityGroupRuleConfigError(
+                'Invalid class - ' + protocol.__class__.__name__)
+    elif isinstance(protocol, str) or isinstance(protocol, int):
         for proto_enum in Protocol:
             if proto_enum.name == protocol or proto_enum.value == protocol:
                 if proto_enum == Protocol.any:
                     return Protocol.null
                 return proto_enum
         raise SecurityGroupRuleConfigError(
-            'Invalid Protocol - ' + protocol)
+            'Invalid Protocol - ' + str(protocol))
     else:
-        return map_protocol(protocol.value)
+        return map_protocol(str(protocol))
 
 
 def map_ethertype(ethertype):
@@ -364,12 +371,15 @@ def map_ethertype(ethertype):
     :return: the Ethertype enum object
     :raise: Exception if value is invalid
     """
-    if not ethertype:
+    if not ethertype or 'None' == str(ethertype):
         return None
-    elif isinstance(ethertype, Ethertype):
-        return ethertype
-    elif (isinstance(ethertype, str) or isinstance(ethertype, unicode)
-            or isinstance(ethertype, int)):
+    elif isinstance(ethertype, enum.Enum):
+        if ethertype.__class__.__name__ == 'Ethertype':
+            return ethertype
+        else:
+            raise SecurityGroupRuleConfigError(
+                'Invalid class - ' + ethertype.__class__.__name__)
+    elif isinstance(ethertype, str) or isinstance(ethertype, int):
         eth_str = str(ethertype)
         if eth_str == 'IPv6' or eth_str == '6':
             return Ethertype.IPv6
@@ -379,7 +389,7 @@ def map_ethertype(ethertype):
             raise SecurityGroupRuleConfigError(
                 'Invalid Ethertype - ' + eth_str)
     else:
-        return map_ethertype(ethertype.value)
+        return map_ethertype(str(ethertype))
 
 
 class SecurityGroupRuleConfigError(Exception):
