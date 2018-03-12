@@ -52,7 +52,7 @@ class HeatSmokeTests(OSComponentTestCase):
         # This should not throw an exception
         stacks = heat.stacks.list()
         for stack in stacks:
-            print stack
+            logger.info('Stack - %s', stack)
 
     def test_heat_connect_fail(self):
         """
@@ -70,7 +70,7 @@ class HeatSmokeTests(OSComponentTestCase):
         # This should throw an exception
         with self.assertRaises(Exception):
             for stack in stacks:
-                print stack
+                logger.info('Stack - %s', stack)
 
 
 class HeatUtilsCreateSimpleStackTests(OSComponentTestCase):

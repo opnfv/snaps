@@ -16,8 +16,10 @@ import argparse
 import json
 import logging
 import unittest
+from concurrencytest import ConcurrentTestSuite, fork_for_tests
 
-from snaps import test_suite_builder, file_utils
+from snaps import file_utils
+from snaps import test_suite_builder as tsb
 from snaps.openstack.tests import openstack_tests
 
 __author__ = 'spisarski'
@@ -30,14 +32,14 @@ LOG_LEVELS = {'FATAL': logging.FATAL, 'CRITICAL': logging.CRITICAL,
               'INFO': logging.INFO, 'DEBUG': logging.DEBUG}
 
 
-def __create_test_suite(
+def __create_concurrent_test_suite(
         source_filename, ext_net_name, proxy_settings, ssh_proxy_cmd,
         run_unit_tests, run_connection_tests, run_api_tests,
         run_integration_tests, run_staging_tests, flavor_metadata,
         image_metadata, use_keystone, use_floating_ips, continuous_integration,
         log_level):
     """
-    Compiles the tests that should run
+    Compiles the tests that can be run concurrently
     :param source_filename: the OpenStack credentials file (required)
     :param ext_net_name: the name of the external network to use for floating
                          IPs (required)
@@ -73,41 +75,101 @@ def __create_test_suite(
 
     # Tests that do not require a remote connection to an OpenStack cloud
     if run_unit_tests:
-        test_suite_builder.add_unit_tests(suite)
+        tsb.add_unit_tests(suite)
 
     # Basic connection tests
     if run_connection_tests:
-        test_suite_builder.add_openstack_client_tests(
+        tsb.add_openstack_client_tests(
             suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
             use_keystone=use_keystone, log_level=log_level)
 
     # Tests the OpenStack API calls
     if run_api_tests:
-        test_suite_builder.add_openstack_api_tests(
+        tsb.add_openstack_api_tests(
             suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
             use_keystone=use_keystone, image_metadata=image_metadata,
             log_level=log_level)
 
     # Long running integration type tests
     if run_integration_tests:
-        test_suite_builder.add_openstack_integration_tests(
+        tsb.add_openstack_integration_tests(
             suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
             use_keystone=use_keystone, flavor_metadata=flavor_metadata,
             image_metadata=image_metadata, use_floating_ips=use_floating_ips,
             log_level=log_level)
 
     if run_staging_tests:
-        test_suite_builder.add_openstack_staging_tests(
+        tsb.add_openstack_staging_tests(
             suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
             log_level=log_level)
 
     if continuous_integration:
-        test_suite_builder.add_openstack_ci_tests(
+        tsb.add_openstack_ci_tests(
             suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
             use_keystone=use_keystone, flavor_metadata=flavor_metadata,
             image_metadata=image_metadata, use_floating_ips=use_floating_ips,
             log_level=log_level)
     return suite
+
+
+def __create_sequential_test_suite(
+        source_filename, ext_net_name, proxy_settings, ssh_proxy_cmd,
+        run_integration_tests, flavor_metadata, image_metadata, use_keystone,
+        use_floating_ips, log_level):
+    """
+    Compiles the tests that cannot be run in parallel
+    :param source_filename: the OpenStack credentials file (required)
+    :param ext_net_name: the name of the external network to use for floating
+                         IPs (required)
+    :param run_integration_tests: when true, the integration tests are executed
+    :param proxy_settings: <host>:<port> of the proxy server (optional)
+    :param ssh_proxy_cmd: the command used to connect via SSH over some proxy
+                          server (optional)
+    :param flavor_metadata: dict() object containing the metadata for flavors
+                            created for test VM instance
+    :param image_metadata: dict() object containing the metadata for overriding
+                           default images within the tests
+    :param use_keystone: when true, tests creating users and projects will be
+                         exercised and must be run on a host that
+                         has access to the cloud's administrative network
+    :param use_floating_ips: when true, tests requiring floating IPs will be
+                             executed
+    :param log_level: the logging level
+    :return:
+    """
+    if use_floating_ips and run_integration_tests:
+        suite = unittest.TestSuite()
+
+        os_creds = openstack_tests.get_credentials(
+            os_env_file=source_filename, proxy_settings_str=proxy_settings,
+            ssh_proxy_cmd=ssh_proxy_cmd)
+
+        tsb.add_ansible_integration_tests(
+                suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
+                use_keystone=use_keystone, flavor_metadata=flavor_metadata,
+                image_metadata=image_metadata, log_level=log_level)
+
+        return suite
+
+
+def __output_results(results):
+    """
+    Sends the test results to the logger
+    :param results:
+    :return:
+    """
+
+    if results.errors:
+        logger.error('Number of errors in test suite - %s',
+                     len(results.errors))
+        for test, message in results.errors:
+            logger.error(str(test) + " ERROR with " + message)
+
+    if results.failures:
+        logger.error('Number of failures in test suite - %s',
+                     len(results.failures))
+        for test, message in results.failures:
+            logger.error(str(test) + " FAILED with " + message)
 
 
 def main(arguments):
@@ -129,7 +191,9 @@ def main(arguments):
     if arguments.image_metadata_file:
         image_metadata = file_utils.read_yaml(arguments.image_metadata_file)
 
-    suite = None
+    concurrent_suite = None
+    sequential_suite = None
+
     if arguments.env and arguments.ext_net:
         unit = arguments.include_unit != ARG_NOT_SET
         connection = arguments.include_connection != ARG_NOT_SET
@@ -144,40 +208,63 @@ def main(arguments):
             api = True
             integration = True
 
-        suite = __create_test_suite(
+        concurrent_suite = __create_concurrent_test_suite(
             arguments.env, arguments.ext_net, arguments.proxy,
             arguments.ssh_proxy_cmd, unit, connection, api,
             integration, staging, flavor_metadata, image_metadata,
             arguments.use_keystone != ARG_NOT_SET,
             arguments.floating_ips != ARG_NOT_SET,
             ci, log_level)
+
+        if (arguments.include_integration != ARG_NOT_SET
+                and arguments.floating_ips != ARG_NOT_SET):
+            sequential_suite = __create_sequential_test_suite(
+                arguments.env, arguments.ext_net, arguments.proxy,
+                arguments.ssh_proxy_cmd, integration, flavor_metadata,
+                image_metadata,
+                arguments.use_keystone != ARG_NOT_SET,
+                arguments.floating_ips != ARG_NOT_SET, log_level)
     else:
         logger.error('Environment file or external network not defined')
         exit(1)
 
     i = 0
     while i < int(arguments.num_runs):
-        result = unittest.TextTestRunner(verbosity=2).run(suite)
         i += 1
 
-        if result.errors:
-            logger.error('Number of errors in test suite - %s',
-                         len(result.errors))
-            for test, message in result.errors:
-                logger.error(str(test) + " ERROR with " + message)
+        if concurrent_suite:
+            logger.info('Running Concurrent Tests')
+            concurrent_runner = unittest.TextTestRunner(verbosity=2)
+            concurrent_suite = ConcurrentTestSuite(
+                concurrent_suite, fork_for_tests(int(arguments.threads)))
+            concurrent_results = concurrent_runner.run(concurrent_suite)
+            __output_results(concurrent_results)
 
-        if result.failures:
-            logger.error('Number of failures in test suite - %s',
-                         len(result.failures))
-            for test, message in result.failures:
-                logger.error(str(test) + " FAILED with " + message)
+            if ((concurrent_results.errors
+                    and len(concurrent_results.errors) > 0)
+                    or (concurrent_results.failures
+                        and len(concurrent_results.failures) > 0)):
+                logger.error('See above for test failures')
+                exit(1)
+            else:
+                logger.info(
+                    'Concurrent tests completed successfully in run #%s', i)
 
-        if ((result.errors and len(result.errors) > 0)
-                or (result.failures and len(result.failures) > 0)):
-            logger.error('See above for test failures')
-            exit(1)
-        else:
-            logger.info('All tests completed successfully in run #%s', i)
+        if sequential_suite:
+            logger.info('Running Sequential Tests')
+            sequential_runner = unittest.TextTestRunner(verbosity=2)
+            sequential_results = sequential_runner.run(sequential_suite)
+            __output_results(sequential_results)
+
+            if ((sequential_results.errors
+                    and len(sequential_results.errors) > 0)
+                or (sequential_results.failures
+                    and len(sequential_results.failures) > 0)):
+                logger.error('See above for test failures')
+                exit(1)
+            else:
+                logger.info(
+                    'Sequential tests completed successfully in run #%s', i)
 
     logger.info('Successful completion of %s test runs', i)
     exit(0)
@@ -247,6 +334,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '-r', '--num-runs', dest='num_runs', default=1,
         help='Number of test runs to execute (default 1)')
+    parser.add_argument(
+        '-t', '--threads', dest='threads', default=4,
+        help='Number of threads to execute the tests (default 4)')
 
     args = parser.parse_args()
 

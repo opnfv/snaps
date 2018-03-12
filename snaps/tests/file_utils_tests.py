@@ -31,7 +31,7 @@ class FileUtilsTests(unittest.TestCase):
 
     def setUp(self):
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
-        self.tmp_dir = '.tmp/'
+        self.tmp_dir = 'tmp/'
         self.test_dir = self.tmp_dir + str(guid)
         if not os.path.exists(self.test_dir):
             os.makedirs(self.test_dir)
@@ -44,7 +44,7 @@ class FileUtilsTests(unittest.TestCase):
             self.tmp_file_opened.close()
 
         if os.path.exists(self.test_dir) and os.path.isdir(self.test_dir):
-            shutil.rmtree(self.tmp_dir)
+            shutil.rmtree(self.test_dir)
 
     def testFileIsDirectory(self):
         """
