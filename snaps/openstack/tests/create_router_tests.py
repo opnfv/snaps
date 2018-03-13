@@ -24,7 +24,7 @@ from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_router import RouterSettings, OpenStackRouter
 from snaps.openstack.create_security_group import OpenStackSecurityGroup
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
-from snaps.openstack.utils import neutron_utils, settings_utils
+from snaps.openstack.utils import neutron_utils, settings_utils, keystone_utils
 
 __author__ = 'mmakati'
 
@@ -380,6 +380,41 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
         self.assertEquals(router, self.router_creator.get_router())
 
         self.check_router_recreation(router, router_settings)
+
+    def test_create_router_with_ext_port(self):
+        """
+        Test creation of a router with a port to an external network as an
+        'admin' user.
+        """
+        port_settings = [
+            create_network.PortConfig(
+                name=self.guid + '-port1',
+                network_name=self.ext_net_name)]
+
+        router_settings = RouterConfig(
+            name=self.guid + '-pub-router', port_settings=port_settings)
+        self.router_creator = create_router.OpenStackRouter(
+            self.admin_os_creds, router_settings)
+        self.router_creator.create()
+
+        admin_neutron = neutron_utils.neutron_client(
+            self.admin_os_creds, self.admin_os_session)
+        admin_keystone = keystone_utils.keystone_client(
+            self.admin_os_creds, self.admin_os_session)
+        router = neutron_utils.get_router(
+            admin_neutron, admin_keystone, router_settings=router_settings,
+            project_name=self.admin_os_creds.project_name)
+
+        self.assertIsNotNone(router)
+        self.assertEquals(router, self.router_creator.get_router())
+
+        ext_net = neutron_utils.get_network(
+            admin_neutron, admin_keystone, network_name=self.ext_net_name)
+
+        for port, subnets in router.port_subnets:
+            self.assertEqual(ext_net.id, port.network_id)
+            for subnet in subnets:
+                self.assertEqual(ext_net.id, subnet.network_id)
 
     def check_router_recreation(self, router, orig_settings):
         """

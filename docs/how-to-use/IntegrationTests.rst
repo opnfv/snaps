@@ -272,6 +272,9 @@ create_router_tests.py - CreateRouterSuccessTests
 | test_create_router_external_network   | 2             | Ensures that a router can be created that is connected to |
 |                                       |               | both external and private internal networks               |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_router_with_ext_port      | 2             | Ensures that a router can be created by an 'admin' user   |
+|                                       |               | with a port to the external networks                      |
++---------------------------------------+---------------+-----------------------------------------------------------+
 
 create_router_tests.py - CreateRouterNegativeTests
 --------------------------------------------------
