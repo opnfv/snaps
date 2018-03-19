@@ -104,6 +104,9 @@ create_project_tests.py - CreateProjectSuccessTests
 | test_create_project              | 2 & 3         | Tests the creation of a project via the OpenStackProject  |
 |                                  |               | class                                                     |
 +----------------------------------+---------------+-----------------------------------------------------------+
+| test_create_project_quota        | 2 & 3         | Tests the creation of a project via the OpenStackProject  |
+| _override                        |               | class with overriding the default quota values            |
++----------------------------------+---------------+-----------------------------------------------------------+
 | test_create_project_2x           | 2 & 3         | Tests the creation of a project a second time via the     |
 |                                  |               | OpenStackProject class to ensure it is only created once  |
 +----------------------------------+---------------+-----------------------------------------------------------+

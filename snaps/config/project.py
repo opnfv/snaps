@@ -32,6 +32,7 @@ class ProjectConfig(object):
         :param users: list of users to associate project to (optional)
         :param enabled: denotes whether or not the project is enabled
                         (default True)
+        :param quotas: quota values to override (optional)
         """
 
         self.name = kwargs.get('name')
@@ -45,6 +46,8 @@ class ProjectConfig(object):
             self.enabled = True
 
         self.users = kwargs.get('users', list())
+
+        self.quotas = kwargs.get('quotas')
 
         if not self.name:
             raise ProjectConfigError(

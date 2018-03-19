@@ -143,6 +143,38 @@ class CreateProjectSuccessTests(OSComponentTestCase):
         self.assertTrue(validate_project(self.keystone, self.project_settings,
                                          created_project))
 
+    def test_create_project_quota_override(self):
+        """
+        Tests the creation of an OpenStack project with new quotas.
+        """
+        quotas = {
+            'cores': 4, 'instances': 5, 'injected_files': 6,
+            'injected_file_content_bytes': 60000, 'ram': 70000, 'fixed_ips': 7,
+            'key_pairs': 8}
+        self.project_settings.quotas = quotas
+        self.project_creator = OpenStackProject(self.os_creds,
+                                                self.project_settings)
+        created_project = self.project_creator.create()
+        self.assertIsNotNone(created_project)
+
+        retrieved_project = keystone_utils.get_project(
+            keystone=self.keystone, project_settings=self.project_settings)
+        self.assertIsNotNone(retrieved_project)
+        self.assertEqual(created_project, retrieved_project)
+        self.assertTrue(validate_project(self.keystone, self.project_settings,
+                                         created_project))
+
+        nova = nova_utils.nova_client(self.os_creds, self.os_session)
+        new_quotas = nova_utils.get_compute_quotas(nova, created_project.id)
+
+        self.assertEqual(4, new_quotas.cores)
+        self.assertEqual(5, new_quotas.instances)
+        self.assertEqual(6, new_quotas.injected_files)
+        self.assertEqual(60000, new_quotas.injected_file_content_bytes)
+        self.assertEqual(70000, new_quotas.ram)
+        self.assertEqual(7, new_quotas.fixed_ips)
+        self.assertEqual(8, new_quotas.key_pairs)
+
     def test_create_project_2x(self):
         """
         Tests the creation of an OpenStack project twice to ensure it only

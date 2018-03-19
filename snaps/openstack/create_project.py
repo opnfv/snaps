@@ -74,6 +74,29 @@ class OpenStackProject(OpenStackIdentityObject):
                         logger.warn('Unable to associate user %s due to %s',
                                     user.name, e)
 
+            if self.project_settings.quotas:
+                quota_dict = self.project_settings.quotas
+                nova = nova_utils.nova_client(self._os_creds, self._os_session)
+                quotas = nova_utils.get_compute_quotas(nova, self.__project.id)
+                if quotas:
+                    if 'cores' in quota_dict:
+                        quotas.cores = quota_dict['cores']
+                    if 'instances' in quota_dict:
+                        quotas.instances = quota_dict['instances']
+                    if 'injected_files' in quota_dict:
+                        quotas.injected_files = quota_dict['injected_files']
+                    if 'injected_file_content_bytes' in quota_dict:
+                        quotas.injected_file_content_bytes = \
+                            quota_dict['injected_file_content_bytes']
+                    if 'ram' in quota_dict:
+                        quotas.ram = quota_dict['ram']
+                    if 'fixed_ips' in quota_dict:
+                        quotas.fixed_ips = quota_dict['fixed_ips']
+                    if 'key_pairs' in quota_dict:
+                        quotas.key_pairs = quota_dict['key_pairs']
+
+                    nova_utils.update_quotas(nova, self.__project.id, quotas)
+
         return self.__project
 
     def clean(self):
