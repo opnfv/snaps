@@ -282,21 +282,6 @@ class CreateSimpleVolumeFailureTests(OSIntegrationTestCase):
         with self.assertRaises(BadRequest):
             self.volume_creator.create(block=True)
 
-    def test_create_volume_bad_zone(self):
-        """
-        Tests the creation of an OpenStack volume with an availability zone
-        that does not exist to ensure it raises a BadRequest exception.
-        """
-        volume_settings = VolumeConfig(
-            name=self.__class__.__name__ + '-' + str(self.guid),
-            availability_zone='foo')
-
-        # Create Volume
-        self.volume_creator = OpenStackVolume(self.os_creds, volume_settings)
-
-        with self.assertRaises(BadRequest):
-            self.volume_creator.create(block=True)
-
 
 class CreateVolumeWithTypeTests(OSIntegrationTestCase):
     """

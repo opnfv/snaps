@@ -409,9 +409,6 @@ create_volume_tests.py - CreateSimpleVolumeFailureTests
 | test_create_volume_bad_image           | 2 & 3         | Tests to ensure that attempting to create a volume with an|
 |                                        |               | image that does not exist raises a BadRequest exception   |
 +----------------------------------------+---------------+-----------------------------------------------------------+
-| test_create_volume_bad_zone            | 2 & 3         | Tests to ensure that attempting to create a volume with an|
-|                                        |               | invalid availability zone raises a BadRequest exception   |
-+----------------------------------------+---------------+-----------------------------------------------------------+
 
 create_volume_tests.py - CreateVolumeWithTypeTests
 --------------------------------------------------
