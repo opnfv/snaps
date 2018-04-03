@@ -1,0 +1,9 @@
+---
+project: snaps-oo
+project-type: tools
+release-model: stable
+
+branches:
+  - name: stable/fraser
+    location:
+      snaps: cbd9af45e80c9e1922cb2046bd9b5737d4d51abb
