@@ -128,8 +128,12 @@ def get_network(neutron, keystone, network_settings=None, network_name=None,
     for network, netInsts in networks.items():
         for inst in netInsts:
             if project_name:
-                project = keystone_utils.get_project_by_id(
-                    keystone, inst['project_id'])
+                if 'project_id' in inst.keys():
+                    project = keystone_utils.get_project_by_id(
+                        keystone, inst['project_id'])
+                else:
+                    project = keystone_utils.get_project_by_id(
+                        keystone, inst['tenant_id'])
                 if project and project.name == project_name:
                     return __map_network(neutron, inst)
             else:
@@ -354,8 +358,12 @@ def get_router(neutron, keystone, router_settings=None, router_name=None,
     os_routers = neutron.list_routers(**router_filter)
     for os_router in os_routers['routers']:
         if project_name:
-            project = keystone_utils.get_project_by_id(
-                keystone, os_router['project_id'])
+            if 'project_id' in os_router.keys():
+                project = keystone_utils.get_project_by_id(
+                    keystone, os_router['project_id'])
+            else:
+                project = keystone_utils.get_project_by_id(
+                    keystone, os_router['tenant_id'])
             if project and project.name == project_name:
                 return __map_router(neutron, os_router)
 
@@ -521,8 +529,12 @@ def get_port(neutron, keystone, port_settings=None, port_name=None,
     ports = neutron.list_ports(**port_filter)
     for port in ports['ports']:
         if project_name:
-            project = keystone_utils.get_project_by_id(
-                keystone, port['project_id'])
+            if 'project_id' in port.keys():
+                project = keystone_utils.get_project_by_id(
+                    keystone, port['project_id'])
+            else:
+                project = keystone_utils.get_project_by_id(
+                    keystone, port['tenant_id'])
             if project and project.name == project_name:
                 return Port(**port)
         else:
@@ -626,8 +638,12 @@ def get_security_group(neutron, keystone, sec_grp_settings=None,
     group = None
     for group in groups['security_groups']:
         if project_name:
-            project = keystone_utils.get_project_by_id(
-                keystone, group['tenant_id'])
+            if 'project_id' in group.keys():
+                project = keystone_utils.get_project_by_id(
+                    keystone, group['project_id'])
+            else:
+                project = keystone_utils.get_project_by_id(
+                    keystone, group['tenant_id'])
             if project and project_name == project.name:
                 break
         else:
