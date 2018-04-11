@@ -2902,14 +2902,17 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
                              metadata=self.flavor_metadata))
             self.flavor_creator.create()
 
-            sec_grp_name = self.guid + '-sec-grp'
+            self.sec_grp_name = self.guid + '-sec-grp'
             rule1 = SecurityGroupRuleConfig(
-                sec_grp_name=sec_grp_name, direction=Direction.ingress,
+                sec_grp_name=self.sec_grp_name, direction=Direction.ingress,
+                protocol=Protocol.icmp)
+            rule2 = SecurityGroupRuleConfig(
+                sec_grp_name=self.sec_grp_name, direction=Direction.egress,
                 protocol=Protocol.icmp)
             self.sec_grp_creator = OpenStackSecurityGroup(
                 self.os_creds,
                 SecurityGroupConfig(
-                    name=sec_grp_name, rule_settings=[rule1]))
+                    name=self.sec_grp_name, rule_settings=[rule1, rule2]))
             self.sec_grp_creator.create()
         except:
             self.tearDown()
@@ -2989,6 +2992,7 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
             name=self.vm_inst1_name,
             flavor=self.flavor_creator.flavor_settings.name,
             userdata=_get_ping_userdata(self.ip2),
+            security_group_names=self.sec_grp_name,
             port_settings=[PortConfig(
                 name=self.port_1_name,
                 ip_addrs=[{
@@ -3001,6 +3005,7 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
             name=self.vm_inst2_name,
             flavor=self.flavor_creator.flavor_settings.name,
             userdata=_get_ping_userdata(self.ip1),
+            security_group_names=self.sec_grp_name,
             port_settings=[PortConfig(
                 name=self.port_2_name,
                 ip_addrs=[{
