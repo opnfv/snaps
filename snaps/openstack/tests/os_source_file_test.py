@@ -76,7 +76,6 @@ class OSComponentTestCase(unittest.TestCase):
                                          image_metadata, log_level))
         return suite
 
-
     def __clean__(self):
         """
         Cleans up keystone session.
@@ -123,7 +122,7 @@ class OSIntegrationTestCase(OSComponentTestCase):
 
     @staticmethod
     def parameterize(testcase_klass, os_creds, ext_net_name,
-                     use_keystone=False, flavor_metadata=None,
+                     use_keystone=True, flavor_metadata=None,
                      image_metadata=None, netconf_override=None,
                      log_level=logging.DEBUG):
         """
@@ -154,12 +153,10 @@ class OSIntegrationTestCase(OSComponentTestCase):
         self.user_creator = None
         self.admin_os_creds = self.os_creds
         self.admin_os_session = self.os_session
-        keystone_utils.keystone_session(
-            self.admin_os_creds)
+        self.keystone = keystone_utils.keystone_client(
+            self.admin_os_creds, self.admin_os_session)
 
         if self.use_keystone:
-            self.keystone = keystone_utils.keystone_client(
-                self.admin_os_creds, self.admin_os_session)
             guid = self.__class__.__name__ + '-' + str(uuid.uuid4())[:-19]
             project_name = guid + '-proj'
             self.project_creator = deploy_utils.create_project(
@@ -203,4 +200,3 @@ class OSIntegrationTestCase(OSComponentTestCase):
             keystone_utils.close_session(self.admin_os_session)
 
         super(OSIntegrationTestCase, self).__clean__()
-
