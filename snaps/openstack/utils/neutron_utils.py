@@ -681,6 +681,21 @@ def get_security_group_by_id(neutron, sec_grp_id):
     return None
 
 
+def list_security_groups(neutron):
+
+    """
+    Lists the available security groups
+    :param neutron: the neutron client
+    """
+    logger.info('Listing the available security groups')
+    sec_groups = []
+    response = self.neutron.list_security_groups()
+    for sg in response['security_groups']:
+        sec_groups.append(sg)
+
+    return sec_groups
+
+
 def create_security_group_rule(neutron, keystone, sec_grp_rule_settings,
                                proj_name):
     """

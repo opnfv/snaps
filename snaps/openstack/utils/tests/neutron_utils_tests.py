@@ -1010,6 +1010,27 @@ class NeutronUtilsSecurityGroupTests(OSComponentTestCase):
         self.assertEqual(self.security_groups[0].id, sec_grp_1b.id)
         self.assertEqual(self.security_groups[1].id, sec_grp_2b.id)
 
+    def test_create_list_sec_grp_no_rules(self):
+        """
+        Tests the neutron_utils.create_security_group() and
+        list_security_groups function
+        """
+        sec_grp_settings = SecurityGroupConfig(
+            name=self.sec_grp_name, description='hello group')
+        neutron_utils.create_security_group(
+            self.neutron, self.keystone, sec_grp_settings))
+
+        sec_grp_settings2 = SecurityGroupConfig(
+            name=self.sec_grp_name, description='hola group')
+        neutron_utils.create_security_group(
+            self.neutron, self.keystone, sec_grp_settings2))
+
+        returned_sec_groups = neutron_utils.list_security_groups(self.neutron)
+
+        self.assertIsNotNone(returned_sec_groups)
+        self.assertEqual(sec_grp_settings.name, returned_sec_groups[0].name)
+        self.assertEqual(sec_grp_settings2.name, returned_sec_groups[1].name)
+
 
 class NeutronUtilsFloatingIpTests(OSComponentTestCase):
     """
