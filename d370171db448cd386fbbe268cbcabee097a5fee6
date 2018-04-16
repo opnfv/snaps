@@ -16,6 +16,24 @@
       "revId": "d370171db448cd386fbbe268cbcabee097a5fee6",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_2557c9cb",
+        "filename": "snaps/openstack/utils/neutron_utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 692,
+      "author": {
+        "id": 2091
+      },
+      "writtenOn": "2018-04-16T16:29:00Z",
+      "side": 1,
+      "message": "oops!!",
+      "parentUuid": "5a3f45e8_a553d9e0",
+      "revId": "d370171db448cd386fbbe268cbcabee097a5fee6",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
