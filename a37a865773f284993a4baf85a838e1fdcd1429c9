@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_45f815c3",
+        "filename": "snaps/openstack/utils/tests/neutron_utils_tests.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1019,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-04-16T16:38:43Z",
+      "side": 1,
+      "message": "You will probably want to append a \u0027-1\u0027 or something to ensure unique names.",
+      "revId": "a37a865773f284993a4baf85a838e1fdcd1429c9",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_a50119b1",
+        "filename": "snaps/openstack/utils/tests/neutron_utils_tests.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1023,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-04-16T16:38:43Z",
+      "side": 1,
+      "message": "You will probably want to append a \u0027-2\u0027 or something to ensure unique names.",
+      "revId": "a37a865773f284993a4baf85a838e1fdcd1429c9",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_65fb91c1",
+        "filename": "snaps/openstack/utils/tests/neutron_utils_tests.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1031,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-04-16T16:38:43Z",
+      "side": 1,
+      "message": "You will need to loop through all of the security group objects to ensure the one you are looking for is actually there. You are not guaranteed that there will only be 2 security groups returned (there will most likely be a minimum of 3) and may have many more depending on your pod under test.",
+      "revId": "a37a865773f284993a4baf85a838e1fdcd1429c9",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
