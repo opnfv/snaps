@@ -16,6 +16,40 @@
       "revId": "1b38ef8c9c4588904b08486b9a42dfaef20dbccb",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_c5d7054a",
+        "filename": "snaps/openstack/utils/tests/neutron_utils_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-04-16T16:06:11Z",
+      "side": 1,
+      "message": "You will need to store this security group object for cleanup in tearDown in some way.",
+      "revId": "1b38ef8c9c4588904b08486b9a42dfaef20dbccb",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_25c989ac",
+        "filename": "snaps/openstack/utils/tests/neutron_utils_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1025,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-04-16T16:06:11Z",
+      "side": 1,
+      "message": "You will need to store this security group object for cleanup in tearDown in some way.",
+      "revId": "1b38ef8c9c4588904b08486b9a42dfaef20dbccb",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
