@@ -31,6 +31,25 @@ class RouterConfigUnitTests(unittest.TestCase):
         with self.assertRaises(RouterConfigError):
             RouterConfig(**dict())
 
+    def test_bad_internal_subnets_bad_key(self):
+        with self.assertRaises(RouterConfigError):
+            RouterConfig(name='foo', internal_subnets={'foo': 'bar'})
+
+    def test_bad_internal_subnets_no_project(self):
+        with self.assertRaises(RouterConfigError):
+            RouterConfig(name='foo', internal_subnets={
+                'subnet': {'subnet_name': 'bar', 'network_name': 'foo'}})
+
+    def test_bad_internal_subnets_no_network(self):
+        with self.assertRaises(RouterConfigError):
+            RouterConfig(name='foo', internal_subnets={
+                'subnet': {'subnet_name': 'bar', 'project_name': 'foo'}})
+
+    def test_bad_internal_subnets_no_subnet(self):
+        with self.assertRaises(RouterConfigError):
+            RouterConfig(name='foo', internal_subnets={
+                'subnet': {'project_name': 'bar', 'network_name': 'foo'}})
+
     def test_name_only(self):
         settings = RouterConfig(name='foo')
         self.assertEqual('foo', settings.name)
@@ -59,7 +78,7 @@ class RouterConfigUnitTests(unittest.TestCase):
         self.assertTrue(isinstance(settings.port_settings, list))
         self.assertEqual(0, len(settings.port_settings))
 
-    def test_all(self):
+    def test_all_internal_subnets_str(self):
         port_settings = PortConfig(name='foo', network_name='bar')
         settings = RouterConfig(
             name='foo', project_name='bar', external_gateway='foo_gateway',
@@ -76,11 +95,36 @@ class RouterConfigUnitTests(unittest.TestCase):
         self.assertEqual(['10.0.0.1/24'], settings.internal_subnets)
         self.assertEqual([port_settings], settings.port_settings)
 
-    def test_config_all(self):
+    def test_all_internal_subnets_dict(self):
+        port_settings = PortConfig(name='foo', network_name='bar')
+        int_subs = {'subnet': {
+            'project_name': 'proj_a', 'network_name': 'net_name',
+            'subnet_name': 'sub_name'}}
+        settings = RouterConfig(
+            name='foo', project_name='bar', external_gateway='foo_gateway',
+            admin_state_up=True, enable_snat=False,
+            internal_subnets=int_subs,
+            interfaces=[port_settings])
+        self.assertEqual('foo', settings.name)
+        self.assertEqual('bar', settings.project_name)
+        self.assertEqual('foo_gateway', settings.external_gateway)
+        self.assertTrue(settings.admin_state_up)
+        self.assertFalse(settings.enable_snat)
+        self.assertIsNotNone(settings.internal_subnets)
+        self.assertTrue(isinstance(settings.internal_subnets, dict))
+        self.assertEqual(1, len(settings.internal_subnets))
+        self.assertEqual(int_subs, settings.internal_subnets)
+        self.assertEqual([port_settings], settings.port_settings)
+
+    def test_config_all_internal_subnets_str(self):
+        int_subs = {'subnet': {
+            'project_name': 'proj_a', 'network_name': 'net_name',
+            'subnet_name': 'sub_name'}}
         settings = RouterConfig(
             **{'name': 'foo', 'project_name': 'bar',
                'external_gateway': 'foo_gateway', 'admin_state_up': True,
-               'enable_snat': False, 'internal_subnets': ['10.0.0.1/24'],
+               'enable_snat': False,
+               'internal_subnets': int_subs,
                'interfaces':
                    [{'port': {'name': 'foo-port',
                               'network_name': 'bar-net'}}]})
@@ -90,9 +134,9 @@ class RouterConfigUnitTests(unittest.TestCase):
         self.assertTrue(settings.admin_state_up)
         self.assertFalse(settings.enable_snat)
         self.assertIsNotNone(settings.internal_subnets)
-        self.assertTrue(isinstance(settings.internal_subnets, list))
+        self.assertTrue(isinstance(settings.internal_subnets, dict))
         self.assertEqual(1, len(settings.internal_subnets))
-        self.assertEqual(['10.0.0.1/24'], settings.internal_subnets)
+        self.assertEqual(int_subs, settings.internal_subnets)
         self.assertEqual([PortConfig(**{'name': 'foo-port',
                                         'network_name': 'bar-net'})],
                          settings.port_settings)
