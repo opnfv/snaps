@@ -317,7 +317,8 @@ def add_openstack_client_tests(suite, os_creds, ext_net_name,
 
 
 def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True,
-                            image_metadata=None, log_level=logging.INFO):
+                            flavor_metadata=None, image_metadata=None,
+                            log_level=logging.INFO):
     """
     Adds tests written to exercise all existing OpenStack APIs
     :param suite: the unittest.TestSuite object to which to add the tests
@@ -328,6 +329,9 @@ def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True,
     :param use_keystone: when True, tests requiring direct access to Keystone
                          are added as these need to be running on a host that
                          has access to the cloud's private network
+    :param flavor_metadata: dict() object containing the metadata required by
+                            your flavor based on your configuration:
+                            (i.e. {'hw:mem_page_size': 'any'})
     :param image_metadata: dict() object containing metadata for creating an
                            image with custom config
                            (see YAML files in examples/image-metadata)
@@ -383,7 +387,7 @@ def add_openstack_api_tests(suite, os_creds, ext_net_name, use_keystone=True,
     suite.addTest(OSComponentTestCase.parameterize(
         NovaUtilsInstanceVolumeTests, os_creds=os_creds,
         ext_net_name=ext_net_name, log_level=log_level,
-        image_metadata=image_metadata))
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata))
     suite.addTest(OSComponentTestCase.parameterize(
         CreateFlavorTests, os_creds=os_creds, ext_net_name=ext_net_name,
         log_level=log_level))

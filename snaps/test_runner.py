@@ -87,8 +87,8 @@ def __create_concurrent_test_suite(
     if run_api_tests:
         tsb.add_openstack_api_tests(
             suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
-            use_keystone=use_keystone, image_metadata=image_metadata,
-            log_level=log_level)
+            use_keystone=use_keystone, flavor_metadata=flavor_metadata,
+            image_metadata=image_metadata, log_level=log_level)
 
     # Long running integration type tests
     if run_integration_tests:
