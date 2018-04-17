@@ -70,8 +70,14 @@ openstack:
         name: mgr-router
         external_gateway: external
         internal_subnets:
-          - mgr-subnet
-          - mgr-subnet-2
+          - subnet:
+              project_name: admin
+              network_name: mgr-net
+              subnet_name: mgr-subnet
+          - subnet:
+              project_name: admin
+              network_name: mgr-net
+              subnet_name: mgr-subnet-2
         interfaces:
           - port:
               name: mgr-router-to-site1
@@ -83,12 +89,18 @@ openstack:
         name: site1-router
         external_gateway: external
         internal_subnets:
-          - site1-subnet
+          - subnet:
+              project_name: admin
+              network_name: site1-net
+              subnet_name: site1-subnet
     - router:
         name: site2-router
         external_gateway: external
         internal_subnets:
-          - site2-subnet
+          - subnet:
+              project_name: admin
+              network_name: site2-net
+              subnet_name: site2-subnet
     - router:
         name: site-to-site-router
         interfaces:

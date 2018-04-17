@@ -95,7 +95,10 @@ openstack:
         name: {{ router_name }}
         external_gateway: {{ ext_net }}
         internal_subnets:
-          - {{ subnet_name }}
+          - subnet:
+              project_name: {{ admin_proj }}
+              network_name: {{ net_name }}
+              subnet_name: {{ subnet_name }}
   keypairs:
     - keypair:
         os_user:

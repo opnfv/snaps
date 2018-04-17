@@ -307,6 +307,8 @@ def __create_instances(os_creds_dict, creator_class, config_class, config,
                             creator.create()
 
                         out[inst_config['name']] = creator
+                    else:
+                        raise Exception('Unable to instantiate creator')
 
         logger.info('Initialized configured %ss', config_key)
 

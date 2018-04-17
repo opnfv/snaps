@@ -306,6 +306,7 @@ class SimpleHealthCheck(OSIntegrationTestCase):
         self.inst_creator = None
 
         self.priv_net_config = openstack_tests.get_priv_net_config(
+            project_name=self.os_creds.project_name,
             net_name=guid + '-priv-net',
             subnet_name=guid + '-priv-subnet',
             netconf_override=self.netconf_override)
@@ -490,6 +491,7 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
         """
         # Create Network
         net_config = openstack_tests.get_priv_net_config(
+            project_name=self.os_creds.project_name,
             net_name=self.guid + '-pub-net',
             subnet_name=self.guid + '-pub-subnet',
             router_name=self.guid + '-pub-router',
@@ -539,6 +541,7 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
         """
         # Create Network
         net_config = openstack_tests.get_priv_net_config(
+            project_name=self.os_creds.project_name,
             net_name=self.guid + '-pub-net',
             subnet_name=self.guid + '-pub-subnet',
             router_name=self.guid + '-pub-router',
@@ -711,6 +714,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         self.inst_creators = list()
 
         self.pub_net_config = openstack_tests.get_pub_net_config(
+            project_name=self.os_creds.project_name,
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
             router_name=guid + '-pub-router', external_net=self.ext_net_name,
             netconf_override=self.netconf_override)
@@ -1245,7 +1249,10 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
             name=self.guid + '-net', subnet_settings=[subnet_settings])
         router_settings = RouterConfig(
             name=self.guid + '-router', external_gateway=self.ext_net_name,
-            internal_subnets=[subnet_settings.name])
+            internal_subnets=[{'subnet': {
+                'project_name': self.os_creds.project_name,
+                'network_name': network_settings.name,
+                'subnet_name': subnet_settings.name}}])
 
         # Create Network
         self.network_creator = OpenStackNetwork(
@@ -1293,7 +1300,10 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
             subnet_settings=[subnet4_settings, subnet6_settings])
         router_settings = RouterConfig(
             name=self.guid + '-router', external_gateway=self.ext_net_name,
-            internal_subnets=[subnet4_settings.name])
+            internal_subnets=[{'subnet': {
+                'project_name': self.os_creds.project_name,
+                'network_name': network_settings.name,
+                'subnet_name': subnet4_settings.name}}])
 
         # Create Network
         self.network_creator = OpenStackNetwork(
@@ -1354,6 +1364,7 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
         self.inst_creator = None
 
         self.net_config = openstack_tests.get_priv_net_config(
+            project_name=self.os_creds.project_name,
             net_name=self.guid + '-pub-net',
             subnet_name=self.guid + '-pub-subnet',
             router_name=self.guid + '-pub-router',
@@ -1735,6 +1746,7 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
         self.inst_creators = list()
 
         self.priv_net_config = openstack_tests.get_priv_net_config(
+            project_name=self.os_creds.project_name,
             net_name=guid + '-priv-net', subnet_name=guid + '-priv-subnet',
             netconf_override=self.netconf_override)
 
@@ -1870,6 +1882,7 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
         self.floating_ip_name = self.guid + 'fip1'
 
         net_config = openstack_tests.get_priv_net_config(
+            project_name=self.os_creds.project_name,
             net_name=self.guid + '-pub-net',
             subnet_name=self.guid + '-pub-subnet',
             router_name=self.guid + '-pub-router',
@@ -2194,6 +2207,7 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
         self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
 
         net_config = openstack_tests.get_priv_net_config(
+            project_name=self.os_creds.project_name,
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
             router_name=guid + '-pub-router', external_net=self.ext_net_name,
             netconf_override=self.netconf_override)
@@ -2336,6 +2350,7 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
         self.inst_creator = None
 
         self.priv_net_config = openstack_tests.get_priv_net_config(
+            project_name=self.os_creds.project_name,
             net_name=self.guid + '-priv-net',
             subnet_name=self.guid + '-priv-subnet')
         self.port_settings = PortConfig(
@@ -3053,6 +3068,7 @@ class CreateInstanceVolumeTests(OSIntegrationTestCase):
             name=guid + '-image', image_metadata=self.image_metadata)
 
         net_config = openstack_tests.get_priv_net_config(
+            project_name=self.os_creds.project_name,
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
             router_name=guid + '-pub-router', external_net=self.ext_net_name,
             netconf_override=self.netconf_override)

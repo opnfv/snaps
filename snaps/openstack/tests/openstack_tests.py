@@ -312,19 +312,19 @@ def ubuntu_image_settings(name, url=None, image_metadata=None,
         public=public)
 
 
-def get_priv_net_config(net_name, subnet_name, router_name=None,
+def get_priv_net_config(project_name, net_name, subnet_name, router_name=None,
                         cidr='10.55.0.0/24', external_net=None,
                         netconf_override=None):
-    return OSNetworkConfig(net_name, subnet_name, cidr, router_name,
-                           external_gateway=external_net,
-                           netconf_override=netconf_override)
+    return OSNetworkConfig(
+        project_name, net_name, subnet_name, cidr, router_name,
+        external_gateway=external_net, netconf_override=netconf_override)
 
 
-def get_pub_net_config(net_name, subnet_name=None, router_name=None,
-                       cidr='10.55.1.0/24', external_net=None,
-                       netconf_override=None):
-    return OSNetworkConfig(net_name, subnet_name, cidr, router_name,
-                           external_gateway=external_net,
+def get_pub_net_config(
+        project_name, net_name, subnet_name=None, router_name=None,
+        cidr='10.55.1.0/24', external_net=None, netconf_override=None):
+    return OSNetworkConfig(project_name, net_name, subnet_name, cidr,
+                           router_name, external_gateway=external_net,
                            netconf_override=netconf_override)
 
 
@@ -335,8 +335,8 @@ class OSNetworkConfig:
     physical_network and segmentation_id
     """
 
-    def __init__(self, net_name, subnet_name=None, subnet_cidr=None,
-                 router_name=None, external_gateway=None,
+    def __init__(self, project_name, net_name, subnet_name=None,
+                 subnet_cidr=None, router_name=None, external_gateway=None,
                  netconf_override=None):
         """
         :param netconf_override: dict() containing the reconfigured
@@ -361,7 +361,10 @@ class OSNetworkConfig:
             if subnet_name:
                 self.router_settings = RouterConfig(
                     name=router_name, external_gateway=external_gateway,
-                    internal_subnets=[subnet_name])
+                    internal_subnets=[{'subnet': {
+                        'project_name': project_name,
+                        'network_name': net_name,
+                        'subnet_name': subnet_name}}])
             else:
                 self.router_settings = RouterConfig(
                     name=router_name, external_gateway=external_gateway)

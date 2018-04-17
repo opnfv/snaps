@@ -33,7 +33,11 @@ class RouterConfig(object):
         :param admin_state_up: The administrative status of the router.
                                True = up / False = down (default True)
         :param internal_subnets: List of subnet names to which to connect this
-                                 router for Floating IP purposes
+                                 router (this way is deprecated).
+                                 *** NEW WAY ***
+                                 List of dict where the key is 'subnet' that
+                                 contains members with the following keys:
+                                 project_name, network_name, and subnet_name
         :param port_settings: List of PortConfig objects
         :return:
         """
@@ -45,6 +49,19 @@ class RouterConfig(object):
         self.enable_snat = kwargs.get('enable_snat')
         if kwargs.get('internal_subnets'):
             self.internal_subnets = kwargs['internal_subnets']
+            if isinstance(self.internal_subnets, dict):
+                if 'subnet' not in self.internal_subnets:
+                    raise RouterConfigError(
+                        'subnet is a required key to internal_subnets')
+                if 'project_name' not in self.internal_subnets['subnet']:
+                    raise RouterConfigError(
+                        'subnet.project is a required key to subnet')
+                if 'network_name' not in self.internal_subnets['subnet']:
+                    raise RouterConfigError(
+                        'network_name is a required key to subnet')
+                if 'subnet_name' not in self.internal_subnets['subnet']:
+                    raise RouterConfigError(
+                        'subnet_name is a required key to subnet')
         else:
             self.internal_subnets = list()
 

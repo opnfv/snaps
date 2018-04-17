@@ -18,7 +18,7 @@ from neutronclient.common.exceptions import NotFound, Unauthorized
 
 from snaps.config.router import RouterConfig
 from snaps.openstack.openstack_creator import OpenStackNetworkObject
-from snaps.openstack.utils import neutron_utils, keystone_utils
+from snaps.openstack.utils import neutron_utils
 
 __author__ = 'spisarski'
 
@@ -71,14 +71,13 @@ class OpenStackRouter(OpenStackNetworkObject):
                         self.router_settings.name, e)
 
         if self.__router:
-            for internal_subnet_name in self.router_settings.internal_subnets:
-                internal_subnet = neutron_utils.get_subnet(
-                    self._neutron, subnet_name=internal_subnet_name)
+            for sub_config in self.router_settings.internal_subnets:
+                internal_subnet = self.__get_internal_subnet(sub_config)
                 if internal_subnet:
                     self.__internal_subnets.append(internal_subnet)
                 else:
                     raise RouterCreationError(
-                        'Subnet not found with name ' + internal_subnet_name)
+                        'Subnet not found with name ' + internal_subnet.name)
 
             for port_setting in self.router_settings.port_settings:
                 port = neutron_utils.get_port(
@@ -100,9 +99,8 @@ class OpenStackRouter(OpenStackNetworkObject):
             self.__router = neutron_utils.create_router(
                 self._neutron, self._os_creds, self.router_settings)
 
-            for internal_subnet_name in self.router_settings.internal_subnets:
-                internal_subnet = neutron_utils.get_subnet(
-                    self._neutron, subnet_name=internal_subnet_name)
+            for sub_config in self.router_settings.internal_subnets:
+                internal_subnet = self.__get_internal_subnet(sub_config)
                 if internal_subnet:
                     self.__internal_subnets.append(internal_subnet)
                     if internal_subnet:
@@ -113,7 +111,7 @@ class OpenStackRouter(OpenStackNetworkObject):
                         self.__internal_router_interface = router_intf
                 else:
                     raise RouterCreationError(
-                        'Subnet not found with name ' + internal_subnet_name)
+                        'Subnet not found with name ' + internal_subnet.name)
 
             for port_setting in self.router_settings.port_settings:
                 port = neutron_utils.get_port(
@@ -144,6 +142,27 @@ class OpenStackRouter(OpenStackNetworkObject):
         self.__router = neutron_utils.get_router_by_id(
             self._neutron, self.__router.id)
         return self.__router
+
+    def __get_internal_subnet(self, sub_config):
+        """
+        returns the Subnet domain object from the subnet configurator
+        :param sub_config:
+        :return:
+        """
+        if isinstance(sub_config, str):
+            return neutron_utils.get_subnet_by_name(
+                self._neutron, self._keystone,
+                subnet_name=sub_config)
+        if isinstance(sub_config, dict):
+            sub_dict = sub_config['subnet']
+            network = neutron_utils.get_network(
+                self._neutron, self._keystone,
+                network_name=sub_dict['network_name'],
+                project_name=sub_dict['project_name'])
+            if network:
+                return neutron_utils.get_subnet(
+                    self._neutron, network,
+                    subnet_name=sub_dict['subnet_name'])
 
     def clean(self):
         """

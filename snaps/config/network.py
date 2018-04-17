@@ -412,22 +412,23 @@ class PortConfig(object):
             raise PortConfigError(
                 'The attribute network_name is required')
 
-    def __get_fixed_ips(self, neutron):
+    def __get_fixed_ips(self, neutron, network):
         """
         Sets the self.fixed_ips value
         :param neutron: the Neutron client
+        :param network: the SNAPS-OO network domain object
         :return: None
         """
-
         fixed_ips = list()
         if self.ip_addrs:
 
             for ip_addr_dict in self.ip_addrs:
                 subnet = neutron_utils.get_subnet(
-                    neutron, subnet_name=ip_addr_dict['subnet_name'])
-                if subnet and 'ip' in ip_addr_dict:
-                    fixed_ips.append({'ip_address': ip_addr_dict['ip'],
-                                      'subnet_id': subnet.id})
+                    neutron, network, subnet_name=ip_addr_dict['subnet_name'])
+                if subnet:
+                    if 'ip' in ip_addr_dict:
+                        fixed_ips.append({'ip_address': ip_addr_dict['ip'],
+                                          'subnet_id': subnet.id})
                 else:
                     raise PortConfigError(
                         'Invalid port configuration, subnet does not exist '
@@ -443,25 +444,29 @@ class PortConfig(object):
 
         TODO - expand automated testing to exercise all parameters
         :param neutron: the Neutron client
+        :param keystone: the Keystone client
         :param os_creds: the OpenStack credentials
         :return: the dictionary object
         """
-
         out = dict()
-
         session = keystone_utils.keystone_session(os_creds)
         keystone = keystone_utils.keystone_client(os_creds, session)
+
+        project_name = os_creds.project_name
+        if self.project_name:
+            project_name = project_name
         try:
             network = neutron_utils.get_network(
                 neutron, keystone, network_name=self.network_name,
-                project_name=self.project_name)
+                project_name=project_name)
         finally:
-            keystone_utils.close_session(session)
+            if session:
+                keystone_utils.close_session(session)
 
         if not network:
             raise PortConfigError(
                 'Cannot locate network with name - ' + self.network_name
-                + ' in project - ' + str(self.project_name))
+                + ' in project - ' + str(project_name))
 
         out['network_id'] = network.id
 
@@ -484,7 +489,7 @@ class PortConfig(object):
         if self.mac_address:
             out['mac_address'] = self.mac_address
 
-        fixed_ips = self.__get_fixed_ips(neutron)
+        fixed_ips = self.__get_fixed_ips(neutron, network)
         if fixed_ips and len(fixed_ips) > 0:
             out['fixed_ips'] = fixed_ips
 

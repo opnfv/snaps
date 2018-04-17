@@ -371,7 +371,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.assertEqual(1, len(net_creators[0].get_network().subnets))
         subnet = net_creators[0].get_network().subnets[0]
         subnet_by_name = neutron_utils.get_subnet(
-            neutron, subnet_name=subnet.name)
+            neutron, net_creators[0].get_network(), subnet_name=subnet.name)
         self.assertEqual(subnet, subnet_by_name)
 
         subnet_by_id = neutron_utils.get_subnet_by_id(neutron, subnet.id)

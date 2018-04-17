@@ -206,16 +206,17 @@ def delete_subnet(neutron, subnet):
         neutron.delete_subnet(subnet.id)
 
 
-def get_subnet(neutron, subnet_settings=None, subnet_name=None):
+def get_subnet(neutron, network, subnet_settings=None, subnet_name=None):
     """
     Returns the first subnet object that fits the query else None including
     if subnet_settings or subnet_name parameters are None.
     :param neutron: the client
+    :param network: the associated SNAPS-OO Network domain object
     :param subnet_settings: the subnet settings of the object to retrieve
     :param subnet_name: the name of the subnet to retrieve
     :return: a SNAPS-OO Subnet domain object or None
     """
-    sub_filter = dict()
+    sub_filter = {'network_id': network.id}
     if subnet_settings:
         sub_filter['name'] = subnet_settings.name
         sub_filter['cidr'] = subnet_settings.cidr
@@ -244,6 +245,33 @@ def get_subnet(neutron, subnet_settings=None, subnet_name=None):
     subnets = neutron.list_subnets(**sub_filter)
     for subnet in subnets['subnets']:
         return Subnet(**subnet)
+
+
+def get_subnet_by_name(neutron, keystone, subnet_name, project_name=None):
+    """
+    Returns the first subnet object that fits the query else None including
+    if subnet_settings or subnet_name parameters are None.
+    :param neutron: the Neutron client
+    :param keystone: the Keystone client
+    :param subnet_name: the name of the subnet to retrieve
+    :param project_name: the name of the associated project to the subnet to
+                         retrieve
+    :return: a SNAPS-OO Subnet domain object or None
+    """
+    project = None
+    if project_name:
+        project = keystone_utils.get_project(
+            keystone, project_name=project_name)
+    if project:
+        sub_filter = {'name': subnet_name, 'project_id': project.id}
+        subnets = neutron.list_subnets(**sub_filter)
+        for subnet in subnets['subnets']:
+            return Subnet(**subnet)
+    else:
+        sub_filter = {'name': subnet_name}
+        subnets = neutron.list_subnets(**sub_filter)
+        for subnet in subnets['subnets']:
+            return Subnet(**subnet)
 
 
 def get_subnet_by_id(neutron, subnet_id):
@@ -623,17 +651,14 @@ def get_security_group(neutron, keystone, sec_grp_settings=None,
         return None
 
     groups = neutron.list_security_groups(**sec_grp_filter)
-    group = None
     for group in groups['security_groups']:
         if project_name:
             project = keystone_utils.get_project_by_id(
                 keystone, group['tenant_id'])
             if project and project_name == project.name:
-                break
+                return __map_os_security_group(neutron, group)
         else:
-            break
-    if group:
-        return __map_os_security_group(neutron, group)
+            return __map_os_security_group(neutron, group)
 
 
 def __map_os_security_group(neutron, os_sec_grp):
