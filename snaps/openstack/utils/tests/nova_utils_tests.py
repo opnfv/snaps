@@ -269,7 +269,8 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
             self.image_creator.create()
 
             network_settings = openstack_tests.get_priv_net_config(
-                guid + '-net', guid + '-subnet').network_settings
+                self.os_creds.project_name, guid + '-net',
+                guid + '-subnet').network_settings
             self.network_creator = OpenStackNetwork(
                 self.os_creds, network_settings)
             self.network_creator.create()
@@ -393,7 +394,8 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
             self.image_creator.create()
 
             network_settings = openstack_tests.get_priv_net_config(
-                guid + '-net', guid + '-subnet').network_settings
+                self.os_creds.project_name, guid + '-net',
+                guid + '-subnet').network_settings
             self.network_creator = OpenStackNetwork(
                 self.os_creds, network_settings)
             self.network_creator.create()

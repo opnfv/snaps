@@ -90,6 +90,7 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
 
             # First network is public
             self.pub_net_config = openstack_tests.get_pub_net_config(
+                project_name=self.os_creds.project_name,
                 net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
                 router_name=guid + '-pub-router',
                 external_net=self.ext_net_name)
