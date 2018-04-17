@@ -41,7 +41,10 @@ openstack:
         name: simple-router
         external_gateway: external
         internal_subnets:
-          - simple-subnet
+          - subnet:
+              project_name: admin
+              network_name: simple-net
+              subnet_name: simple-subnet
   keypairs:
     - keypair:
         name: simple-kp

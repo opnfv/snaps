@@ -48,7 +48,10 @@ openstack:
         name: router-1
         external_gateway: external
         internal_subnets:
-          - subnet-1
+          - subnet:
+              project_name: admin
+              network_name: net-1
+              subnet_name: subnet-1
   keypairs:
     - keypair:
         name: two-net

@@ -365,6 +365,7 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
 
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.net_config = openstack_tests.get_pub_net_config(
+            project_name=self.os_creds.project_name,
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
             router_name=guid + '-pub-router', external_net=self.ext_net_name,
             netconf_override=self.netconf_override)
@@ -395,7 +396,7 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         # Create Network
         self.net_creator = OpenStackNetwork(
             self.os_creds, self.net_config.network_settings)
-        self.net_creator.create()
+        network = self.net_creator.create()
 
         # Validate network was created
         self.assertTrue(neutron_utils_tests.validate_network(
@@ -405,7 +406,7 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
 
         # Validate subnets
         self.assertTrue(neutron_utils_tests.validate_subnet(
-            self.neutron,
+            self.neutron, network,
             self.net_creator.network_settings.subnet_settings[0].name,
             self.net_creator.network_settings.subnet_settings[0].cidr, True))
 
@@ -441,7 +442,7 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
         # Create Network
         self.net_creator = OpenStackNetwork(
             self.os_creds, self.net_config.network_settings)
-        self.net_creator.create()
+        network = self.net_creator.create()
 
         # Create Router
         self.router_creator = create_router.OpenStackRouter(
@@ -456,7 +457,7 @@ class CreateNetworkSuccessTests(OSIntegrationTestCase):
 
         # Validate subnets
         self.assertTrue(neutron_utils_tests.validate_subnet(
-            self.neutron,
+            self.neutron, network,
             self.net_creator.network_settings.subnet_settings[0].name,
             self.net_creator.network_settings.subnet_settings[0].cidr, True))
 
@@ -616,7 +617,7 @@ class CreateNetworkGatewayTests(OSIntegrationTestCase):
 
         # Validate subnets
         self.assertTrue(neutron_utils_tests.validate_subnet(
-            self.neutron,
+            self.neutron, out_net,
             self.net_creator.network_settings.subnet_settings[0].name,
             self.net_creator.network_settings.subnet_settings[0].cidr, True))
 
@@ -645,7 +646,7 @@ class CreateNetworkGatewayTests(OSIntegrationTestCase):
 
         # Validate subnets
         self.assertTrue(neutron_utils_tests.validate_subnet(
-            self.neutron,
+            self.neutron, out_net,
             self.net_creator.network_settings.subnet_settings[0].name,
             self.net_creator.network_settings.subnet_settings[0].cidr, True))
 
@@ -674,7 +675,7 @@ class CreateNetworkGatewayTests(OSIntegrationTestCase):
 
         # Validate subnets
         self.assertTrue(neutron_utils_tests.validate_subnet(
-            self.neutron,
+            self.neutron, out_net,
             self.net_creator.network_settings.subnet_settings[0].name,
             self.net_creator.network_settings.subnet_settings[0].cidr, True))
 
@@ -812,6 +813,7 @@ class CreateNetworkTypeTests(OSComponentTestCase):
         """
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.net_config = openstack_tests.get_pub_net_config(
+            project_name=self.os_creds.project_name,
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet')
 
         self.neutron = neutron_utils.neutron_client(
@@ -959,6 +961,7 @@ class CreateMultipleNetworkTests(OSIntegrationTestCase):
 
         guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
         self.net_config = openstack_tests.get_pub_net_config(
+            project_name=self.os_creds.project_name,
             net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet')
 
         self.neutron = neutron_utils.neutron_client(
