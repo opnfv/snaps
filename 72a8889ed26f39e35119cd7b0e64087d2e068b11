@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_5bdc7573",
+        "filename": "snaps/openstack/utils/tests/neutron_utils_tests.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1034,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-04-17T16:27:04Z",
+      "side": 1,
+      "message": "No need for this assertion",
+      "revId": "72a8889ed26f39e35119cd7b0e64087d2e068b11",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_bbe5b939",
+        "filename": "snaps/openstack/utils/tests/neutron_utils_tests.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-04-17T16:27:04Z",
+      "side": 1,
+      "message": "No need for this assertion and it is incorrect and will cause a test failure.\nAlso, pep8 - line wrap \u003e 79",
+      "revId": "72a8889ed26f39e35119cd7b0e64087d2e068b11",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_9be27d2d",
+        "filename": "snaps/openstack/utils/tests/neutron_utils_tests.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-04-17T16:27:04Z",
+      "side": 1,
+      "message": "Add a line here, pep8",
+      "revId": "72a8889ed26f39e35119cd7b0e64087d2e068b11",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
