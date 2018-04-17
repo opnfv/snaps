@@ -96,7 +96,7 @@ class OpenStackVmInstance(OpenStackComputeObject):
         """
         self.initialize()
 
-        if len(self.__ports) == 0:
+        if len(self.__ports) != len(self.instance_settings.port_settings):
             self.__ports = self.__create_ports(
                 self.instance_settings.port_settings)
         if not self.__vm:
@@ -346,12 +346,13 @@ class OpenStackVmInstance(OpenStackComputeObject):
 
         for port_setting in port_settings:
             port = neutron_utils.get_port(
-                self.__neutron, self.__keystone, port_settings=port_setting)
+                self.__neutron, self.__keystone, port_settings=port_setting,
+                project_name=self._os_creds.project_name)
             if not port:
                 port = neutron_utils.create_port(
                     self.__neutron, self._os_creds, port_setting)
-                if port:
-                    ports.append((port_setting.name, port))
+            if port:
+                ports.append((port_setting.name, port))
 
         return ports
 
@@ -390,8 +391,10 @@ class OpenStackVmInstance(OpenStackComputeObject):
         port = self.get_port_by_name(port_name)
         if port:
             if subnet_name:
+                network = neutron_utils.get_network_by_id(
+                    self.__neutron, port.network_id)
                 subnet = neutron_utils.get_subnet(
-                    self.__neutron, subnet_name=subnet_name)
+                    self.__neutron, network, subnet_name=subnet_name)
                 if not subnet:
                     logger.warning('Cannot retrieve port IP as subnet could '
                                    'not be located with name - %s',
