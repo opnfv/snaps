@@ -52,7 +52,10 @@ openstack:
         name: ext-net-router
         external_gateway: ext-net
         internal_subnets:
-          - internal-subnet
+          - subnet:
+              project_name: admin
+              network_name: internal-net
+              subnet_name: internal-subnet
   keypairs:
     - keypair:
         name: ext-net-kp
