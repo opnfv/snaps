@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_6a15153f",
+        "filename": "snaps/openstack/utils/neutron_utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 2091
+      },
+      "writtenOn": "2018-04-19T10:40:00Z",
+      "side": 1,
+      "message": "if no sec_grp_name or settings is provided, it will return the first security group that comes with the list method. Why would we want that? Apart from that, this change is not described by the commit message, was this change mixed into this patch by mistake?",
+      "revId": "10dee055774604595a6b54ad58ada0427809a67d",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
