@@ -342,16 +342,18 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
         # Wait until instance is ACTIVE
         iters = 0
         active = False
+        status = None
         while iters < 60:
-            if create_instance.STATUS_ACTIVE == nova_utils.get_server_status(
-                    self.nova, self.vm_inst):
+            status = nova_utils.get_server_status(self.nova, self.vm_inst)
+            if create_instance.STATUS_ACTIVE == status:
                 active = True
                 break
 
             time.sleep(3)
             iters += 1
 
-        self.assertTrue(active)
+        self.assertTrue(active, msg='VM {} status {} is not {}'.format(
+            self.vm_inst.name, status, create_instance.STATUS_ACTIVE))
         vm_inst = nova_utils.get_latest_server_object(
             self.nova, self.neutron, self.keystone, self.vm_inst,
             self.os_creds.project_name)
