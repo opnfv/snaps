@@ -14,6 +14,8 @@
 # limitations under the License.
 import logging
 
+import six
+
 from neutronclient.common.exceptions import NotFound, Unauthorized
 
 from snaps.config.router import RouterConfig
@@ -149,7 +151,7 @@ class OpenStackRouter(OpenStackNetworkObject):
         :param sub_config:
         :return:
         """
-        if isinstance(sub_config, str):
+        if isinstance(sub_config, six.text_type):
             return neutron_utils.get_subnet_by_name(
                 self._neutron, self._keystone,
                 subnet_name=sub_config)
