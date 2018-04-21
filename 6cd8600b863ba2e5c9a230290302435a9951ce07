@@ -16,6 +16,23 @@
       "revId": "6cd8600b863ba2e5c9a230290302435a9951ce07",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_475e4f77",
+        "filename": "snaps/openstack/create_router.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 3405
+      },
+      "writtenOn": "2018-04-21T10:46:13Z",
+      "side": 1,
+      "message": "or isinstance(str(sub_config), str) to avoid six but I prefer the first proposal.",
+      "revId": "6cd8600b863ba2e5c9a230290302435a9951ce07",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
