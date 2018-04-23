@@ -413,13 +413,18 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
 
         self.assertIsNotNone(ext_net)
         self.assertIsNotNone(router.port_subnets)
+
+        id_found = False
         for port, subnets in router.port_subnets:
             self.assertIsNotNone(subnets)
             self.assertIsNotNone(port)
-            self.assertEqual(ext_net.id, port.network_id)
-            for subnet in subnets:
-                self.assertIsNotNone(subnet)
-                self.assertEqual(ext_net.id, subnet.network_id)
+
+            if ext_net.id == port.network_id:
+                id_found = True
+                for subnet in subnets:
+                    self.assertIsNotNone(subnet)
+                    self.assertEqual(ext_net.id, subnet.network_id)
+        self.assertTrue(id_found)
 
     def check_router_recreation(self, router, orig_settings):
         """
