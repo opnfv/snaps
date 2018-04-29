@@ -13,4 +13,3 @@ wrapt>=1.7.0 # BSD License
 scp
 cryptography>=2.1 # BSD/Apache-2.0
 concurrencytest
-six>=1.10.0 # MIT
