@@ -400,11 +400,11 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
                 self.os_creds, network_settings)
             self.network_creator.create()
 
+            flavor_settings = FlavorConfig(
+                name=self.flavor_name, ram=256, disk=10, vcpus=1,
+                metadata=self.flavor_metadata)
             self.flavor_creator = OpenStackFlavor(
-                self.os_creds,
-                FlavorConfig(
-                    name=guid + '-flavor-name', ram=256, disk=10, vcpus=1,
-                    metadata=self.flavor_metadata))
+                self.os_creds, flavor_settings)
             self.flavor_creator.create()
 
             # Create Volume
