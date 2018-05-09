@@ -170,6 +170,8 @@ class OSIntegrationTestCase(OSComponentTestCase):
 
             # Set by implementing class for setting the user's roles
             roles = dict()
+            self.user_roles = list()                                             
+            self.user_roles.append('admin')                                  
             if self.user_roles:
                 for user_role in self.user_roles:
                     roles[user_role] = project_name
