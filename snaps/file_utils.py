@@ -12,6 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import ssl
+
 import os
 import logging
 
@@ -168,7 +170,8 @@ def __get_url_response(url):
     proxy_handler = urllib.ProxyHandler({})
     opener = urllib.build_opener(proxy_handler)
     urllib.install_opener(opener)
-    return urllib.urlopen(url)
+    context = ssl._create_unverified_context()
+    return urllib.urlopen(url, context=context)
 
 
 def read_yaml(config_file_path):

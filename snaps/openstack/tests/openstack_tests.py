@@ -16,6 +16,7 @@ import logging
 import re
 
 from snaps import file_utils
+from snaps.config.flavor import FlavorConfig
 from snaps.config.image import ImageConfig
 from snaps.config.network import NetworkConfig, SubnetConfig
 from snaps.config.router import RouterConfig
@@ -326,6 +327,32 @@ def get_pub_net_config(
     return OSNetworkConfig(project_name, net_name, subnet_name, cidr,
                            router_name, external_gateway=external_net,
                            netconf_override=netconf_override)
+
+
+def get_flavor_config(name, ram, disk, vcpus, ephemeral=None, swap=None,
+                      rxtx_factor=None, is_public=None, metadata=None):
+    if metadata:
+        if 'ram' in metadata:
+            ram = metadata['ram']
+        if 'disk' in metadata:
+            disk = metadata['disk']
+        if 'vcpus' in metadata:
+            vcpus = metadata['vcpus']
+        if 'ephemeral' in metadata:
+            ephemeral = metadata['ephemeral']
+        if 'swap' in metadata:
+            swap = metadata['swap']
+        if 'rxtx_factor' in metadata:
+            rxtx_factor = metadata['rxtx_factor']
+        if 'is_public' in metadata:
+            is_public = metadata['is_public']
+        if 'metadata' in metadata:
+            metadata = metadata['metadata']
+
+    return FlavorConfig(
+        name=name, ram=ram, disk=disk, vcpus=vcpus, ephemeral=ephemeral,
+        swap=swap, rxtx_factor=rxtx_factor, is_public=is_public,
+        metadata=metadata)
 
 
 class OSNetworkConfig:
