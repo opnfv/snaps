@@ -167,6 +167,7 @@ class HeatUtilsCreateSimpleStackTests(OSComponentTestCase):
                                                    self.stack1.id)
         self.assertEqual(self.stack1, stack_query_3)
 
+        resources=list()
         resources = heat_utils.get_resources(self.heat_client, self.stack1.id)
         self.assertIsNotNone(resources)
         self.assertEqual(4, len(resources))
