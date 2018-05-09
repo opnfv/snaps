@@ -192,6 +192,12 @@ class Router:
 
             self.external_network_id = gateway_info.get('network_id')
             self.external_fixed_ips = gateway_info.get('external_fixed_ips')
+       elif (kwargs.get('external_gateway_info') and                       
+                isinstance(kwargs.get('external_gateway_info'), dict)):      
+            gateway_info = kwargs.get('external_gateway_info')                
+                                                                              
+            self.external_network_id = gateway_info.get('network_id')         
+            self.external_fixed_ips = gateway_info.get('external_fixed_ips')  
         else:
             self.external_fixed_ips = kwargs.get('external_fixed_ips', None)
             self.external_network_id = kwargs.get('external_network_id', None)
