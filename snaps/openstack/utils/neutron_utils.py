@@ -388,7 +388,7 @@ def get_router(neutron, keystone, router_settings=None, router_name=None,
         if project_name:
             if 'project_id' in os_router.keys():
                 project = keystone_utils.get_project_by_id(
-                    keystone, os_router['project_id'])
+                    keystone, os_router['tenant_id'])
             else:
                 project = keystone_utils.get_project_by_id(
                     keystone, os_router['tenant_id'])
@@ -559,7 +559,7 @@ def get_port(neutron, keystone, port_settings=None, port_name=None,
         if project_name:
             if 'project_id' in port.keys():
                 project = keystone_utils.get_project_by_id(
-                    keystone, port['project_id'])
+                    keystone, port['tenant_id'])
             else:
                 project = keystone_utils.get_project_by_id(
                     keystone, port['tenant_id'])
