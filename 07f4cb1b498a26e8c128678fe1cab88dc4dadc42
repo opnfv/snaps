@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_edcbd650",
+        "filename": "snaps/domain/network.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-05-10T15:07:33Z",
+      "side": 1,
+      "message": "This block is the same as the one above, and does not appear to be changing any logic whatsoever. What is the purpose?",
+      "revId": "07f4cb1b498a26e8c128678fe1cab88dc4dadc42",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
