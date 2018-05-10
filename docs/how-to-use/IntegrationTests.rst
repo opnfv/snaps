@@ -536,6 +536,17 @@ create_stack_tests.py - CreateStackNestedResourceTests
 |                                       |               | initialized OpenStackVmInstance objects                   |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_stack_tests.py - CreateStackUpdateTests
+----------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             |   Heat API    | Description                                               |
++=======================================+===============+===========================================================+
+| test_update                           | 1             | Ensures that an OpenStackHeatStack can have the number of |
+|                                       |               | VMs updated and they are spawned and access can be        |
+|                                       |               | obtained with SSH over floating IPs                       |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_stack_tests.py - CreateStackRouterTests
 ----------------------------------------------
 

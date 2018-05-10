@@ -94,7 +94,8 @@ from snaps.openstack.tests.create_stack_tests import (
     StackSettingsUnitTests, CreateStackSuccessTests, CreateStackNegativeTests,
     CreateStackFlavorTests, CreateStackFloatingIpTests,
     CreateStackNestedResourceTests, CreateStackKeypairTests,
-    CreateStackVolumeTests, CreateStackSecurityGroupTests)
+    CreateStackVolumeTests, CreateStackSecurityGroupTests,
+    CreateStackUpdateTests)
 from snaps.openstack.tests.create_user_tests import (
     UserSettingsUnitTests, CreateUserSuccessTests)
 from snaps.openstack.tests.create_volume_tests import (
@@ -680,6 +681,11 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
             log_level=log_level))
         suite.addTest(OSIntegrationTestCase.parameterize(
             CreateStackNestedResourceTests, os_creds=os_creds,
+            ext_net_name=ext_net_name, use_keystone=use_keystone,
+            flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+            log_level=log_level))
+        suite.addTest(OSIntegrationTestCase.parameterize(
+            CreateStackUpdateTests, os_creds=os_creds,
             ext_net_name=ext_net_name, use_keystone=use_keystone,
             flavor_metadata=flavor_metadata, image_metadata=image_metadata,
             log_level=log_level))
