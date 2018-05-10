@@ -206,9 +206,14 @@ def __map_os_server_obj_to_vm_inst(neutron, keystone, os_server,
             network = neutron_utils.get_network(
                 neutron, keystone, network_name=net_name,
                 project_name=project_name)
-            ports = neutron_utils.get_ports(neutron, network, ips)
-            for port in ports:
-                out_ports.append(port)
+            if network:
+                ports = neutron_utils.get_ports(neutron, network, ips)
+                for port in ports:
+                    out_ports.append(port)
+            else:
+                raise NovaException(
+                    'Network not found in project {} with name {}'.format(
+                        project_name, net_name))
 
     volumes = None
     if hasattr(os_server, 'os-extended-volumes:volumes_attached'):
