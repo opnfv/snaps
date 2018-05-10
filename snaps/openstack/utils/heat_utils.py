@@ -144,6 +144,28 @@ def create_stack(heat_cli, stack_settings):
     return get_stack_by_id(heat_cli, stack_id=stack['stack']['id'])
 
 
+def update_stack(heat_cli, stack, env_vals):
+    """
+    Updates the specified parameters in the stack
+    :param heat_cli: the OpenStack heat client object
+    :param stack_settings: the stack configuration
+    :return: the Stack domain object
+    """
+    args = dict()
+
+    args['stack_name'] = stack.name
+    args['existing'] = True
+
+    if env_vals:
+        args['parameters'] = env_vals
+        os_stack = heat_cli.stacks.update(**args)
+        return get_stack_by_id(heat_cli, stack_id=os_stack['stack']['id'])
+    else:
+        logger.warn('Stack not updated, env_vals are None')
+        return get_stack_by_id(heat_cli, stack_id=stack.id)
+
+
+
 def delete_stack(heat_cli, stack):
     """
     Deletes the Heat stack
