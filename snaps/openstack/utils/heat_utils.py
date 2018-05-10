@@ -15,17 +15,17 @@
 import logging
 import os
 
-import yaml
 from heatclient.client import Client
 from heatclient.common.template_format import yaml_loader
 from novaclient.exceptions import NotFound
 from oslo_serialization import jsonutils
+import yaml
 
 from snaps import file_utils
 from snaps.domain.stack import Stack, Resource, Output
-
 from snaps.openstack.utils import (
     keystone_utils, neutron_utils, nova_utils, cinder_utils)
+
 
 __author__ = 'spisarski'
 
@@ -141,6 +141,24 @@ def create_stack(heat_cli, stack_settings):
     stack = heat_cli.stacks.create(**args)
 
     return get_stack_by_id(heat_cli, stack_id=stack['stack']['id'])
+
+
+def update_stack(heat_cli, stack, env_vals):
+    """
+    Updates the specified parameters in the stack
+    :param heat_cli: the OpenStack heat client object
+    :param stack_settings: the stack configuration
+    """
+    args = dict()
+
+    args['stack_name'] = stack.name
+    args['existing'] = True
+
+    if env_vals:
+        args['parameters'] = env_vals
+        heat_cli.stacks.update(stack.id, **args)
+    else:
+        logger.warn('Stack not updated, env_vals are None')
 
 
 def delete_stack(heat_cli, stack):

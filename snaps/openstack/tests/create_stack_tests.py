@@ -12,36 +12,36 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 import os
 import time
-
-import pkg_resources
-from heatclient.exc import HTTPBadRequest
-
-import snaps
-from snaps import file_utils
-from snaps.config.flavor import FlavorConfig
-from snaps.config.image import ImageConfig
-from snaps.config.stack import StackConfigError, StackConfig
-from snaps.openstack.create_flavor import OpenStackFlavor
-from snaps.openstack.create_image import OpenStackImage
-
-try:
-    from urllib.request import URLError
-except ImportError:
-    from urllib2 import URLError
-
-import logging
 import unittest
 import uuid
 
+from heatclient.exc import HTTPBadRequest
+import pkg_resources
+
+from snaps import file_utils
+import snaps
+from snaps.config.flavor import FlavorConfig
+from snaps.config.image import ImageConfig
+from snaps.config.stack import StackConfigError, StackConfig
 from snaps.openstack import create_stack
+from snaps.openstack.create_flavor import OpenStackFlavor
+from snaps.openstack.create_image import OpenStackImage
 from snaps.openstack.create_stack import (
     StackSettings, StackCreationError, StackError, OpenStackHeatStack)
 from snaps.openstack.tests import openstack_tests, create_instance_tests
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import (
     heat_utils, neutron_utils, nova_utils, keystone_utils)
+
+
+try:
+    from urllib.request import URLError
+except ImportError:
+    from urllib2 import URLError
+
 
 __author__ = 'spisarski'
 
@@ -400,7 +400,8 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
 
         nova = nova_utils.nova_client(self.os_creds, self.os_session)
         neutron = neutron_utils.neutron_client(self.os_creds, self.os_session)
-        keystone = keystone_utils.keystone_client(self.os_creds, self.os_session)
+        keystone = keystone_utils.keystone_client(
+            self.os_creds, self.os_session)
         vm_inst_by_name = nova_utils.get_server(
             nova, neutron, keystone,
             server_name=vm_inst_creators[0].get_vm_inst().name)
@@ -651,6 +652,134 @@ class CreateStackNestedResourceTests(OSIntegrationTestCase):
             heat_keypair_option='private_key')
         self.assertIsNotNone(self.vm_inst_creators)
         self.assertEqual(1, len(self.vm_inst_creators))
+
+        for vm_inst_creator in self.vm_inst_creators:
+            self.assertTrue(
+                create_instance_tests.validate_ssh_client(vm_inst_creator))
+
+
+class CreateStackUpdateTests(OSIntegrationTestCase):
+    """
+    Tests to ensure that stack update commands work
+    """
+
+    def setUp(self):
+        self.user_roles = ['heat_stack_owner']
+
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+
+        self.heat_cli = heat_utils.heat_client(self.os_creds, self.os_session)
+        self.stack_creator = None
+
+        self.image_creator = OpenStackImage(
+            self.os_creds, openstack_tests.cirros_image_settings(
+                name=self.guid + '-image',
+                image_metadata=self.image_metadata))
+        self.image_creator.create()
+
+        self.flavor_creator = OpenStackFlavor(
+            self.admin_os_creds,
+            FlavorConfig(
+                name=self.guid + '-flavor-name', ram=256, disk=10, vcpus=1))
+        self.flavor_creator.create()
+
+        env_values = {
+            'network_name': self.guid + '-network',
+            'public_network': self.ext_net_name,
+            'agent_image': self.image_creator.image_settings.name,
+            'agent_flavor': self.flavor_creator.flavor_settings.name,
+            'key_name': self.guid + '-key',
+        }
+
+        heat_tmplt_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'agent-group.yaml')
+        heat_resource_path = pkg_resources.resource_filename(
+            'snaps.openstack.tests.heat', 'agent.yaml')
+
+        stack_settings = StackConfig(
+            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            template_path=heat_tmplt_path,
+            resource_files=[heat_resource_path],
+            env_values=env_values)
+
+        self.stack_creator = OpenStackHeatStack(
+            self.os_creds, stack_settings,
+            [self.image_creator.image_settings])
+
+        self.vm_inst_creators = list()
+
+    def tearDown(self):
+        """
+        Cleans the stack and downloaded stack file
+        """
+        if self.stack_creator:
+            try:
+                self.stack_creator.clean()
+            except:
+                pass
+
+        if self.image_creator:
+            try:
+                self.image_creator.clean()
+            except:
+                pass
+
+        if self.flavor_creator:
+            try:
+                self.flavor_creator.clean()
+            except:
+                pass
+
+        for vm_inst_creator in self.vm_inst_creators:
+            try:
+                keypair_settings = vm_inst_creator.keypair_settings
+                if keypair_settings and keypair_settings.private_filepath:
+                    expanded_path = os.path.expanduser(
+                        keypair_settings.private_filepath)
+                    os.chmod(expanded_path, 0o755)
+                    os.remove(expanded_path)
+            except:
+                pass
+
+        super(self.__class__, self).__clean__()
+
+    def test_update(self):
+        """
+        Tests the update of an OpenStack stack from Heat template file
+        by changing the number of VM instances from 1 to 2, and
+        the retrieval of two VM instance creators and attempt to connect via
+        SSH to the first one with a floating IP.
+        """
+        created_stack = self.stack_creator.create()
+        self.assertIsNotNone(created_stack)
+
+        self.vm_inst_creators = self.stack_creator.get_vm_inst_creators(
+            heat_keypair_option='private_key')
+        self.assertIsNotNone(self.vm_inst_creators)
+        self.assertEqual(1, len(self.vm_inst_creators))
+
+        for vm_inst_creator in self.vm_inst_creators:
+            self.assertTrue(
+                create_instance_tests.validate_ssh_client(vm_inst_creator))
+
+        env_values = {
+            'network_name': self.guid + '-network',
+            'public_network': self.ext_net_name,
+            'agent_count': 2,
+            'agent_image': self.image_creator.image_settings.name,
+            'agent_flavor': self.flavor_creator.flavor_settings.name,
+            'key_name': self.guid + '-key',
+        }
+
+        updated_stack = self.stack_creator.update(env_values)
+        self.assertIsNotNone(updated_stack)
+
+        self.vm_inst_creators = self.stack_creator.get_vm_inst_creators(
+            heat_keypair_option='private_key')
+        self.assertIsNotNone(self.vm_inst_creators)
+        self.assertEqual(2, len(self.vm_inst_creators))
 
         for vm_inst_creator in self.vm_inst_creators:
             self.assertTrue(
