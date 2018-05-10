@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_8db7b2f4",
+        "filename": "snaps/openstack/tests/cluster_template_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-05-10T14:11:18Z",
+      "side": 1,
+      "message": "Those are the default values",
+      "parentUuid": "5a3f45e8_f240d7a6",
+      "range": {
+        "startLine": 73,
+        "startChar": 40,
+        "endLine": 74,
+        "endChar": 20
+      },
+      "revId": "44e8131216787127980558824b2a1def94fe317e",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_d23ddb2c",
         "filename": "snaps/openstack/tests/create_stack_tests.py",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_edcf567d",
+        "filename": "snaps/openstack/tests/create_stack_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-05-10T14:11:18Z",
+      "side": 1,
+      "message": "defaults to be overridden by flavor_metadata - see implementation in the new function get_flavor_config()",
+      "parentUuid": "5a3f45e8_d23ddb2c",
+      "range": {
+        "startLine": 153,
+        "startChar": 45,
+        "endLine": 155,
+        "endChar": 19
+      },
+      "revId": "44e8131216787127980558824b2a1def94fe317e",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_3247dfbd",
         "filename": "snaps/openstack/tests/openstack_tests.py",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2018-05-10T07:55:40Z",
       "side": 1,
       "message": "Why a re you setting the the ram and vcpus this way ? You include those in a dict which is called metadata. But the vcpu and ram is not metadata of a flavor is parameters. metadata of flavor is for example vcpu-limit, hugepages ,etc.",
+      "range": {
+        "startLine": 332,
+        "startChar": 0,
+        "endLine": 350,
+        "endChar": 43
+      },
+      "revId": "44e8131216787127980558824b2a1def94fe317e",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_cdcc1a8c",
+        "filename": "snaps/openstack/tests/openstack_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-05-10T14:11:18Z",
+      "side": 1,
+      "message": "the hugepages and other values that you speak of need to be set as dictionary items in the FlavorConfig() metadata member.",
+      "parentUuid": "5a3f45e8_3247dfbd",
       "range": {
         "startLine": 332,
         "startChar": 0,
