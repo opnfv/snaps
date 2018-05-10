@@ -70,7 +70,7 @@ resources:
   network:
         type: OS::Neutron::Net
         properties:
-          name: { get_param: agent_count }
+          name: { get_param: network_name }
 
   subnet:
         type: OS::Neutron::Subnet
