@@ -149,11 +149,7 @@ class OpenStackRouter(OpenStackNetworkObject):
         :param sub_config:
         :return:
         """
-        if isinstance(sub_config, str):
-            return neutron_utils.get_subnet_by_name(
-                self._neutron, self._keystone,
-                subnet_name=sub_config)
-        if isinstance(sub_config, dict):
+       if isinstance(sub_config, dict):
             sub_dict = sub_config['subnet']
             network = neutron_utils.get_network(
                 self._neutron, self._keystone,
@@ -163,6 +159,10 @@ class OpenStackRouter(OpenStackNetworkObject):
                 return neutron_utils.get_subnet(
                     self._neutron, network,
                     subnet_name=sub_dict['subnet_name'])
+        else:
+            return neutron_utils.get_subnet_by_name(
+                self._neutron, self._keystone,
+                subnet_name=sub_config)
 
     def clean(self):
         """
