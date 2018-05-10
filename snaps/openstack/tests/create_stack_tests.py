@@ -208,7 +208,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
-        created_stack = self.stack_creator.create()
+        created_stack = self.stack_creator.create(block=True)
         self.assertIsNotNone(created_stack)
 
         retrieved_stack = heat_utils.get_stack_by_id(self.heat_cli,
@@ -239,7 +239,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
         with self.assertRaises(StackCreationError):
-            self.stack_creator.create()
+            self.stack_creator.create(block=True)
 
     def test_create_stack_template_dict(self):
         """
@@ -256,7 +256,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
-        created_stack = self.stack_creator.create()
+        created_stack = self.stack_creator.create(block=True)
         self.assertIsNotNone(created_stack)
 
         retrieved_stack = heat_utils.get_stack_by_id(self.heat_cli,
@@ -280,7 +280,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
-        created_stack = self.stack_creator.create()
+        created_stack = self.stack_creator.create(block=True)
         self.assertIsNotNone(created_stack)
 
         retrieved_stack = heat_utils.get_stack_by_id(self.heat_cli,
@@ -324,7 +324,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
-        created_stack1 = self.stack_creator.create()
+        created_stack1 = self.stack_creator.create(block=True)
 
         retrieved_stack = heat_utils.get_stack_by_id(self.heat_cli,
                                                      created_stack1.id)
@@ -335,7 +335,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
 
         # Should be retrieving the instance data
         stack_creator2 = OpenStackHeatStack(self.os_creds, stack_settings)
-        stack2 = stack_creator2.create()
+        stack2 = stack_creator2.create(block=True)
         self.assertEqual(created_stack1.id, stack2.id)
 
     def test_retrieve_network_creators(self):
@@ -349,7 +349,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
-        created_stack = self.stack_creator.create()
+        created_stack = self.stack_creator.create(block=True)
         self.assertIsNotNone(created_stack)
 
         net_creators = self.stack_creator.get_network_creators()
@@ -390,7 +390,7 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
-        created_stack = self.stack_creator.create()
+        created_stack = self.stack_creator.create(block=True)
         self.assertIsNotNone(created_stack)
 
         vm_inst_creators = self.stack_creator.get_vm_inst_creators()
@@ -502,7 +502,7 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings,
             [self.image_creator.image_settings])
-        created_stack = self.stack_creator.create()
+        created_stack = self.stack_creator.create(block=True)
         self.assertIsNotNone(created_stack)
 
         self.vm_inst_creators = self.stack_creator.get_vm_inst_creators(
@@ -531,7 +531,7 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings,
             [self.image_creator.image_settings])
-        created_stack = self.stack_creator.create()
+        created_stack = self.stack_creator.create(block=True)
         self.assertIsNotNone(created_stack)
 
         derived_stack = create_stack.generate_creator(
@@ -647,7 +647,7 @@ class CreateStackNestedResourceTests(OSIntegrationTestCase):
         the retrieval of two VM instance creators and attempt to connect via
         SSH to the first one with a floating IP.
         """
-        created_stack = self.stack_creator.create()
+        created_stack = self.stack_creator.create(block=True)
         self.assertIsNotNone(created_stack)
 
         self.vm_inst_creators = self.stack_creator.get_vm_inst_creators(
@@ -701,7 +701,7 @@ class CreateStackRouterTests(OSIntegrationTestCase):
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
-        self.created_stack = self.stack_creator.create()
+        self.created_stack = self.stack_creator.create(block=True)
         self.assertIsNotNone(self.created_stack)
 
     def tearDown(self):
@@ -767,7 +767,7 @@ class CreateStackVolumeTests(OSIntegrationTestCase):
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
-        self.created_stack = self.stack_creator.create()
+        self.created_stack = self.stack_creator.create(block=True)
         self.assertIsNotNone(self.created_stack)
 
     def tearDown(self):
@@ -853,7 +853,7 @@ class CreateStackFlavorTests(OSIntegrationTestCase):
             template_path=self.heat_tmplt_path)
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
-        self.created_stack = self.stack_creator.create()
+        self.created_stack = self.stack_creator.create(block=True)
         self.assertIsNotNone(self.created_stack)
 
     def tearDown(self):
@@ -919,7 +919,7 @@ class CreateStackKeypairTests(OSIntegrationTestCase):
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
-        self.created_stack = self.stack_creator.create()
+        self.created_stack = self.stack_creator.create(block=True)
         self.assertIsNotNone(self.created_stack)
 
         self.keypair_creators = list()
@@ -1003,7 +1003,7 @@ class CreateStackSecurityGroupTests(OSIntegrationTestCase):
             env_values=self.env_values)
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
-        self.created_stack = self.stack_creator.create()
+        self.created_stack = self.stack_creator.create(block=True)
         self.assertIsNotNone(self.created_stack)
 
     def tearDown(self):
@@ -1092,7 +1092,7 @@ class CreateStackNegativeTests(OSIntegrationTestCase):
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
         with self.assertRaises(HTTPBadRequest):
-            self.stack_creator.create()
+            self.stack_creator.create(block=True)
 
     def test_bad_stack_file(self):
         """
@@ -1103,7 +1103,7 @@ class CreateStackNegativeTests(OSIntegrationTestCase):
         self.stack_creator = OpenStackHeatStack(
             self.os_creds, stack_settings)
         with self.assertRaises(IOError):
-            self.stack_creator.create()
+            self.stack_creator.create(block=True)
 
 
 class CreateStackFailureTests(OSIntegrationTestCase):
@@ -1200,7 +1200,7 @@ class CreateStackFailureTests(OSIntegrationTestCase):
 
         with self.assertRaises(StackError):
             try:
-                self.stack_creator.create()
+                self.stack_creator.create(block=True)
             except StackError:
                 resources = heat_utils.get_resources(
                     self.heat_cli, self.stack_creator.get_stack().id)
