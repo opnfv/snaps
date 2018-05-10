@@ -93,7 +93,8 @@ class OSIntegrationTestCase(OSComponentTestCase):
 
     def __init__(self, method_name='runTest', os_creds=None, ext_net_name=None,
                  use_keystone=True, flavor_metadata=None, image_metadata=None,
-                 netconf_override=None, log_level=logging.DEBUG):
+                 custom_roles=None, netconf_override=None,
+                 log_level=logging.DEBUG):
         """
         Super for integration tests requiring a connection to OpenStack
         :param method_name: default 'runTest'
@@ -121,14 +122,15 @@ class OSIntegrationTestCase(OSComponentTestCase):
             image_metadata=image_metadata, log_level=log_level)
         self.netconf_override = netconf_override
         self.use_keystone = use_keystone
+        self.custom_roles = custom_roles
         self.keystone = None
         self.user_roles = None
 
     @staticmethod
     def parameterize(testcase_klass, os_creds, ext_net_name,
                      use_keystone=True, flavor_metadata=None,
-                     image_metadata=None, netconf_override=None,
-                     log_level=logging.DEBUG):
+                     image_metadata=None, user_roles=None,
+                     netconf_override=None, log_level=logging.DEBUG):
         """
         Create a suite containing all tests taken from the given
         subclass, passing them the parameter 'param'.
@@ -139,8 +141,8 @@ class OSIntegrationTestCase(OSComponentTestCase):
         for name in test_names:
             suite.addTest(testcase_klass(name, os_creds, ext_net_name,
                                          use_keystone, flavor_metadata,
-                                         image_metadata, netconf_override,
-                                         log_level))
+                                         image_metadata, user_roles,
+                                         netconf_override, log_level))
         return suite
 
     """
@@ -170,6 +172,10 @@ class OSIntegrationTestCase(OSComponentTestCase):
 
             # Set by implementing class for setting the user's roles
             roles = dict()
+            if self.custom_roles:
+                for user_role in self.custom_roles:
+                    roles[user_role] = project_name
+
             if self.user_roles:
                 for user_role in self.user_roles:
                     roles[user_role] = project_name
