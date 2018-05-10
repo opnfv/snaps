@@ -128,6 +128,26 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
                 logger.error('ERROR: STACK CREATION FAILED: %s', status)
                 raise StackCreationError('Failure while creating stack')
 
+    def update(self, env_vals):
+        """
+        Updates the heat stack in OpenStack
+        :param: env_vals - the values to update
+        :return: The Stack domain object or None
+        """
+        if self.__stack:
+            logger.info('Updating stack - %s', self.__stack.name)
+            heat_utils.update_stack(self.__heat_cli, self.__stack, env_vals)
+            if self.stack_updated(block=True):
+                logger.info('Stack %s is now updated with params: %s',
+                            env_vals)
+                self.stack_settings.env_values = env_vals
+                return self.__stack
+            else:
+                status = heat_utils.get_stack_status_reason(self.__heat_cli,
+                                                            self.__stack.id)
+                logger.error('ERROR: STACK UPDATE FAILED: %s', status)
+                raise StackUpdateError('Failure while updating stack')
+
     def clean(self):
         """
         Cleanse environment of all artifacts
@@ -219,6 +239,22 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
         return self._stack_status_check(
             snaps.config.stack.STATUS_CREATE_COMPLETE, block, timeout,
             poll_interval, snaps.config.stack.STATUS_CREATE_FAILED)
+
+    def stack_updated(self, block=False,
+                      timeout=snaps.config.stack.STACK_UPDATE_TIMEOUT,
+                      poll_interval=snaps.config.stack.POLL_INTERVAL):
+        """
+        Returns true when the stack status returns the value of
+        expected_status_code
+        :param block: When true, thread will block until active or timeout
+                      value in seconds has been exceeded (False)
+        :param timeout: The timeout value
+        :param poll_interval: The polling interval in seconds
+        :return: T/F
+        """
+        return self._stack_status_check(
+            snaps.config.stack.STATUS_UPDATE_COMPLETE, block, timeout,
+            poll_interval, snaps.config.stack.STATUS_UPDATE_FAILED)
 
     def stack_deleted(self, block=False,
                       timeout=snaps.config.stack.STACK_DELETE_TIMEOUT,
@@ -544,6 +580,11 @@ class StackSettings(StackConfig):
 class StackCreationError(Exception):
     """
     Exception to be thrown when an stack cannot be created
+    """
+
+class StackUpdateError(Exception):
+    """
+    Exception to be thrown when an stack update failed
     """
 
 
