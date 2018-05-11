@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_687fb315",
+        "filename": "snaps/openstack/create_stack.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-05-11T18:49:37Z",
+      "side": 1,
+      "message": "You will need to add at least one parameter that will tell the class what you are attempting to update. After the update is called, you will also want to replace self.__stack with the one returned from the heat_utils.update_stack() call.",
+      "revId": "9655e608c91ee65cec79475f0353af486b1d4486",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
