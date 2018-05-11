@@ -140,6 +140,30 @@
       "revId": "44e8131216787127980558824b2a1def94fe317e",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_c5c07252",
+        "filename": "snaps/openstack/tests/openstack_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 6745
+      },
+      "writtenOn": "2018-05-11T07:13:37Z",
+      "side": 1,
+      "message": "So with your patch if anyone wants to set the hugepages to the flavor he needs to pass an extra dictionary to the metadata dictionary ? Am I right ?",
+      "parentUuid": "5a3f45e8_cdcc1a8c",
+      "range": {
+        "startLine": 332,
+        "startChar": 0,
+        "endLine": 350,
+        "endChar": 43
+      },
+      "revId": "44e8131216787127980558824b2a1def94fe317e",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
