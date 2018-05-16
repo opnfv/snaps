@@ -37,7 +37,7 @@ class ProjectConfig(object):
 
         self.name = kwargs.get('name')
         self.domain_name = kwargs.get(
-            'domain', kwargs.get('domain', 'Default'))
+            'domain_name', kwargs.get('domain', 'Default'))
 
         self.description = kwargs.get('description')
         if kwargs.get('enabled') is not None:
