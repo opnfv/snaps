@@ -457,8 +457,7 @@ class PortConfig(object):
             project_name = project_name
         try:
             network = neutron_utils.get_network(
-                neutron, keystone, network_name=self.network_name,
-                project_name=project_name)
+                neutron, keystone, network_name=self.network_name)
         finally:
             if session:
                 keystone_utils.close_session(session)
