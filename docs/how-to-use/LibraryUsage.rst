@@ -154,6 +154,10 @@ Create Flavor
       -  is\_public - flag that denotes whether or not other projects
          can access image (default=True)
       -  metadata - freeform dict() for special metadata (optional)
+                  - freeform dict() for values of basic elements
+                    (e.g. ram, vcpu, disk, etc) could be added.
+                    As result the hard coded values of those elements will be
+                    overwritten by the new ones (optional)
 
 .. code:: python
 
