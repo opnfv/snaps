@@ -364,10 +364,11 @@ class CreateFlavorTests(OSComponentTestCase):
         raise any exceptions.
         """
         # Create Flavor
-        flavor_settings = FlavorConfig(
+        self.flavor_metadata.update(create_flavor.MEM_PAGE_SIZE_ANY)
+        flavor_settings = openstack_tests.get_flavor_config(
             name=self.flavor_name, ram=1, disk=1, vcpus=1, ephemeral=2, swap=3,
             rxtx_factor=2.2, is_public=False,
-            metadata=create_flavor.MEM_PAGE_SIZE_ANY)
+            metadata=self.flavor_metadata)
         self.flavor_creator = OpenStackFlavor(self.os_creds, flavor_settings)
         flavor = self.flavor_creator.create()
         self.assertTrue(validate_flavor(self.nova, flavor_settings, flavor))
