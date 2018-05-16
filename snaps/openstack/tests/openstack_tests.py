@@ -331,28 +331,36 @@ def get_pub_net_config(
 
 def get_flavor_config(name, ram, disk, vcpus, ephemeral=None, swap=None,
                       rxtx_factor=None, is_public=None, metadata=None):
+    metadata_excl = metadata
     if metadata:
         if 'ram' in metadata:
             ram = metadata['ram']
+            del metadata_excl['ram']
         if 'disk' in metadata:
             disk = metadata['disk']
+            del metadata_excl['disk']
         if 'vcpus' in metadata:
             vcpus = metadata['vcpus']
+            del metadata_excl['vcpus']
         if 'ephemeral' in metadata:
             ephemeral = metadata['ephemeral']
+            del metadata_excl['ephemeral']
         if 'swap' in metadata:
             swap = metadata['swap']
+            del metadata_excl['swap']
         if 'rxtx_factor' in metadata:
             rxtx_factor = metadata['rxtx_factor']
+            del metadata_excl['rxtx_factor']
         if 'is_public' in metadata:
             is_public = metadata['is_public']
+            del metadata_excl['is_public']
         if 'metadata' in metadata:
-            metadata = metadata['metadata']
+            metadata_excl = metadata['metadata']
 
     return FlavorConfig(
         name=name, ram=ram, disk=disk, vcpus=vcpus, ephemeral=ephemeral,
         swap=swap, rxtx_factor=rxtx_factor, is_public=is_public,
-        metadata=metadata)
+        metadata=metadata_excl)
 
 
 class OSNetworkConfig:
