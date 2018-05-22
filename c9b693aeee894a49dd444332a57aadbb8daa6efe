@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_58687cf5",
+        "filename": "snaps/openstack/tests/create_flavor_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-05-22T00:11:04Z",
+      "side": 1,
+      "message": "\"AttributeError: \u0027NoneType\u0027 object has no attribute \u0027update\u0027\" raised here when running with defaults. You will need to minimally add  check here:\n\nif self.flavor_metadata:\n    self.flavor_metadata.update(create_flavor.MEM_PAGE_SIZE)",
+      "revId": "c9b693aeee894a49dd444332a57aadbb8daa6efe",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_b86d4007",
+        "filename": "snaps/openstack/tests/create_flavor_tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-05-22T00:11:04Z",
+      "side": 1,
+      "message": "openstack_tests has not been imported",
+      "revId": "c9b693aeee894a49dd444332a57aadbb8daa6efe",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
