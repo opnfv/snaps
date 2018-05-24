@@ -180,7 +180,7 @@ def read_yaml(config_file_path):
     logger.debug('Attempting to load configuration file - ' + config_file_path)
     config_file = None
     try:
-        with open(config_file_path) as config_file:
+        with open(config_file_path, 'r') as config_file:
             config = yaml.safe_load(config_file)
             logger.info('Loaded configuration')
         return config
@@ -188,6 +188,20 @@ def read_yaml(config_file_path):
         if config_file:
             logger.info('Closing configuration file')
             config_file.close()
+
+
+def persist_dict_to_yaml(the_dict, file_name):
+    """
+    Creates a YAML file from a dict
+    :param the_dict: the dictionary to store
+    :param conf_dir: the directory used to store the config file
+    :return: the file object
+    """
+    logger.info('Persisting %s to [%s]', the_dict, file_name)
+    file_path = os.path.expanduser(file_name)
+    yaml_from_dict = yaml.dump(
+        the_dict, default_flow_style=False, default_style='')
+    return save_string_to_file(yaml_from_dict, file_path)
 
 
 def read_os_env_file(os_env_filename):
