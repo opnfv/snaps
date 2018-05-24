@@ -309,8 +309,9 @@ def get_server_security_group_names(nova, server):
     """
     out = list()
     os_vm_inst = __get_latest_server_os_object(nova, server)
-    for sec_grp_dict in os_vm_inst.security_groups:
-        out.append(sec_grp_dict['name'])
+    if hasattr(os_vm_inst, 'security_groups'):
+        for sec_grp_dict in os_vm_inst.security_groups:
+            out.append(sec_grp_dict['name'])
     return out
 
 

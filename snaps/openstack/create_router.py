@@ -162,7 +162,8 @@ class OpenStackRouter(OpenStackNetworkObject):
         else:
             return neutron_utils.get_subnet_by_name(
                 self._neutron, self._keystone,
-                subnet_name=sub_config)
+                subnet_name=sub_config,
+                project_name=self._os_creds.project_name)
 
     def clean(self):
         """

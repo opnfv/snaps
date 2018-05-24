@@ -458,6 +458,10 @@ class PortConfig(object):
         try:
             network = neutron_utils.get_network(
                 neutron, keystone, network_name=self.network_name)
+            if network and not network.shared:
+                network = neutron_utils.get_network(
+                    neutron, keystone, network_name=self.network_name,
+                    project_name=project_name)
         finally:
             if session:
                 keystone_utils.close_session(session)
