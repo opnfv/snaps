@@ -16,6 +16,24 @@
       "revId": "ceb261860f8e9cbb4200ed89f38df5a1a7a3b7b6",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_d358eafc",
+        "filename": "snaps/openstack/utils/tests/heat_utils_tests.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-05-24T14:59:10Z",
+      "side": 1,
+      "message": "this line will not have any effect",
+      "parentUuid": "1a494da4_d3410a0d",
+      "revId": "ceb261860f8e9cbb4200ed89f38df5a1a7a3b7b6",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
