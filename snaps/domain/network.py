@@ -186,8 +186,7 @@ class Router:
         self.port_subnets = kwargs.get('port_subnets')
 
         if (kwargs.get('external_gateway_info') and
-                isinstance(kwargs.get('external_gateway_info'), dict) and
-                kwargs.get('external_gateway_info').get('external_fixed_ips')):
+                isinstance(kwargs.get('external_gateway_info'), dict)):
             gateway_info = kwargs.get('external_gateway_info')
 
             self.external_network_id = gateway_info.get('network_id')
