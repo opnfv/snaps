@@ -638,11 +638,10 @@ class CreateNetworkGatewayTests(OSIntegrationTestCase):
             self.os_creds, net_config)
         out_net = self.net_creator.create()
 
-        # Validate network was created
-        self.assertTrue(neutron_utils_tests.validate_network(
-            self.neutron, self.keystone,
-            self.net_creator.network_settings.name, True,
-            self.os_creds.project_name))
+        self.assertIsNotNone(out_net)
+
+        get_net = neutron_utils.get_network_by_id(self.neutron, out_net.id)
+        self.assertIsNotNone(get_net)
 
         # Validate subnets
         self.assertTrue(neutron_utils_tests.validate_subnet(
