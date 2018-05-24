@@ -44,6 +44,7 @@ from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_router import OpenStackRouter
 from snaps.openstack.create_security_group import OpenStackSecurityGroup
 from snaps.openstack.create_volume import OpenStackVolume
+from snaps.openstack.os_credentials import OSCreds
 from snaps.openstack.tests import openstack_tests, validation_utils
 from snaps.openstack.tests.os_source_file_test import (
     OSIntegrationTestCase, OSComponentTestCase)
@@ -694,6 +695,7 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
         Instantiates the CreateImage object that is responsible for downloading
         and creating an OS image file within OpenStack
         """
+        self.proj_users = ['admin']
         super(self.__class__, self).__start__()
 
         self.nova = nova_utils.nova_client(self.os_creds, self.os_session)
@@ -1055,9 +1057,35 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
 
         self.assertTrue(inst_creator.vm_active(block=True))
 
+        vm_os_creds = OSCreds(
+            auth_url=self.admin_os_creds.auth_url,
+            username=self.admin_os_creds.username,
+            password=self.admin_os_creds.password,
+            project_name=self.os_creds.project_name,
+            identity_api_version=self.os_creds.identity_api_version)
         derived_inst_creator = create_instance.generate_creator(
-            self.os_creds, vm_inst, self.image_creator.image_settings,
+            vm_os_creds, vm_inst, self.image_creator.image_settings,
             self.os_creds.project_name, self.keypair_creator.keypair_settings)
+
+        # Tests to ensure that a instance can be returned with an invalid
+        # image config object and admin credentials (when the 'admin' user has
+        # been added to the project) as this should not matter unless one
+        # needs to access the machine via ssh and its floating IP
+
+        # Invalid ImageConfig
+        derived_foo_image_creator = create_instance.generate_creator(
+            vm_os_creds, vm_inst, ImageConfig(
+                name='foo', image_user='bar', format='qcow2',
+                image_file='foo/bar'),
+            vm_os_creds.project_name)
+        self.assertIsNotNone(derived_foo_image_creator)
+        self.assertTrue(derived_foo_image_creator.vm_active())
+
+        # None ImageConfig
+        derived_none_image_creator = create_instance.generate_creator(
+            vm_os_creds, vm_inst, None, vm_os_creds.project_name)
+        self.assertIsNotNone(derived_none_image_creator)
+        self.assertTrue(derived_none_image_creator.vm_active())
 
         derived_inst_creator.add_floating_ip(FloatingIpConfig(
             name=self.floating_ip_name, port_name=self.port_1_name,

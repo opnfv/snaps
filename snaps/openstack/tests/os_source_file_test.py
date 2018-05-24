@@ -77,8 +77,9 @@ class OSComponentTestCase(unittest.TestCase):
         test_names = test_loader.getTestCaseNames(testcase_klass)
         suite = unittest.TestSuite()
         for name in test_names:
-            suite.addTest(testcase_klass(name, os_creds, ext_net_name,
-                flavor_metadata, image_metadata, log_level))
+            suite.addTest(testcase_klass(
+                name, os_creds, ext_net_name, flavor_metadata, image_metadata,
+                log_level))
         return suite
 
     def __clean__(self):
@@ -123,6 +124,7 @@ class OSIntegrationTestCase(OSComponentTestCase):
         self.use_keystone = use_keystone
         self.keystone = None
         self.user_roles = None
+        self.proj_users = None
 
     @staticmethod
     def parameterize(testcase_klass, os_creds, ext_net_name,
@@ -170,7 +172,7 @@ class OSIntegrationTestCase(OSComponentTestCase):
 
             # Set by implementing class for setting the user's roles
             roles = dict()
-            if self.user_roles:
+            if self.user_roles and isinstance(self.user_roles, list):
                 for user_role in self.user_roles:
                     roles[user_role] = project_name
 
@@ -186,6 +188,12 @@ class OSIntegrationTestCase(OSComponentTestCase):
 
             # add user to project
             self.project_creator.assoc_user(self.user_creator.get_user())
+
+            if self.proj_users and isinstance(self.proj_users, list):
+                for user_name in self.proj_users:
+                    user = keystone_utils.get_user(self.keystone, user_name)
+                    if user:
+                        self.project_creator.assoc_user(user)
 
     def __clean__(self):
         """
