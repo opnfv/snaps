@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_3ce59ba8",
+        "filename": "snaps/openstack/create_router.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 3405
+      },
+      "writtenOn": "2018-05-26T20:01:53Z",
+      "side": 1,
+      "message": "uhm. This requires the user to be admin for creating a router...\n\nTraceback (most recent call last):\n  File \"/usr/lib/python2.7/site-packages/xtesting/core/vnf.py\", line 74, in run\n    if (self.deploy_orchestrator() and\n  File \"/usr/lib/python2.7/site-packages/functest/opnfv_tests/vnf/router/cloudify_vrouter.py\", line 212, in deploy_orchestrator\n    router_creator.create()\n  File \"/usr/lib/python2.7/site-packages/snaps/openstack/create_router.py\", line 103, in create\n    internal_subnet \u003d self.__get_internal_subnet(sub_config)\n  File \"/usr/lib/python2.7/site-packages/snaps/openstack/create_router.py\", line 166, in __get_internal_subnet\n    project_name\u003dself._os_creds.project_name)\n  File \"/usr/lib/python2.7/site-packages/snaps/openstack/utils/neutron_utils.py\", line 268, in get_subnet_by_name\n    keystone, project_name\u003dproject_name)\n  File \"/usr/lib/python2.7/site-packages/snaps/openstack/utils/keystone_utils.py\", line 149, in get_project\n    projects \u003d keystone.projects.list(**proj_filter)\n  File \"/usr/lib/python2.7/site-packages/keystoneclient/v3/projects.py\", line 138, in list\n    **kwargs)\n  File \"/usr/lib/python2.7/site-packages/keystoneclient/base.py\", line 75, in func\n    return f(*args, **new_kwargs)\n  File \"/usr/lib/python2.7/site-packages/keystoneclient/base.py\", line 397, in list\n    self.collection_key)\n  File \"/usr/lib/python2.7/site-packages/keystoneclient/base.py\", line 125, in _list\n    resp, body \u003d self.client.get(url, **kwargs)\n  File \"/usr/lib/python2.7/site-packages/keystoneauth1/adapter.py\", line 304, in get\n    return self.request(url, \u0027GET\u0027, **kwargs)\n  File \"/usr/lib/python2.7/site-packages/keystoneauth1/adapter.py\", line 463, in request\n    resp \u003d super(LegacyJsonAdapter, self).request(*args, **kwargs)\n  File \"/usr/lib/python2.7/site-packages/keystoneauth1/adapter.py\", line 189, in request\n    return self.session.request(url, method, **kwargs)\n  File \"/usr/lib/python2.7/site-packages/keystoneauth1/session.py\", line 737, in request\n    raise exceptions.from_response(resp, method, url)\nForbidden: You are not authorized to perform the requested action: identity:list_projects. (HTTP 403) (Request-ID: req-88c5d9fe-310f-4fea-9885-c376ac370d56)",
+      "revId": "b351d8cf4d882c7ec3acbd0111b4d0bf1747c9d3",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
