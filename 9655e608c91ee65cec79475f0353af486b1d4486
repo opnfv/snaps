@@ -16,6 +16,24 @@
       "revId": "9655e608c91ee65cec79475f0353af486b1d4486",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_61179252",
+        "filename": "snaps/openstack/create_stack.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 2034
+      },
+      "writtenOn": "2018-05-28T15:53:12Z",
+      "side": 1,
+      "message": "I thought the concept is that the self.stack_settings.env_values gets updated by the programmer and then calls this.  Should I have them create a new map and update the existing env_values with that instead?",
+      "parentUuid": "5a3f45e8_687fb315",
+      "revId": "9655e608c91ee65cec79475f0353af486b1d4486",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
