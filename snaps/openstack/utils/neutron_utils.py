@@ -262,20 +262,17 @@ def get_subnet_by_name(neutron, keystone, subnet_name, project_name=None):
                          retrieve
     :return: a SNAPS-OO Subnet domain object or None
     """
-    project = None
-    if project_name:
-        project = keystone_utils.get_project(
-            keystone, project_name=project_name)
-    if project:
-        sub_filter = {'name': subnet_name, 'project_id': project.id}
-        subnets = neutron.list_subnets(**sub_filter)
-        for subnet in subnets['subnets']:
-            return Subnet(**subnet)
-    else:
-        sub_filter = {'name': subnet_name}
-        subnets = neutron.list_subnets(**sub_filter)
-        for subnet in subnets['subnets']:
-            return Subnet(**subnet)
+    sub_filter = {'name': subnet_name}
+    subnets = neutron.list_subnets(**sub_filter)
+    for subnet in subnets['subnets']:
+        subnet = Subnet(**subnet)
+        if project_name:
+            project = keystone_utils.get_project_by_id(
+                keystone, subnet.project_id)
+            if project:
+                return subnet
+        else:
+            return subnet
 
 
 def get_subnet_by_id(neutron, subnet_id):

@@ -111,7 +111,7 @@ class OpenStackRouter(OpenStackNetworkObject):
                         self.__internal_router_interface = router_intf
                 else:
                     raise RouterCreationError(
-                        'Subnet not found with name ' + internal_subnet.name)
+                        'Subnet not found with name {}'.format(sub_config))
 
             for port_setting in self.router_settings.port_settings:
                 port = neutron_utils.get_port(
