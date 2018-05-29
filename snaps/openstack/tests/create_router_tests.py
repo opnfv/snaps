@@ -21,7 +21,8 @@ from snaps.config.security_group import SecurityGroupConfig
 from snaps.openstack import create_network
 from snaps.openstack import create_router
 from snaps.openstack.create_network import OpenStackNetwork
-from snaps.openstack.create_router import RouterSettings, OpenStackRouter
+from snaps.openstack.create_router import (RouterSettings, OpenStackRouter,
+    RouterCreationError)
 from snaps.openstack.create_security_group import OpenStackSecurityGroup
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import neutron_utils, settings_utils, keystone_utils
@@ -238,6 +239,53 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
 
         # Should not raise an exception
         self.router_creator.clean()
+
+    def test_create_with_internal_sub(self):
+        """
+        Test internal_subnets works.
+        """
+        network_settings1 = NetworkConfig(
+            name=self.guid + '-pub-net1',
+            subnet_settings=[
+                create_network.SubnetConfig(
+                    cidr=cidr1, name=self.guid + '-pub-subnet1',
+                    gateway_ip=static_gateway_ip1)])
+        self.network_creator1 = OpenStackNetwork(self.os_creds,
+                                                 network_settings1)
+
+        self.network_creator1.create()
+        self.router_settings = RouterConfig(
+            name=self.guid + '-pub-router', external_gateway=self.ext_net_name,
+            internal_subnets=[network_settings1.subnet_settings[0].name])
+
+        self.router_creator = create_router.OpenStackRouter(
+            self.os_creds, self.router_settings)
+        created_router = self.router_creator.create()
+        self.assertIsNotNone(created_router)
+
+    def test_create_with_invalid_internal_sub(self):
+        """
+        Test adding an internal subnet owned by admin which should fail.
+        """
+        network_settings1 = NetworkConfig(
+            name=self.guid + '-pub-net1',
+            subnet_settings=[
+                create_network.SubnetConfig(
+                    cidr=cidr1, name=self.guid + '-pub-subnet1',
+                    gateway_ip=static_gateway_ip1)])
+        self.network_creator1 = OpenStackNetwork(self.admin_os_creds,
+                                                 network_settings1)
+
+        self.network_creator1.create()
+        self.router_settings = RouterConfig(
+            name=self.guid + '-pub-router', external_gateway=self.ext_net_name,
+            internal_subnets=[network_settings1.subnet_settings[0].name])
+
+        self.router_creator = create_router.OpenStackRouter(
+            self.os_creds, self.router_settings)
+
+        with self.assertRaises(RouterCreationError):
+            created_router = self.router_creator.create()
 
     def test_create_router_admin_state_false(self):
         """

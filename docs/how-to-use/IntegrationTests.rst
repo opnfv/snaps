@@ -260,6 +260,12 @@ create_router_tests.py - CreateRouterSuccessTests
 | test_create_delete_router             | 2             | Ensures that a router can be deleted via the              |
 |                                       |               | OpenStackRouter.clean() method                            |
 +---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_with_internal_sub         | 2             | Ensures that a router can be joined to a subnet created by|
+|                                       |               | the same user who created the subnet                      |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_with_invalid_internal_sub | 2             | Ensures that a router cannot be created when attempting to|
+|                                       |               | join a subnet created by the admin user                   |
++---------------------------------------+---------------+-----------------------------------------------------------+
 | test_create_router_admin_state_false  | 2             | Ensures that a router can created with                    |
 |                                       |               | admin_state_up = False                                    |
 +---------------------------------------+---------------+-----------------------------------------------------------+
