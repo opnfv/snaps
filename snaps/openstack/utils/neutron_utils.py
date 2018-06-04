@@ -269,7 +269,7 @@ def get_subnet_by_name(neutron, keystone, subnet_name, project_name=None):
         if project_name:
             project = keystone_utils.get_project_by_id(
                 keystone, subnet.project_id)
-            if project:
+            if project.name == project_name:
                 return subnet
         else:
             return subnet
