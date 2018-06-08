@@ -28,6 +28,7 @@ from snaps.domain.user import User
 logger = logging.getLogger('keystone_utils')
 
 V2_VERSION_NUM = 2.0
+V3_VERSION_NUM = 3
 V2_VERSION_STR = 'v' + str(V2_VERSION_NUM)
 
 
@@ -210,7 +211,7 @@ def create_project(keystone, project_settings):
 def delete_project(keystone, project):
     """
     Deletes a project
-    :param keystone: the Keystone clien
+    :param keystone: the Keystone client
     :param project: the SNAPS-OO Project domain object
     """
     logger.info('Deleting project with name - %s', project.name)

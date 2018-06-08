@@ -38,6 +38,9 @@ class OpenStackCloudObject(CloudObject):
         self._keystone = keystone_utils.keystone_client(
             self._os_creds, session=self._os_session)
 
+    def get_os_creds(self):
+        return self._os_creds
+
     def create(self):
         raise NotImplementedError('Do not override abstract method')
 

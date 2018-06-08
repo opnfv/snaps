@@ -530,8 +530,8 @@ def __get_connection_info(ansible_config, vm_dict):
     return None
 
 
-def __get_variables(var_config, os_creds_dict, vm_dict, image_dict, flavor_dict,
-                    networks_dict, routers_dict):
+def __get_variables(var_config, os_creds_dict, vm_dict, image_dict,
+                    flavor_dict, networks_dict, routers_dict):
     """
     Returns a dictionary of substitution variables to be used for Ansible
     templates
@@ -587,18 +587,19 @@ def __get_variable_value(var_config_values, os_creds_dict, vm_dict, image_dict,
                           the name is the key
     :return:
     """
-    admin_creds = os_creds_dict.get('admin-creds')
     if var_config_values['type'] == 'string':
         return __get_string_variable_value(var_config_values)
     if var_config_values['type'] == 'vm-attr':
         return __get_vm_attr_variable_value(var_config_values, vm_dict)
     if var_config_values['type'] == 'os_creds':
-        return __get_os_creds_variable_value(var_config_values, admin_creds)
+        return __get_os_creds_variable_value(var_config_values, os_creds_dict)
+    if var_config_values['type'] == 'os_creds_dict':
+        return str(__get_os_creds_dict(var_config_values, os_creds_dict))
     if var_config_values['type'] == 'network':
         return __get_network_variable_value(var_config_values, networks_dict)
     if var_config_values['type'] == 'router':
         return __get_router_variable_value(var_config_values, routers_dict,
-                                           admin_creds)
+                                           os_creds_dict)
     if var_config_values['type'] == 'port':
         return __get_vm_port_variable_value(var_config_values, vm_dict)
     if var_config_values['type'] == 'floating_ip':
@@ -607,8 +608,8 @@ def __get_variable_value(var_config_values, os_creds_dict, vm_dict, image_dict,
         return __get_image_variable_value(var_config_values, image_dict)
     if var_config_values['type'] == 'flavor':
         return __get_flavor_variable_value(var_config_values, flavor_dict)
-    if var_config_values['type'] == 'snaps-env-yaml':
-        return __create_snaps_env_yaml(var_config_values, vm_dict)
+    if var_config_values['type'] == 'vm-yaml':
+        return __create_yaml(var_config_values, vm_dict)
     return None
 
 
@@ -637,13 +638,19 @@ def __get_vm_attr_variable_value(var_config_values, vm_dict):
             return vm.get_image_user()
 
 
-def __get_os_creds_variable_value(var_config_values, os_creds):
+def __get_os_creds_variable_value(var_config_values, os_creds_dict):
     """
     Returns the associated OS credentials value
     :param var_config_values: the configuration dictionary
-    :param os_creds: the admin OpenStack OSCreds object
+    :param os_creds_dict: dict of OpenStack credentials where the key is the
+                          name
     :return: the value
     """
+    if 'creds_name' in var_config_values:
+        os_creds = os_creds_dict.get[var_config_values['creds_name']]
+    else:
+        os_creds = os_creds_dict.get('admin-creds')
+
     if os_creds:
         if var_config_values['value'] == 'username':
             logger.info("Returning OS username")
@@ -657,6 +664,21 @@ def __get_os_creds_variable_value(var_config_values, os_creds):
         elif var_config_values['value'] == 'project_name':
             logger.info("Returning OS project_name")
             return os_creds.project_name
+
+
+def __get_os_creds_dict(var_config_values, os_creds_dict):
+    """
+    Returns the associated OS credentials as a dict
+    :param var_config_values: the configuration dictionary
+    :param os_creds_dict: dict of creds where the key is the username
+    :return: the value dict
+    """
+    if 'creds_name' in var_config_values:
+        os_creds = os_creds_dict.get[var_config_values['creds_name']]
+    else:
+        os_creds = os_creds_dict.get('admin-creds')
+    if os_creds:
+        return os_creds.to_dict()
 
 
 def __get_network_variable_value(var_config_values, networks_dict):
@@ -706,15 +728,22 @@ def __get_network_variable_value(var_config_values, networks_dict):
                                 return broadcast_ip
 
 
-def __get_router_variable_value(var_config_values, routers_dict, os_creds):
+def __get_router_variable_value(var_config_values, routers_dict,
+                                os_creds_dict):
     """
     Returns the associated network value
     :param var_config_values: the configuration dictionary
     :param routers_dict: the dictionary containing all networks where the key
                           is the network name
-    :param os_creds: the admin OpenStack credentials
+    :param os_creds_dict: dict of OpenStack credentials where the key is the
+                          name
     :return: the value
     """
+    if 'creds_name' in var_config_values:
+        os_creds = os_creds_dict.get[var_config_values['creds_name']]
+    else:
+        os_creds = os_creds_dict.get('admin-creds')
+
     router_name = var_config_values.get('router_name')
     router_creator = routers_dict[router_name]
 
@@ -818,34 +847,27 @@ def __get_flavor_variable_value(var_config_values, flavor_dict):
                     return flavor_creator.get_flavor().id
 
 
-def __create_snaps_env_yaml(var_config_values, vm_dict):
+def __create_yaml(var_config_values, vm_dict):
     """
     Creates a yaml file containing an OpenStack pod's credentials with a list
     of server IDs that can be used for obtaining SNAPS-OO instances for
     manipulation such as rebooting
     :param var_config_values: the configuration dictionary
-    :param os_creds: the admin credentials for accessing OpenStack
     :param vm_dict: the dictionary containing all vm creators where the
                     key is the name
     :return: the name of the generated file
     """
     out_dict = dict()
     out_dict['vms'] = list()
+    req_vm_names = var_config_values.get('vms')
 
     for name, vm_creator in vm_dict.items():
         vm_inst = vm_creator.get_vm_inst()
-        inst_creds = vm_creator._os_creds
-        if vm_inst:
+        if vm_inst and vm_inst.name in req_vm_names:
             out_dict['vms'].append({
                 'name': str(vm_inst.name),
                 'id': str(vm_inst.id),
-                'os_creds': {
-                    'username': inst_creds.username,
-                    'password': inst_creds.password,
-                    'auth_url': inst_creds.auth_url,
-                    'project_name': inst_creds.project_name,
-                    'identity_api_version': inst_creds.identity_api_version,
-                }
+                'os_creds': vm_creator.get_os_creds().to_dict()
             })
 
     out_file = file_utils.persist_dict_to_yaml(

@@ -63,7 +63,7 @@ class OSCreds:
         self.project_name = kwargs.get('project_name')
 
         if kwargs.get('identity_api_version') is None:
-            self.identity_api_version = keystone_utils.V2_VERSION_NUM
+            self.identity_api_version = keystone_utils.V3_VERSION_NUM
         else:
             self.identity_api_version = float(kwargs['identity_api_version'])
 
@@ -170,6 +170,45 @@ class OSCreds:
         new_url += '/' + last_token
 
         return new_url
+
+    def to_dict(self):
+        """Converts object to a dict that can be used to construct another"""
+        return {'username': self.username,
+                'password': self.password,
+                'auth_url': self.auth_url,
+                'project_name': self.project_name,
+                'identity_api_version': self.identity_api_version,
+                'image_api_version': self.image_api_version,
+                'network_api_version': self.network_api_version,
+                'compute_api_version': self.compute_api_version,
+                'heat_api_version': self.heat_api_version,
+                'user_domain_id': self.user_domain_id,
+                'user_domain_name': self.user_domain_name,
+                'project_domain_id': self.project_domain_id,
+                'project_domain_name': self.project_domain_name,
+                'interface': self.interface,
+                'region_name': self.region_name,
+                'proxy_settings': self.proxy_settings,
+                'cacert': self.cacert}
+
+    def __eq__(self, other):
+        return (self.username == other.username and
+                self.password == other.password and
+                self.auth_url == other.auth_url and
+                self.project_name == other.project_name and
+                float(self.identity_api_version) == float(other.identity_api_version) and
+                float(self.image_api_version) == float(other.image_api_version) and
+                float(self.network_api_version) == float(other.network_api_version) and
+                float(self.compute_api_version) == float(other.compute_api_version) and
+                float(self.heat_api_version) == float(other.heat_api_version) and
+                self.user_domain_id == other.user_domain_id and
+                self.user_domain_name == other.user_domain_name and
+                self.project_domain_id == other.project_domain_id and
+                self.project_domain_name == other.project_domain_name and
+                self.interface == other.interface and
+                self.region_name == other.region_name and
+                self.proxy_settings == other.proxy_settings and
+                self.cacert == other.cacert)
 
     def __str__(self):
         """Converts object to a string"""
