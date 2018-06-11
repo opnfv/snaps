@@ -88,12 +88,16 @@ resources:
       ram: 1024
       vcpus: 2
       disk: 2
+      extra_specs:
+        hw:mem_page_size: large
   flavor2:
     type: OS::Nova::Flavor
     properties:
       ram: 1024
       vcpus: 2
       disk: 2
+      extra_specs:
+        hw:mem_page_size: large
 
   network:
     type: OS::Neutron::Net

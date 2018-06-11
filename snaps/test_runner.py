@@ -185,7 +185,8 @@ def main(arguments):
 
     flavor_metadata = None
     if arguments.flavor_metadata:
-        flavor_metadata = json.loads(arguments.flavor_metadata)
+        flavor_metadata = {
+            'metadata': {'hw:mem_page_size': arguments.flavor_metadata}}
 
     image_metadata = None
     if arguments.image_metadata_file:
@@ -321,8 +322,8 @@ if __name__ == '__main__':
              'network and is able to create users and groups')
     parser.add_argument(
         '-fm', '--flavor-meta', dest='flavor_metadata',
-        help='JSON string to be used as flavor metadata for all test instances'
-             ' created')
+        help='hw:mem_page_size flavor setting value (i.e. large). '
+             'Required for DPDK')
     parser.add_argument(
         '-im', '--image-meta', dest='image_metadata_file', default=None,
         help='Location of YAML file containing the image metadata')

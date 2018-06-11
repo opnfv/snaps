@@ -39,6 +39,7 @@ class Network:
         self.external = kwargs.get('router:external', kwargs.get('external'))
         self.type = kwargs.get('provider:network_type', kwargs.get('type'))
         self.subnets = kwargs.get('subnets', list())
+        self.mtu = kwargs.get('mtu')
 
     def __eq__(self, other):
         return (self.name == other.name and self.id == other.id and
@@ -46,7 +47,8 @@ class Network:
                 self.admin_state_up == other.admin_state_up and
                 self.shared == other.shared and
                 self.external == other.external and
-                self.subnets == other.subnets)
+                self.subnets == other.subnets and
+                self.mtu == other.mtu)
 
 
 class Subnet:

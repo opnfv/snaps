@@ -15,3 +15,6 @@
 #project_name: admin
 #identity_api_version: 3
 #ext_net: <external network name>
+
+flavor_metadata:
+    hw:mem_page_size: large

@@ -269,16 +269,17 @@ class NovaUtilsInstanceTests(OSComponentTestCase):
             self.image_creator.create()
 
             network_settings = openstack_tests.get_priv_net_config(
-                self.os_creds.project_name, guid + '-net',
-                guid + '-subnet').network_settings
+                project_name=self.os_creds.project_name,
+                net_name="{}-{}".format(guid, 'net'),
+                subnet_name="{}-{}".format(guid, 'subnet')).network_settings
             self.network_creator = OpenStackNetwork(
                 self.os_creds, network_settings)
             self.network_creator.create()
 
-            self.flavor_creator = OpenStackFlavor(
-                self.os_creds,
-                FlavorConfig(
-                    name=guid + '-flavor-name', ram=256, disk=10, vcpus=1))
+            flavor_config = openstack_tests.get_flavor_config(
+                name="{}-{}".format(guid, 'flavor-name'), ram=256, disk=10,
+                vcpus=1, metadata=self.flavor_metadata)
+            self.flavor_creator = OpenStackFlavor(self.os_creds, flavor_config)
             self.flavor_creator.create()
 
             port_settings = PortConfig(
@@ -394,8 +395,10 @@ class NovaUtilsInstanceVolumeTests(OSComponentTestCase):
             self.image_creator.create()
 
             network_settings = openstack_tests.get_priv_net_config(
-                self.os_creds.project_name, guid + '-net',
-                guid + '-subnet').network_settings
+                project_name=self.os_creds.project_name,
+                net_name="{}-{}".format(guid, 'net'),
+                subnet_name="{}-{}".format(guid, 'subnet')).network_settings
+
             self.network_creator = OpenStackNetwork(
                 self.os_creds, network_settings)
             self.network_creator.create()

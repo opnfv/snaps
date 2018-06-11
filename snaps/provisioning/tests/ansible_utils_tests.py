@@ -19,7 +19,6 @@ import os
 import pkg_resources
 from scp import SCPClient
 
-from snaps.config.flavor import FlavorConfig
 from snaps.config.keypair import KeypairConfig
 from snaps.config.network import PortConfig
 from snaps.config.security_group import (
@@ -84,14 +83,15 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
             os_image_settings = openstack_tests.ubuntu_image_settings(
                 name=guid + '-' + '-image',
                 image_metadata=self.image_metadata)
-            self.image_creator = create_image.OpenStackImage(self.os_creds,
-                                                             os_image_settings)
+            self.image_creator = create_image.OpenStackImage(
+                self.os_creds, os_image_settings)
             self.image_creator.create()
 
             # First network is public
             self.pub_net_config = openstack_tests.get_pub_net_config(
                 project_name=self.os_creds.project_name,
-                net_name=guid + '-pub-net', subnet_name=guid + '-pub-subnet',
+                net_name=guid + '-pub-net',
+                mtu=1450, subnet_name=guid + '-pub-subnet',
                 router_name=guid + '-pub-router',
                 external_net=self.ext_net_name)
 

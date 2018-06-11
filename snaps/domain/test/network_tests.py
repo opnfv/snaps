@@ -31,7 +31,8 @@ class NetworkObjectTests(unittest.TestCase):
         network = Network(
             **{'name': 'foo', 'id': 'bar', 'project_id': 'proj1',
                'provider:network_type': 'flat', 'admin_state_up': False,
-               'shared': True, 'router:external': False, 'subnets': [subnet]})
+               'shared': True, 'router:external': False, 'subnets': [subnet],
+               'mtu': 999})
         self.assertEqual('foo', network.name)
         self.assertEqual('bar', network.id)
         self.assertEqual('proj1', network.project_id)
@@ -40,6 +41,7 @@ class NetworkObjectTests(unittest.TestCase):
         self.assertFalse(network.external)
         self.assertTrue(network.shared)
         self.assertEqual([subnet], network.subnets)
+        self.assertEqual(999, network.mtu)
 
     def test_construction_kwargs_2(self):
         subnet = Subnet(
