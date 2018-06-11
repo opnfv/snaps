@@ -46,6 +46,7 @@ class NetworkConfig(object):
         :param segmentation_id: the id of the segmentation
                                  (this is required when network_type is 'vlan')
         :param subnets or subnet_settings: List of SubnetConfig objects.
+        :param mtu: MTU setting (optional)
         :return:
         """
 
@@ -87,6 +88,8 @@ class NetworkConfig(object):
 
         if not self.name or len(self.name) < 1:
             raise NetworkConfigError('Name required for networks')
+
+        self.mtu = kwargs.get('mtu')
 
     def get_project_id(self, os_creds):
         """
@@ -144,6 +147,8 @@ class NetworkConfig(object):
             out['provider:segmentation_id'] = self.segmentation_id
         if self.external:
             out['router:external'] = self.external
+        if self.mtu:
+            out['mtu'] = self.mtu
         return {'network': out}
 
 

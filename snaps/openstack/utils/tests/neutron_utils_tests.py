@@ -575,9 +575,11 @@ class NeutronUtilsRouterTests(OSComponentTestCase):
         """
         subnet_setting = self.net_config.network_settings.subnet_settings[0]
         self.net_config = openstack_tests.OSNetworkConfig(
-            self.os_creds.project_name, self.net_config.network_settings.name,
-            subnet_setting.name, subnet_setting.cidr,
-            self.net_config.router_settings.name, self.ext_net_name)
+            project_name=self.os_creds.project_name,
+            net_name=self.net_config.network_settings.name,
+            subnet_name=subnet_setting.name, subnet_cidr=subnet_setting.cidr,
+            router_name=self.net_config.router_settings.name,
+            external_gateway=self.ext_net_name)
         self.router = neutron_utils.create_router(
             self.neutron, self.os_creds, self.net_config.router_settings)
         validate_router(
@@ -1108,7 +1110,7 @@ Validation routines
 """
 
 
-def validate_network(neutron, keystone, name, exists, project_name):
+def validate_network(neutron, keystone, name, exists, project_name, mtu=None):
     """
     Returns true if a network for a given name DOES NOT exist if the exists
     parameter is false conversely true. Returns false if a network for a given
@@ -1126,6 +1128,8 @@ def validate_network(neutron, keystone, name, exists, project_name):
         return True
     if not exists and not network:
         return True
+    if mtu:
+        return mtu == network.mtu
     return False
 
 

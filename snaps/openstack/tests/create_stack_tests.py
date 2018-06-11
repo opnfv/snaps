@@ -569,14 +569,15 @@ class CreateStackNestedResourceTests(OSIntegrationTestCase):
 
         self.image_creator = OpenStackImage(
             self.os_creds, openstack_tests.cirros_image_settings(
-                name=self.guid + '-image',
+                name="{}-{}".format(self.guid, 'image'),
                 image_metadata=self.image_metadata))
         self.image_creator.create()
 
+        flavor_config = openstack_tests.get_flavor_config(
+            name="{}-{}".format(self.guid, 'flavor-name'), ram=256, disk=10,
+            vcpus=1, metadata=self.flavor_metadata)
         self.flavor_creator = OpenStackFlavor(
-            self.admin_os_creds,
-            FlavorConfig(
-                name=self.guid + '-flavor-name', ram=256, disk=10, vcpus=1))
+            self.admin_os_creds, flavor_config)
         self.flavor_creator.create()
 
         env_values = {
@@ -593,7 +594,8 @@ class CreateStackNestedResourceTests(OSIntegrationTestCase):
             'snaps.openstack.tests.heat', 'agent.yaml')
 
         stack_settings = StackConfig(
-            name=self.__class__.__name__ + '-' + str(self.guid) + '-stack',
+            name="{}-{}".format(
+                self.__class__.__name__, str(self.guid) + '-stack'),
             template_path=heat_tmplt_path,
             resource_files=[heat_resource_path],
             env_values=env_values)

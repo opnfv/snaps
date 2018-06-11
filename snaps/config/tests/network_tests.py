@@ -42,6 +42,7 @@ class NetworkConfigUnitTests(unittest.TestCase):
         self.assertIsNone(settings.network_type)
         self.assertIsNone(settings.segmentation_id)
         self.assertEqual(0, len(settings.subnet_settings))
+        self.assertIsNone(settings.mtu)
 
     def test_config_with_name_only(self):
         settings = NetworkConfig(**{'name': 'foo'})
@@ -53,13 +54,14 @@ class NetworkConfigUnitTests(unittest.TestCase):
         self.assertIsNone(settings.network_type)
         self.assertIsNone(settings.segmentation_id)
         self.assertEqual(0, len(settings.subnet_settings))
+        self.assertIsNone(settings.mtu)
 
     def test_all(self):
         sub_settings = SubnetConfig(name='foo-subnet', cidr='10.0.0.0/24')
         settings = NetworkConfig(
             name='foo', admin_state_up=False, shared=True, project_name='bar',
             external=True, network_type='vlan', physical_network='phy',
-            segmentation_id=2366, subnet_settings=[sub_settings])
+            segmentation_id=2366, subnet_settings=[sub_settings], mtu=999)
         self.assertEqual('foo', settings.name)
         self.assertFalse(settings.admin_state_up)
         self.assertTrue(settings.shared)
@@ -70,6 +72,7 @@ class NetworkConfigUnitTests(unittest.TestCase):
         self.assertEqual(2366, settings.segmentation_id)
         self.assertEqual(1, len(settings.subnet_settings))
         self.assertEqual('foo-subnet', settings.subnet_settings[0].name)
+        self.assertEqual(999, settings.mtu)
 
     def test_config_all(self):
         settings = NetworkConfig(
@@ -79,7 +82,8 @@ class NetworkConfigUnitTests(unittest.TestCase):
                'segmentation_id': 2366,
                'subnets':
                    [{'subnet': {'name': 'foo-subnet',
-                                'cidr': '10.0.0.0/24'}}]})
+                                'cidr': '10.0.0.0/24'}}],
+               'mtu': 999})
         self.assertEqual('foo', settings.name)
         self.assertFalse(settings.admin_state_up)
         self.assertTrue(settings.shared)
@@ -90,6 +94,7 @@ class NetworkConfigUnitTests(unittest.TestCase):
         self.assertEqual(2366, settings.segmentation_id)
         self.assertEqual(1, len(settings.subnet_settings))
         self.assertEqual('foo-subnet', settings.subnet_settings[0].name)
+        self.assertEqual(999, settings.mtu)
 
 
 class SubnetConfigUnitTests(unittest.TestCase):
