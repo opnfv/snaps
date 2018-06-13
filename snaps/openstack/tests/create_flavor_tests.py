@@ -20,6 +20,7 @@ from snaps.openstack import create_flavor
 from snaps.openstack.create_flavor import OpenStackFlavor, FlavorSettings
 from snaps.openstack.tests.os_source_file_test import OSComponentTestCase
 from snaps.openstack.utils import nova_utils
+from snaps.openstack.tests import openstack_tests
 
 __author__ = 'spisarski'
 
@@ -364,10 +365,13 @@ class CreateFlavorTests(OSComponentTestCase):
         raise any exceptions.
         """
         # Create Flavor
-        flavor_settings = FlavorConfig(
+        if self.flavor_metadata:
+            self.flavor_metadata.update(create_flavor.
+                                        MEM_PAGE_SIZE_ANY)
+        flavor_settings = openstack_tests.get_flavor_config(
             name=self.flavor_name, ram=1, disk=1, vcpus=1, ephemeral=2, swap=3,
             rxtx_factor=2.2, is_public=False,
-            metadata=create_flavor.MEM_PAGE_SIZE_ANY)
+            metadata=self.flavor_metadata)
         self.flavor_creator = OpenStackFlavor(self.os_creds, flavor_settings)
         flavor = self.flavor_creator.create()
         self.assertTrue(validate_flavor(self.nova, flavor_settings, flavor))

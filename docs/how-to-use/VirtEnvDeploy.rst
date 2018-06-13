@@ -121,7 +121,11 @@ Use launcher.py to deploy and clean up example environments.  These examples are
           -  rxtx\_factor: the receive/transmit factor to be set on ports if
              backend supports QoS extension (default 1.0)
           -  is\_public: denotes whether or not the flavor is public (default = True)
-          -  metadata: freeform dict() for special metadata (optional)
+          -  metadata: - freeform dict() for special metadata (optional)
+                       - freeform dict() for values of basic elements
+                         (e.g. ram, vcpu, disk, etc) could be added.
+                         As result the hard coded values of those elements will be
+                         overwritten by the new ones (optional)
 
    -  qos_specs: the QoS Specs to create
 
