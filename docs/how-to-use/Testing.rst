@@ -26,6 +26,8 @@ Execute the tests
 | \* -f [optional - When set, will execute tests requiring Floating
   IPS]
 | \* -im [optional - File containing image endpoints to override
-| \* -fm [optional - JSON string containing a dict() for flavor metadata default='{\"hw:mem_page_size\": \"any\"}']
+| \* -fm [optional - JSON string containing a dict(): - for flavor metadata default='{\"hw:mem_page_size\": \"any\"}'
+                                                      - for values of basic elements (e.g. ram, vcpu, disk, etc) could be added.
+                                                        As result the hard coded values of those elements will be overwritten by the new ones]
 | \* -ci [optional - runs the tests required by SNAPS-OO CI]
 | \* -r [optional with default value of '1' - The number of test iterations to execute]
