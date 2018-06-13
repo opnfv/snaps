@@ -22,6 +22,30 @@
       "revId": "e6ec3766be49d69a44ca1e1348bbf5e6ed692c84",
       "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da5c1566_562b2582",
+        "filename": "snaps/openstack/tests/os_source_file_test.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 6883
+      },
+      "writtenOn": "2018-06-13T11:15:08Z",
+      "side": 1,
+      "message": "Rectify that: dev_os_env_file is just not being generated in all cases.",
+      "parentUuid": "da5c1566_361dd167",
+      "range": {
+        "startLine": 69,
+        "startChar": 37,
+        "endLine": 69,
+        "endChar": 46
+      },
+      "revId": "e6ec3766be49d69a44ca1e1348bbf5e6ed692c84",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
     }
   ]
 }
