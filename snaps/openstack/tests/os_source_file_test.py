@@ -50,29 +50,32 @@ class OSComponentTestCase(unittest.TestCase):
 
         logging.basicConfig(level=log_level)
 
+        self.ext_net_name = None
+        self.flavor_metadata = None
+
         if os_creds:
             self.os_creds = os_creds
         else:
-            self.os_creds = openstack_tests.get_credentials(
-                dev_os_env_file=dev_os_env_file)
+            if file_utils.file_exists(dev_os_env_file):
+                self.os_creds = openstack_tests.get_credentials(
+                    dev_os_env_file=dev_os_env_file)
+                if not self.ext_net_name:
+                    test_conf = file_utils.read_yaml(dev_os_env_file)
+                    self.ext_net_name = test_conf.get('ext_net')
+                    os_env_dict = file_utils.read_yaml(dev_os_env_file)
+                    flavor_metadata = os_env_dict.get('flavor_metadata')
+                    if flavor_metadata:
+                        self.flavor_metadata = {'metadata': flavor_metadata}
+            else:
+                raise Exception('Unable to obtain OSCreds')
 
         self.os_session = keystone_utils.keystone_session(self.os_creds)
-        self.ext_net_name = ext_net_name
 
-        if not self.ext_net_name and file_utils.file_exists(dev_os_env_file):
-            test_conf = file_utils.read_yaml(dev_os_env_file)
-            self.ext_net_name = test_conf.get('ext_net')
-
-        self.flavor_metadata = {}
-        if flavor_metadata:
-            self.flavor_metadata = flavor_metadata
-        else:
-            if file_utils.file_exists(dev_os_env_file):
-                os_env_dict = file_utils.read_yaml(dev_os_env_file)
-                flavor_metadata = os_env_dict.get('flavor_metadata')
-                if flavor_metadata:
-                    self.flavor_metadata = {'metadata': flavor_metadata}
         self.image_metadata = image_metadata
+        if not self.ext_net_name:
+            self.ext_net_name = ext_net_name
+        if not self.flavor_metadata:
+            self.flavor_metadata = flavor_metadata
 
     @staticmethod
     def parameterize(testcase_klass, os_creds, ext_net_name,
