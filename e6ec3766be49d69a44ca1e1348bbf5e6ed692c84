@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da5c1566_361dd167",
+        "filename": "snaps/openstack/tests/os_source_file_test.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 6883
+      },
+      "writtenOn": "2018-06-13T11:02:05Z",
+      "side": 1,
+      "message": "dev_os_env_file is not being generated, at least for odl scenarios and test are failing. We have the following:\n  File \"/usr/lib/python2.7/site-packages/snaps/file_utils.py\", line 186, in read_yaml\n    with open(config_file_path, \u0027r\u0027) as config_file:\nIOError: [Errno 2] No such file or directory: \u0027/usr/lib/python2.7/site-packages/snaps/openstack/tests/conf/os_env.yaml\u0027\n2018-06-13 05:32:46,434 - xtesting.core.testcase - ERROR - Please run test before getting the duration",
+      "range": {
+        "startLine": 69,
+        "startChar": 37,
+        "endLine": 69,
+        "endChar": 46
+      },
+      "revId": "e6ec3766be49d69a44ca1e1348bbf5e6ed692c84",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
