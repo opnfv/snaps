@@ -16,6 +16,7 @@ import logging
 import re
 
 from snaps import file_utils
+from snaps.config.flavor import FlavorConfig
 from snaps.config.image import ImageConfig
 from snaps.config.network import NetworkConfig, SubnetConfig
 from snaps.config.router import RouterConfig
@@ -326,6 +327,65 @@ def get_pub_net_config(
     return OSNetworkConfig(project_name, net_name, subnet_name, cidr,
                            router_name, external_gateway=external_net,
                            netconf_override=netconf_override)
+
+
+def get_flavor_config(name, ram, disk, vcpus, ephemeral=None, swap=None,
+                      rxtx_factor=None, is_public=None, metadata=None):
+    """This method replaces the hard coded basic element (e.g. ram, vcpu, disk
+     etc) with those are included in the new freeform dict() of metadata
+     parameter.
+
+    :param name: the flavor name (required)
+    :param ram: memory in MB to allocate to VM (required)
+    :param disk: disk storage in GB (required)
+    :param vcpus: the number of CPUs to allocate to VM (required)
+    :param ephemeral: the size of the ephemeral disk in GB (default=0)
+    :param swap: the size of the swap disk in GB (default=0)
+    :param rxtx_factor: the receive/transmit factor to be set on ports
+         if backend supports QoS extension (default=1.0)
+    :param is_public: flag that denotes whether or not other projects
+         can access image (default=True)
+    :param metadata: - freeform dict() for special metadata (optional)
+                     - freeform dict() for values of basic elements
+                     (e.g. ram, vcpu, disk, etc) could be added.
+                     As result the hard coded values of those elements will be
+                     overwritten by the new ones (optional)
+    :return: The FlavorConfig replacing the hard coded basic element values
+            (e.g. ram, vcpu, disk etc) with those are included in the metadata
+             dict [optional]. The metadata parameter in the FlavorConfig
+             consist of the metadata data only.
+    """
+
+    metadata_excl = metadata
+    if metadata:
+        if 'ram' in metadata:
+            ram = metadata['ram']
+            del metadata_excl['ram']
+        if 'disk' in metadata:
+            disk = metadata['disk']
+            del metadata_excl['disk']
+        if 'vcpus' in metadata:
+            vcpus = metadata['vcpus']
+            del metadata_excl['vcpus']
+        if 'ephemeral' in metadata:
+            ephemeral = metadata['ephemeral']
+            del metadata_excl['ephemeral']
+        if 'swap' in metadata:
+            swap = metadata['swap']
+            del metadata_excl['swap']
+        if 'rxtx_factor' in metadata:
+            rxtx_factor = metadata['rxtx_factor']
+            del metadata_excl['rxtx_factor']
+        if 'is_public' in metadata:
+            is_public = metadata['is_public']
+            del metadata_excl['is_public']
+        if 'metadata' in metadata:
+            metadata_excl = metadata['metadata']
+
+    return FlavorConfig(
+        name=name, ram=ram, disk=disk, vcpus=vcpus, ephemeral=ephemeral,
+        swap=swap, rxtx_factor=rxtx_factor, is_public=is_public,
+        metadata=metadata_excl)
 
 
 class OSNetworkConfig:
