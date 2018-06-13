@@ -63,13 +63,15 @@ class OSComponentTestCase(unittest.TestCase):
             test_conf = file_utils.read_yaml(dev_os_env_file)
             self.ext_net_name = test_conf.get('ext_net')
 
+        self.flavor_metadata = {}
         if flavor_metadata:
             self.flavor_metadata = flavor_metadata
         else:
-            os_env_dict = file_utils.read_yaml(dev_os_env_file)
-            flavor_metadata = os_env_dict.get('flavor_metadata')
-            if flavor_metadata:
-                self.flavor_metadata = {'metadata': flavor_metadata}
+            if file_utils.file_exists(dev_os_env_file):
+                os_env_dict = file_utils.read_yaml(dev_os_env_file)
+                flavor_metadata = os_env_dict.get('flavor_metadata')
+                if flavor_metadata:
+                    self.flavor_metadata = {'metadata': flavor_metadata}
         self.image_metadata = image_metadata
 
     @staticmethod
