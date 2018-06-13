@@ -105,11 +105,11 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
             self.router_creator.create()
 
             # Create Flavor
+            flavor_config = openstack_tests.get_flavor_config(
+                name=guid + '-flavor-name', ram=2048, disk=10, vcpus=2,
+                metadata=self.flavor_metadata)
             self.flavor_creator = create_flavor.OpenStackFlavor(
-                self.admin_os_creds,
-                FlavorConfig(
-                    name=guid + '-flavor-name', ram=2048, disk=10, vcpus=2,
-                    metadata=self.flavor_metadata))
+                self.admin_os_creds, flavor_config)
             self.flavor_creator.create()
 
             # Create Key/Pair

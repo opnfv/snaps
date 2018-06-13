@@ -150,10 +150,11 @@ class CreateStackSuccessTests(OSIntegrationTestCase):
         self.image_creator.create()
 
         # Create Flavor
-        self.flavor_creator = OpenStackFlavor(
-            self.admin_os_creds,
-            FlavorConfig(
-                name=self.guid + '-flavor-name', ram=256, disk=10, vcpus=1))
+        flavor_config = openstack_tests.get_flavor_config(
+            name=self.guid + '-flavor-name', ram=256, disk=10, vcpus=1,
+            metadata=self.flavor_metadata)
+        self.flavor_creator = OpenStackFlavor(self.admin_os_creds,
+                                              flavor_config)
         self.flavor_creator.create()
 
         self.network_name = self.guid + '-net'

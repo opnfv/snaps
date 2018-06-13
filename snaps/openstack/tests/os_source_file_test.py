@@ -31,7 +31,8 @@ dev_os_env_file = pkg_resources.resource_filename(
 class OSComponentTestCase(unittest.TestCase):
 
     def __init__(self, method_name='runTest', os_creds=None, ext_net_name=None,
-                 image_metadata=None, log_level=logging.DEBUG):
+                 flavor_metadata=None, image_metadata=None,
+                 log_level=logging.DEBUG):
         """
         Super for test classes requiring a connection to OpenStack
         :param method_name: default 'runTest'
@@ -39,6 +40,8 @@ class OSComponentTestCase(unittest.TestCase):
                          in the package snaps.openstack.tests.conf.os_env.yaml
         :param ext_net_name: the name of the external network that is used for
                              creating routers for floating IPs
+        :param flavor_metadata: dict() to be sent directly into the Nova client
+                                generally used for page sizes
         :param image_metadata: ability to override images being used in the
                                tests (see examples/image-metadata)
         :param log_level: the logging level of your test run (default DEBUG)
@@ -60,11 +63,13 @@ class OSComponentTestCase(unittest.TestCase):
             test_conf = file_utils.read_yaml(dev_os_env_file)
             self.ext_net_name = test_conf.get('ext_net')
 
+        self.flavor_metadata = flavor_metadata
         self.image_metadata = image_metadata
 
     @staticmethod
     def parameterize(testcase_klass, os_creds, ext_net_name,
-                     image_metadata=None, log_level=logging.DEBUG):
+                     flavor_metadata=None, image_metadata=None,
+                     log_level=logging.DEBUG):
         """ Create a suite containing all tests taken from the given
             subclass, passing them the parameter 'param'.
         """
@@ -73,7 +78,8 @@ class OSComponentTestCase(unittest.TestCase):
         suite = unittest.TestSuite()
         for name in test_names:
             suite.addTest(testcase_klass(name, os_creds, ext_net_name,
-                                         image_metadata, log_level))
+                                         flavor_metadata, image_metadata,
+                                         log_level))
         return suite
 
     def __clean__(self):
@@ -112,12 +118,11 @@ class OSIntegrationTestCase(OSComponentTestCase):
         """
         super(OSIntegrationTestCase, self).__init__(
             method_name=method_name, os_creds=os_creds,
-            ext_net_name=ext_net_name, image_metadata=image_metadata,
-            log_level=log_level)
+            ext_net_name=ext_net_name, flavor_metadata=flavor_metadata,
+            image_metadata=image_metadata, log_level=log_level)
         self.netconf_override = netconf_override
         self.use_keystone = use_keystone
         self.keystone = None
-        self.flavor_metadata = flavor_metadata
         self.user_roles = None
 
     @staticmethod
