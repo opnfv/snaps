@@ -15,17 +15,18 @@
 import logging
 import os
 
-import yaml
 from heatclient.client import Client
 from heatclient.common.template_format import yaml_loader
 from novaclient.exceptions import NotFound
 from oslo_serialization import jsonutils
+import yaml
 
 from snaps import file_utils
 from snaps.domain.stack import Stack, Resource, Output
-
 from snaps.openstack.utils import (
     keystone_utils, neutron_utils, nova_utils, cinder_utils)
+from snaps.thread_utils import worker_pool
+
 
 __author__ = 'spisarski'
 
@@ -220,8 +221,14 @@ def get_stack_networks(heat_cli, neutron, stack):
 
     out = list()
     resources = get_resources(heat_cli, stack.id, 'OS::Neutron::Net')
+    workers = []
     for resource in resources:
-        network = neutron_utils.get_network_by_id(neutron, resource.id)
+        worker = worker_pool().apply_async(neutron_utils.get_network_by_id,
+                                           (neutron, resource.id))
+        workers.append(worker)
+
+    for worker in workers:
+        network = worker.get()
         if network:
             out.append(network)
 
@@ -239,8 +246,14 @@ def get_stack_routers(heat_cli, neutron, stack):
 
     out = list()
     resources = get_resources(heat_cli, stack.id, 'OS::Neutron::Router')
+    workers = []
     for resource in resources:
-        router = neutron_utils.get_router_by_id(neutron, resource.id)
+        worker = worker_pool().apply_async(neutron_utils.get_router_by_id,
+                                           (neutron, resource.id))
+        workers.append(worker)
+
+    for worker in workers:
+        router = worker.get()
         if router:
             out.append(router)
 
@@ -258,9 +271,15 @@ def get_stack_security_groups(heat_cli, neutron, stack):
 
     out = list()
     resources = get_resources(heat_cli, stack.id, 'OS::Neutron::SecurityGroup')
+    workers = []
     for resource in resources:
-        security_group = neutron_utils.get_security_group_by_id(
-            neutron, resource.id)
+        worker = worker_pool().apply_async(
+            neutron_utils.get_security_group_by_id,
+            (neutron, resource.id))
+        workers.append(worker)
+
+    for worker in workers:
+        security_group = worker.get()
         if security_group:
             out.append(security_group)
 
@@ -281,26 +300,39 @@ def get_stack_servers(heat_cli, nova, neutron, keystone, stack, project_name):
 
     out = list()
     srvr_res = get_resources(heat_cli, stack.id, 'OS::Nova::Server')
+    workers = []
     for resource in srvr_res:
+        worker = worker_pool().apply_async(
+            nova_utils.get_server_object_by_id,
+            (nova, neutron, keystone, resource.id, project_name))
+        workers.append((resource.id, worker))
+
+    for worker in workers:
+        resource_id = worker[0]
         try:
-            server = nova_utils.get_server_object_by_id(
-                nova, neutron, keystone, resource.id, project_name)
+            server = worker[1].get()
             if server:
                 out.append(server)
         except NotFound:
-            logger.warn('VmInst cannot be located with ID %s', resource.id)
+            logger.warn('VmInst cannot be located with ID %s', resource_id)
 
     res_grps = get_resources(heat_cli, stack.id, 'OS::Heat::ResourceGroup')
     for res_grp in res_grps:
         res_ress = get_resources(heat_cli, res_grp.id)
+        workers = []
         for res_res in res_ress:
             res_res_srvrs = get_resources(
                 heat_cli, res_res.id, 'OS::Nova::Server')
             for res_srvr in res_res_srvrs:
-                server = nova_utils.get_server_object_by_id(
-                    nova, neutron, keystone, res_srvr.id, project_name)
-                if server:
-                    out.append(server)
+                worker = worker_pool().apply_async(
+                    nova_utils.get_server_object_by_id,
+                    (nova, neutron, keystone, res_srvr.id, project_name))
+                workers.append(worker)
+
+        for worker in workers:
+            server = worker.get()
+            if server:
+                out.append(server)
 
     return out
 
@@ -316,13 +348,20 @@ def get_stack_keypairs(heat_cli, nova, stack):
 
     out = list()
     resources = get_resources(heat_cli, stack.id, 'OS::Nova::KeyPair')
+    workers = []
     for resource in resources:
+        worker = worker_pool().apply_async(
+            nova_utils.get_keypair_by_id, (nova, resource.id))
+        workers.append((resource.id, worker))
+
+    for worker in workers:
+        resource_id = worker[0]
         try:
-            keypair = nova_utils.get_keypair_by_id(nova, resource.id)
+            keypair = worker[1].get()
             if keypair:
                 out.append(keypair)
         except NotFound:
-            logger.warn('Keypair cannot be located with ID %s', resource.id)
+            logger.warn('Keypair cannot be located with ID %s', resource_id)
 
     return out
 
@@ -338,13 +377,20 @@ def get_stack_volumes(heat_cli, cinder, stack):
 
     out = list()
     resources = get_resources(heat_cli, stack.id, 'OS::Cinder::Volume')
+    workers = []
     for resource in resources:
+        worker = worker_pool().apply_async(
+            cinder_utils.get_volume_by_id, (cinder, resource.id))
+        workers.append((resource.id, worker))
+
+    for worker in workers:
+        resource_id = worker[0]
         try:
-            server = cinder_utils.get_volume_by_id(cinder, resource.id)
+            server = worker[1].get()
             if server:
                 out.append(server)
         except NotFound:
-            logger.warn('Volume cannot be located with ID %s', resource.id)
+            logger.warn('Volume cannot be located with ID %s', resource_id)
 
     return out
 
@@ -360,13 +406,20 @@ def get_stack_volume_types(heat_cli, cinder, stack):
 
     out = list()
     resources = get_resources(heat_cli, stack.id, 'OS::Cinder::VolumeType')
+    workers = []
     for resource in resources:
+        worker = worker_pool().apply_async(
+            cinder_utils.get_volume_type_by_id, (cinder, resource.id))
+        workers.append((resource.id, worker))
+
+    for worker in workers:
+        resource_id = worker[0]
         try:
-            vol_type = cinder_utils.get_volume_type_by_id(cinder, resource.id)
+            vol_type = worker[1].get()
             if vol_type:
                 out.append(vol_type)
         except NotFound:
-            logger.warn('VolumeType cannot be located with ID %s', resource.id)
+            logger.warn('VolumeType cannot be located with ID %s', resource_id)
 
     return out
 
@@ -383,13 +436,20 @@ def get_stack_flavors(heat_cli, nova, stack):
 
     out = list()
     resources = get_resources(heat_cli, stack.id, 'OS::Nova::Flavor')
+    workers = []
     for resource in resources:
+        worker = worker_pool().apply_async(
+            nova_utils.get_flavor_by_id, (nova, resource.id))
+        workers.append((resource.id, worker))
+
+    for worker in workers:
+        resource_id = worker[0]
         try:
-            flavor = nova_utils.get_flavor_by_id(nova, resource.id)
+            flavor = worker[1].get()
             if flavor:
                 out.append(flavor)
         except NotFound:
-            logger.warn('Flavor cannot be located with ID %s', resource.id)
+            logger.warn('Flavor cannot be located with ID %s', resource_id)
 
     return out
 

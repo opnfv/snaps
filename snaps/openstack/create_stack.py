@@ -23,16 +23,17 @@ from snaps.config.stack import StackConfig
 from snaps.openstack.create_flavor import OpenStackFlavor
 from snaps.openstack.create_instance import OpenStackVmInstance
 from snaps.openstack.create_keypairs import OpenStackKeypair
-from snaps.openstack.create_security_group import OpenStackSecurityGroup
+from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.create_router import OpenStackRouter
+from snaps.openstack.create_security_group import OpenStackSecurityGroup
 from snaps.openstack.create_volume import OpenStackVolume
 from snaps.openstack.create_volume_type import OpenStackVolumeType
 from snaps.openstack.openstack_creator import OpenStackCloudObject
 from snaps.openstack.utils import (
     nova_utils, settings_utils, glance_utils, cinder_utils)
-
-from snaps.openstack.create_network import OpenStackNetwork
 from snaps.openstack.utils import heat_utils, neutron_utils
+from snaps.thread_utils import worker_pool
+
 
 __author__ = 'spisarski'
 
@@ -295,6 +296,23 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
 
         return out
 
+    def __create_vm_inst(self, heat_keypair_option, stack_server):
+
+        vm_inst_settings = settings_utils.create_vm_inst_config(
+            self.__nova, self._keystone, self.__neutron, stack_server,
+            self._os_creds.project_name)
+        image_settings = settings_utils.determine_image_config(
+            self.__glance, stack_server, self.image_settings)
+        keypair_settings = settings_utils.determine_keypair_config(
+            self.__heat_cli, self.__stack, stack_server,
+            keypair_settings=self.keypair_settings,
+            priv_key_key=heat_keypair_option)
+        vm_inst_creator = OpenStackVmInstance(
+            self._os_creds, vm_inst_settings, image_settings,
+            keypair_settings)
+        vm_inst_creator.initialize()
+        return vm_inst_creator
+
     def get_vm_inst_creators(self, heat_keypair_option=None):
         """
         Returns a list of VM Instance creator objects as configured by the heat
@@ -308,21 +326,16 @@ class OpenStackHeatStack(OpenStackCloudObject, object):
             self.__heat_cli, self.__nova, self.__neutron, self._keystone,
             self.__stack, self._os_creds.project_name)
 
+        workers = []
         for stack_server in stack_servers:
-            vm_inst_settings = settings_utils.create_vm_inst_config(
-                self.__nova, self._keystone, self.__neutron, stack_server,
-                self._os_creds.project_name)
-            image_settings = settings_utils.determine_image_config(
-                self.__glance, stack_server, self.image_settings)
-            keypair_settings = settings_utils.determine_keypair_config(
-                self.__heat_cli, self.__stack, stack_server,
-                keypair_settings=self.keypair_settings,
-                priv_key_key=heat_keypair_option)
-            vm_inst_creator = OpenStackVmInstance(
-                self._os_creds, vm_inst_settings, image_settings,
-                keypair_settings)
-            out.append(vm_inst_creator)
-            vm_inst_creator.initialize()
+            worker = worker_pool().apply_async(
+                self.__create_vm_inst,
+                (heat_keypair_option,
+                    stack_server))
+            workers.append(worker)
+
+        for worker in workers:
+            out.append(worker.get())
 
         return out
 
