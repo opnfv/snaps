@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Cable Television Laboratories, Inc. ("CableLabs")
+# Copyright (c) 2017 Cable Television Laboratories, Inc. ("CableLabs")
 #                    and others.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,4 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__author__ = 'spisarski'
+from multiprocessing.pool import ThreadPool
+
+_pool = None
+
+
+# Define a thread pool with a limit for how many simultaneous API requests
+# can be in progress at once.
+def worker_pool(size=5):
+    global _pool
+    if _pool is None:
+        _pool = ThreadPool(processes=size)
+    return _pool
