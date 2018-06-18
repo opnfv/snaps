@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da5c1566_bbab8188",
+        "filename": "snaps/thread_utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-06-18T21:11:44Z",
+      "side": 1,
+      "message": "Can you add an optional parameter for the number of threads/processes?",
+      "revId": "4c316acbc771a9ac0f56b28aef12c60ca8d35c0f",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
