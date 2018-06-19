@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da5c1566_01683cb9",
+        "filename": "snaps/thread_utils.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1421
+      },
+      "writtenOn": "2018-06-19T17:48:16Z",
+      "side": 1,
+      "message": "should the global keyword be used here instead of in the utility function?",
+      "revId": "b2590d79a80dc12948d028ffee5b911b59daa777",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
