@@ -24,7 +24,6 @@ from neutronclient.common.exceptions import (
     InvalidIpForSubnetClient, BadRequest)
 
 from snaps import file_utils
-from snaps.config.flavor import FlavorConfig
 from snaps.config.image import ImageConfig
 from snaps.config.keypair import KeypairConfig
 from snaps.config.network import PortConfig, NetworkConfig, SubnetConfig
@@ -335,10 +334,11 @@ class SimpleHealthCheck(OSIntegrationTestCase):
             if (self.flavor_metadata and
                self.flavor_metadata.get('hw:mem_page_size') == 'large'):
                 self.flavor_ram = 1024
+            flavor_config = openstack_tests.get_flavor_config(
+                name=guid + '-flavor-name', ram=self.flavor_ram, disk=10,
+                vcpus=1, metadata=self.flavor_metadata)
             self.flavor_creator = OpenStackFlavor(
-                self.admin_os_creds,
-                FlavorConfig(name=guid + '-flavor-name', ram=self.flavor_ram,
-                             disk=10, vcpus=1, metadata=self.flavor_metadata))
+                self.admin_os_creds, flavor_config)
             self.flavor_creator.create()
         except Exception as e:
             self.tearDown()
@@ -437,10 +437,11 @@ class CreateInstanceSimpleTests(OSIntegrationTestCase):
             self.image_creator.create()
 
             # Create Flavor
+            flavor_config = openstack_tests.get_flavor_config(
+                name=self.guid + '-flavor-name', ram=256, disk=10,
+                vcpus=2, metadata=self.flavor_metadata)
             self.flavor_creator = OpenStackFlavor(
-                self.admin_os_creds,
-                FlavorConfig(name=self.guid + '-flavor-name', ram=256, disk=10,
-                             vcpus=2, metadata=self.flavor_metadata))
+                self.admin_os_creds, flavor_config)
             self.flavor_creator.create()
             self.network_creator = None
         except Exception as e:
@@ -615,10 +616,11 @@ class CreateInstanceExternalNetTests(OSIntegrationTestCase):
             self.image_creator.create()
 
             # Create Flavor
+            flavor_config = openstack_tests.get_flavor_config(
+                name=guid + '-flavor-name', ram=256, disk=10,
+                vcpus=2, metadata=self.flavor_metadata)
             self.flavor_creator = OpenStackFlavor(
-                self.admin_os_creds,
-                FlavorConfig(name=guid + '-flavor-name', ram=256, disk=10,
-                             vcpus=2, metadata=self.flavor_metadata))
+                self.admin_os_creds, flavor_config)
             self.flavor_creator.create()
 
             self.port_settings = PortConfig(
@@ -737,10 +739,11 @@ class CreateInstanceSingleNetworkTests(OSIntegrationTestCase):
             self.router_creator.create()
 
             # Create Flavor
+            flavor_config = openstack_tests.get_flavor_config(
+                name=guid + '-flavor-name', ram=256, disk=10,
+                vcpus=2, metadata=self.flavor_metadata)
             self.flavor_creator = OpenStackFlavor(
-                self.admin_os_creds,
-                FlavorConfig(name=guid + '-flavor-name', ram=256, disk=10,
-                             vcpus=2, metadata=self.flavor_metadata))
+                self.admin_os_creds, flavor_config)
             self.flavor_creator.create()
 
             self.keypair_creator = OpenStackKeypair(
@@ -1146,11 +1149,11 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
                 self.os_creds, os_image_settings)
             self.image_creator.create()
 
+            flavor_config = openstack_tests.get_flavor_config(
+                name=self.guid + '-flavor-name', ram=256, disk=10,
+                vcpus=2, metadata=self.flavor_metadata)
             self.flavor_creator = OpenStackFlavor(
-                self.admin_os_creds,
-                FlavorConfig(
-                    name=self.guid + '-flavor-name', ram=256, disk=10, vcpus=2,
-                    metadata=self.flavor_metadata))
+                self.admin_os_creds, flavor_config)
             self.flavor_creator.create()
 
             self.keypair_creator = OpenStackKeypair(
@@ -1385,10 +1388,11 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
             self.network_creator.create()
 
             # Create Flavor
+            flavor_config = openstack_tests.get_flavor_config(
+                name=self.guid + '-flavor-name', ram=256, disk=10,
+                vcpus=2, metadata=self.flavor_metadata)
             self.flavor_creator = OpenStackFlavor(
-                self.admin_os_creds,
-                FlavorConfig(name=self.guid + '-flavor-name', ram=256, disk=10,
-                             vcpus=2, metadata=self.flavor_metadata))
+                self.admin_os_creds, flavor_config)
             self.flavor_creator.create()
         except Exception as e:
             self.tearDown()
@@ -1760,10 +1764,11 @@ class CreateInstanceOnComputeHost(OSIntegrationTestCase):
             self.network_creator.create()
 
             # Create Flavor
+            flavor_config = openstack_tests.get_flavor_config(
+                name=guid + '-flavor-name', ram=512, disk=1,
+                vcpus=1, metadata=self.flavor_metadata)
             self.flavor_creator = OpenStackFlavor(
-                self.admin_os_creds,
-                FlavorConfig(name=guid + '-flavor-name', ram=512, disk=1,
-                             vcpus=1, metadata=self.flavor_metadata))
+                self.admin_os_creds, flavor_config)
             self.flavor_creator.create()
 
             # Create Image
@@ -1909,11 +1914,11 @@ class InstanceSecurityGroupTests(OSIntegrationTestCase):
             self.network_creator.create()
 
             # Create Flavor
+            flavor_config = openstack_tests.get_flavor_config(
+                name=self.guid + '-flavor-name', ram=256, disk=10,
+                vcpus=2, metadata=self.flavor_metadata)
             self.flavor_creator = OpenStackFlavor(
-                self.admin_os_creds,
-                FlavorConfig(name=self.guid + '-flavor-name', ram=256,
-                             disk=10, vcpus=2,
-                             metadata=self.flavor_metadata))
+                self.admin_os_creds, flavor_config)
             self.flavor_creator.create()
 
             self.port_settings = PortConfig(
@@ -2246,10 +2251,11 @@ class CreateInstanceFromThreePartImage(OSIntegrationTestCase):
             self.image_creator.create()
 
             # Create Flavor
+            flavor_config = openstack_tests.get_flavor_config(
+                name=guid + '-flavor-name', ram=256, disk=10,
+                vcpus=2, metadata=self.flavor_metadata)
             self.flavor_creator = OpenStackFlavor(
-                self.admin_os_creds,
-                FlavorConfig(name=guid + '-flavor-name', ram=256, disk=10,
-                             vcpus=2, metadata=self.flavor_metadata))
+                self.admin_os_creds, flavor_config)
             self.flavor_creator.create()
 
             # Create Network
@@ -2368,11 +2374,11 @@ class CreateInstanceMockOfflineTests(OSComponentTestCase):
             self.network_creator.create()
 
             # Create Flavor
+            flavor_config = openstack_tests.get_flavor_config(
+                name=self.guid + '-flavor-name', ram=256, disk=10,
+                vcpus=2, metadata=self.flavor_metadata)
             self.flavor_creator = OpenStackFlavor(
-                self.os_creds,
-                FlavorConfig(
-                    name=self.guid + '-flavor-name', ram=256, disk=10,
-                    vcpus=1))
+                self.os_creds, flavor_config)
             self.flavor_creator.create()
         except Exception as e:
             self.tearDown()
@@ -2910,11 +2916,11 @@ class CreateInstanceTwoNetTests(OSIntegrationTestCase):
                 self.os_creds, router_settings)
             self.router_creator.create()
 
+            flavor_config = openstack_tests.get_flavor_config(
+                name=self.guid + '-flavor-name', ram=512, disk=10,
+                vcpus=2, metadata=self.flavor_metadata)
             self.flavor_creator = OpenStackFlavor(
-                self.admin_os_creds,
-                FlavorConfig(name=self.guid + '-flavor-name', ram=512,
-                             disk=10, vcpus=2,
-                             metadata=self.flavor_metadata))
+                self.admin_os_creds, flavor_config)
             self.flavor_creator.create()
 
             sec_grp_name = self.guid + '-sec-grp'
@@ -3094,10 +3100,11 @@ class CreateInstanceVolumeTests(OSIntegrationTestCase):
             self.image_creator.create()
 
             # Create Flavor
+            flavor_config = openstack_tests.get_flavor_config(
+                name=guid + '-flavor-name', ram=256, disk=1,
+                vcpus=2, metadata=self.flavor_metadata)
             self.flavor_creator = OpenStackFlavor(
-                self.admin_os_creds,
-                FlavorConfig(name=guid + '-flavor-name', ram=256, disk=1,
-                             vcpus=2, metadata=self.flavor_metadata))
+                self.admin_os_creds, flavor_config)
             self.flavor_creator.create()
 
             # Create Network
