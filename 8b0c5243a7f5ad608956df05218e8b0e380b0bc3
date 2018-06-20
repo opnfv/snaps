@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da5c1566_f0f35308",
+        "filename": "snaps/openstack/create_stack.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 2034
+      },
+      "writtenOn": "2018-06-20T19:20:38Z",
+      "side": 1,
+      "message": "This changes the default to false, where it was true before.",
+      "revId": "8b0c5243a7f5ad608956df05218e8b0e380b0bc3",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
