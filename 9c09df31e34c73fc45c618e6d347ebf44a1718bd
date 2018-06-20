@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da5c1566_b0d39b37",
+        "filename": "snaps/openstack/create_stack.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 2034
+      },
+      "writtenOn": "2018-06-20T19:20:38Z",
+      "side": 1,
+      "message": "Still not good, sorry.  needs to have % and two params",
+      "revId": "9c09df31e34c73fc45c618e6d347ebf44a1718bd",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da5c1566_f0dd1344",
+        "filename": "snaps/openstack/utils/heat_utils.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 2034
+      },
+      "writtenOn": "2018-06-20T19:20:38Z",
+      "side": 1,
+      "message": "There is no return from stacks.update.",
+      "revId": "9c09df31e34c73fc45c618e6d347ebf44a1718bd",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da5c1566_d0e28f02",
+        "filename": "snaps/openstack/utils/heat_utils.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 2034
+      },
+      "writtenOn": "2018-06-20T19:20:38Z",
+      "side": 1,
+      "message": "Remove return from here and L162",
+      "revId": "9c09df31e34c73fc45c618e6d347ebf44a1718bd",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
