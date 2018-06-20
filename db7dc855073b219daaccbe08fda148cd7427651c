@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da5c1566_d0b0cff6",
+        "filename": "snaps/openstack/utils/heat_utils.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 2034
+      },
+      "writtenOn": "2018-06-20T20:05:52Z",
+      "side": 1,
+      "message": "os_stack will be None.",
+      "revId": "db7dc855073b219daaccbe08fda148cd7427651c",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da5c1566_f0ab5387",
+        "filename": "snaps/openstack/utils/heat_utils.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 2034
+      },
+      "writtenOn": "2018-06-20T20:05:52Z",
+      "side": 1,
+      "message": "My previous commit did remove this and removed the :return frm the method docs.",
+      "revId": "db7dc855073b219daaccbe08fda148cd7427651c",
+      "serverId": "bbac25d2-bf60-4904-9ba8-a72fc000d6c5",
+      "unresolved": false
+    }
+  ]
+}
