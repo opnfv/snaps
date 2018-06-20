@@ -69,9 +69,10 @@ class CreateClusterTemplateTests(OSIntegrationTestCase):
 
         self.image_creator = OpenStackImage(self.os_creds, os_image_settings)
 
-        self.flavor_creator = OpenStackFlavor(
-            self.os_creds, FlavorConfig(
-                name=self.guid + '-flavor', ram=512, disk=10, vcpus=1))
+        flavor_config = openstack_tests.get_flavor_config(
+            name=self.guid + '-flavor', ram=512, disk=10,
+            vcpus=1, metadata=self.flavor_metadata)
+        self.flavor_creator = OpenStackFlavor(self.os_creds, flavor_config)
 
         keypair_priv_filepath = 'tmp/' + self.guid
         keypair_pub_filepath = keypair_priv_filepath + '.pub'
