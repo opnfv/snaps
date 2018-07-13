@@ -140,10 +140,10 @@ resources:
       floating_network: { get_param: external_net_name }
 
   floating_ip_association:
-    type: OS::Nova::FloatingIPAssociation
+    type: OS::Neutron::FloatingIPAssociation
     properties:
-      floating_ip: { get_resource: floating_ip }
-      server_id: {get_resource: vm1}
+      floatingip_id: { get_resource: floating_ip }
+      port_id: {get_resource: port1}
 
   keypair:
     type: OS::Nova::KeyPair
@@ -151,21 +151,28 @@ resources:
       name: { get_param: keypair_name }
       save_private_key: True
 
+  port1:
+    type: OS::Neutron::Port
+    properties:
+      network: { get_resource: network }
+      security_groups: [{ get_resource: server_security_group }]
+      fixed_ips:
+        - subnet_id: { get_resource: subnet }
+
   vm1:
     type: OS::Nova::Server
-    depends_on: [subnet, keypair, flavor1]
+    depends_on: [subnet, keypair, flavor1, port1]
     properties:
       name: { get_param: inst1_name }
       image: { get_param: image1_name }
       flavor: { get_resource: flavor1 }
       key_name: {get_resource: keypair}
-      security_groups: [{ get_resource: server_security_group }]
       networks:
-        - network: { get_resource: network }
+        - port: { get_resource: port1 }
 
   vm2:
     type: OS::Nova::Server
-    depends_on: [subnet, flavor2]
+    depends_on: [subnet, keypair, flavor2]
     properties:
       name: { get_param: inst2_name }
       image: { get_param: image2_name }
