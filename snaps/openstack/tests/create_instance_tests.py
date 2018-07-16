@@ -1426,6 +1426,14 @@ class CreateInstancePortManipulationTests(OSIntegrationTestCase):
                     'Unexpected exception cleaning network with message - %s',
                     e)
 
+        if self.network_creator2:
+            try:
+                self.network_creator2.clean()
+            except Exception as e:
+                logger.error(
+                    'Unexpected exception cleaning network with message - %s',
+                    e)
+
         if self.image_creator and not self.image_creator.image_settings.exists:
             try:
                 self.image_creator.clean()
