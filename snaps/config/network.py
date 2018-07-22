@@ -462,7 +462,7 @@ class PortConfig(object):
         try:
             network = neutron_utils.get_network(
                 neutron, keystone, network_name=self.network_name)
-            if network and (not network.shared or not network.external):
+            if network and (not network.shared and not network.external):
                 network = neutron_utils.get_network(
                     neutron, keystone, network_name=self.network_name,
                     project_name=project_name)
