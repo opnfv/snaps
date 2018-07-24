@@ -1364,6 +1364,7 @@ class CreateInstanceIPv6NetworkTests(OSIntegrationTestCase):
             keypair_settings=self.keypair_creator.keypair_settings)
 
         self.inst_creator.create(block=True)
+        self.inst_creator.cloud_init_complete(block=True)
         ssh_client = self.inst_creator.ssh_client()
         self.assertIsNotNone(ssh_client)
 
