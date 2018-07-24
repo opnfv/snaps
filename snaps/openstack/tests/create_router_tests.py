@@ -21,8 +21,8 @@ from snaps.config.security_group import SecurityGroupConfig
 from snaps.openstack import create_network
 from snaps.openstack import create_router
 from snaps.openstack.create_network import OpenStackNetwork
-from snaps.openstack.create_router import (RouterSettings, OpenStackRouter,
-    RouterCreationError)
+from snaps.openstack.create_router import (
+    RouterSettings, OpenStackRouter, RouterCreationError)
 from snaps.openstack.create_security_group import OpenStackSecurityGroup
 from snaps.openstack.tests.os_source_file_test import OSIntegrationTestCase
 from snaps.openstack.utils import neutron_utils, settings_utils, keystone_utils
@@ -31,6 +31,7 @@ __author__ = 'mmakati'
 
 cidr1 = '10.200.201.0/24'
 cidr2 = '10.200.202.0/24'
+cidr3 = '10.200.203.0/24'
 static_gateway_ip1 = '10.200.201.1'
 static_gateway_ip2 = '10.200.202.1'
 
@@ -285,7 +286,7 @@ class CreateRouterSuccessTests(OSIntegrationTestCase):
             self.os_creds, self.router_settings)
 
         with self.assertRaises(RouterCreationError):
-            created_router = self.router_creator.create()
+            self.router_creator.create()
 
     def test_create_router_admin_state_false(self):
         """
@@ -760,6 +761,112 @@ class CreateRouterSecurityGroupTests(OSIntegrationTestCase):
 
         router_settings = RouterConfig(
             name=self.guid + '-pub-router', external_gateway=self.ext_net_name,
+            port_settings=port_settings)
+        self.router_creator = create_router.OpenStackRouter(
+            self.os_creds, router_settings)
+        self.router_creator.create()
+
+
+class CreateRouterSharedNetworksTests(OSIntegrationTestCase):
+    """
+    Class for testing routers external and/or shared networks
+    """
+
+    def setUp(self):
+        """
+        Initializes objects used for router testing
+        """
+        super(self.__class__, self).__start__()
+
+        self.guid = self.__class__.__name__ + '-' + str(uuid.uuid4())
+        self.router_creator = None
+
+        ext_network_settings = NetworkConfig(
+            name=self.guid + '-ext-net',
+            external=True,
+            subnet_settings=[
+                create_network.SubnetConfig(
+                    cidr=cidr1, name=self.guid + '-ext-subnet1')])
+        self.ext_network_creator = OpenStackNetwork(
+            self.admin_os_creds, ext_network_settings)
+        self.ext_network_creator.create()
+
+        shared_network_settings = NetworkConfig(
+            name=self.guid + '-shared-net',
+            shared=True,
+            subnet_settings=[
+                create_network.SubnetConfig(
+                    cidr=cidr2, name=self.guid + '-shared-subnet1')])
+        self.shared_network_creator = OpenStackNetwork(
+            self.admin_os_creds, shared_network_settings)
+        self.shared_network_creator.create()
+
+        overlay_network_settings = NetworkConfig(
+            name=self.guid + '-overlay-net',
+            subnet_settings=[
+                create_network.SubnetConfig(
+                    cidr=cidr3, name=self.guid + '-overlay-subnet1')])
+        self.overlay_network_creator = OpenStackNetwork(
+            self.os_creds, overlay_network_settings)
+        self.overlay_network_creator.create()
+
+        self.neutron = neutron_utils.neutron_client(
+            self.os_creds, self.os_session)
+
+    def tearDown(self):
+        """
+        Cleans the remote OpenStack objects used for router testing
+        """
+        if self.router_creator:
+            self.router_creator.clean()
+
+        if self.overlay_network_creator:
+            self.overlay_network_creator.clean()
+
+        if self.shared_network_creator:
+            self.shared_network_creator.clean()
+
+        if self.ext_network_creator:
+            self.ext_network_creator.clean()
+
+        super(self.__class__, self).__clean__()
+
+    def test_create_router_external(self):
+        """
+        Test creation of a router with a custom external network created by
+        admin.
+        """
+        router_settings = RouterConfig(
+            name=self.guid + '-pub-router',
+            external_gateway=self.ext_network_creator.get_network().name)
+        self.router_creator = create_router.OpenStackRouter(
+            self.os_creds, router_settings)
+        self.router_creator.create()
+
+    def test_create_router_port_external(self):
+        """
+        Test creation of a router with a port to an custom external network
+        created by admin.
+        """
+        router_settings = RouterConfig(
+            name=self.guid + '-pub-router',
+            network_name=self.ext_network_creator.get_network().name)
+        self.router_creator = create_router.OpenStackRouter(
+            self.os_creds, router_settings)
+        self.router_creator.create()
+
+    def test_create_router_port_shared(self):
+        """
+        Test creation of a router with a port to an custom shared network
+        created by admin.
+        """
+        port_settings = [
+            create_network.PortConfig(
+                name=self.guid + '-port1',
+                network_name=self.shared_network_creator.get_network().name)]
+
+        router_settings = RouterConfig(
+            name=self.guid + '-pub-router',
             port_settings=port_settings)
         self.router_creator = create_router.OpenStackRouter(
             self.os_creds, router_settings)

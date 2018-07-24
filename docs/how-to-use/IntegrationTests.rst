@@ -324,6 +324,22 @@ create_router_tests.py - CreateRouterSecurityGroupTests
 |                                       |               | applied to it                                             |
 +---------------------------------------+---------------+-----------------------------------------------------------+
 
+create_router_tests.py - CreateRouterSharedNetworksTests
+--------------------------------------------------------
+
++---------------------------------------+---------------+-----------------------------------------------------------+
+| Test Name                             | Neutron API   | Description                                               |
++=======================================+===============+===========================================================+
+| test_create_router_external           | 2             | Ensures that a router can be joined to an external network|
+|                                       |               | that was created by an admin user                         |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_router_port_external      | 2             | Ensures that a router can have a port created to an       |
+|                                       |               | external network that was created by an admin user        |
++---------------------------------------+---------------+-----------------------------------------------------------+
+| test_create_router_port_shared        | 2             | Ensures that a router can have a port created to an       |
+|                                       |               | shared network that was created by an admin user          |
++---------------------------------------+---------------+-----------------------------------------------------------+
+
 create_qos_tests.py - CreateQoSTests
 ------------------------------------
 

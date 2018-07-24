@@ -86,7 +86,7 @@ from snaps.openstack.tests.create_qos_tests import (
 from snaps.openstack.tests.create_router_tests import (
     CreateRouterSuccessTests, CreateRouterNegativeTests,
     RouterSettingsUnitTests, CreateMultipleRouterTests,
-    CreateRouterSecurityGroupTests)
+    CreateRouterSecurityGroupTests, CreateRouterSharedNetworksTests)
 from snaps.openstack.tests.create_security_group_tests import (
     CreateSecurityGroupTests, SecurityGroupRuleSettingsUnitTests,
     SecurityGroupSettingsUnitTests, CreateMultipleSecurityGroupTests)
@@ -542,6 +542,11 @@ def add_openstack_integration_tests(suite, os_creds, ext_net_name,
         log_level=log_level))
     suite.addTest(OSIntegrationTestCase.parameterize(
         CreateRouterSecurityGroupTests, os_creds=os_creds,
+        ext_net_name=ext_net_name, use_keystone=use_keystone,
+        flavor_metadata=flavor_metadata, image_metadata=image_metadata,
+        log_level=log_level))
+    suite.addTest(OSIntegrationTestCase.parameterize(
+        CreateRouterSharedNetworksTests, os_creds=os_creds,
         ext_net_name=ext_net_name, use_keystone=use_keystone,
         flavor_metadata=flavor_metadata, image_metadata=image_metadata,
         log_level=log_level))

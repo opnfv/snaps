@@ -544,8 +544,11 @@ def get_port(neutron, keystone, port_settings=None, port_name=None,
             project_name = port_settings.project_name
         if port_settings.network_name:
             network = get_network(
-                neutron, keystone, network_name=port_settings.network_name,
-                project_name=project_name)
+                neutron, keystone, network_name=port_settings.network_name)
+            if network and not (network.shared or network.external):
+                network = get_network(
+                    neutron, keystone, network_name=port_settings.network_name,
+                    project_name=project_name)
             if network:
                 port_filter['network_id'] = network.id
     elif port_name:
