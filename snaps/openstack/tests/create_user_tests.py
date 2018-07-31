@@ -106,7 +106,8 @@ class CreateUserSuccessTests(OSComponentTestCase):
         self.user_settings = UserConfig(
             name=guid + '-name',
             password=guid + '-password',
-            roles={'admin': self.os_creds.project_name},
+            roles={'admin': self.os_creds.project_name,
+                   'Admin': self.os_creds.project_name},
             domain_name=self.os_creds.user_domain_name)
 
         self.keystone = keystone_utils.keystone_client(self.os_creds, self.os_session)
@@ -183,6 +184,8 @@ class CreateUserSuccessTests(OSComponentTestCase):
         self.assertEqual(created_user, retrieved_user)
 
         role = keystone_utils.get_role_by_name(self.keystone, 'admin')
+        if not role:
+            role = keystone_utils.get_role_by_name(self.keystone, 'Admin')
         self.assertIsNotNone(role)
 
         os_proj = keystone_utils.get_project(
