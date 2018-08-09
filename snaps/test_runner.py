@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
-import json
 import logging
 import unittest
 from concurrencytest import ConcurrentTestSuite, fork_for_tests
@@ -36,8 +35,7 @@ def __create_concurrent_test_suite(
         source_filename, ext_net_name, proxy_settings, ssh_proxy_cmd,
         run_unit_tests, run_connection_tests, run_api_tests,
         run_integration_tests, run_staging_tests, flavor_metadata,
-        image_metadata, use_keystone, use_floating_ips, continuous_integration,
-        log_level):
+        image_metadata, use_floating_ips, continuous_integration, log_level):
     """
     Compiles the tests that can be run concurrently
     :param source_filename: the OpenStack credentials file (required)
@@ -58,9 +56,6 @@ def __create_concurrent_test_suite(
                             created for test VM instance
     :param image_metadata: dict() object containing the metadata for overriding
                            default images within the tests
-    :param use_keystone: when true, tests creating users and projects will be
-                         exercised and must be run on a host that
-                         has access to the cloud's administrative network
     :param use_floating_ips: when true, tests requiring floating IPs will be
                              executed
     :param continuous_integration: when true, tests for CI will be run
@@ -81,20 +76,20 @@ def __create_concurrent_test_suite(
     if run_connection_tests:
         tsb.add_openstack_client_tests(
             suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
-            use_keystone=use_keystone, log_level=log_level)
+            use_keystone=True, log_level=log_level)
 
     # Tests the OpenStack API calls
     if run_api_tests:
         tsb.add_openstack_api_tests(
             suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
-            use_keystone=use_keystone, flavor_metadata=flavor_metadata,
+            use_keystone=True, flavor_metadata=flavor_metadata,
             image_metadata=image_metadata, log_level=log_level)
 
     # Long running integration type tests
     if run_integration_tests:
         tsb.add_openstack_integration_tests(
             suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
-            use_keystone=use_keystone, flavor_metadata=flavor_metadata,
+            use_keystone=True, flavor_metadata=flavor_metadata,
             image_metadata=image_metadata, use_floating_ips=use_floating_ips,
             log_level=log_level)
 
@@ -106,7 +101,7 @@ def __create_concurrent_test_suite(
     if continuous_integration:
         tsb.add_openstack_ci_tests(
             suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
-            use_keystone=use_keystone, flavor_metadata=flavor_metadata,
+            use_keystone=True, flavor_metadata=flavor_metadata,
             image_metadata=image_metadata, use_floating_ips=use_floating_ips,
             log_level=log_level)
     return suite
@@ -114,7 +109,7 @@ def __create_concurrent_test_suite(
 
 def __create_sequential_test_suite(
         source_filename, ext_net_name, proxy_settings, ssh_proxy_cmd,
-        run_integration_tests, flavor_metadata, image_metadata, use_keystone,
+        run_integration_tests, flavor_metadata, image_metadata,
         use_floating_ips, log_level):
     """
     Compiles the tests that cannot be run in parallel
@@ -129,9 +124,6 @@ def __create_sequential_test_suite(
                             created for test VM instance
     :param image_metadata: dict() object containing the metadata for overriding
                            default images within the tests
-    :param use_keystone: when true, tests creating users and projects will be
-                         exercised and must be run on a host that
-                         has access to the cloud's administrative network
     :param use_floating_ips: when true, tests requiring floating IPs will be
                              executed
     :param log_level: the logging level
@@ -146,7 +138,7 @@ def __create_sequential_test_suite(
 
         tsb.add_ansible_integration_tests(
                 suite=suite, os_creds=os_creds, ext_net_name=ext_net_name,
-                use_keystone=use_keystone, flavor_metadata=flavor_metadata,
+                use_keystone=True, flavor_metadata=flavor_metadata,
                 image_metadata=image_metadata, log_level=log_level)
 
         return suite
@@ -213,7 +205,6 @@ def main(arguments):
             arguments.env, arguments.ext_net, arguments.proxy,
             arguments.ssh_proxy_cmd, unit, connection, api,
             integration, staging, flavor_metadata, image_metadata,
-            arguments.use_keystone != ARG_NOT_SET,
             arguments.floating_ips != ARG_NOT_SET,
             ci, log_level)
 
@@ -223,7 +214,6 @@ def main(arguments):
                 arguments.env, arguments.ext_net, arguments.proxy,
                 arguments.ssh_proxy_cmd, integration, flavor_metadata,
                 image_metadata,
-                arguments.use_keystone != ARG_NOT_SET,
                 arguments.floating_ips != ARG_NOT_SET, log_level)
     else:
         logger.error('Environment file or external network not defined')
@@ -314,12 +304,6 @@ if __name__ == '__main__':
         '-f', '--floating-ips', dest='floating_ips', default=ARG_NOT_SET,
         nargs='?', help='When argument is set, all integration tests requiring'
                         ' Floating IPs will be executed')
-    parser.add_argument(
-        '-k', '--use-keystone', dest='use_keystone', default=ARG_NOT_SET,
-        nargs='?',
-        help='When argument is set, the tests will exercise the keystone APIs '
-             'and must be run on a machine that has access to the admin '
-             'network and is able to create users and groups')
     parser.add_argument(
         '-fm', '--flavor-meta', dest='flavor_metadata',
         help='hw:mem_page_size flavor setting value (i.e. large). '
