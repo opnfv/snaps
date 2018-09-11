@@ -41,6 +41,10 @@ parameters:
     label: Instance Flavor for second VM
     description: Flavor name for the second instance
     default: m1.med
+  flavor_extra_specs:
+    type: json
+    description: Instance Flavor extra specs
+    default: {}
   net_name:
     type: string
     label: Test network name
@@ -88,12 +92,14 @@ resources:
       ram: 1024
       vcpus: 2
       disk: 2
+      extra_specs: { get_param: flavor_extra_specs }
   flavor2:
     type: OS::Nova::Flavor
     properties:
       ram: 1024
       vcpus: 2
       disk: 2
+      extra_specs: { get_param: flavor_extra_specs }
 
   network:
     type: OS::Neutron::Net

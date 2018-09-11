@@ -448,6 +448,7 @@ class CreateStackFloatingIpTests(OSIntegrationTestCase):
             'image2_name': self.image_creator.image_settings.name,
             'flavor1_name': self.flavor1_name,
             'flavor2_name': self.flavor2_name,
+            'flavor_extra_specs': self.flavor_metadata,
             'net_name': self.network_name,
             'subnet_name': self.subnet_name,
             'inst1_name': self.vm_inst1_name,
