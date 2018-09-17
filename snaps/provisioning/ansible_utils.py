@@ -21,8 +21,8 @@ import paramiko
 
 try:
     from ansible.parsing.dataloader import DataLoader
-    from ansible.vars import VariableManager
-    from ansible.inventory import Inventory
+    from ansible.vars.manager import VariableManager
+    from ansible.inventory.manager import InventoryManager
     from ansible.executor.playbook_executor import PlaybookExecutor
 except:
     pass
@@ -52,7 +52,8 @@ def apply_playbook(playbook_path, hosts_inv, host_user,
     :return: the results
     """
     if not os.path.isfile(playbook_path):
-        raise AnsibleException('Requested playbook not found - ' + playbook_path)
+        raise AnsibleException(
+            'Requested playbook not found - ' + playbook_path)
 
     pk_file_path = None
     if ssh_priv_key_file_path:
@@ -72,14 +73,13 @@ def apply_playbook(playbook_path, hosts_inv, host_user,
     import ansible.constants
     ansible.constants.HOST_KEY_CHECKING = False
 
-    variable_manager = VariableManager()
+    loader = DataLoader()
+    inventory = InventoryManager(loader=loader)
+    for host in hosts_inv:
+        inventory.add_host(host=host, group='ungrouped')
+    variable_manager = VariableManager(loader=loader, inventory=inventory)
     if variables:
         variable_manager.extra_vars = variables
-
-    loader = DataLoader()
-    inventory = Inventory(loader=loader, variable_manager=variable_manager,
-                          host_list=hosts_inv)
-    variable_manager.set_inventory(inventory)
 
     ssh_extra_args = None
     if proxy_setting and proxy_setting.ssh_proxy_cmd:
@@ -90,14 +90,14 @@ def apply_playbook(playbook_path, hosts_inv, host_user,
                     'connection', 'module_path', 'forks', 'remote_user',
                     'private_key_file', 'ssh_common_args', 'ssh_extra_args',
                     'become', 'become_method', 'become_user', 'verbosity',
-                    'check', 'timeout'])
+                    'check', 'timeout', 'diff'])
 
     ansible_opts = options(
         listtags=False, listtasks=False, listhosts=False, syntax=False,
         connection='ssh', module_path=None, forks=100, remote_user=host_user,
         private_key_file=pk_file_path, ssh_common_args=None,
         ssh_extra_args=ssh_extra_args, become=None, become_method=None,
-        become_user=None, verbosity=11111, check=False, timeout=30)
+        become_user=None, verbosity=11111, check=False, timeout=30, diff=None)
 
     logger.debug('Setting up Ansible Playbook Executor for playbook - ' +
                  playbook_path)
