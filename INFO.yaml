@@ -1,0 +1,44 @@
+---
+project: 'SNAPS-OO'
+project_creation_date: '07.02.2017'
+project_category: ''
+lifecycle_state: 'Incubation'
+project_lead: &opnfv_snaps_ptl
+    name: 'Steven Pisarski'
+    email: 's.pisarski@cablelabs.com'
+    id: 'spisarski'
+    company: 'cablelabs.com'
+    timezone: 'Unknown'
+primary_contact: *opnfv_snaps_ptl
+issue_tracking:
+    type: 'jira'
+    url: 'https://jira.opnfv.org/projects/SNAPS'
+    key: 'SNAPS'
+mailing_list:
+    type: 'mailman2'
+    url: 'opnfv-tech-discuss@lists.opnfv.org'
+    tag: '[snaps]'
+realtime_discussion:
+    type: irc
+    server: 'freenode.net'
+    channel: '#opnfv-snaps'
+meetings:
+    - type: 'gotomeeting+irc'
+      agenda:  # eg: 'https://wiki.opnfv.org/display/'
+      url:  # eg: 'https://global.gotomeeting.com/join/819733085'
+      server: 'freenode.net'
+      channel: '#opnfv-meeting'
+      repeats: 'weekly'
+      time:  # eg: '16:00 UTC'
+repositories:
+    - 'snaps'
+committers:
+    - <<: *opnfv_snaps_ptl
+    - name: 'Randy Levensalor'
+      email: 'r.levensalor@cablelabs.com'
+      company: 'cablelabs.com'
+      id: 'RandyL'
+tsc:
+    # yamllint disable rule:line-length
+    approval: 'http//meetbot.opnfv.org/meetings/opnfv-meeting/2017/opnfv-meeting.2017-02-07-15.00.html'
+    # yamllint enable rule:line-length
