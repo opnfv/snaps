@@ -3,3 +3,5 @@
 *.*project
 build
 dist
+.tox
+docs/_build/*
