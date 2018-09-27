@@ -32,20 +32,24 @@ __author__ = 'spisarski'
 logger = logging.getLogger('ansible_utils')
 
 
-def apply_playbook(playbook_path, hosts_inv, host_user,
+def apply_playbook(playbook_path, hosts_inv=None, host_user=None,
                    ssh_priv_key_file_path=None, password=None, variables=None,
                    proxy_setting=None):
     """
     Executes an Ansible playbook to the given host
     :param playbook_path: the (relative) path to the Ansible playbook
     :param hosts_inv: a list of hostnames/ip addresses to which to apply the
-                      Ansible playbook
+                      Ansible playbook (not required when PB is configured for
+                      localhost)
     :param host_user: A user for the host instances (must be a password-less
-                      sudo user if playbook has "sudo: yes"
+                      sudo user if playbook has "sudo: yes") (not required when
+                      PB is configured for localhost)
     :param ssh_priv_key_file_path: the file location of the ssh key. Required
-                                   if password is None
+                                   if password is None (not required when PB is
+                                   configured for localhost)
     :param password: the file location of the ssh key. Required if
-                     ssh_priv_key_file_path is None
+                     ssh_priv_key_file_path is None (not required when PB is
+                     configured for localhost)
     :param variables: a dictionary containing any substitution variables needed
                       by the Jinga 2 templates
     :param proxy_setting: instance of os_credentials.ProxySettings class
@@ -60,11 +64,8 @@ def apply_playbook(playbook_path, hosts_inv, host_user,
         pk_file_path = os.path.expanduser(ssh_priv_key_file_path)
         if not password:
             if not os.path.isfile(pk_file_path):
-                raise AnsibleException('Requested private SSH key not found - ' +
-                                pk_file_path)
-
-    if not ssh_priv_key_file_path and not password:
-        raise AnsibleException('Invalid credentials, no priv key or password')
+                raise AnsibleException(
+                    'Requested private SSH key not found - ' + pk_file_path)
 
     passwords = None
     if password:
@@ -75,9 +76,14 @@ def apply_playbook(playbook_path, hosts_inv, host_user,
 
     loader = DataLoader()
     inventory = InventoryManager(loader=loader)
-    for host in hosts_inv:
-        inventory.add_host(host=host, group='ungrouped')
+    if hosts_inv:
+        for host in hosts_inv:
+            inventory.add_host(host=host, group='ungrouped')
+    else:
+        inventory.remove_restriction()
+
     variable_manager = VariableManager(loader=loader, inventory=inventory)
+
     if variables:
         variable_manager.extra_vars = variables
 
