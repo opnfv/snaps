@@ -474,9 +474,8 @@ class OpenStackVmInstance(OpenStackComputeObject):
                           playbook
         :param fip_name: the name of the floating IP to use for applying the
                          playbook (default - will take the first)
-        :return: the return value from ansible
         """
-        return ansible_utils.apply_playbook(
+        ansible_utils.apply_playbook(
             pb_file_loc, [self.get_floating_ip(fip_name=fip_name).ip],
             self.get_image_user(),
             ssh_priv_key_file_path=self.keypair_settings.private_filepath,

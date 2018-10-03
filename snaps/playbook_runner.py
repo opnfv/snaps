@@ -67,12 +67,11 @@ def main(parsed_args):
     if not variables.get('env_file'):
         variables['env_file'] = parsed_args.env_file
 
-    retval = ansible_utils.apply_playbook(
+    ansible_utils.apply_playbook(
         parsed_args.playbook, [parsed_args.ip_addr], parsed_args.host_user,
         ssh_priv_key_file_path=parsed_args.priv_key,
         password=parsed_args.password, variables=variables,
         proxy_setting=proxy_settings)
-    exit(retval)
 
 
 if __name__ == '__main__':

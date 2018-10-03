@@ -53,7 +53,10 @@ def apply_playbook(playbook_path, hosts_inv=None, host_user=None,
     :param variables: a dictionary containing any substitution variables needed
                       by the Jinga 2 templates
     :param proxy_setting: instance of os_credentials.ProxySettings class
-    :return: the results
+    :raises AnsibleException when the return code from the Ansible library is
+            not 0
+    :return: the return code from the Ansible library only when 0.
+             Implementation now raises an exception otherwise
     """
     if not os.path.isfile(playbook_path):
         raise AnsibleException(
@@ -79,8 +82,9 @@ def apply_playbook(playbook_path, hosts_inv=None, host_user=None,
     if hosts_inv:
         for host in hosts_inv:
             inventory.add_host(host=host, group='ungrouped')
+        connection = 'ssh'
     else:
-        inventory.remove_restriction()
+        connection = 'local'
 
     variable_manager = VariableManager(loader=loader, inventory=inventory)
 
@@ -100,10 +104,11 @@ def apply_playbook(playbook_path, hosts_inv=None, host_user=None,
 
     ansible_opts = options(
         listtags=False, listtasks=False, listhosts=False, syntax=False,
-        connection='ssh', module_path=None, forks=100, remote_user=host_user,
-        private_key_file=pk_file_path, ssh_common_args=None,
-        ssh_extra_args=ssh_extra_args, become=None, become_method=None,
-        become_user=None, verbosity=11111, check=False, timeout=30, diff=None)
+        connection=connection, module_path=None, forks=100,
+        remote_user=host_user, private_key_file=pk_file_path,
+        ssh_common_args=None, ssh_extra_args=ssh_extra_args, become=None,
+        become_method=None, become_user=None, verbosity=11111, check=False,
+        timeout=30, diff=None)
 
     logger.debug('Setting up Ansible Playbook Executor for playbook - ' +
                  playbook_path)
@@ -116,7 +121,15 @@ def apply_playbook(playbook_path, hosts_inv=None, host_user=None,
         passwords=passwords)
 
     logger.debug('Executing Ansible Playbook - ' + playbook_path)
-    return executor.run()
+    ret_val = executor.run()
+
+    if ret_val != 0:
+        raise AnsibleException(
+            'Error applying playbook [{}] with value [{}] using the connection'
+            ' type of [{}]'.format(
+                playbook_path, ret_val, connection))
+
+    return ret_val
 
 
 def ssh_client(ip, user, private_key_filepath=None, password=None,
@@ -149,9 +162,10 @@ def ssh_client(ip, user, private_key_filepath=None, password=None,
         ssh.connect(
             ip, username=user, key_filename=pk_abs_path, password=password,
             sock=proxy_cmd)
+        logger.info('Obtained SSH connection to %s', ip)
         return ssh
     except Exception as e:
-        logger.warning('Unable to connect via SSH with message - ' + str(e))
+        logger.debug('Unable to connect via SSH with message - ' + str(e))
 
 
 class AnsibleException(Exception):

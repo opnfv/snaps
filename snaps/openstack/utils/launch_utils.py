@@ -464,17 +464,13 @@ def __apply_ansible_playbook(ansible_config, os_creds_dict, vm_dict,
                 ansible_config.get('variables'), os_creds_dict, vm_dict,
                 image_dict, flavor_dict, networks_dict, routers_dict)
 
-            retval = ansible_utils.apply_playbook(
+            ansible_utils.apply_playbook(
                 ansible_config['playbook_location'], floating_ips, remote_user,
                 ssh_priv_key_file_path=private_key_filepath,
                 variables=variables,
                 proxy_setting=proxy_settings)
-            if retval != 0:
-                # Not a fatal type of event
-                raise Exception(
-                    'Error applying playbook found at location - %s',
-                    ansible_config.get('playbook_location'))
-            elif ansible_config.get('post_processing'):
+
+            if 'post_processing' in ansible_config:
                 post_proc_config = ansible_config['post_processing']
                 if 'sleep' in post_proc_config:
                     time.sleep(post_proc_config['sleep'])
@@ -483,8 +479,6 @@ def __apply_ansible_playbook(ansible_config, os_creds_dict, vm_dict,
                         if vm_name in vm_dict:
                             logger.info('Rebooting VM - %s', vm_name)
                             vm_dict[vm_name].reboot(RebootType.hard)
-
-            return retval
 
 
 def __get_connection_info(ansible_config, vm_dict):

@@ -265,8 +265,7 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
 
         relative_pb_path = pkg_resources.resource_filename(
             'snaps.provisioning.tests.playbooks', 'simple_playbook.yml')
-        retval = self.inst_creator.apply_ansible_playbook(relative_pb_path)
-        self.assertEqual(0, retval)
+        self.inst_creator.apply_ansible_playbook(relative_pb_path)
 
         ssh = ansible_utils.ssh_client(
             ip, user, private_key_filepath=priv_key,
@@ -332,9 +331,8 @@ class AnsibleProvisioningTests(OSIntegrationTestCase):
         relative_pb_path = pkg_resources.resource_filename(
             'snaps.provisioning.tests.playbooks',
             'template_playbook.yml')
-        retval = self.inst_creator.apply_ansible_playbook(
+        self.inst_creator.apply_ansible_playbook(
             relative_pb_path, variables={'name': 'Foo'})
-        self.assertEqual(0, retval)
 
         ssh = ansible_utils.ssh_client(
             ip, user, private_key_filepath=priv_key,
