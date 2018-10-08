@@ -32,6 +32,10 @@ logger = logging.getLogger('snaps_launcher')
 
 ARG_NOT_SET = "argument not set"
 
+from warnings import warn
+warn('This script will be removed in a subsequent release',
+     DeprecationWarning)
+
 
 def main(arguments):
     """

@@ -29,6 +29,10 @@ except:
 
 __author__ = 'spisarski'
 
+from warnings import warn
+warn('This utility will be removed in a subsequent release',
+     DeprecationWarning)
+
 logger = logging.getLogger('ansible_utils')
 
 

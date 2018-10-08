@@ -53,6 +53,10 @@ from snaps.openstack.utils import deploy_utils, neutron_utils, keystone_utils
 from snaps.openstack.utils.nova_utils import RebootType
 from snaps.provisioning import ansible_utils
 
+from warnings import warn
+warn('This utility will be removed in a subsequent release',
+     DeprecationWarning)
+
 logger = logging.getLogger('lanuch_utils')
 DEFAULT_CREDS_KEY = 'admin'
 

@@ -475,6 +475,10 @@ class OpenStackVmInstance(OpenStackComputeObject):
         :param fip_name: the name of the floating IP to use for applying the
                          playbook (default - will take the first)
         """
+        from warnings import warn
+        warn('This method will be removed in a subsequent release',
+             DeprecationWarning)
+
         ansible_utils.apply_playbook(
             pb_file_loc, [self.get_floating_ip(fip_name=fip_name).ip],
             self.get_image_user(),
