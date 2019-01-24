@@ -890,7 +890,7 @@ def __get_os_floating_ip(neutron, floating_ip):
     """
     logger.debug('Attempting to retrieve existing floating ip with IP - %s',
                  floating_ip.ip)
-    fips = neutron.list_floatingips(ip=floating_ip.id)
+    fips = neutron.list_floatingips(floating_ip_address=floating_ip.ip)
 
     for fip in fips['floatingips']:
         if fip['id'] == floating_ip.id:
